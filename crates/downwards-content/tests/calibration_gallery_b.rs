@@ -455,6 +455,10 @@ fn authored_structures_separate_the_five_intended_mechanic_axes() {
     assert!(b4_sides.windows(2).all(|pair| pair[0] != pair[1]));
 
     let b5 = calibration_gallery_b5_room();
+    for column in 20..=22 {
+        assert_eq!(b5.tile(column, 1), Some(Tile::HazardUp));
+        assert_eq!(b4.tile(column, 1), Some(Tile::Empty));
+    }
     for row in [2, 3] {
         for column in 20..=22 {
             assert_eq!(b5.tile(column, row), Some(Tile::HazardDown));

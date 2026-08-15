@@ -25,6 +25,11 @@ surfaces, so approaching a spike from behind does not kill the player or permit 
 the tile. This is a physics change, not merely an art change, and therefore advances
 `PLAYER_MOVEMENT_POLICY_VERSION` from 2 to 3.
 
+A two-sided lethal barrier is authored as a back-to-back pair, such as `^` directly above `v`.
+Low Clearance, Low Bridge, and the hard challenge use this explicit pairing above their downward
+ceiling banks, preventing the safe rear face from becoming an unintended walkable bypass. The
+client draws an opaque shared base seam for paired vertical or horizontal spikes.
+
 The existing numeric tile identities remain stable for `Empty`, `Solid`, upward spikes, and
 `OneWay`; the three new directions use additive identities. Historical artifact wire data still
 maps its `hazard` spelling to an upward spike.

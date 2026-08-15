@@ -27,7 +27,7 @@ const TILE_SIZE: i32 = 10;
 // an uncut maximum-height jump.
 const HARD_NO_DASH_ROWS: [&str; 18] = [
     "..........#>....................",
-    "..........#>....................",
+    "..........#>........^^^.........",
     "..........##........vvv.........",
     "..........##....................",
     "..........#>...<#...............",
@@ -119,6 +119,10 @@ mod tests {
     #[test]
     fn spike_faces_have_backing_and_only_the_authored_safe_pads() {
         let room = hard_no_dash_room();
+        for column in 20..=22 {
+            assert_eq!(room.tile(column, 1), Some(Tile::HazardUp));
+            assert_eq!(room.tile(column, 2), Some(Tile::HazardDown));
+        }
         for row in 0..18 {
             assert_eq!(room.tile(10, row), Some(Tile::Solid));
             let right_backing = if row <= 3 { Tile::Empty } else { Tile::Solid };

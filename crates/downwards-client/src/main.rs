@@ -99,6 +99,7 @@ const SOLID_EXPOSED_SIDE: Color = Color::new(0.08, 0.12, 0.19, 1.0);
 const ONE_WAY: Color = Color::new(0.44, 0.57, 0.69, 1.0);
 const HAZARD: Color = Color::new(0.95, 0.25, 0.34, 1.0);
 const HAZARD_DARK: Color = Color::new(0.27, 0.08, 0.13, 1.0);
+const SPIKE_BASE: Color = Color::new(0.04, 0.13, 0.24, 1.0);
 const EXIT: Color = Color::new(0.25, 0.9, 0.7, 1.0);
 const EXIT_DARK: Color = Color::new(0.06, 0.24, 0.23, 1.0);
 const DOOR: Color = Color::new(0.36, 0.78, 1.0, 1.0);
@@ -4565,6 +4566,53 @@ fn draw_tiles(viewport: &PixelViewport, room: &Room, assets: &VisualAssets) {
             }
         }
     }
+    draw_paired_spike_bases(viewport, room);
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SpikeBasePair {
+    Horizontal,
+    Vertical,
+}
+
+fn spike_base_pair(room: &Room, x: u16, y: u16) -> Option<SpikeBasePair> {
+    match room.hazard_direction(x, y)? {
+        HazardDirection::Up
+            if y + 1 < room.height()
+                && room.hazard_direction(x, y + 1) == Some(HazardDirection::Down) =>
+        {
+            Some(SpikeBasePair::Horizontal)
+        }
+        HazardDirection::Left
+            if x + 1 < room.width()
+                && room.hazard_direction(x + 1, y) == Some(HazardDirection::Right) =>
+        {
+            Some(SpikeBasePair::Vertical)
+        }
+        HazardDirection::Up
+        | HazardDirection::Down
+        | HazardDirection::Left
+        | HazardDirection::Right => None,
+    }
+}
+
+fn draw_paired_spike_bases(viewport: &PixelViewport, room: &Room) {
+    for y in 0..room.height() {
+        for x in 0..room.width() {
+            let bounds = room.tile_bounds(x, y);
+            match spike_base_pair(room, x, y) {
+                Some(SpikeBasePair::Horizontal) => viewport.rectangle(
+                    CoreRect::new(bounds.x, bounds.bottom() - 1, bounds.width, 2),
+                    SPIKE_BASE,
+                ),
+                Some(SpikeBasePair::Vertical) => viewport.rectangle(
+                    CoreRect::new(bounds.right() - 1, bounds.y, 2, bounds.height),
+                    SPIKE_BASE,
+                ),
+                None => {}
+            }
+        }
+    }
 }
 
 fn solid_at_offset(room: &Room, x: u16, y: u16, dx: i32, dy: i32) -> bool {
@@ -7129,7 +7177,12 @@ mod tests {
         let room = scenario.room();
         assert_eq!(room.name(), "Low Clearance");
 
+        assert_eq!(room.hazard_direction(20, 3), Some(HazardDirection::Up));
         assert_eq!(room.hazard_direction(20, 4), Some(HazardDirection::Down));
+        assert_eq!(
+            spike_base_pair(room, 20, 3),
+            Some(SpikeBasePair::Horizontal)
+        );
         assert_eq!(room.hazard_direction(20, 12), Some(HazardDirection::Up));
         assert_eq!(room.hazard_direction(11, 11), Some(HazardDirection::Right));
         assert_eq!(room.hazard_direction(15, 13), Some(HazardDirection::Left));

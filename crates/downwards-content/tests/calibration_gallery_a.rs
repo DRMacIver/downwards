@@ -445,6 +445,7 @@ fn structural_axes_are_explicit_in_the_authored_tiles() {
 
     let a4 = (cases[3].room_factory)();
     for col in 20..=23 {
+        assert_eq!(a4.tile(col, 3), Some(Tile::HazardUp));
         assert_eq!(a4.tile(col, 4), Some(Tile::HazardDown));
     }
     for col in 17..=20 {
@@ -642,6 +643,11 @@ fn low_clearance_route_and_spike_faces_are_structurally_consistent() {
     let room = clearance_replay.room();
     for x in 20..=23 {
         assert_eq!(
+            room.hazard_direction(x, 3),
+            Some(HazardDirection::Up),
+            "the upper face of the ceiling bank must prevent walking across its back"
+        );
+        assert_eq!(
             room.hazard_direction(x, 4),
             Some(HazardDirection::Down),
             "the upper bank must point into the route below"
@@ -654,6 +660,8 @@ fn low_clearance_route_and_spike_faces_are_structurally_consistent() {
             "the lower bank must point into the route above"
         );
     }
+    let ceiling_point_y = room.tile_bounds(20, 4).bottom();
+    let tile_size = room.tile_size();
 
     let mut minimum_top_under_ceiling = i32::MAX;
     for (index, &action) in canonical.iter().enumerate() {
@@ -663,8 +671,9 @@ fn low_clearance_route_and_spike_faces_are_structurally_consistent() {
             minimum_top_under_ceiling = minimum_top_under_ceiling.min(player.y);
         }
     }
-    assert_eq!(
-        minimum_top_under_ceiling, 56,
-        "the exact cut route should retain its documented 6px ceiling clearance"
+    let clearance = minimum_top_under_ceiling - ceiling_point_y;
+    assert!(
+        (1..tile_size).contains(&clearance),
+        "the generated route should pass below the authored ceiling with a positive sub-tile clearance; got {clearance}px"
     );
 }

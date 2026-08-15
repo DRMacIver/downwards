@@ -80,8 +80,11 @@ boxes. The bridge art is flush with the exact top collision surface. Every spike
 Spike direction is authored room data, not inferred presentation. The ASCII authoring characters
 are `^`, `v`, `<`, and `>`, mapping to `HazardUp`, `HazardDown`, `HazardLeft`, and `HazardRight`.
 The pointed face is lethal; the back and perpendicular faces are solid, nonlethal obstacles.
-Rendering, collision, room identity, descriptors, and artifact records all consume that same
-explicit direction.
+Where a barrier must be lethal from both sides, level data explicitly places opposite spikes
+back-to-back rather than changing that rule. The renderer joins such `^`/`v` or `<`/`>` pairs with
+an opaque shared base band, so their generated sprites cannot expose a background-coloured seam.
+Rendering, collision, room identity, descriptors, and artifact records all consume the same
+explicit directions.
 
 <details>
 <summary>Exact v2 environment edit prompt</summary>
