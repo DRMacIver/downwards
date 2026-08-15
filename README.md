@@ -216,16 +216,27 @@ methods as well as the coins. Deaths and restarts return to the door used to ent
 without discarding gloves, boots, Crown, or coins. `V` demonstrates the next intended room-local
 objective; it is not a whole-dungeon route.
 
+Palette generation v11 also replaces the Astral Keep's duplicated Void Pass shell with a distinct
+late wall-rhythm room. Its four alternating contact bands use upward-lethal caps so Dash cannot
+turn them into recharge ledges. The retained route has five accepted Wall Jumps and seven
+horizontal reversals; a same-policy bounded Dash-only search has no positive. As elsewhere, that
+bounded miss is evidence for the authored gate, not a proof of impossibility.
+
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 
 ```sh
 cargo run -p downwards-content --example retune_demo_dungeon
 cargo run -p downwards-content --example retune_demo_dungeon -- --check
+cargo run -p downwards-content --example retune_demo_dungeon -- --route demo-dungeon.void-pass
 ```
 
 The checked-in artifact contains one exact route and 64-trial strength-one input-perturbation
 observations for every floor under the current movement and palette policies. These are
-tractability and controller-behaviour records, not difficulty scores.
+tractability and controller-behaviour records, not difficulty scores. The retuner considers the
+previous checked-in witness, finite direct-controller positives, and course-specific segmented
+routes; it mechanically simplifies exact replays, compares action shape lexicographically, and
+only adopts a candidate with at least one success in every applicable perturbation family. The
+targeted `--route` form prints those observations without rewriting the full artifact.
 
 Join that evidence to the persistent human-attempt history and a tile-layout similarity audit with:
 

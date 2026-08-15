@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 10;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 11;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1687,16 +1687,32 @@ impl PaletteDraft<'_> {
                 }
             }
             DungeonPaletteCourse::VoidPass => {
-                self.horizontal(14, 3, 7, Tile::OneWay);
-                self.horizontal(11, 11, 14, Tile::OneWay);
-                self.horizontal(8, 18, 21, Tile::OneWay);
-                self.horizontal(5, 25, 28, Tile::OneWay);
-                self.horizontal(14, 28, 30, Tile::OneWay);
-                for (start, end) in [(7, 11), (14, 18), (21, 25)] {
-                    self.horizontal(16, start, end, Tile::HazardUp);
-                    self.horizontal(17, start, end, Tile::Solid);
+                // A late-game combination course rather than another copy of the horizontal
+                // bridge template. Enter the shaft through its low left aperture, alternate
+                // through four broad contact bands, then leave over the right wall's cap. The
+                // uppermost tile of every safe band is HazardUp: it is safe from the shaft-facing
+                // side but cannot become a tiny landing that refills Dash between bands.
+                self.vertical(10, 1, 17, Tile::Solid);
+                self.vertical(11, 1, 4, Tile::HazardRight);
+                self.set(11, 4, Tile::HazardUp);
+                self.vertical(11, 5, 7, Tile::Solid);
+                self.vertical(11, 7, 10, Tile::HazardRight);
+                self.set(11, 10, Tile::HazardUp);
+                self.vertical(11, 11, 13, Tile::Solid);
+                self.vertical(11, 13, 15, Tile::HazardRight);
+                self.vertical(17, 3, 17, Tile::Solid);
+                self.vertical(16, 3, 7, Tile::HazardLeft);
+                self.set(16, 7, Tile::HazardUp);
+                self.vertical(16, 8, 10, Tile::Solid);
+                self.vertical(16, 10, 13, Tile::HazardLeft);
+                self.set(16, 13, Tile::HazardUp);
+                self.vertical(16, 14, 17, Tile::Solid);
+                for row in 15..17 {
+                    self.set(10, row, Tile::Empty);
+                    self.set(11, row, Tile::Empty);
                 }
-                self.horizontal(3, 15, 24, Tile::HazardDown);
+                self.horizontal(3, 17, 24, Tile::Solid);
+                self.horizontal(14, 25, 30, Tile::OneWay);
             }
             DungeonPaletteCourse::StarwellClimb => {
                 self.vertical(10, 1, 17, Tile::Solid);

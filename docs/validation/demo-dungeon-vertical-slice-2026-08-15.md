@@ -80,6 +80,13 @@ returns the player to its validated interior arrival without resetting room-loca
 Crown similarly persists and is the only terminal goal. Ordinary door exits change rooms and are
 deliberately not counted as whole-level victories.
 
+Palette generation v11 replaces the Astral Keep's former Void Pass copy with a distinct authored
+wall-rhythm course. Four alternating wall-contact bands have upward-lethal top caps: the vertical
+faces remain valid Wall-Jump contacts, while the horizontal surfaces cannot refill Dash. Its frozen
+route reaches the east door in 224 ticks with five accepted Wall Jumps and seven horizontal
+reversals. A bounded Dash-only solve under the same policy has no positive. This is a no-known-
+bypass audit, not a claim of physical impossibility.
+
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
 persistent item omission, additive mid-run Wall Jump and Dash state, gate rejection without room reset, client
@@ -122,7 +129,16 @@ Regenerate or verify the exact route artifact with:
 ```sh
 cargo run -p downwards-content --example retune_demo_dungeon
 cargo run -p downwards-content --example retune_demo_dungeon -- --check
+cargo run -p downwards-content --example retune_demo_dungeon -- --route demo-dungeon.void-pass
 ```
+
+The authoring tool considers the previous checked-in witness, finite direct-controller positives,
+and explicitly registered segmented route candidates. Every candidate is replay-verified and
+mechanically simplified before action shape is compared lexicographically. A replacement is only
+selected when all four applicable strength-one perturbation families retain a success; otherwise
+the previous exact robust witness remains eligible. This prevents a shorter but newly brittle AI
+trace from silently becoming the dungeon's displayed route. The targeted `--route` form prints the
+candidate observations without publishing a partial 101-floor artifact.
 
 For iterative playtesting, render a cheap descriptive audit without rerunning the solvers:
 

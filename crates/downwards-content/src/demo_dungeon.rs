@@ -1521,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v10".to_owned(),
+        id: "demo-dungeon-v11".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -3033,6 +3033,71 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn void_pass_is_a_distinct_late_wall_rhythm_with_no_known_dash_only_bypass() {
+        let inventory = DemoDungeonInventory {
+            climbing_gloves: true,
+            winged_boots: true,
+            ..DemoDungeonInventory::with_coin_count_for_validation(
+                DEMO_DUNGEON_ASTRAL_GATE_REQUIREMENT,
+            )
+        };
+        let (initial, solution) = solve_route(
+            DemoDungeonRoom::VoidPass,
+            Some("west"),
+            inventory,
+            SearchTarget::door("east"),
+        );
+        let mut replayed = initial;
+        let mut wall_sides = Vec::new();
+        for action in solution.replay.actions() {
+            for event in replayed.step(action).events {
+                if let SimulationEvent::Jumped(JumpKind::Wall { side }) = event {
+                    wall_sides.push(side);
+                }
+            }
+        }
+        assert_eq!(replayed.reached_exit(), Some("east"));
+        assert!(
+            wall_sides.len() >= 4,
+            "Void Pass no longer demonstrates its alternating wall rhythm: {wall_sides:?}"
+        );
+        assert!(
+            wall_sides
+                .windows(2)
+                .filter(|pair| pair[0] != pair[1])
+                .count()
+                >= 2,
+            "Void Pass known positive lost its rapid wall-side changes: {wall_sides:?}"
+        );
+
+        let dash_only = DemoDungeonInventory {
+            climbing_gloves: false,
+            ..inventory
+        };
+        let room = demo_dungeon_room(DemoDungeonRoom::VoidPass, dash_only);
+        let mut initial = Simulation::enter_via_door(room, dash_only.abilities(), "west").unwrap();
+        initial.enable_current_player_movement();
+        let outcome = solve_target(
+            &initial,
+            SearchTarget::door("east"),
+            &SolverConfig::for_abilities(dash_only.abilities()),
+        )
+        .unwrap();
+        assert!(
+            !matches!(outcome, TargetSolveOutcome::Solved(_)),
+            "Dash-only search unexpectedly bypassed the Void Pass wall rhythm: {outcome:?}"
+        );
+
+        let void = demo_dungeon_room(DemoDungeonRoom::VoidPass, inventory);
+        let prism = demo_dungeon_room(DemoDungeonRoom::PrismRun, inventory);
+        assert_ne!(
+            void.tiles(),
+            prism.tiles(),
+            "Void Pass regressed to the copied horizontal bridge shell"
+        );
     }
 
     #[test]
