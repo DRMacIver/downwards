@@ -94,7 +94,6 @@ In-game lab controls:
 const LETTERBOX: Color = Color::new(0.015, 0.02, 0.035, 1.0);
 const ROOM_BACKGROUND: Color = Color::new(0.035, 0.055, 0.085, 1.0);
 const SOLID: Color = Color::new(0.14, 0.18, 0.25, 1.0);
-const SOLID_EDGE: Color = Color::new(0.25, 0.32, 0.42, 1.0);
 const ONE_WAY: Color = Color::new(0.44, 0.57, 0.69, 1.0);
 const HAZARD: Color = Color::new(0.95, 0.25, 0.34, 1.0);
 const HAZARD_DARK: Color = Color::new(0.27, 0.08, 0.13, 1.0);
@@ -122,25 +121,41 @@ const MENU_SELECTED: Color = Color::new(0.08, 0.19, 0.25, 1.0);
 
 const PLAYER_SPRITE_SHEET_COLUMNS: u8 = 4;
 const PLAYER_SPRITE_SHEET_ROWS: u8 = 3;
-const PLAYER_SPRITE_CELL_PIXELS: f32 = 16.0;
-const PLAYER_SPRITE_SHEET_WIDTH: f32 = 64.0;
-const PLAYER_SPRITE_SHEET_HEIGHT: f32 = 48.0;
+const PLAYER_SPRITE_CELL_PIXELS: f32 = 24.0;
+const PLAYER_SPRITE_SHEET_WIDTH: f32 = 96.0;
+const PLAYER_SPRITE_SHEET_HEIGHT: f32 = 72.0;
 const PLAYER_SPRITE_LOGICAL_SIZE: f32 = 16.0;
+const ENVIRONMENT_SHEET_COLUMNS: u8 = 4;
+const ENVIRONMENT_SHEET_ROWS: u8 = 3;
+const ENVIRONMENT_CELL_PIXELS: f32 = 24.0;
+const ENVIRONMENT_SHEET_WIDTH: f32 = 96.0;
+const ENVIRONMENT_SHEET_HEIGHT: f32 = 72.0;
 
 struct VisualAssets {
     player_sprites: Texture2D,
+    environment_tiles: Texture2D,
 }
 
 impl VisualAssets {
     fn load() -> Self {
         let player_sprites = Texture2D::from_file_with_format(
-            include_bytes!("../assets/player-sprites-v1.png"),
+            include_bytes!("../assets/player-sprites-v2.png"),
             None,
         );
         assert_eq!(player_sprites.width(), PLAYER_SPRITE_SHEET_WIDTH);
         assert_eq!(player_sprites.height(), PLAYER_SPRITE_SHEET_HEIGHT);
         player_sprites.set_filter(FilterMode::Nearest);
-        Self { player_sprites }
+        let environment_tiles = Texture2D::from_file_with_format(
+            include_bytes!("../assets/environment-tiles-v1.png"),
+            None,
+        );
+        assert_eq!(environment_tiles.width(), ENVIRONMENT_SHEET_WIDTH);
+        assert_eq!(environment_tiles.height(), ENVIRONMENT_SHEET_HEIGHT);
+        environment_tiles.set_filter(FilterMode::Nearest);
+        Self {
+            player_sprites,
+            environment_tiles,
+        }
     }
 }
 
@@ -3857,6 +3872,44 @@ fn dash_pressed() -> bool {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum EnvironmentSprite {
+    SolidA = 0,
+    SolidB = 1,
+    OneWay = 2,
+    SpikesUp = 3,
+    SpikesDown = 4,
+    SpikesHorizontal = 5,
+    Exit = 7,
+    Door = 8,
+    Pickup = 9,
+    TimedHazardActive = 10,
+    TimedHazardInactive = 11,
+}
+
+impl EnvironmentSprite {
+    const fn sheet_source(self) -> Rect {
+        let index = self as u8;
+        let column = index % ENVIRONMENT_SHEET_COLUMNS;
+        let row = index / ENVIRONMENT_SHEET_COLUMNS;
+        debug_assert!(row < ENVIRONMENT_SHEET_ROWS);
+        Rect::new(
+            column as f32 * ENVIRONMENT_CELL_PIXELS,
+            row as f32 * ENVIRONMENT_CELL_PIXELS,
+            ENVIRONMENT_CELL_PIXELS,
+            ENVIRONMENT_CELL_PIXELS,
+        )
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SpikeDirection {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum PlayerPose {
     IdleA = 0,
     IdleB = 1,
@@ -3965,21 +4018,26 @@ fn render(client: &ClientState, visual_assets: &VisualAssets) {
     if client.level_menu_visible() {
         let menu_viewport = viewport.translated(0, ROOM_TOP);
         if client.gallery_menu_visible() {
-            draw_gallery_menu(&menu_viewport, client);
+            draw_gallery_menu(&menu_viewport, client, visual_assets);
         } else {
-            draw_level_menu(&menu_viewport, client);
+            draw_level_menu(&menu_viewport, client, visual_assets);
         }
         return;
     }
 
     let room_viewport = viewport.translated(0, ROOM_TOP);
-    draw_tiles(&room_viewport, client.simulation.room());
-    draw_room_objects(&room_viewport, &client.simulation);
+    draw_tiles(&room_viewport, client.simulation.room(), visual_assets);
+    draw_room_objects(&room_viewport, &client.simulation, visual_assets);
     let focus = client.current_entry().map(|entry| DoorFocus {
         source: entry.source_door_id(),
         target: entry.target_door_id(),
     });
-    draw_exits(&room_viewport, client.simulation.room(), focus);
+    draw_exits(
+        &room_viewport,
+        client.simulation.room(),
+        focus,
+        visual_assets,
+    );
     draw_player_effects(
         &room_viewport,
         client.simulation.player().bounds(),
@@ -4019,7 +4077,7 @@ fn render(client: &ClientState, visual_assets: &VisualAssets) {
     }
 }
 
-fn draw_gallery_menu(viewport: &PixelViewport, client: &ClientState) {
+fn draw_gallery_menu(viewport: &PixelViewport, client: &ClientState, visual_assets: &VisualAssets) {
     const PREVIEW_X: i32 = 171;
     const PREVIEW_Y: i32 = 43;
     const PREVIEW_SCALE: f32 = 0.43;
@@ -4070,10 +4128,18 @@ fn draw_gallery_menu(viewport: &PixelViewport, client: &ClientState) {
             left: viewport.screen_x(PREVIEW_X),
             top: viewport.screen_y(PREVIEW_Y),
         };
-        draw_tiles(&preview_viewport, simulation.room());
-        draw_room_objects(&preview_viewport, simulation);
-        draw_exits(&preview_viewport, simulation.room(), None);
-        draw_player(&preview_viewport, simulation.player().bounds(), None);
+        draw_tiles(&preview_viewport, simulation.room(), visual_assets);
+        draw_room_objects(&preview_viewport, simulation, visual_assets);
+        draw_exits(&preview_viewport, simulation.room(), None, visual_assets);
+        draw_animated_player(
+            &preview_viewport,
+            simulation.player().bounds(),
+            PlayerVisual {
+                pose: PlayerPose::IdleA,
+                flip_x: false,
+            },
+            visual_assets,
+        );
     } else {
         viewport.centered_text_in(
             CoreRect::new(168, 38, 146, 84),
@@ -4171,7 +4237,7 @@ fn draw_gallery_menu(viewport: &PixelViewport, client: &ClientState) {
     );
 }
 
-fn draw_level_menu(viewport: &PixelViewport, client: &ClientState) {
+fn draw_level_menu(viewport: &PixelViewport, client: &ClientState, visual_assets: &VisualAssets) {
     viewport.rectangle(CoreRect::new(0, 0, 320, 180), MENU_BACKGROUND);
     viewport.centered_text("DOWNWARDS  /  LEVEL SELECT", 12, 9, PLAYER);
     for (index, tier) in [
@@ -4271,7 +4337,7 @@ fn draw_level_menu(viewport: &PixelViewport, client: &ClientState) {
         viewport.text("v", 164, 148, 6, PLAYER_ACCENT);
     }
 
-    draw_level_menu_preview(viewport, client);
+    draw_level_menu_preview(viewport, client, visual_assets);
 
     viewport.centered_text(
         "UP/DOWN LEVELS   LEFT/RIGHT KITS   ENTER PLAY",
@@ -4291,7 +4357,11 @@ fn draw_level_menu(viewport: &PixelViewport, client: &ClientState) {
     );
 }
 
-fn draw_level_menu_preview(viewport: &PixelViewport, client: &ClientState) {
+fn draw_level_menu_preview(
+    viewport: &PixelViewport,
+    client: &ClientState,
+    visual_assets: &VisualAssets,
+) {
     const PREVIEW_X: i32 = 171;
     const PREVIEW_Y: i32 = 45;
     const PREVIEW_SCALE: f32 = 0.43;
@@ -4308,16 +4378,24 @@ fn draw_level_menu_preview(viewport: &PixelViewport, client: &ClientState) {
             left: viewport.screen_x(PREVIEW_X),
             top: viewport.screen_y(PREVIEW_Y),
         };
-        draw_tiles(&preview_viewport, simulation.room());
-        draw_room_objects(&preview_viewport, simulation);
+        draw_tiles(&preview_viewport, simulation.room(), visual_assets);
+        draw_room_objects(&preview_viewport, simulation, visual_assets);
         let focus = client
             .catalogue_entry(client.level_menu.selected_scenario())
             .map(|entry| DoorFocus {
                 source: entry.source_door_id(),
                 target: entry.target_door_id(),
             });
-        draw_exits(&preview_viewport, simulation.room(), focus);
-        draw_player(&preview_viewport, simulation.player().bounds(), None);
+        draw_exits(&preview_viewport, simulation.room(), focus, visual_assets);
+        draw_animated_player(
+            &preview_viewport,
+            simulation.player().bounds(),
+            PlayerVisual {
+                pose: PlayerPose::IdleA,
+                flip_x: false,
+            },
+            visual_assets,
+        );
     } else {
         viewport.centered_text_in(
             CoreRect::new(168, 42, 146, 84),
@@ -4436,7 +4514,123 @@ fn draw_level_menu_preview(viewport: &PixelViewport, client: &ClientState) {
     }
 }
 
-fn draw_tiles(viewport: &PixelViewport, room: &Room) {
+fn draw_environment_sprite(
+    viewport: &PixelViewport,
+    bounds: CoreRect,
+    sprite: EnvironmentSprite,
+    assets: &VisualAssets,
+    flip_x: bool,
+) {
+    draw_texture_ex(
+        &assets.environment_tiles,
+        viewport.screen_x(bounds.x),
+        viewport.screen_y(bounds.y),
+        WHITE,
+        DrawTextureParams {
+            dest_size: Some(vec2(
+                bounds.width as f32 * viewport.scale,
+                bounds.height as f32 * viewport.scale,
+            )),
+            source: Some(sprite.sheet_source()),
+            flip_x,
+            ..Default::default()
+        },
+    );
+}
+
+fn tile_at_offset(room: &Room, x: u16, y: u16, dx: i32, dy: i32) -> Option<Tile> {
+    let target_x = u16::try_from(i32::from(x) + dx).ok()?;
+    let target_y = u16::try_from(i32::from(y) + dy).ok()?;
+    room.tile(target_x, target_y)
+}
+
+fn nearest_non_empty_distance(room: &Room, x: u16, y: u16, dx: i32, dy: i32) -> u16 {
+    let maximum = room.width().max(room.height()).saturating_add(1);
+    for distance in 1..=maximum {
+        match tile_at_offset(
+            room,
+            x,
+            y,
+            dx * i32::from(distance),
+            dy * i32::from(distance),
+        ) {
+            None => return distance,
+            Some(Tile::Empty | Tile::Hazard) => {}
+            Some(Tile::Solid | Tile::OneWay) => return distance,
+        }
+    }
+    maximum
+}
+
+fn spike_direction(room: &Room, x: u16, y: u16) -> SpikeDirection {
+    let above = tile_at_offset(room, x, y, 0, -1);
+    let below = tile_at_offset(room, x, y, 0, 1);
+    let left = tile_at_offset(room, x, y, -1, 0);
+    let right = tile_at_offset(room, x, y, 1, 0);
+    let horizontal_cluster =
+        matches!(left, Some(Tile::Hazard)) || matches!(right, Some(Tile::Hazard));
+    let vertical_cluster =
+        matches!(above, Some(Tile::Hazard)) || matches!(below, Some(Tile::Hazard));
+
+    // A horizontal strip is a floor/ceiling hazard; a vertical strip is a wall hazard. Solid
+    // anchors resolve attached strips. Floating strips point into the nearer corridor, which is
+    // what makes Low Clearance's upper bank point down and its lower bank point up.
+    if horizontal_cluster && !vertical_cluster {
+        if matches!(below, Some(Tile::Solid | Tile::OneWay)) {
+            return SpikeDirection::Up;
+        }
+        if matches!(above, Some(Tile::Solid | Tile::OneWay)) {
+            return SpikeDirection::Down;
+        }
+        return if nearest_non_empty_distance(room, x, y, 0, -1)
+            <= nearest_non_empty_distance(room, x, y, 0, 1)
+        {
+            SpikeDirection::Up
+        } else {
+            SpikeDirection::Down
+        };
+    }
+    if vertical_cluster && !horizontal_cluster {
+        if matches!(left, Some(Tile::Solid | Tile::OneWay)) {
+            return SpikeDirection::Right;
+        }
+        if matches!(right, Some(Tile::Solid | Tile::OneWay)) {
+            return SpikeDirection::Left;
+        }
+        return if nearest_non_empty_distance(room, x, y, -1, 0)
+            <= nearest_non_empty_distance(room, x, y, 1, 0)
+        {
+            SpikeDirection::Left
+        } else {
+            SpikeDirection::Right
+        };
+    }
+
+    let above_anchor = matches!(above, Some(Tile::Solid | Tile::OneWay) | None);
+    let below_anchor = matches!(below, Some(Tile::Solid | Tile::OneWay) | None);
+    let left_anchor = matches!(left, Some(Tile::Solid | Tile::OneWay) | None);
+    let right_anchor = matches!(right, Some(Tile::Solid | Tile::OneWay) | None);
+    if left_anchor != right_anchor && above_anchor == below_anchor {
+        return if left_anchor {
+            SpikeDirection::Right
+        } else {
+            SpikeDirection::Left
+        };
+    }
+    if below_anchor {
+        SpikeDirection::Up
+    } else if above_anchor {
+        SpikeDirection::Down
+    } else if left_anchor {
+        SpikeDirection::Right
+    } else if right_anchor {
+        SpikeDirection::Left
+    } else {
+        SpikeDirection::Up
+    }
+}
+
+fn draw_tiles(viewport: &PixelViewport, room: &Room, assets: &VisualAssets) {
     for y in 0..room.height() {
         for x in 0..room.width() {
             let bounds = room.tile_bounds(x, y);
@@ -4444,79 +4638,74 @@ fn draw_tiles(viewport: &PixelViewport, room: &Room) {
                 Tile::Empty => {}
                 Tile::Solid => {
                     viewport.rectangle(bounds, SOLID);
-                    viewport.rectangle(
-                        CoreRect::new(bounds.x, bounds.y, bounds.width, 1),
-                        SOLID_EDGE,
+                    draw_environment_sprite(
+                        viewport,
+                        bounds,
+                        if (x + y).is_multiple_of(2) {
+                            EnvironmentSprite::SolidA
+                        } else {
+                            EnvironmentSprite::SolidB
+                        },
+                        assets,
+                        false,
                     );
                 }
-                Tile::Hazard => draw_spikes(viewport, bounds),
-                Tile::OneWay => draw_one_way(viewport, bounds),
+                Tile::Hazard => draw_spikes(viewport, bounds, spike_direction(room, x, y), assets),
+                Tile::OneWay => draw_one_way(viewport, bounds, assets),
             }
         }
     }
 }
 
-fn draw_one_way(viewport: &PixelViewport, bounds: CoreRect) {
-    viewport.rectangle(CoreRect::new(bounds.x, bounds.y, bounds.width, 2), ONE_WAY);
-    viewport.rectangle(CoreRect::new(bounds.x + 2, bounds.y + 2, 1, 2), SOLID_EDGE);
-    viewport.rectangle(
-        CoreRect::new(bounds.right() - 3, bounds.y + 2, 1, 2),
-        SOLID_EDGE,
-    );
+fn draw_one_way(viewport: &PixelViewport, bounds: CoreRect, assets: &VisualAssets) {
+    draw_environment_sprite(viewport, bounds, EnvironmentSprite::OneWay, assets, false);
 }
 
-fn draw_spikes(viewport: &PixelViewport, bounds: CoreRect) {
-    let spike_width = bounds.width / 2;
-    for index in 0..2 {
-        let left = bounds.x + index * spike_width;
-        viewport.triangle(
-            (left, bounds.bottom()),
-            (left + spike_width / 2, bounds.y),
-            (left + spike_width, bounds.bottom()),
-            HAZARD,
-        );
-    }
-    viewport.rectangle(
-        CoreRect::new(bounds.x, bounds.bottom() - 2, bounds.width, 2),
-        HAZARD,
-    );
+fn draw_spikes(
+    viewport: &PixelViewport,
+    bounds: CoreRect,
+    direction: SpikeDirection,
+    assets: &VisualAssets,
+) {
+    let (sprite, flip_x) = match direction {
+        SpikeDirection::Up => (EnvironmentSprite::SpikesUp, false),
+        SpikeDirection::Down => (EnvironmentSprite::SpikesDown, false),
+        SpikeDirection::Left => (EnvironmentSprite::SpikesHorizontal, true),
+        SpikeDirection::Right => (EnvironmentSprite::SpikesHorizontal, false),
+    };
+    draw_environment_sprite(viewport, bounds, sprite, assets, flip_x);
 }
 
-fn draw_room_objects(viewport: &PixelViewport, simulation: &Simulation) {
+fn draw_room_objects(viewport: &PixelViewport, simulation: &Simulation, assets: &VisualAssets) {
     for (index, hazard) in simulation.room().timed_hazards().iter().enumerate() {
         let active = simulation
             .timed_hazard_is_active(index)
             .expect("hazard index came from the room");
         let bounds = hazard.bounds();
-        viewport.rectangle(bounds, if active { HAZARD } else { HAZARD_DARK });
-        let stripe = if active { PLAYER } else { HAZARD };
-        if bounds.height > 2 {
-            let mut x = bounds.x + 2;
-            while x < bounds.right() - 1 {
-                viewport.rectangle(CoreRect::new(x, bounds.y + 1, 1, bounds.height - 2), stripe);
-                x += 4;
-            }
-        }
+        draw_environment_sprite(
+            viewport,
+            bounds,
+            if active {
+                EnvironmentSprite::TimedHazardActive
+            } else {
+                EnvironmentSprite::TimedHazardInactive
+            },
+            assets,
+            false,
+        );
+        viewport.rectangle_outline(bounds, 1, if active { HAZARD } else { HAZARD_DARK });
     }
 
     for (index, pickup) in simulation.room().pickups().iter().enumerate() {
         if simulation.pickup_is_collected(index) == Some(true) {
             continue;
         }
-        let bounds = pickup.bounds();
-        let centre_x = bounds.x + bounds.width / 2;
-        let centre_y = bounds.y + bounds.height / 2;
-        viewport.triangle(
-            (centre_x, bounds.y),
-            (bounds.x, centre_y),
-            (bounds.right(), centre_y),
-            PICKUP,
-        );
-        viewport.triangle(
-            (bounds.x, centre_y),
-            (bounds.right(), centre_y),
-            (centre_x, bounds.bottom()),
-            PICKUP,
+        draw_environment_sprite(
+            viewport,
+            pickup.bounds(),
+            EnvironmentSprite::Pickup,
+            assets,
+            false,
         );
     }
 }
@@ -4527,9 +4716,21 @@ struct DoorFocus<'a> {
     target: &'a str,
 }
 
-fn draw_exits(viewport: &PixelViewport, room: &Room, focus: Option<DoorFocus<'_>>) {
+fn draw_exits(
+    viewport: &PixelViewport,
+    room: &Room,
+    focus: Option<DoorFocus<'_>>,
+    assets: &VisualAssets,
+) {
     for exit in room.exits() {
         viewport.rectangle(exit.bounds, EXIT_DARK);
+        draw_environment_sprite(
+            viewport,
+            exit.bounds,
+            EnvironmentSprite::Exit,
+            assets,
+            false,
+        );
         viewport.rectangle_outline(exit.bounds, 1, EXIT);
 
         let centre_y = exit.bounds.y + exit.bounds.height / 2;
@@ -4550,6 +4751,7 @@ fn draw_exits(viewport: &PixelViewport, room: &Room, focus: Option<DoorFocus<'_>
             _ => DOOR,
         };
         viewport.rectangle(bounds, DOOR_DARK);
+        draw_environment_sprite(viewport, bounds, EnvironmentSprite::Door, assets, false);
         viewport.rectangle_outline(bounds, 1, colour);
         if focus.is_some_and(|focus| door.id == focus.target)
             && bounds.width > 4
@@ -4725,47 +4927,6 @@ fn draw_player_effects(
             CoreRect::new(contact_x, bounds.bottom() + 1, 1, 1),
             MOVEMENT_SPARK,
         );
-    }
-}
-
-fn draw_player(viewport: &PixelViewport, bounds: CoreRect, wall_slide: Option<WallSide>) {
-    viewport.rectangle(bounds, PLAYER);
-    viewport.rectangle(
-        CoreRect::new(bounds.x, bounds.bottom() - 3, bounds.width, 3),
-        PLAYER_ACCENT,
-    );
-    viewport.rectangle(
-        CoreRect::new(bounds.right() - 2, bounds.y + 3, 1, 1),
-        ROOM_BACKGROUND,
-    );
-    if let Some(side) = wall_slide {
-        let centre_y = bounds.y + bounds.height / 2;
-        match side {
-            WallSide::Left => {
-                viewport.rectangle(
-                    CoreRect::new(bounds.x, bounds.y + 1, 2, bounds.height - 2),
-                    WALL_SLIDE_CUE,
-                );
-                viewport.triangle(
-                    (bounds.x + 6, centre_y),
-                    (bounds.x + 2, centre_y - 3),
-                    (bounds.x + 2, centre_y + 3),
-                    WALL_SLIDE_CUE,
-                );
-            }
-            WallSide::Right => {
-                viewport.rectangle(
-                    CoreRect::new(bounds.right() - 2, bounds.y + 1, 2, bounds.height - 2),
-                    WALL_SLIDE_CUE,
-                );
-                viewport.triangle(
-                    (bounds.x + 2, centre_y),
-                    (bounds.right() - 2, centre_y - 3),
-                    (bounds.right() - 2, centre_y + 3),
-                    WALL_SLIDE_CUE,
-                );
-            }
-        }
     }
 }
 
@@ -6985,13 +7146,48 @@ mod tests {
             PlayerPose::DeepSkid,
         ];
         let sources = poses.map(PlayerPose::sheet_source);
-        assert_eq!(sources[0], Rect::new(0.0, 0.0, 16.0, 16.0));
-        assert_eq!(sources[11], Rect::new(48.0, 32.0, 16.0, 16.0));
+        assert_eq!(sources[0], Rect::new(0.0, 0.0, 24.0, 24.0));
+        assert_eq!(sources[11], Rect::new(72.0, 48.0, 24.0, 24.0));
         for (index, source) in sources.iter().enumerate() {
             assert!(source.right() <= PLAYER_SPRITE_SHEET_WIDTH);
             assert!(source.bottom() <= PLAYER_SPRITE_SHEET_HEIGHT);
             assert!(!sources[..index].contains(source));
         }
+    }
+
+    #[test]
+    fn environment_cells_cover_every_rendered_landscape_feature() {
+        let sprites = [
+            EnvironmentSprite::SolidA,
+            EnvironmentSprite::SolidB,
+            EnvironmentSprite::OneWay,
+            EnvironmentSprite::SpikesUp,
+            EnvironmentSprite::SpikesDown,
+            EnvironmentSprite::SpikesHorizontal,
+            EnvironmentSprite::Exit,
+            EnvironmentSprite::Door,
+            EnvironmentSprite::Pickup,
+            EnvironmentSprite::TimedHazardActive,
+            EnvironmentSprite::TimedHazardInactive,
+        ];
+        let sources = sprites.map(EnvironmentSprite::sheet_source);
+        for (index, source) in sources.iter().enumerate() {
+            assert!(source.right() <= ENVIRONMENT_SHEET_WIDTH);
+            assert!(source.bottom() <= ENVIRONMENT_SHEET_HEIGHT);
+            assert!(!sources[..index].contains(source));
+        }
+    }
+
+    #[test]
+    fn low_clearance_spikes_point_into_the_actual_route_corridors() {
+        let scenario = calibration_gallery()[4].scenario();
+        let room = scenario.room();
+        assert_eq!(room.name(), "Low Clearance");
+
+        assert_eq!(spike_direction(room, 20, 4), SpikeDirection::Down);
+        assert_eq!(spike_direction(room, 20, 12), SpikeDirection::Up);
+        assert_eq!(spike_direction(room, 11, 11), SpikeDirection::Right);
+        assert_eq!(spike_direction(room, 15, 13), SpikeDirection::Left);
     }
 
     #[test]
