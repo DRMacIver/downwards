@@ -16,8 +16,9 @@ use downwards_ai::{
 };
 use downwards_catalogue::CatalogueBand;
 use downwards_content::{
-    CalibrationLevel, HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET, MEDIUM_NO_DASH_ABILITIES,
-    MEDIUM_NO_DASH_TARGET, calibration_gallery, first_steps_room, hard_no_dash_scenario,
+    CalibratedGeneratorPlaytestLevel, CalibrationLevel, HARD_NO_DASH_ABILITIES,
+    HARD_NO_DASH_TARGET, MEDIUM_NO_DASH_ABILITIES, MEDIUM_NO_DASH_TARGET,
+    calibrated_generator_playtest, calibration_gallery, first_steps_room, hard_no_dash_scenario,
     hard_no_dash_witness_actions, medium_no_dash_scenario, medium_no_dash_witness_actions,
 };
 use downwards_core::{
@@ -67,6 +68,7 @@ Usage: downwards [--seed <u64>] [--tier <1|2|3|4>] [--development]
        downwards --corpus <manifest> [--tier <1|2|3|4>]
        downwards --challenge [hard|tutorial]
        downwards --gallery
+       downwards --calibrated [seed]
 
   (no options)   open the offline-curated v6 route catalogue
   --seed N       explicit developer mode: uncurated v6 seed
@@ -75,6 +77,8 @@ Usage: downwards [--seed <u64>] [--tier <1|2|3|4>] [--development]
   --challenge [hard|tutorial]
                  start an authored wall-jump challenge (default: hard; dash locked)
   --gallery      open the authored no-Dash calibration gallery
+  --calibrated [seed]
+                 play the generated WallJump-only calibration batch
   --generated    return to the curated catalogue (the default)
   --corpus PATH  play the strict native-keyed corpus playtest manifest
   --history PATH append completed human attempts and input timings to PATH
@@ -571,6 +575,8 @@ enum RoomMode {
     Development,
     /// One entry in the stable hand-authored calibration gallery. `seed` is its index.
     Gallery,
+    /// One replay-certified key in the generated human-calibration batch.
+    CalibratedGenerated,
     /// A fixed, hand-authored validation level. Its loadout is locked by content.
     Challenge(ChallengeKind),
 }
@@ -579,7 +585,11 @@ impl RoomMode {
     const fn challenge(self) -> Option<ChallengeKind> {
         match self {
             Self::Challenge(kind) => Some(kind),
-            Self::Generated | Self::DeveloperGenerated | Self::Development | Self::Gallery => None,
+            Self::Generated
+            | Self::DeveloperGenerated
+            | Self::Development
+            | Self::Gallery
+            | Self::CalibratedGenerated => None,
         }
     }
 
@@ -619,6 +629,7 @@ impl LevelMenuState {
             RoomMode::Generated
             | RoomMode::DeveloperGenerated
             | RoomMode::Gallery
+            | RoomMode::CalibratedGenerated
             | RoomMode::Challenge(_) => {
                 // A raw command-line seed stays loaded behind the browser. Opening the menu
                 // focuses the nearest real catalogue row, never a fabricated seed row.
@@ -819,6 +830,9 @@ impl ScenarioSelection {
         if self.mode.is_challenge() {
             self.seed = 0;
             self.tier = AbilityTier::WallJump;
+        } else if self.mode == RoomMode::CalibratedGenerated {
+            self.seed %= calibrated_generator_playtest().len() as u64;
+            self.tier = AbilityTier::WallJump;
         } else if self.mode == RoomMode::Gallery
             && let Ok(index) = usize::try_from(self.seed)
             && let Some(level) = calibration_gallery().get(index)
@@ -829,7 +843,9 @@ impl ScenarioSelection {
     }
 
     fn select_tier(&mut self, tier: AbilityTier) {
-        if self.mode.is_challenge() || self.mode == RoomMode::Gallery {
+        if self.mode.is_challenge()
+            || matches!(self.mode, RoomMode::Gallery | RoomMode::CalibratedGenerated)
+        {
             return;
         }
         self.tier = tier;
@@ -839,7 +855,9 @@ impl ScenarioSelection {
     }
 
     fn select_available_tier(&mut self, tier: AbilityTier, catalogue: &PlayableCatalogue) {
-        if self.mode.is_challenge() || self.mode == RoomMode::Gallery {
+        if self.mode.is_challenge()
+            || matches!(self.mode, RoomMode::Gallery | RoomMode::CalibratedGenerated)
+        {
             return;
         }
         self.select_tier(tier);
@@ -854,6 +872,7 @@ impl ScenarioSelection {
             RoomMode::DeveloperGenerated => RoomMode::Development,
             RoomMode::Development => RoomMode::Generated,
             RoomMode::Gallery => RoomMode::Gallery,
+            RoomMode::CalibratedGenerated => RoomMode::CalibratedGenerated,
             RoomMode::Challenge(kind) => RoomMode::Challenge(kind),
         };
     }
@@ -865,6 +884,7 @@ impl ScenarioSelection {
             | RoomMode::Development
             | RoomMode::DeveloperGenerated
             | RoomMode::Gallery
+            | RoomMode::CalibratedGenerated
             | RoomMode::Challenge(_) => 0,
         };
         Self {
@@ -899,6 +919,7 @@ where
     let mut arguments = arguments.into_iter().map(Into::into).peekable();
     let mut challenge_requested = false;
     let mut gallery_requested = false;
+    let mut calibrated_requested = false;
     let mut authored_mode_conflict = false;
     let mut tier_explicit = false;
 
@@ -928,6 +949,21 @@ where
                 options.selection.mode = RoomMode::Gallery;
                 options.selection.seed = 0;
                 options.selection.tier = AbilityTier::Baseline;
+            }
+            "--calibrated" => {
+                if calibrated_requested {
+                    return Err("--calibrated may be specified only once".to_owned());
+                }
+                calibrated_requested = true;
+                let seed = match arguments.peek() {
+                    Some(value) if !value.starts_with('-') => {
+                        parse_seed(&arguments.next().expect("peeked calibrated seed"))?
+                    }
+                    Some(_) | None => 0,
+                };
+                options.selection.mode = RoomMode::CalibratedGenerated;
+                options.selection.seed = seed;
+                options.selection.tier = AbilityTier::WallJump;
             }
             "--development" => {
                 authored_mode_conflict = true;
@@ -1005,26 +1041,45 @@ where
                 options.selection.seed = 0;
                 options.selection.tier = AbilityTier::WallJump;
             }
+            _ if argument.starts_with("--calibrated=") => {
+                if calibrated_requested {
+                    return Err("--calibrated may be specified only once".to_owned());
+                }
+                calibrated_requested = true;
+                options.selection.mode = RoomMode::CalibratedGenerated;
+                options.selection.seed = parse_seed(&argument[13..])?;
+                options.selection.tier = AbilityTier::WallJump;
+            }
             _ => return Err(format!("unknown argument {argument:?}")),
         }
     }
 
-    if challenge_requested && gallery_requested {
-        return Err("--challenge cannot be combined with --gallery".to_owned());
+    if usize::from(challenge_requested)
+        + usize::from(gallery_requested)
+        + usize::from(calibrated_requested)
+        > 1
+    {
+        return Err("--challenge, --gallery, and --calibrated are mutually exclusive".to_owned());
     }
-    if (challenge_requested || gallery_requested) && authored_mode_conflict {
+    if (challenge_requested || gallery_requested || calibrated_requested) && authored_mode_conflict
+    {
         return Err(
-            "--challenge/--gallery cannot be combined with --seed, --development, --generated, or --corpus"
+            "--challenge/--gallery/--calibrated cannot be combined with --seed, --development, --generated, or --corpus"
                 .to_owned(),
         );
     }
-    if (challenge_requested || gallery_requested) && tier_explicit {
+    if (challenge_requested || gallery_requested || calibrated_requested) && tier_explicit {
         return Err(
-            "--challenge/--gallery use content-locked no-dash loadouts; omit --tier".to_owned(),
+            "--challenge/--gallery/--calibrated use content-locked no-dash loadouts; omit --tier"
+                .to_owned(),
         );
     }
     if challenge_requested {
         options.selection.seed = 0;
+        options.selection.tier = AbilityTier::WallJump;
+    }
+    if calibrated_requested {
+        options.selection.seed %= calibrated_generator_playtest().len() as u64;
         options.selection.tier = AbilityTier::WallJump;
     }
 
@@ -1080,6 +1135,20 @@ fn selection_from_hotkeys(
     if selection.mode.is_challenge() {
         return selection;
     }
+    if selection.mode == RoomMode::CalibratedGenerated {
+        let count = calibrated_generator_playtest().len();
+        let next_index = if is_key_pressed(KeyCode::LeftBracket) {
+            gallery_adjacent_index(selection.seed, count, false)
+        } else if is_key_pressed(KeyCode::RightBracket) {
+            gallery_adjacent_index(selection.seed, count, true)
+        } else {
+            None
+        };
+        if let Some(index) = next_index {
+            selection.seed = index;
+        }
+        return selection.canonicalized();
+    }
     if selection.mode == RoomMode::Gallery {
         let count = calibration_gallery().len();
         let next_index = if is_key_pressed(KeyCode::LeftBracket) {
@@ -1117,6 +1186,9 @@ fn selection_from_hotkeys(
                 }
             }
             RoomMode::Gallery => unreachable!("gallery hotkeys return above"),
+            RoomMode::CalibratedGenerated => {
+                unreachable!("calibrated hotkeys return above")
+            }
             RoomMode::Challenge(_) => unreachable!("challenge hotkeys return above"),
         }
     }
@@ -1139,6 +1211,9 @@ fn selection_from_hotkeys(
                 }
             }
             RoomMode::Gallery => unreachable!("gallery hotkeys return above"),
+            RoomMode::CalibratedGenerated => {
+                unreachable!("calibrated hotkeys return above")
+            }
             RoomMode::Challenge(_) => unreachable!("challenge hotkeys return above"),
         }
     }
@@ -1814,6 +1889,7 @@ enum ReplayOrigin {
     Solver(SolverDiagnostics),
     Challenge(ChallengeKind),
     Gallery(CalibrationLevel),
+    CalibratedGenerated(CalibratedGeneratorPlaytestLevel),
     CatalogueRoute {
         band: Option<CatalogueBand>,
         stored_witness: bool,
@@ -2131,7 +2207,7 @@ impl ClientState {
         let level_menu_preview = LevelMenuPreview::load(preview_selection, &catalogue);
         let browser_mode = match selection.mode {
             RoomMode::Gallery => BrowserMode::Gallery,
-            RoomMode::Challenge(_) => BrowserMode::Closed,
+            RoomMode::Challenge(_) | RoomMode::CalibratedGenerated => BrowserMode::Closed,
             RoomMode::Generated | RoomMode::DeveloperGenerated | RoomMode::Development => {
                 BrowserMode::Catalogue
             }
@@ -2191,6 +2267,8 @@ impl ClientState {
             self.browser_mode = BrowserMode::Gallery;
             return;
         }
+        // Generated calibration is launch-only like a challenge. M deliberately
+        // opens the ordinary named browser; brackets cycle the generated batch.
         self.level_menu = LevelMenuState::focused_on(
             self.selection,
             self.catalogue.entries(self.selection.tier).len(),
@@ -2273,6 +2351,18 @@ impl ClientState {
                 tier: AbilityTier::Baseline,
             });
         }
+        if self.selection.mode == RoomMode::CalibratedGenerated {
+            let index = gallery_adjacent_index(
+                self.selection.seed,
+                calibrated_generator_playtest().len(),
+                true,
+            )?;
+            return Some(ScenarioSelection {
+                mode: RoomMode::CalibratedGenerated,
+                seed: index,
+                tier: AbilityTier::WallJump,
+            });
+        }
         let count = self.catalogue.entries(self.selection.tier).len();
         Some(self.selection.next_catalogue_level(count))
     }
@@ -2296,6 +2386,10 @@ impl ClientState {
                 || "MISSING GALLERY LEVEL".to_owned(),
                 |level| format!("{} {}", level.id().to_ascii_uppercase(), level.title()),
             ),
+            RoomMode::CalibratedGenerated => self.calibrated_entry(selection).map_or_else(
+                || "MISSING CALIBRATED LEVEL".to_owned(),
+                |level| level.title(),
+            ),
             RoomMode::Challenge(kind) => kind.level_identifier().to_owned(),
         }
     }
@@ -2316,6 +2410,9 @@ impl ClientState {
                 || format!("gallery:missing:{:016x}", selection.seed),
                 |level| format!("gallery:{}", level.id()),
             ),
+            RoomMode::CalibratedGenerated => {
+                format!("calibrated-wall-jump-v1:{:016x}", selection.seed)
+            }
             RoomMode::Challenge(kind) => kind.stats_key().to_owned(),
         }
     }
@@ -2345,6 +2442,23 @@ impl ClientState {
 
     fn current_gallery_entry(&self) -> Option<CalibrationLevel> {
         self.gallery_entry(self.selection)
+    }
+
+    fn calibrated_entry(
+        &self,
+        selection: ScenarioSelection,
+    ) -> Option<CalibratedGeneratorPlaytestLevel> {
+        if selection.mode != RoomMode::CalibratedGenerated {
+            return None;
+        }
+        usize::try_from(selection.seed)
+            .ok()
+            .and_then(|index| calibrated_generator_playtest().get(index))
+            .copied()
+    }
+
+    fn current_calibrated_entry(&self) -> Option<CalibratedGeneratorPlaytestLevel> {
+        self.calibrated_entry(self.selection)
     }
 
     fn is_movement_course(&self) -> bool {
@@ -2707,6 +2821,8 @@ impl ClientState {
             SolveRequest::Route => {
                 if let Some(kind) = self.selection.mode.challenge() {
                     self.perform_challenge_route(kind, initial, generated_provenance);
+                } else if let Some(level) = self.current_calibrated_entry() {
+                    self.perform_calibrated_route(level, initial, generated_provenance);
                 } else if let Some(level) = self.current_gallery_entry() {
                     self.perform_gallery_route(level, initial, generated_provenance);
                 } else if self.current_entry().is_some() {
@@ -2789,6 +2905,41 @@ impl ClientState {
             replay,
             ReplayObjective::Exit(level.target().to_owned()),
             ReplayOrigin::Gallery(level),
+        );
+    }
+
+    fn perform_calibrated_route(
+        &mut self,
+        level: CalibratedGeneratorPlaytestLevel,
+        initial: Simulation,
+        generated_provenance: Option<GeneratedProvenance>,
+    ) {
+        let replay = Replay::record(&initial, level.witness_actions());
+        let verification = match replay.verify(&initial) {
+            Ok(verification) => verification,
+            Err(error) => {
+                self.set_replay_error("GENERATED VERIFY ERROR", error.to_string());
+                return;
+            }
+        };
+        if verification.reached_exit.as_deref() != Some(level.target()) {
+            self.set_replay_error(
+                "GENERATED VERIFY ERROR",
+                format!(
+                    "seed {} expected exit {:?}, reached {:?}",
+                    level.seed(),
+                    level.target(),
+                    verification.reached_exit
+                ),
+            );
+            return;
+        }
+        self.install_playback(
+            initial,
+            generated_provenance,
+            replay,
+            ReplayObjective::Exit(level.target().to_owned()),
+            ReplayOrigin::CalibratedGenerated(level),
         );
     }
 
@@ -3463,6 +3614,25 @@ fn load_scenario(
             }
             (simulation, None)
         }
+        RoomMode::CalibratedGenerated => {
+            let index = usize::try_from(selection.seed).map_err(|_| {
+                format!(
+                    "calibrated generated index {} does not fit this platform",
+                    selection.seed
+                )
+            })?;
+            let level = calibrated_generator_playtest()
+                .get(index)
+                .copied()
+                .ok_or_else(|| {
+                    format!(
+                        "calibrated generated entry {} does not exist ({} registered)",
+                        selection.seed,
+                        calibrated_generator_playtest().len()
+                    )
+                })?;
+            (level.scenario(), None)
+        }
         RoomMode::Challenge(kind) => {
             let simulation = kind.scenario();
             let expected_abilities = match kind {
@@ -3715,6 +3885,7 @@ fn room_mode_label(mode: RoomMode) -> &'static str {
         RoomMode::DeveloperGenerated => "DEVELOPER",
         RoomMode::Development => "DEVELOPMENT",
         RoomMode::Gallery => "GALLERY",
+        RoomMode::CalibratedGenerated => "CALIBRATED",
         RoomMode::Challenge(_) => "CHALLENGE",
     }
 }
@@ -4424,6 +4595,22 @@ fn draw_level_menu_preview(
                 )
             },
         ),
+        RoomMode::CalibratedGenerated => client.calibrated_entry(selection).map_or_else(
+            || {
+                (
+                    "MISSING CALIBRATED ENTRY".to_owned(),
+                    "EXACT ROUTE unavailable".to_owned(),
+                    "CONTENT-LOCKED WALL-JUMP LOADOUT".to_owned(),
+                )
+            },
+            |level| {
+                (
+                    format!("GENERATED V1 / SEED {:02}", level.seed()),
+                    format!("SIMPLIFIED STORED ROUTE -> {}", level.target()),
+                    level.mechanic_axis().to_owned(),
+                )
+            },
+        ),
         RoomMode::Challenge(kind) => (
             format!(
                 "FIXED HAND-AUTHORED {} VALIDATION CHALLENGE",
@@ -4974,6 +5161,8 @@ fn draw_hud(viewport: &PixelViewport, client: &ClientState) {
                 client.movement_tuning.top_speed_pixels_per_second,
                 client.movement_tuning.braking_milliseconds,
             )
+        } else if client.selection.mode == RoomMode::CalibratedGenerated {
+            "A/D MOVE  JUMP: TAP=LOW HOLD=HIGH  [ ] SEED  V WITNESS  M LEVELS".to_owned()
         } else if client.selection.mode == RoomMode::Gallery {
             "A/D MOVE  JUMP: TAP=LOW HOLD=HIGH  [ ] LEVEL  V WITNESS  M GALLERY".to_owned()
         } else if client.selection.mode.is_challenge() {
@@ -5018,6 +5207,17 @@ fn draw_hud(viewport: &PixelViewport, client: &ClientState) {
                 format!(
                     "{} {} / {}",
                     level.id().to_ascii_uppercase(),
+                    level.title(),
+                    level.mechanic_axis()
+                )
+            },
+        ),
+        RoomMode::CalibratedGenerated => client.current_calibrated_entry().map_or_else(
+            || "MISSING CALIBRATED LEVEL".to_owned(),
+            |level| {
+                format!(
+                    "GEN V1 SEED {:02} / {} / {}",
+                    level.seed(),
                     level.title(),
                     level.mechanic_axis()
                 )
@@ -5123,6 +5323,7 @@ fn draw_win_feedback(viewport: &PixelViewport, client: &ClientState) {
         RoomMode::DeveloperGenerated => format!("DEV SEED {:X}", client.selection.seed),
         RoomMode::Development => DEVELOPMENT_LEVEL_IDENTIFIER.to_owned(),
         RoomMode::Gallery => client.level_name(client.selection),
+        RoomMode::CalibratedGenerated => client.level_name(client.selection),
         RoomMode::Challenge(kind) => kind.level_identifier().to_owned(),
     };
     viewport.centered_text(&result, 84, 7, UI_TEXT);
@@ -5251,6 +5452,15 @@ fn draw_replay_status(viewport: &PixelViewport, client: &ClientState) {
                     ),
                     format!("{} / {}", level.title(), level.mechanic_axis()),
                     "stored tractability witness / exact replay / dash locked".to_owned(),
+                    "P PLAY/PAUSE  N FRAME  ESC HUMAN".to_owned(),
+                ],
+                ReplayOrigin::CalibratedGenerated(level) => vec![
+                    title(
+                        "GENERATED",
+                        &format!("SEED {:02} -> {}", level.seed(), level.target()),
+                    ),
+                    format!("{} / {}", level.title(), level.mechanic_axis()),
+                    "mechanically simplified witness / exact replay / dash locked".to_owned(),
                     "P PLAY/PAUSE  N FRAME  ESC HUMAN".to_owned(),
                 ],
                 ReplayOrigin::Solver(diagnostics) => {
@@ -5827,6 +6037,27 @@ mod tests {
         assert!(parse_launch_options(["--gallery", "--seed", "1"]).is_err());
         assert!(parse_launch_options(["--development", "--gallery"]).is_err());
         assert!(parse_launch_options(["--gallery", "--corpus=x"]).is_err());
+    }
+
+    #[test]
+    fn calibrated_launch_is_seeded_locked_and_conflict_checked() {
+        let default = parse_launch_options(["--calibrated"]).unwrap();
+        assert_eq!(default.selection.mode, RoomMode::CalibratedGenerated);
+        assert_eq!(default.selection.seed, 0);
+        assert_eq!(default.selection.tier, AbilityTier::WallJump);
+
+        let wrapped = parse_launch_options(["--calibrated=13"]).unwrap();
+        assert_eq!(wrapped.selection.mode, RoomMode::CalibratedGenerated);
+        assert_eq!(wrapped.selection.seed, 1);
+        assert_eq!(wrapped.selection.tier, AbilityTier::WallJump);
+
+        assert!(parse_launch_options(["--calibrated="]).is_err());
+        assert!(parse_launch_options(["--calibrated", "--calibrated=1"]).is_err());
+        assert!(parse_launch_options(["--calibrated", "--tier", "wall-jump"]).is_err());
+        assert!(parse_launch_options(["--calibrated", "--seed", "1"]).is_err());
+        assert!(parse_launch_options(["--calibrated", "--gallery"]).is_err());
+        assert!(parse_launch_options(["--calibrated", "--challenge"]).is_err());
+        assert!(parse_launch_options(["--calibrated", "--corpus=x"]).is_err());
     }
 
     #[test]
@@ -6998,6 +7229,44 @@ mod tests {
             let frame_count = playback.transport.total_frames;
             assert!(frame_count > 0);
 
+            for _ in 0..frame_count {
+                client.advance_replay(false);
+            }
+            assert_eq!(client.simulation.reached_exit(), Some(level.target()));
+            assert!(client.replay_complete());
+        }
+    }
+
+    #[test]
+    fn calibrated_v_installs_and_plays_every_mechanically_generated_witness() {
+        for level in calibrated_generator_playtest().iter().copied() {
+            let selection = ScenarioSelection {
+                mode: RoomMode::CalibratedGenerated,
+                seed: level.seed(),
+                tier: AbilityTier::WallJump,
+            };
+            let mut client = ClientState::new(selection, None, false).unwrap();
+            assert_eq!(client.browser_mode, BrowserMode::Closed);
+            client.request_solve();
+            client.perform_requested_solve();
+
+            let ReplayMode::Playback(playback) = &client.replay_mode else {
+                panic!(
+                    "generated seed {} should install its witness: {:?}",
+                    level.seed(),
+                    client.replay_notice.as_ref().map(|notice| &notice.detail)
+                );
+            };
+            assert!(matches!(
+                playback.origin,
+                ReplayOrigin::CalibratedGenerated(actual) if actual.seed() == level.seed()
+            ));
+            assert_eq!(
+                playback.expected_objective,
+                Some(ReplayObjective::Exit(level.target().to_owned()))
+            );
+            assert!(playback.replay.actions().all(|action| !action.dash));
+            let frame_count = playback.transport.total_frames;
             for _ in 0..frame_count {
                 client.advance_replay(false);
             }

@@ -158,6 +158,28 @@ rooms are calibration experiments, not endorsed examples of robust clearance yet
 uses the same movement and held-Jump input available to a human player. Record results in the
 [`human calibration gallery feedback plan`](docs/research/human-calibration-gallery-plan.md).
 
+The first resumed generator pilot is deliberately separate from both that authored gallery and
+the production corpus. It contains twelve deterministic WallJump-only/no-Dash rooms built from
+the human-calibrated grammar: short turns, even-tempo climbs, recovery ascents, rising causeways,
+and visible low-bridge jump cuts. Launch seed 0 (or any seed 0–11) with:
+
+```sh
+cargo run -- --calibrated 0
+```
+
+During play, `[` and `]` cycle the twelve generated keys, `V` plays the mechanically simplified
+exact witness, and `M` opens the ordinary level browser. Regenerate the witness artifact after a
+movement-policy or generator change with:
+
+```sh
+cargo run --release -p downwards-content --example retune_calibrated_generator
+```
+
+That process performs the solver/simplifier and ability-removal checks; tests consume its output
+rather than hard-coding route lengths. The retained route facts are acceptance evidence, not a
+difficulty score. See the
+[`calibrated WallJump generator v1 report`](docs/validation/calibrated-wall-jump-generator-v1-2026-08-15.md).
+
 In any human-controlled room, press `F2` to open the movement-tuning menu. It directly adjusts top
 speed in pixels/second, acceleration and braking response in milliseconds, and wall-momentum
 behavior along three axes: Wall Ascent converts a rising wall impact into additional upward speed,

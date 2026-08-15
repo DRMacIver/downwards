@@ -8,8 +8,15 @@
 
 #![forbid(unsafe_code)]
 
+mod calibrated_wall_jump;
 pub mod experimental;
 pub mod v6;
+
+pub use calibrated_wall_jump::{
+    CALIBRATED_WALL_JUMP_ABILITIES, CALIBRATED_WALL_JUMP_GENERATION_VERSION,
+    CALIBRATED_WALL_JUMP_TARGET, CalibratedWallJumpCandidate, CalibratedWallJumpCourse,
+    CalibratedWallJumpKey, CalibratedWallJumpParameters,
+};
 
 pub use v6::{
     COMPOSITIONAL_FEATURE_STAGE_VERSION, COMPOSITIONAL_GENERATION_VERSION, CompositionFailure,

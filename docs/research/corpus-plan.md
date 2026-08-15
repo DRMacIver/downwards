@@ -120,6 +120,30 @@ until human feedback on this first round is recorded and compared with the struc
 existing metrics. See the
 [`human calibration gallery plan and feedback sheet`](human-calibration-gallery-plan.md).
 
+### Calibration-first generation resumed (2026-08-15)
+
+Human feedback and subsequent movement tuning made the revised gallery a useful starting range:
+not high-end difficulty, but broadly suitable for a reasonably challenging game. Generation has
+therefore resumed only as a separate twelve-key playtest pilot. It does **not** reactivate the old
+duration/controller-demand/shaky-hand difficulty ranking and does not alter corpus source policy.
+
+The new `calibrated-wall-jump-v1` grammar is WallJump-only/no-Dash and varies five isolated shapes
+derived from the played gallery: short staged turns, regular alternating rhythm, rhythm with one
+recovery shelf, a climb plus rising landing chain, and the same traverse with a visible jump-cut
+bank. Every playtest key must have a mechanically simplified clean replay, every jump press must be
+accepted, retained wall contacts must stay in the calibrated 3–7 range without repeated-wall
+thrashing, a complete finite baseline controller audit must find no positive, and the ordinary
+bounded baseline solver must remain inconclusive. These are typed acceptance/refusal boundaries,
+not a scalar human-difficulty model or proof of physical impossibility.
+
+The initial run found and rejected two real design failures before freezing the batch: reflecting
+the low-bridge finish retained a visibly thrashy route, and reflecting the recovery shelf admitted
+a replay-certified baseline bypass which the finite direct-controller vocabulary missed. V1 keeps
+those shapes directional and varies their shaft placement instead. The twelve accepted rooms are
+available through `downwards --calibrated [seed]` for another human-feedback round; no room becomes
+corpus input merely by passing this pilot. See the
+[`calibrated WallJump generator v1 report`](../validation/calibrated-wall-jump-generator-v1-2026-08-15.md).
+
 ## First room-centric pilots (2026-08-15)
 
 The historical first terrain-only pipeline slice enumerated all four construction kits, three

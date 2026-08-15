@@ -1,0 +1,329 @@
+calibrated-wall-jump-witnesses-v1
+generation-version 1
+movement-policy-version 3
+seed 0
+room-id generated.calibrated-wall-jump.v1.short-turns.0000000000000000
+course short-turns
+reflected false
+ticks 64
+jump-presses 4
+accepted-jumps 4
+wall-jumps 3
+repeated-wall-sides 1
+action-spans 17
+direct-positives 1
+baseline-status PathHorizon
+baseline-search 14561 505689
+span 1 1 0 0 0 0
+span 3 1 0 1 0 0
+span 2 0 0 1 0 0
+span 1 1 0 1 0 0
+span 3 0 0 0 0 0
+span 1 1 0 0 0 0
+span 8 0 0 0 0 0
+span 1 0 0 1 0 0
+span 9 0 0 0 0 0
+span 1 0 0 1 0 0
+span 8 0 0 0 0 0
+span 6 -1 0 0 0 0
+span 4 0 0 0 0 0
+span 1 -1 0 0 0 0
+span 5 0 0 0 0 0
+span 1 0 0 1 0 0
+span 9 0 0 0 0 0
+end
+seed 1
+room-id generated.calibrated-wall-jump.v1.even-tempo.0000000000000001
+course even-tempo
+reflected false
+ticks 47
+jump-presses 5
+accepted-jumps 5
+wall-jumps 5
+repeated-wall-sides 0
+action-spans 9
+direct-positives 1
+baseline-status PathHorizon
+baseline-search 14227 483782
+span 1 0 0 1 0 0
+span 12 0 0 0 0 0
+span 1 0 0 1 0 0
+span 10 0 0 0 0 0
+span 1 0 0 1 0 0
+span 10 0 0 0 0 0
+span 1 0 0 1 0 0
+span 10 0 0 0 0 0
+span 1 0 0 1 0 0
+end
+seed 2
+room-id generated.calibrated-wall-jump.v1.recovery-ascent.0000000000000002
+course recovery-ascent
+reflected false
+ticks 47
+jump-presses 5
+accepted-jumps 5
+wall-jumps 5
+repeated-wall-sides 0
+action-spans 9
+direct-positives 1
+baseline-status PathHorizon
+baseline-search 14227 483782
+span 1 0 0 1 0 0
+span 12 0 0 0 0 0
+span 1 0 0 1 0 0
+span 10 0 0 0 0 0
+span 1 0 0 1 0 0
+span 10 0 0 0 0 0
+span 1 0 0 1 0 0
+span 10 0 0 0 0 0
+span 1 0 0 1 0 0
+end
+seed 3
+room-id generated.calibrated-wall-jump.v1.causeway.0000000000000003
+course causeway
+reflected false
+ticks 118
+jump-presses 4
+accepted-jumps 4
+wall-jumps 3
+repeated-wall-sides 0
+action-spans 13
+direct-positives 2
+baseline-status PathHorizon
+baseline-search 14353 483050
+span 1 0 0 1 0 0
+span 10 0 0 0 0 0
+span 1 0 0 1 0 0
+span 8 0 0 0 0 0
+span 1 0 0 1 0 0
+span 8 0 0 0 0 0
+span 81 1 0 0 0 0
+span 1 1 0 1 0 0
+span 1 0 0 1 0 0
+span 1 1 0 1 0 0
+span 1 0 0 1 0 0
+span 1 1 0 1 0 0
+span 3 0 0 0 0 0
+end
+seed 4
+room-id generated.calibrated-wall-jump.v1.low-bridge.0000000000000004
+course low-bridge
+reflected false
+ticks 122
+jump-presses 7
+accepted-jumps 7
+wall-jumps 3
+repeated-wall-sides 0
+action-spans 22
+direct-positives 1
+baseline-status PathHorizon
+baseline-search 14353 483050
+span 1 0 0 1 0 0
+span 11 0 0 0 0 0
+span 1 0 0 1 0 0
+span 7 0 0 0 0 0
+span 1 0 0 1 0 0
+span 8 0 0 0 0 0
+span 29 1 0 0 0 0
+span 5 1 0 1 0 0
+span 10 1 0 0 0 0
+span 2 0 0 0 0 0
+span 1 1 0 0 0 0
+span 1 0 0 0 0 0
+span 1 0 0 1 0 0
+span 2 0 0 0 0 0
+span 1 1 0 0 0 0
+span 6 0 0 0 0 0
+span 1 1 0 0 0 0
+span 1 0 0 1 0 0
+span 8 0 0 0 0 0
+span 18 1 0 0 0 0
+span 5 1 0 1 0 0
+span 2 0 0 0 0 0
+end
+seed 5
+room-id generated.calibrated-wall-jump.v1.short-turns.0000000000000005
+course short-turns
+reflected true
+ticks 64
+jump-presses 4
+accepted-jumps 4
+wall-jumps 3
+repeated-wall-sides 1
+action-spans 17
+direct-positives 1
+baseline-status PathHorizon
+baseline-search 14562 520361
+span 1 -1 0 0 0 0
+span 3 -1 0 1 0 0
+span 2 0 0 1 0 0
+span 1 -1 0 1 0 0
+span 3 0 0 0 0 0
+span 1 -1 0 0 0 0
+span 8 0 0 0 0 0
+span 1 0 0 1 0 0
+span 9 0 0 0 0 0
+span 1 0 0 1 0 0
+span 8 0 0 0 0 0
+span 6 1 0 0 0 0
+span 4 0 0 0 0 0
+span 1 1 0 0 0 0
+span 5 0 0 0 0 0
+span 1 0 0 1 0 0
+span 9 0 0 0 0 0
+end
+seed 6
+room-id generated.calibrated-wall-jump.v1.even-tempo.0000000000000006
+course even-tempo
+reflected true
+ticks 47
+jump-presses 5
+accepted-jumps 5
+wall-jumps 5
+repeated-wall-sides 0
+action-spans 9
+direct-positives 1
+baseline-status PathHorizon
+baseline-search 14313 491224
+span 1 0 0 1 0 0
+span 12 0 0 0 0 0
+span 1 0 0 1 0 0
+span 10 0 0 0 0 0
+span 1 0 0 1 0 0
+span 10 0 0 0 0 0
+span 1 0 0 1 0 0
+span 10 0 0 0 0 0
+span 1 0 0 1 0 0
+end
+seed 7
+room-id generated.calibrated-wall-jump.v1.recovery-ascent.0000000000000007
+course recovery-ascent
+reflected false
+ticks 47
+jump-presses 5
+accepted-jumps 5
+wall-jumps 5
+repeated-wall-sides 0
+action-spans 9
+direct-positives 1
+baseline-status PathHorizon
+baseline-search 13997 480649
+span 1 0 0 1 0 0
+span 12 0 0 0 0 0
+span 1 0 0 1 0 0
+span 10 0 0 0 0 0
+span 1 0 0 1 0 0
+span 10 0 0 0 0 0
+span 1 0 0 1 0 0
+span 10 0 0 0 0 0
+span 1 0 0 1 0 0
+end
+seed 8
+room-id generated.calibrated-wall-jump.v1.causeway.0000000000000008
+course causeway
+reflected true
+ticks 118
+jump-presses 4
+accepted-jumps 4
+wall-jumps 3
+repeated-wall-sides 0
+action-spans 11
+direct-positives 1
+baseline-status PathHorizon
+baseline-search 14020 474694
+span 1 0 0 1 0 0
+span 10 0 0 0 0 0
+span 1 0 0 1 0 0
+span 8 0 0 0 0 0
+span 1 0 0 1 0 0
+span 8 0 0 0 0 0
+span 81 -1 0 0 0 0
+span 2 0 0 1 0 0
+span 1 -1 0 1 0 0
+span 2 0 0 1 0 0
+span 3 0 0 0 0 0
+end
+seed 9
+room-id generated.calibrated-wall-jump.v1.low-bridge.0000000000000009
+course low-bridge
+reflected false
+ticks 127
+jump-presses 5
+accepted-jumps 5
+wall-jumps 4
+repeated-wall-sides 0
+action-spans 16
+direct-positives 2
+baseline-status PathHorizon
+baseline-search 14234 481284
+span 1 0 0 1 0 0
+span 8 0 0 0 0 0
+span 1 0 0 1 0 0
+span 11 0 0 0 0 0
+span 1 0 0 1 0 0
+span 8 0 0 0 0 0
+span 13 1 0 0 0 0
+span 1 0 0 0 0 0
+span 68 1 0 0 0 0
+span 1 0 0 0 0 0
+span 1 0 0 1 0 0
+span 1 1 0 1 0 0
+span 1 0 0 1 0 0
+span 8 0 0 0 0 0
+span 1 0 0 1 0 0
+span 2 0 0 0 0 0
+end
+seed 10
+room-id generated.calibrated-wall-jump.v1.short-turns.000000000000000a
+course short-turns
+reflected false
+ticks 64
+jump-presses 4
+accepted-jumps 4
+wall-jumps 3
+repeated-wall-sides 1
+action-spans 17
+direct-positives 1
+baseline-status PathHorizon
+baseline-search 14488 518679
+span 1 1 0 0 0 0
+span 3 1 0 1 0 0
+span 2 0 0 1 0 0
+span 1 1 0 1 0 0
+span 3 0 0 0 0 0
+span 1 1 0 0 0 0
+span 8 0 0 0 0 0
+span 1 0 0 1 0 0
+span 9 0 0 0 0 0
+span 1 0 0 1 0 0
+span 8 0 0 0 0 0
+span 6 -1 0 0 0 0
+span 4 0 0 0 0 0
+span 1 -1 0 0 0 0
+span 5 0 0 0 0 0
+span 1 0 0 1 0 0
+span 9 0 0 0 0 0
+end
+seed 11
+room-id generated.calibrated-wall-jump.v1.even-tempo.000000000000000b
+course even-tempo
+reflected false
+ticks 47
+jump-presses 5
+accepted-jumps 5
+wall-jumps 5
+repeated-wall-sides 0
+action-spans 9
+direct-positives 1
+baseline-status PathHorizon
+baseline-search 13997 480649
+span 1 0 0 1 0 0
+span 12 0 0 0 0 0
+span 1 0 0 1 0 0
+span 10 0 0 0 0 0
+span 1 0 0 1 0 0
+span 10 0 0 0 0 0
+span 1 0 0 1 0 0
+span 10 0 0 0 0 0
+span 1 0 0 1 0 0
+end

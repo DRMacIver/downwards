@@ -2,6 +2,7 @@
 
 #![forbid(unsafe_code)]
 
+mod calibrated_generator_playtest;
 mod calibration_gallery;
 mod calibration_gallery_a;
 mod calibration_gallery_b;
@@ -10,6 +11,9 @@ mod hard_no_dash;
 mod medium_no_dash;
 mod movement_obstacle_courses;
 
+pub use calibrated_generator_playtest::{
+    CalibratedGeneratorPlaytestLevel, calibrated_generator_playtest,
+};
 pub use calibration_gallery::{CalibrationLevel, calibration_gallery};
 pub use calibration_gallery_a::{
     CALIBRATION_GALLERY_A_ABILITIES, CALIBRATION_GALLERY_A_DIMENSIONS,
