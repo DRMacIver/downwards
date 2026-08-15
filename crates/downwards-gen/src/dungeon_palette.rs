@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 6;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 7;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -619,9 +619,9 @@ impl PaletteDraft<'_> {
                 self.vertical(10, 8, 17, Tile::Solid);
                 self.vertical(16, 7, 17, Tile::Solid);
                 self.vertical(11, 8, 10, Tile::HazardRight);
-                self.vertical(11, 12, 14, Tile::HazardRight);
+                self.vertical(11, 12, 14, Tile::Solid);
                 self.vertical(15, 10, 12, Tile::HazardLeft);
-                self.vertical(15, 14, 16, Tile::HazardLeft);
+                self.vertical(15, 14, 16, Tile::Solid);
                 self.horizontal(7, 16, 25, Tile::OneWay);
                 self.horizontal(14, 24, 30, Tile::OneWay);
                 for row in 14..16 {
@@ -633,8 +633,8 @@ impl PaletteDraft<'_> {
                 self.horizontal(14, 3, 9, Tile::OneWay);
                 self.vertical(10, 4, 12, Tile::Solid);
                 self.vertical(16, 4, 17, Tile::Solid);
-                self.horizontal(5, 17, 24, Tile::OneWay);
-                self.horizontal(9, 23, 28, Tile::OneWay);
+                self.horizontal(5, 17, 30, Tile::OneWay);
+                self.horizontal(9, 17, 30, Tile::OneWay);
                 self.horizontal(14, 25, 30, Tile::OneWay);
             }
             DungeonPaletteCourse::Threshold => {
@@ -662,21 +662,22 @@ impl PaletteDraft<'_> {
                 self.vertical(24, 4, 14, Tile::Solid);
             }
             DungeonPaletteCourse::BootsVault => {
-                // This is the five-beat alternating contact pattern calibrated by the gallery's
-                // Even Tempo room. The floor door places the player inside the bottom of the
-                // shaft; hazard-faced bands prevent riding one wall and force rapid direction
-                // changes before the reward shelf.
+                // A five-beat alternating contact pattern using two-tile safe windows. The floor
+                // door places the player inside the bottom of the shaft; hazard-faced bands make
+                // riding one wall lethal and require the same rapid direction changes as the
+                // calibrated Two-Tile Turn / Even Tempo exercises before the reward shelf.
                 self.vertical(13, 0, 16, Tile::Solid);
                 self.set(14, 0, Tile::HazardRight);
-                self.vertical(14, 1, 4, Tile::Solid);
-                self.vertical(14, 4, 7, Tile::HazardRight);
-                self.vertical(14, 7, 10, Tile::Solid);
-                self.vertical(14, 10, 13, Tile::HazardRight);
-                self.vertical(14, 13, 16, Tile::Solid);
+                self.vertical(14, 1, 5, Tile::HazardRight);
+                self.vertical(14, 5, 7, Tile::Solid);
+                self.vertical(14, 7, 11, Tile::HazardRight);
+                self.vertical(14, 11, 13, Tile::Solid);
+                self.vertical(14, 13, 16, Tile::HazardRight);
                 self.vertical(19, 4, 16, Tile::Solid);
-                self.vertical(18, 4, 7, Tile::Solid);
-                self.vertical(18, 7, 10, Tile::HazardLeft);
-                self.vertical(18, 10, 13, Tile::Solid);
+                self.vertical(18, 4, 5, Tile::HazardLeft);
+                self.vertical(18, 5, 7, Tile::Solid);
+                self.vertical(18, 7, 11, Tile::HazardLeft);
+                self.vertical(18, 11, 13, Tile::Solid);
                 self.vertical(18, 13, 16, Tile::HazardLeft);
                 self.horizontal(4, 18, 26, Tile::Solid);
                 self.set(14, 16, Tile::Empty);

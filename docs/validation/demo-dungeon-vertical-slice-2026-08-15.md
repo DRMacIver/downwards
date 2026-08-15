@@ -38,9 +38,11 @@ Rootworks branches open the Climber's Reliquary; collecting the Climbing Gloves 
 Jump. The next ten floors are mandatory: two side branches hold coins, the Climber's Gate needs all
 six regional coins, and its physical route has an observed multi-wall positive while an equivalent
 bounded baseline search has no positive. The Winged Boots are another
-room-local pickup whose stable ID is interpreted by client run state. Their floor door is sealed
-until eighteen coins have been collected, and the reward sits above the gallery-calibrated “Even
-Tempo” pattern: alternating safe wall bands separated by inward-facing hazard bands. Collecting the
+room-local pickup whose stable ID is interpreted by client run state. Eighteen coins open only the
+lower route. The Underpass coin is required for the Treasury, and both Treasury coins are required
+before either Winged Vault entrance opens. The reward sits above a tightened two-tile version of
+the gallery-calibrated alternating wall pattern: safe wall bands separated by inward-facing hazard
+bands. Collecting the
 boots grants Dash immediately and omits the pickup on later visits. Horizontal Dash uses a low
 posture in the current movement policy, so an eight-pixel body can traverse a ten-pixel tunnel that
 the standing twelve-pixel body cannot walk through, then expands automatically once headroom
@@ -56,9 +58,11 @@ Twenty-eight stable coin IDs are distributed across the graph. Their 128-bit col
 across room reconstruction and is shown in both HUD rails. Exactly six are available before the
 Climbing Gloves. Six more are distributed through the mandatory Wall-Jump course, including both
 branches; all twelve are needed to leave it. Another six are available in the Threshold, Three-Way
-Hall, Rafter Mint, Climbers' Gallery, and Needle Belfry; collecting all eighteen is therefore
-required to enter the Winged Vault or lower loop. The vault and Underpass contribute the nineteenth
-and twentieth, opening the Treasury. Its two coins permit entry to the Dash region; all six coins
+Hall, Rafter Mint, Climbers' Gallery, and Needle Belfry; collecting all eighteen is required to
+enter the lower loop. The Underpass contributes coin nineteen and opens the Treasury. Its two coins
+bring the inventory to twenty-one and unseal the Winged Vault; the vault's final pre-Dash coin makes
+twenty-two. Thus every floor is mechanically critical: removing any one floor prevents the Crown
+inventory and traversal contract from being satisfied. All six Dash-region coins
 there are then required at the Dash Seal, producing the full 28-coin Crown inventory. A rejected door
 returns the player to its validated interior arrival without resetting room-local progress. The
 Crown similarly persists and is the only terminal goal. Ordinary door exits change rooms and are
@@ -68,16 +72,25 @@ Validation covers exact reciprocal room/door IDs, opposite socket geometry, full
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
 persistent item omission, additive mid-run Wall Jump and Dash state, gate rejection without room reset, client
 traversal of the intended loop, and authoritative solver positives for every critical leg and coin
-branch. The retained boots route contains at least four alternating wall jumps and no repeated-side
-wall hops. A WallJump-only search misses the chasm under the same bounded search budget while the
+branch. The retained boots route now takes 111 ticks, eight accepted jumps, four wall jumps, and at
+least two rapid wall-side changes through two-tile contact windows. A WallJump-only search misses
+the chasm under the same bounded search budget while the
 post-boots loadout succeeds. That miss is evidence for this vertical slice, not a proof of physical
 impossibility. The ten opening-region representative routes also retain at least one observed
 success in every applicable strength-one blind input-perturbation family under a small deterministic
-study. The ten Dash-region representative routes likewise retain observed successes in every
-applicable strength-one perturbation family. The final Dash Seal's exact positive uses Dash while an
+study. The mechanically generated per-floor witness artifact records exact routes and every
+applicable strength-one outcome, including explicit zero-success blind-continuation families rather
+than hiding them. The final Dash Seal's exact positive uses Dash while an
 equivalent WallJump-only search has no positive. Those observations are controller diagnostics, not
 a scalar difficulty or human-robustness claim.
 
 This does not claim a strong dungeon generator, calibrated whole-run difficulty, or durable
 save-game persistence. It is a playable integration prototype intended to expose graph, pacing,
 unlock, and room-transition problems before generalising the generator.
+
+Regenerate or verify the exact route artifact with:
+
+```sh
+cargo run -p downwards-content --example retune_demo_dungeon
+cargo run -p downwards-content --example retune_demo_dungeon -- --check
+```

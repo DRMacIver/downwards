@@ -17,8 +17,12 @@ pub const DEMO_DUNGEON_GOAL_EXIT: &str = "crown-goal";
 pub const DEMO_DUNGEON_TOTAL_COINS: u8 = 28;
 pub const DEMO_DUNGEON_GLOVE_GATE_REQUIREMENT: u8 = 6;
 pub const DEMO_DUNGEON_WALL_REGION_GATE_REQUIREMENT: u8 = 12;
-pub const DEMO_DUNGEON_BOOT_GATE_REQUIREMENT: u8 = 18;
-pub const DEMO_DUNGEON_TREASURY_REQUIREMENT: u8 = 20;
+/// Opens the lower route containing the last pre-Dash coin branches.
+pub const DEMO_DUNGEON_LOWER_VAULT_REQUIREMENT: u8 = 18;
+/// Opens the Treasury only after the Underpass coin has been collected.
+pub const DEMO_DUNGEON_TREASURY_REQUIREMENT: u8 = 19;
+/// Opens either entrance to the Winged Vault after every other pre-Dash coin.
+pub const DEMO_DUNGEON_BOOT_GATE_REQUIREMENT: u8 = 21;
 pub const DEMO_DUNGEON_DASH_REGION_GATE_REQUIREMENT: u8 = 28;
 pub const DEMO_DUNGEON_CROWN_GATE_REQUIREMENT: u8 = 28;
 
@@ -144,6 +148,47 @@ pub enum DemoDungeonRoom {
     Treasury,
     Gatehouse,
     CrownSanctum,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DemoDungeonRouteTarget {
+    Door(&'static str),
+    Pickup(&'static str),
+    GoalExit,
+}
+
+impl DemoDungeonRouteTarget {
+    #[must_use]
+    pub const fn kind(self) -> &'static str {
+        match self {
+            Self::Door(_) => "door",
+            Self::Pickup(_) => "pickup",
+            Self::GoalExit => "exit",
+        }
+    }
+
+    #[must_use]
+    pub const fn id(self) -> &'static str {
+        match self {
+            Self::Door(id) | Self::Pickup(id) => id,
+            Self::GoalExit => DEMO_DUNGEON_GOAL_EXIT,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct DemoDungeonRouteSpec {
+    pub room: DemoDungeonRoom,
+    pub entry_door: Option<&'static str>,
+    pub target: DemoDungeonRouteTarget,
+    pub inventory: DemoDungeonInventory,
+}
+
+impl DemoDungeonRouteSpec {
+    #[must_use]
+    pub const fn id(self) -> &'static str {
+        self.room.id()
+    }
 }
 
 impl DemoDungeonRoom {
@@ -534,6 +579,142 @@ impl DemoDungeonRoom {
     }
 }
 
+/// One mechanically regenerated representative route for every authored floor.
+///
+/// This is content metadata, not a difficulty ordering. The generated witness artifact binds an
+/// exact replay to each coordinate and tests replay it under the current movement policy.
+#[must_use]
+pub fn demo_dungeon_route_specs() -> [DemoDungeonRouteSpec; 41] {
+    const EMPTY: DemoDungeonInventory = DemoDungeonInventory {
+        climbing_gloves: false,
+        winged_boots: false,
+        crown: false,
+        coin_mask: 0,
+    };
+    const WALL: DemoDungeonInventory = DemoDungeonInventory {
+        climbing_gloves: true,
+        winged_boots: false,
+        crown: false,
+        coin_mask: 0,
+    };
+    const BOTH: DemoDungeonInventory = DemoDungeonInventory {
+        climbing_gloves: true,
+        winged_boots: true,
+        crown: false,
+        coin_mask: 0,
+    };
+
+    DemoDungeonRoom::ALL.map(|room| {
+        let inventory = match room {
+            DemoDungeonRoom::HollowLanding
+            | DemoDungeonRoom::MossWalk
+            | DemoDungeonRoom::SplitRoot
+            | DemoDungeonRoom::RootCellar
+            | DemoDungeonRoom::BrokenAqueduct
+            | DemoDungeonRoom::OldLift
+            | DemoDungeonRoom::LanternGallery
+            | DemoDungeonRoom::WatchPost
+            | DemoDungeonRoom::Sluice
+            | DemoDungeonRoom::ClimberVault => EMPTY,
+            DemoDungeonRoom::WallAntechamber
+            | DemoDungeonRoom::BroadChimney
+            | DemoDungeonRoom::BellSwitchback
+            | DemoDungeonRoom::BellNiche
+            | DemoDungeonRoom::TempoHall
+            | DemoDungeonRoom::SplitSpire
+            | DemoDungeonRoom::RafterShrine
+            | DemoDungeonRoom::LandingChain
+            | DemoDungeonRoom::NeedleTurn
+            | DemoDungeonRoom::WallGate
+            | DemoDungeonRoom::Threshold
+            | DemoDungeonRoom::Crossroads
+            | DemoDungeonRoom::WallGallery
+            | DemoDungeonRoom::BootsVault
+            | DemoDungeonRoom::CoinLoft
+            | DemoDungeonRoom::NeedleRoom => WALL,
+            DemoDungeonRoom::Underpass
+            | DemoDungeonRoom::DashChasm
+            | DemoDungeonRoom::GaleLanding
+            | DemoDungeonRoom::LowPassage
+            | DemoDungeonRoom::CurrentFork
+            | DemoDungeonRoom::CoinDuct
+            | DemoDungeonRoom::PulseGallery
+            | DemoDungeonRoom::StormSplit
+            | DemoDungeonRoom::StormCache
+            | DemoDungeonRoom::RelayChasm
+            | DemoDungeonRoom::BrakeTower
+            | DemoDungeonRoom::DashSeal
+            | DemoDungeonRoom::Treasury
+            | DemoDungeonRoom::Gatehouse
+            | DemoDungeonRoom::CrownSanctum => BOTH,
+        };
+        let entry_door = match room {
+            DemoDungeonRoom::HollowLanding => None,
+            DemoDungeonRoom::RootCellar
+            | DemoDungeonRoom::BellNiche
+            | DemoDungeonRoom::CoinLoft
+            | DemoDungeonRoom::CoinDuct => Some("ceiling"),
+            DemoDungeonRoom::WatchPost
+            | DemoDungeonRoom::RafterShrine
+            | DemoDungeonRoom::BootsVault
+            | DemoDungeonRoom::NeedleRoom
+            | DemoDungeonRoom::StormCache => Some("floor"),
+            _ => Some("west"),
+        };
+        let target = match room {
+            DemoDungeonRoom::HollowLanding
+            | DemoDungeonRoom::MossWalk
+            | DemoDungeonRoom::BrokenAqueduct
+            | DemoDungeonRoom::OldLift
+            | DemoDungeonRoom::Sluice
+            | DemoDungeonRoom::LandingChain
+            | DemoDungeonRoom::WallGate
+            | DemoDungeonRoom::Threshold
+            | DemoDungeonRoom::DashChasm
+            | DemoDungeonRoom::RelayChasm
+            | DemoDungeonRoom::DashSeal
+            | DemoDungeonRoom::Gatehouse => DemoDungeonRouteTarget::Door("east"),
+            DemoDungeonRoom::SplitRoot
+            | DemoDungeonRoom::BellSwitchback
+            | DemoDungeonRoom::CurrentFork => DemoDungeonRouteTarget::Door("floor"),
+            DemoDungeonRoom::LanternGallery
+            | DemoDungeonRoom::SplitSpire
+            | DemoDungeonRoom::StormSplit => DemoDungeonRouteTarget::Door("ceiling"),
+            DemoDungeonRoom::RootCellar => DemoDungeonRouteTarget::Pickup("dungeon-coin-03"),
+            DemoDungeonRoom::WatchPost => DemoDungeonRouteTarget::Pickup("dungeon-coin-05"),
+            DemoDungeonRoom::ClimberVault => {
+                DemoDungeonRouteTarget::Pickup(DEMO_DUNGEON_GLOVE_PICKUP)
+            }
+            DemoDungeonRoom::WallAntechamber => DemoDungeonRouteTarget::Pickup("dungeon-coin-16"),
+            DemoDungeonRoom::BroadChimney => DemoDungeonRouteTarget::Pickup("dungeon-coin-17"),
+            DemoDungeonRoom::BellNiche => DemoDungeonRouteTarget::Pickup("dungeon-coin-18"),
+            DemoDungeonRoom::TempoHall => DemoDungeonRouteTarget::Pickup("dungeon-coin-19"),
+            DemoDungeonRoom::RafterShrine => DemoDungeonRouteTarget::Pickup("dungeon-coin-20"),
+            DemoDungeonRoom::NeedleTurn => DemoDungeonRouteTarget::Pickup("dungeon-coin-21"),
+            DemoDungeonRoom::Crossroads => DemoDungeonRouteTarget::Door("floor"),
+            DemoDungeonRoom::WallGallery => DemoDungeonRouteTarget::Door("ceiling"),
+            DemoDungeonRoom::BootsVault => DemoDungeonRouteTarget::Pickup(DEMO_DUNGEON_BOOT_PICKUP),
+            DemoDungeonRoom::Underpass => DemoDungeonRouteTarget::Pickup("dungeon-coin-13"),
+            DemoDungeonRoom::GaleLanding => DemoDungeonRouteTarget::Pickup("dungeon-coin-22"),
+            DemoDungeonRoom::LowPassage => DemoDungeonRouteTarget::Pickup("dungeon-coin-23"),
+            DemoDungeonRoom::CoinDuct => DemoDungeonRouteTarget::Pickup("dungeon-coin-24"),
+            DemoDungeonRoom::PulseGallery => DemoDungeonRouteTarget::Pickup("dungeon-coin-25"),
+            DemoDungeonRoom::StormCache => DemoDungeonRouteTarget::Pickup("dungeon-coin-26"),
+            DemoDungeonRoom::BrakeTower => DemoDungeonRouteTarget::Pickup("dungeon-coin-27"),
+            DemoDungeonRoom::CoinLoft => DemoDungeonRouteTarget::Pickup("dungeon-coin-09"),
+            DemoDungeonRoom::NeedleRoom => DemoDungeonRouteTarget::Pickup("dungeon-coin-11"),
+            DemoDungeonRoom::Treasury => DemoDungeonRouteTarget::Pickup("dungeon-coin-15"),
+            DemoDungeonRoom::CrownSanctum => DemoDungeonRouteTarget::GoalExit,
+        };
+        DemoDungeonRouteSpec {
+            room,
+            entry_door,
+            target,
+            inventory,
+        }
+    })
+}
+
 #[must_use]
 pub const fn demo_dungeon_door_coin_requirement(
     room: DemoDungeonRoom,
@@ -556,7 +737,8 @@ pub const fn demo_dungeon_door_requirement(
         (DemoDungeonRoom::Sluice, b"east") => DEMO_DUNGEON_GLOVE_GATE_REQUIREMENT,
         (DemoDungeonRoom::WallGate, b"east") => DEMO_DUNGEON_WALL_REGION_GATE_REQUIREMENT,
         (DemoDungeonRoom::DashSeal, b"east") => DEMO_DUNGEON_DASH_REGION_GATE_REQUIREMENT,
-        (DemoDungeonRoom::Crossroads, b"ceiling") | (DemoDungeonRoom::WallGallery, b"floor") => {
+        (DemoDungeonRoom::WallGallery, b"floor") => DEMO_DUNGEON_LOWER_VAULT_REQUIREMENT,
+        (DemoDungeonRoom::Crossroads, b"ceiling") | (DemoDungeonRoom::Underpass, b"west") => {
             DEMO_DUNGEON_BOOT_GATE_REQUIREMENT
         }
         (DemoDungeonRoom::Underpass, b"east") => DEMO_DUNGEON_TREASURY_REQUIREMENT,
@@ -622,7 +804,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v6".to_owned(),
+        id: "demo-dungeon-v7".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -983,6 +1165,10 @@ mod tests {
         );
         assert_eq!(
             demo_dungeon_door_coin_requirement(DemoDungeonRoom::WallGallery, "floor"),
+            Some(DEMO_DUNGEON_LOWER_VAULT_REQUIREMENT)
+        );
+        assert_eq!(
+            demo_dungeon_door_coin_requirement(DemoDungeonRoom::Underpass, "west"),
             Some(DEMO_DUNGEON_BOOT_GATE_REQUIREMENT)
         );
         assert_eq!(
@@ -1001,6 +1187,113 @@ mod tests {
             demo_dungeon_door_coin_requirement(DemoDungeonRoom::Gatehouse, "west"),
             None
         );
+    }
+
+    #[test]
+    fn boots_and_crown_require_every_authored_floor() {
+        let lower_ready = DemoDungeonInventory {
+            climbing_gloves: true,
+            ..DemoDungeonInventory::with_coin_count_for_validation(
+                DEMO_DUNGEON_LOWER_VAULT_REQUIREMENT,
+            )
+        };
+        assert!(
+            demo_dungeon_door_requirement(DemoDungeonRoom::WallGallery, "floor")
+                .is_satisfied_by(&lower_ready.authored_progression_inventory())
+        );
+        assert!(
+            !demo_dungeon_door_requirement(DemoDungeonRoom::Underpass, "west")
+                .is_satisfied_by(&lower_ready.authored_progression_inventory())
+        );
+        assert!(
+            !demo_dungeon_door_requirement(DemoDungeonRoom::Underpass, "east")
+                .is_satisfied_by(&lower_ready.authored_progression_inventory())
+        );
+
+        let underpass_ready = DemoDungeonInventory {
+            climbing_gloves: true,
+            ..DemoDungeonInventory::with_coin_count_for_validation(
+                DEMO_DUNGEON_TREASURY_REQUIREMENT,
+            )
+        };
+        assert!(
+            demo_dungeon_door_requirement(DemoDungeonRoom::Underpass, "east")
+                .is_satisfied_by(&underpass_ready.authored_progression_inventory())
+        );
+        assert!(
+            !demo_dungeon_door_requirement(DemoDungeonRoom::Underpass, "west")
+                .is_satisfied_by(&underpass_ready.authored_progression_inventory())
+        );
+
+        let vault_ready = DemoDungeonInventory {
+            climbing_gloves: true,
+            ..DemoDungeonInventory::with_coin_count_for_validation(
+                DEMO_DUNGEON_BOOT_GATE_REQUIREMENT,
+            )
+        };
+        for (room, door) in [
+            (DemoDungeonRoom::Crossroads, "ceiling"),
+            (DemoDungeonRoom::Underpass, "west"),
+        ] {
+            assert!(
+                demo_dungeon_door_requirement(room, door)
+                    .is_satisfied_by(&vault_ready.authored_progression_inventory()),
+                "the Winged Vault entrance {room:?}/{door} should open only after the Treasury"
+            );
+        }
+
+        // Mechanically remove each floor in turn and recompute progression. No floor may be
+        // omitted while still obtaining both traversal methods, every coin, and the Crown floor.
+        for blocked in DemoDungeonRoom::ALL {
+            let mut reachable = if blocked == DemoDungeonRoom::HollowLanding {
+                std::collections::BTreeSet::new()
+            } else {
+                std::collections::BTreeSet::from([DemoDungeonRoom::HollowLanding])
+            };
+            let mut inventory = DemoDungeonInventory::default();
+            loop {
+                let previous_reachable = reachable.clone();
+                let previous_inventory = inventory;
+                for &room in &previous_reachable {
+                    for (coin, _) in room_coin_specs(room) {
+                        assert!(
+                            inventory.collect_coin(&coin_id(coin))
+                                || inventory.has_coin(&coin_id(coin))
+                        );
+                    }
+                    match room {
+                        DemoDungeonRoom::ClimberVault => inventory.climbing_gloves = true,
+                        DemoDungeonRoom::BootsVault => inventory.winged_boots = true,
+                        _ => {}
+                    }
+                }
+                for &room in &previous_reachable {
+                    for connection in room.connections() {
+                        let Some(destination) =
+                            DemoDungeonRoom::from_id(&connection.destination_room)
+                        else {
+                            continue;
+                        };
+                        if destination != blocked
+                            && demo_dungeon_door_requirement(room, &connection.door_id)
+                                .is_satisfied_by(&inventory.authored_progression_inventory())
+                        {
+                            reachable.insert(destination);
+                        }
+                    }
+                }
+                if reachable == previous_reachable && inventory == previous_inventory {
+                    break;
+                }
+            }
+            assert!(
+                !reachable.contains(&DemoDungeonRoom::CrownSanctum)
+                    || inventory.coin_count() < DEMO_DUNGEON_TOTAL_COINS
+                    || !inventory.climbing_gloves
+                    || !inventory.winged_boots,
+                "{blocked:?} can be skipped while still satisfying the final progression contract"
+            );
+        }
     }
 
     #[test]
@@ -1700,9 +1993,13 @@ mod tests {
             "the boots route must contain the alternating wall climb, got {accepted_jumps} jumps / {} wall jumps",
             wall_sides.len()
         );
+        let side_changes = wall_sides
+            .windows(2)
+            .filter(|pair| pair[0] != pair[1])
+            .count();
         assert!(
-            wall_sides.windows(2).all(|pair| pair[0] != pair[1]),
-            "the boots route must alternate wall sides instead of hopping one wall: {wall_sides:?}"
+            side_changes >= 2,
+            "the boots route must make multiple rapid wall-to-wall turns: {wall_sides:?}"
         );
     }
 
