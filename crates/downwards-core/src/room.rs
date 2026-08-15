@@ -14,10 +14,47 @@ pub enum Tile {
     #[default]
     Empty = 0,
     Solid = 1,
-    Hazard = 2,
+    HazardUp = 2,
     /// A platform that collides only with a player crossing its top while
     /// moving down. It can be jumped through from below.
     OneWay = 3,
+    HazardDown = 4,
+    HazardLeft = 5,
+    HazardRight = 6,
+}
+
+impl Tile {
+    #[must_use]
+    pub const fn is_hazard(self) -> bool {
+        matches!(
+            self,
+            Self::HazardUp | Self::HazardDown | Self::HazardLeft | Self::HazardRight
+        )
+    }
+
+    #[must_use]
+    pub const fn hazard_direction(self) -> Option<HazardDirection> {
+        match self {
+            Self::HazardUp => Some(HazardDirection::Up),
+            Self::HazardDown => Some(HazardDirection::Down),
+            Self::HazardLeft => Some(HazardDirection::Left),
+            Self::HazardRight => Some(HazardDirection::Right),
+            Self::Empty | Self::Solid | Self::OneWay => None,
+        }
+    }
+}
+
+/// Direction in which a hazard tile's lethal points face.
+///
+/// Hazard tiles remain solid obstacles from their rear and side faces. The direction is authored
+/// directly as part of the tile placement, so rendering and collision consume the same explicit
+/// room data without guessing from neighbouring geometry.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum HazardDirection {
+    Up,
+    Down,
+    Left,
+    Right,
 }
 
 /// A rectangular hazard whose activation is derived solely from the room
@@ -512,7 +549,7 @@ impl Room {
             return Err(RoomError::SpawnOutOfBounds(spawn));
         }
         if overlapping_tile(width, tile_size, &tiles, spawn_bounds, |tile| {
-            matches!(tile, Tile::Solid | Tile::Hazard)
+            tile == Tile::Solid || tile.is_hazard()
         })
         .is_some()
         {
@@ -778,6 +815,12 @@ impl Room {
         )
     }
 
+    /// Return the direction explicitly authored into a spike tile.
+    #[must_use]
+    pub fn hazard_direction(&self, x: u16, y: u16) -> Option<HazardDirection> {
+        self.tile(x, y).and_then(Tile::hazard_direction)
+    }
+
     pub(crate) fn first_tile_matching(
         &self,
         bounds: Rect,
@@ -972,6 +1015,21 @@ mod tests {
             destination_room: None,
             destination_door: None,
         }
+    }
+
+    #[test]
+    fn hazard_direction_is_explicit_tile_data() {
+        let mut room = empty_room(vec![]);
+        room.tiles[8 * 32 + 5] = Tile::HazardUp;
+        room.tiles[4 * 32 + 5] = Tile::HazardDown;
+        room.tiles[7 * 32 + 13] = Tile::HazardRight;
+        room.tiles[7 * 32 + 20] = Tile::HazardLeft;
+
+        assert_eq!(room.hazard_direction(5, 8), Some(HazardDirection::Up));
+        assert_eq!(room.hazard_direction(5, 4), Some(HazardDirection::Down));
+        assert_eq!(room.hazard_direction(13, 7), Some(HazardDirection::Right));
+        assert_eq!(room.hazard_direction(20, 7), Some(HazardDirection::Left));
+        assert_eq!(room.hazard_direction(0, 0), None);
     }
 
     #[test]
@@ -1176,7 +1234,7 @@ mod tests {
             Err(DoorError::ArrivalOutOfBounds { .. })
         ));
 
-        for tile in [Tile::Solid, Tile::Hazard, Tile::OneWay] {
+        for tile in [Tile::Solid, Tile::HazardUp, Tile::OneWay] {
             let mut tiled = empty_room(vec![]);
             tiled.tiles[5 * 32 + 2] = tile;
             assert!(matches!(

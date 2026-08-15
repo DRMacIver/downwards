@@ -409,7 +409,7 @@ impl Draft {
         let end_x = start_x + length;
         debug_assert!(start_x > 0 && start_x < end_x && end_x < ROOM_WIDTH);
         for x in start_x..end_x {
-            self.set(x, WALKING_ROW, Tile::Hazard);
+            self.set(x, WALKING_ROW, Tile::HazardUp);
         }
         self.hazard_clusters += 1;
     }
@@ -458,7 +458,7 @@ impl Draft {
                     if x == 0 || x == ROOM_WIDTH - 1 || y == 0 || y == FLOOR_ROW {
                         boundary_solid_tiles += 1;
                     }
-                } else if tile == Tile::Hazard {
+                } else if tile.is_hazard() {
                     hazard_tiles += 1;
                 } else if tile == Tile::OneWay {
                     one_way_tiles += 1;
@@ -637,7 +637,7 @@ mod tests {
                     .room
                     .tiles()
                     .iter()
-                    .filter(|&&tile| tile == Tile::Hazard)
+                    .filter(|&&tile| tile.is_hazard())
                     .count() as u16;
                 let one_way_count = level
                     .room
@@ -1037,7 +1037,7 @@ mod tests {
         let mut widest = 0;
         let mut current = 0;
         for tile in &tiles[start..end] {
-            if *tile == Tile::Hazard {
+            if *tile == Tile::HazardUp {
                 current += 1;
                 widest = widest.max(current);
             } else {
@@ -1052,7 +1052,7 @@ mod tests {
         let mut runs = Vec::new();
         let mut run_start = None;
         for x in 0..ROOM_WIDTH {
-            let hazard = tiles[start + usize::from(x)] == Tile::Hazard;
+            let hazard = tiles[start + usize::from(x)] == Tile::HazardUp;
             match (run_start, hazard) {
                 (None, true) => run_start = Some(x),
                 (Some(first), false) => {

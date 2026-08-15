@@ -1,7 +1,7 @@
 use std::{fmt, sync::Arc};
 
 use crate::{
-    Pickup, Point, Rect, Room, Tile, TimedHazard,
+    HazardDirection, Pickup, Point, Rect, Room, Tile, TimedHazard,
     room::{ROOM_HEIGHT_PIXELS, ROOM_WIDTH_PIXELS},
 };
 
@@ -22,7 +22,7 @@ pub const ONE_WAY_DROP_TICKS: u8 = 3;
 ///
 /// Historical corpus replays deliberately keep constructing an unconfigured `Simulation`; their
 /// digests therefore remain in the legacy policy domain until that corpus is regenerated.
-pub const PLAYER_MOVEMENT_POLICY_VERSION: u32 = 2;
+pub const PLAYER_MOVEMENT_POLICY_VERSION: u32 = 3;
 
 const RUN_SPEED: i32 = 384;
 const GROUND_ACCELERATION: i32 = 96;
@@ -1058,7 +1058,7 @@ impl Simulation {
         if let Some((first_x, last_x, first_y, last_y)) = self.tile_range(swept) {
             for y in first_y..=last_y {
                 for x in first_x..=last_x {
-                    if self.room.tile(x, y) != Some(Tile::Solid) {
+                    if !self.tile_blocks_horizontal_motion(x, y, dx) {
                         continue;
                     }
                     let tile = scale_rect(self.room.tile_bounds(x, y));
@@ -1145,9 +1145,34 @@ impl Simulation {
                     let Some(tile_kind) = self.room.tile(x, y) else {
                         continue;
                     };
-                    let collides_down = tile_kind == Tile::Solid
-                        || (tile_kind == Tile::OneWay && self.state.player.one_way_drop_ticks == 0);
-                    if tile_kind != Tile::Solid && !(dy > 0 && collides_down) {
+                    let collides_down = match tile_kind {
+                        Tile::Solid => true,
+                        Tile::OneWay => self.state.player.one_way_drop_ticks == 0,
+                        Tile::HazardUp
+                        | Tile::HazardDown
+                        | Tile::HazardLeft
+                        | Tile::HazardRight => !matches!(
+                            self.room
+                                .hazard_direction(x, y)
+                                .expect("hazard tile has a direction"),
+                            HazardDirection::Up
+                        ),
+                        Tile::Empty => false,
+                    };
+                    let collides_up = match tile_kind {
+                        Tile::Solid => true,
+                        Tile::HazardUp
+                        | Tile::HazardDown
+                        | Tile::HazardLeft
+                        | Tile::HazardRight => !matches!(
+                            self.room
+                                .hazard_direction(x, y)
+                                .expect("hazard tile has a direction"),
+                            HazardDirection::Down
+                        ),
+                        Tile::Empty | Tile::OneWay => false,
+                    };
+                    if !((dy > 0 && collides_down) || (dy < 0 && collides_up)) {
                         continue;
                     }
                     let tile = scale_rect(self.room.tile_bounds(x, y));
@@ -1162,7 +1187,7 @@ impl Simulation {
                         resolved_y = resolved_y.min(tile.y - current.height);
                         hit_ground = true;
                     } else if dy < 0
-                        && tile_kind == Tile::Solid
+                        && collides_up
                         && current.y >= tile.bottom()
                         && target_y < tile.bottom()
                     {
@@ -1187,6 +1212,7 @@ impl Simulation {
         self.has_ground_contact_for(Tile::Solid)
             || (self.state.player.one_way_drop_ticks == 0
                 && self.has_ground_contact_for(Tile::OneWay))
+            || self.has_hazard_ground_contact()
     }
 
     fn has_ground_contact_for(&self, kind: Tile) -> bool {
@@ -1236,7 +1262,7 @@ impl Simulation {
         };
         (first_y..=last_y).any(|y| {
             (first_x..=last_x).any(|x| {
-                if self.room.tile(x, y) != Some(Tile::Solid) {
+                if !self.tile_has_wall_surface(x, y, side) {
                     return false;
                 }
                 let tile = scale_rect(self.room.tile_bounds(x, y));
@@ -1245,6 +1271,62 @@ impl Simulation {
                     WallSide::Right => current.right() == tile.x,
                 };
                 adjacent && current.y < tile.bottom() && current.bottom() > tile.y
+            })
+        })
+    }
+
+    fn tile_blocks_horizontal_motion(&self, x: u16, y: u16, dx: i32) -> bool {
+        match self.room.tile(x, y) {
+            Some(Tile::Solid) => true,
+            Some(Tile::HazardUp | Tile::HazardDown | Tile::HazardLeft | Tile::HazardRight) => {
+                match self
+                    .room
+                    .hazard_direction(x, y)
+                    .expect("hazard tile has a direction")
+                {
+                    HazardDirection::Up | HazardDirection::Down => true,
+                    HazardDirection::Left => dx < 0,
+                    HazardDirection::Right => dx > 0,
+                }
+            }
+            Some(Tile::Empty | Tile::OneWay) | None => false,
+        }
+    }
+
+    fn tile_has_wall_surface(&self, x: u16, y: u16, side: WallSide) -> bool {
+        match self.room.tile(x, y) {
+            Some(Tile::Solid) => true,
+            Some(Tile::HazardUp | Tile::HazardDown | Tile::HazardLeft | Tile::HazardRight) => {
+                let direction = self
+                    .room
+                    .hazard_direction(x, y)
+                    .expect("hazard tile has a direction");
+                match side {
+                    // A wall to the player's left exposes the tile's right face.
+                    WallSide::Left => direction != HazardDirection::Right,
+                    // A wall to the player's right exposes the tile's left face.
+                    WallSide::Right => direction != HazardDirection::Left,
+                }
+            }
+            Some(Tile::Empty | Tile::OneWay) | None => false,
+        }
+    }
+
+    fn has_hazard_ground_contact(&self) -> bool {
+        let current = self.player_bounds_subpixels();
+        let candidates = Rect::new(current.x, current.bottom(), current.width, 1);
+        let Some((first_x, last_x, first_y, last_y)) = self.tile_range(candidates) else {
+            return false;
+        };
+        (first_y..=last_y).any(|y| {
+            (first_x..=last_x).any(|x| {
+                if !self.room.tile(x, y).is_some_and(Tile::is_hazard)
+                    || self.room.hazard_direction(x, y) == Some(HazardDirection::Up)
+                {
+                    return false;
+                }
+                let tile = scale_rect(self.room.tile_bounds(x, y));
+                current.bottom() == tile.y && current.x < tile.right() && current.right() > tile.x
             })
         })
     }
@@ -1284,10 +1366,7 @@ impl Simulation {
 
     fn process_triggers(&mut self, events: &mut Vec<SimulationEvent>) {
         let bounds = self.state.player.bounds();
-        if let Some((tile_x, tile_y)) = self
-            .room
-            .first_tile_matching(bounds, |tile| tile == Tile::Hazard)
-        {
+        if let Some((tile_x, tile_y)) = self.room.first_tile_matching(bounds, Tile::is_hazard) {
             self.state.deaths = self.state.deaths.saturating_add(1);
             events.push(SimulationEvent::Died(DeathReason::Hazard {
                 tile_x,

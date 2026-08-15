@@ -272,7 +272,8 @@ mod tests {
                         .generated
                         .room
                         .tiles()
-                        .contains(&Tile::Hazard)
+                        .iter()
+                        .any(|tile| tile.is_hazard())
                 );
                 assert!(first.candidate.generated.room.timed_hazards().is_empty());
                 assert!(first.summary.grounded_row < FLOOR_ROW);
@@ -316,8 +317,11 @@ mod tests {
                             .map(|tile| match tile {
                                 Tile::Empty => 0_u8,
                                 Tile::Solid => 1,
-                                Tile::Hazard => 2,
+                                Tile::HazardUp => 2,
                                 Tile::OneWay => 3,
+                                Tile::HazardDown => 4,
+                                Tile::HazardLeft => 5,
+                                Tile::HazardRight => 6,
                             })
                             .collect::<Vec<_>>(),
                     );

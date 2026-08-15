@@ -1573,7 +1573,7 @@ mod tests {
                 *floor_total += room
                     .tiles()
                     .iter()
-                    .filter(|&&tile| tile == downwards_core::Tile::Hazard)
+                    .filter(|&&tile| tile.is_hazard())
                     .count();
                 *timed_total += room.timed_hazards().len();
             }

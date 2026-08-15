@@ -997,20 +997,42 @@ fn render_room(svg: &mut String, record: &VisualAuditRecord, x: usize, y: usize)
                 )
                 .unwrap();
             }
-            VisualTile::Hazard => {
+            VisualTile::HazardUp
+            | VisualTile::HazardDown
+            | VisualTile::HazardLeft
+            | VisualTile::HazardRight => {
                 writeln!(
                     svg,
                     "      <rect x=\"{tile_x}\" y=\"{tile_y}\" width=\"{}\" height=\"{}\" fill=\"#ef5350\"/>",
                     visual.tile_size, visual.tile_size
                 )
                 .unwrap();
+                let tile_right = tile_x + i64::from(visual.tile_size);
+                let tile_bottom = tile_y + i64::from(visual.tile_size);
+                let center_x = tile_x + i64::from(visual.tile_size) / 2;
+                let center_y = tile_y + i64::from(visual.tile_size) / 2;
+                let points = match tile {
+                    VisualTile::HazardUp => {
+                        format!(
+                            "{tile_x},{tile_bottom} {center_x},{tile_y} {tile_right},{tile_bottom}"
+                        )
+                    }
+                    VisualTile::HazardDown => {
+                        format!("{tile_x},{tile_y} {tile_right},{tile_y} {center_x},{tile_bottom}")
+                    }
+                    VisualTile::HazardLeft => {
+                        format!(
+                            "{tile_right},{tile_y} {tile_x},{center_y} {tile_right},{tile_bottom}"
+                        )
+                    }
+                    VisualTile::HazardRight => {
+                        format!("{tile_x},{tile_y} {tile_right},{center_y} {tile_x},{tile_bottom}")
+                    }
+                    VisualTile::Empty | VisualTile::Solid | VisualTile::OneWay => unreachable!(),
+                };
                 writeln!(
                     svg,
-                    "      <path d=\"M {tile_x} {} L {} {tile_y} M {tile_x} {tile_y} L {} {}\" fill=\"none\" stroke=\"#7f1d1d\" stroke-width=\"0.8\"/>",
-                    tile_y + i64::from(visual.tile_size),
-                    tile_x + i64::from(visual.tile_size),
-                    tile_x + i64::from(visual.tile_size),
-                    tile_y + i64::from(visual.tile_size),
+                    "      <polygon points=\"{points}\" fill=\"#ef5350\" stroke=\"#7f1d1d\" stroke-width=\"0.8\"/>",
                 )
                 .unwrap();
             }
@@ -1396,7 +1418,7 @@ mod tests {
             tiles[32 * 12 + solid_x.min(30)] = Tile::Solid;
         }
         tiles[32 * 8 + 8] = Tile::OneWay;
-        tiles[32 * 16 + 16] = Tile::Hazard;
+        tiles[32 * 16 + 16] = Tile::HazardUp;
         let room = Room::new(
             format!("core-{id}"),
             "Visual audit fixture",

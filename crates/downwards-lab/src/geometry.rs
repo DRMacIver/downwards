@@ -55,8 +55,11 @@ impl PartialOrd for DescriptorDoor {
 pub enum VisualTile {
     Empty = 0,
     Solid = 1,
-    Hazard = 2,
+    HazardUp = 2,
     OneWay = 3,
+    HazardDown = 4,
+    HazardLeft = 5,
+    HazardRight = 6,
 }
 
 impl From<Tile> for VisualTile {
@@ -64,8 +67,11 @@ impl From<Tile> for VisualTile {
         match tile {
             Tile::Empty => Self::Empty,
             Tile::Solid => Self::Solid,
-            Tile::Hazard => Self::Hazard,
+            Tile::HazardUp => Self::HazardUp,
             Tile::OneWay => Self::OneWay,
+            Tile::HazardDown => Self::HazardDown,
+            Tile::HazardLeft => Self::HazardLeft,
+            Tile::HazardRight => Self::HazardRight,
         }
     }
 }
@@ -130,7 +136,11 @@ fn sorted_rects(bounds: impl Iterator<Item = Rect>) -> Box<[DescriptorRect]> {
     result.into_boxed_slice()
 }
 
-/// Collision behavior at a tile cell. Hazards are passable collision-wise.
+/// Coarse collision behavior at a tile cell.
+///
+/// Directional hazards remain outside this legacy obstacle-only descriptor so historical corpus
+/// topology identities do not silently change. Static and simulation descriptors retain their
+/// exact direction, and authoritative simulation applies the lethal-front/blocking-back contract.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(u8)]
 pub enum CollisionCell {
@@ -144,7 +154,11 @@ impl From<Tile> for CollisionCell {
         match tile {
             Tile::Solid => Self::Solid,
             Tile::OneWay => Self::OneWay,
-            Tile::Empty | Tile::Hazard => Self::Passable,
+            Tile::Empty
+            | Tile::HazardUp
+            | Tile::HazardDown
+            | Tile::HazardLeft
+            | Tile::HazardRight => Self::Passable,
         }
     }
 }

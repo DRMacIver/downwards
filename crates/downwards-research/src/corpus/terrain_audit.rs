@@ -971,7 +971,7 @@ mod tests {
             set_tile(&mut tiles, x, 15, Tile::OneWay);
         }
         for x in 8..24 {
-            set_tile(&mut tiles, x, HEIGHT - 1, Tile::Hazard);
+            set_tile(&mut tiles, x, HEIGHT - 1, Tile::HazardUp);
         }
 
         let west = Door {

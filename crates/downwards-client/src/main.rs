@@ -21,9 +21,9 @@ use downwards_content::{
     hard_no_dash_witness_actions, medium_no_dash_scenario, medium_no_dash_witness_actions,
 };
 use downwards_core::{
-    AbilitySet, Action, BoundarySide, DeathReason, JUMP_BUFFER_TICKS, JumpKind, MovementTuning,
-    PLAYER_MOVEMENT_POLICY_VERSION, Rect as CoreRect, Room, SUBPIXELS_PER_PIXEL, Simulation,
-    SimulationEvent, StepReport, TICKS_PER_SECOND, Tile, WallSide,
+    AbilitySet, Action, BoundarySide, DeathReason, HazardDirection, JUMP_BUFFER_TICKS, JumpKind,
+    MovementTuning, PLAYER_MOVEMENT_POLICY_VERSION, Rect as CoreRect, Room, SUBPIXELS_PER_PIXEL,
+    Simulation, SimulationEvent, StepReport, TICKS_PER_SECOND, Tile, WallSide,
 };
 use downwards_gen::{
     AbilityTier, COMPOSITIONAL_GENERATION_VERSION, experimental::GenerationStrategy,
@@ -94,13 +94,14 @@ In-game lab controls:
 const LETTERBOX: Color = Color::new(0.015, 0.02, 0.035, 1.0);
 const ROOM_BACKGROUND: Color = Color::new(0.035, 0.055, 0.085, 1.0);
 const SOLID: Color = Color::new(0.14, 0.18, 0.25, 1.0);
+const SOLID_EXPOSED_TOP: Color = Color::new(0.38, 0.52, 0.64, 1.0);
+const SOLID_EXPOSED_SIDE: Color = Color::new(0.08, 0.12, 0.19, 1.0);
 const ONE_WAY: Color = Color::new(0.44, 0.57, 0.69, 1.0);
 const HAZARD: Color = Color::new(0.95, 0.25, 0.34, 1.0);
 const HAZARD_DARK: Color = Color::new(0.27, 0.08, 0.13, 1.0);
 const EXIT: Color = Color::new(0.25, 0.9, 0.7, 1.0);
 const EXIT_DARK: Color = Color::new(0.06, 0.24, 0.23, 1.0);
 const DOOR: Color = Color::new(0.36, 0.78, 1.0, 1.0);
-const DOOR_DARK: Color = Color::new(0.055, 0.15, 0.25, 1.0);
 const SOURCE_DOOR: Color = Color::new(0.98, 0.8, 0.28, 1.0);
 const TARGET_DOOR: Color = Color::new(0.25, 0.9, 0.7, 1.0);
 const PICKUP: Color = Color::new(0.98, 0.8, 0.28, 1.0);
@@ -146,7 +147,7 @@ impl VisualAssets {
         assert_eq!(player_sprites.height(), PLAYER_SPRITE_SHEET_HEIGHT);
         player_sprites.set_filter(FilterMode::Nearest);
         let environment_tiles = Texture2D::from_file_with_format(
-            include_bytes!("../assets/environment-tiles-v1.png"),
+            include_bytes!("../assets/environment-tiles-v2.png"),
             None,
         );
         assert_eq!(environment_tiles.width(), ENVIRONMENT_SHEET_WIDTH);
@@ -3902,14 +3903,6 @@ impl EnvironmentSprite {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum SpikeDirection {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum PlayerPose {
     IdleA = 0,
     IdleB = 1,
@@ -4538,98 +4531,6 @@ fn draw_environment_sprite(
     );
 }
 
-fn tile_at_offset(room: &Room, x: u16, y: u16, dx: i32, dy: i32) -> Option<Tile> {
-    let target_x = u16::try_from(i32::from(x) + dx).ok()?;
-    let target_y = u16::try_from(i32::from(y) + dy).ok()?;
-    room.tile(target_x, target_y)
-}
-
-fn nearest_non_empty_distance(room: &Room, x: u16, y: u16, dx: i32, dy: i32) -> u16 {
-    let maximum = room.width().max(room.height()).saturating_add(1);
-    for distance in 1..=maximum {
-        match tile_at_offset(
-            room,
-            x,
-            y,
-            dx * i32::from(distance),
-            dy * i32::from(distance),
-        ) {
-            None => return distance,
-            Some(Tile::Empty | Tile::Hazard) => {}
-            Some(Tile::Solid | Tile::OneWay) => return distance,
-        }
-    }
-    maximum
-}
-
-fn spike_direction(room: &Room, x: u16, y: u16) -> SpikeDirection {
-    let above = tile_at_offset(room, x, y, 0, -1);
-    let below = tile_at_offset(room, x, y, 0, 1);
-    let left = tile_at_offset(room, x, y, -1, 0);
-    let right = tile_at_offset(room, x, y, 1, 0);
-    let horizontal_cluster =
-        matches!(left, Some(Tile::Hazard)) || matches!(right, Some(Tile::Hazard));
-    let vertical_cluster =
-        matches!(above, Some(Tile::Hazard)) || matches!(below, Some(Tile::Hazard));
-
-    // A horizontal strip is a floor/ceiling hazard; a vertical strip is a wall hazard. Solid
-    // anchors resolve attached strips. Floating strips point into the nearer corridor, which is
-    // what makes Low Clearance's upper bank point down and its lower bank point up.
-    if horizontal_cluster && !vertical_cluster {
-        if matches!(below, Some(Tile::Solid | Tile::OneWay)) {
-            return SpikeDirection::Up;
-        }
-        if matches!(above, Some(Tile::Solid | Tile::OneWay)) {
-            return SpikeDirection::Down;
-        }
-        return if nearest_non_empty_distance(room, x, y, 0, -1)
-            <= nearest_non_empty_distance(room, x, y, 0, 1)
-        {
-            SpikeDirection::Up
-        } else {
-            SpikeDirection::Down
-        };
-    }
-    if vertical_cluster && !horizontal_cluster {
-        if matches!(left, Some(Tile::Solid | Tile::OneWay)) {
-            return SpikeDirection::Right;
-        }
-        if matches!(right, Some(Tile::Solid | Tile::OneWay)) {
-            return SpikeDirection::Left;
-        }
-        return if nearest_non_empty_distance(room, x, y, -1, 0)
-            <= nearest_non_empty_distance(room, x, y, 1, 0)
-        {
-            SpikeDirection::Left
-        } else {
-            SpikeDirection::Right
-        };
-    }
-
-    let above_anchor = matches!(above, Some(Tile::Solid | Tile::OneWay) | None);
-    let below_anchor = matches!(below, Some(Tile::Solid | Tile::OneWay) | None);
-    let left_anchor = matches!(left, Some(Tile::Solid | Tile::OneWay) | None);
-    let right_anchor = matches!(right, Some(Tile::Solid | Tile::OneWay) | None);
-    if left_anchor != right_anchor && above_anchor == below_anchor {
-        return if left_anchor {
-            SpikeDirection::Right
-        } else {
-            SpikeDirection::Left
-        };
-    }
-    if below_anchor {
-        SpikeDirection::Up
-    } else if above_anchor {
-        SpikeDirection::Down
-    } else if left_anchor {
-        SpikeDirection::Right
-    } else if right_anchor {
-        SpikeDirection::Left
-    } else {
-        SpikeDirection::Up
-    }
-}
-
 fn draw_tiles(viewport: &PixelViewport, room: &Room, assets: &VisualAssets) {
     for y in 0..room.height() {
         for x in 0..room.width() {
@@ -4649,11 +4550,63 @@ fn draw_tiles(viewport: &PixelViewport, room: &Room, assets: &VisualAssets) {
                         assets,
                         false,
                     );
+                    draw_solid_exposed_edges(viewport, room, x, y, bounds);
                 }
-                Tile::Hazard => draw_spikes(viewport, bounds, spike_direction(room, x, y), assets),
+                Tile::HazardUp | Tile::HazardDown | Tile::HazardLeft | Tile::HazardRight => {
+                    draw_spikes(
+                        viewport,
+                        bounds,
+                        room.hazard_direction(x, y)
+                            .expect("hazard tile has a shared direction"),
+                        assets,
+                    )
+                }
                 Tile::OneWay => draw_one_way(viewport, bounds, assets),
             }
         }
+    }
+}
+
+fn solid_at_offset(room: &Room, x: u16, y: u16, dx: i32, dy: i32) -> bool {
+    let Ok(target_x) = u16::try_from(i32::from(x) + dx) else {
+        return false;
+    };
+    let Ok(target_y) = u16::try_from(i32::from(y) + dy) else {
+        return false;
+    };
+    room.tile(target_x, target_y) == Some(Tile::Solid)
+}
+
+fn draw_solid_exposed_edges(
+    viewport: &PixelViewport,
+    room: &Room,
+    x: u16,
+    y: u16,
+    bounds: CoreRect,
+) {
+    if !solid_at_offset(room, x, y, 0, -1) {
+        viewport.rectangle(
+            CoreRect::new(bounds.x, bounds.y, bounds.width, 1),
+            SOLID_EXPOSED_TOP,
+        );
+    }
+    if !solid_at_offset(room, x, y, -1, 0) {
+        viewport.rectangle(
+            CoreRect::new(bounds.x, bounds.y, 1, bounds.height),
+            SOLID_EXPOSED_SIDE,
+        );
+    }
+    if !solid_at_offset(room, x, y, 1, 0) {
+        viewport.rectangle(
+            CoreRect::new(bounds.right() - 1, bounds.y, 1, bounds.height),
+            SOLID_EXPOSED_SIDE,
+        );
+    }
+    if !solid_at_offset(room, x, y, 0, 1) {
+        viewport.rectangle(
+            CoreRect::new(bounds.x, bounds.bottom() - 1, bounds.width, 1),
+            SOLID_EXPOSED_SIDE,
+        );
     }
 }
 
@@ -4664,14 +4617,14 @@ fn draw_one_way(viewport: &PixelViewport, bounds: CoreRect, assets: &VisualAsset
 fn draw_spikes(
     viewport: &PixelViewport,
     bounds: CoreRect,
-    direction: SpikeDirection,
+    direction: HazardDirection,
     assets: &VisualAssets,
 ) {
     let (sprite, flip_x) = match direction {
-        SpikeDirection::Up => (EnvironmentSprite::SpikesUp, false),
-        SpikeDirection::Down => (EnvironmentSprite::SpikesDown, false),
-        SpikeDirection::Left => (EnvironmentSprite::SpikesHorizontal, true),
-        SpikeDirection::Right => (EnvironmentSprite::SpikesHorizontal, false),
+        HazardDirection::Up => (EnvironmentSprite::SpikesUp, false),
+        HazardDirection::Down => (EnvironmentSprite::SpikesDown, false),
+        HazardDirection::Left => (EnvironmentSprite::SpikesHorizontal, true),
+        HazardDirection::Right => (EnvironmentSprite::SpikesHorizontal, false),
     };
     draw_environment_sprite(viewport, bounds, sprite, assets, flip_x);
 }
@@ -4750,26 +4703,16 @@ fn draw_exits(
             Some(focus) if door.id == focus.source => SOURCE_DOOR,
             _ => DOOR,
         };
-        viewport.rectangle(bounds, DOOR_DARK);
-        draw_environment_sprite(viewport, bounds, EnvironmentSprite::Door, assets, false);
-        viewport.rectangle_outline(bounds, 1, colour);
-        if focus.is_some_and(|focus| door.id == focus.target)
-            && bounds.width > 4
-            && bounds.height > 4
-        {
-            viewport.rectangle_outline(
-                CoreRect::new(
-                    bounds.x + 2,
-                    bounds.y + 2,
-                    bounds.width - 4,
-                    bounds.height - 4,
-                ),
-                1,
-                colour,
-            );
-        }
         let centre_x = bounds.x + bounds.width / 2;
         let centre_y = bounds.y + bounds.height / 2;
+        draw_environment_sprite(viewport, bounds, EnvironmentSprite::Door, assets, false);
+        if focus.is_some_and(|focus| door.id == focus.target)
+            && bounds.width > 2
+            && bounds.height > 2
+        {
+            // A small focus pip replaces the old trigger-sized nested boxes.
+            viewport.rectangle(CoreRect::new(centre_x - 1, bounds.y, 3, 1), colour);
+        }
         match door.side {
             BoundarySide::Left => viewport.triangle(
                 (bounds.x + 1, centre_y),
@@ -4938,7 +4881,9 @@ fn draw_debug_outlines(viewport: &PixelViewport, simulation: &Simulation) {
             let colour = match tile {
                 Tile::Solid => Some(DEBUG_COLLISION),
                 Tile::OneWay => Some(ONE_WAY),
-                Tile::Hazard => Some(HAZARD),
+                Tile::HazardUp | Tile::HazardDown | Tile::HazardLeft | Tile::HazardRight => {
+                    Some(HAZARD)
+                }
                 Tile::Empty => None,
             };
             if let Some(colour) = colour {
@@ -6609,7 +6554,7 @@ mod tests {
         let record: serde_json::Value = serde_json::from_str(lines[0]).unwrap();
         assert_eq!(record["schema"], HUMAN_HISTORY_SCHEMA);
         assert_eq!(record["human_jump_input_policy_version"], 4);
-        assert_eq!(record["player_movement_policy_version"], 2);
+        assert_eq!(record["player_movement_policy_version"], 3);
         assert_eq!(record["movement_profile"], "gameplay-v2");
         assert_eq!(
             record["movement_tuning"]["top_speed_pixels_per_second"],
@@ -6662,7 +6607,7 @@ mod tests {
             110
         );
         assert_eq!(records[1]["schema"], "downwards-movement-tuning-v1");
-        assert_eq!(records[1]["player_movement_policy_version"], 2);
+        assert_eq!(records[1]["player_movement_policy_version"], 3);
         assert_eq!(records[1]["tuning"]["top_speed_pixels_per_second"], 115);
         assert_eq!(records[1]["tuning"]["acceleration_milliseconds"], 72);
         assert_eq!(records[1]["tuning"]["braking_milliseconds"], 203);
@@ -7184,10 +7129,10 @@ mod tests {
         let room = scenario.room();
         assert_eq!(room.name(), "Low Clearance");
 
-        assert_eq!(spike_direction(room, 20, 4), SpikeDirection::Down);
-        assert_eq!(spike_direction(room, 20, 12), SpikeDirection::Up);
-        assert_eq!(spike_direction(room, 11, 11), SpikeDirection::Right);
-        assert_eq!(spike_direction(room, 15, 13), SpikeDirection::Left);
+        assert_eq!(room.hazard_direction(20, 4), Some(HazardDirection::Down));
+        assert_eq!(room.hazard_direction(20, 12), Some(HazardDirection::Up));
+        assert_eq!(room.hazard_direction(11, 11), Some(HazardDirection::Right));
+        assert_eq!(room.hazard_direction(15, 13), Some(HazardDirection::Left));
     }
 
     #[test]

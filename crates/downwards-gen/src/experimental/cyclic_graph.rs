@@ -1030,7 +1030,10 @@ mod tests {
             for row in 0..ROOM_HEIGHT {
                 for x in 0..ROOM_WIDTH {
                     match parts.draft.tile(x, row) {
-                        Tile::Hazard => saw_hazard = true,
+                        Tile::HazardUp
+                        | Tile::HazardDown
+                        | Tile::HazardLeft
+                        | Tile::HazardRight => saw_hazard = true,
                         Tile::OneWay => saw_one_way = true,
                         Tile::Solid => saw_solid = true,
                         Tile::Empty => {}

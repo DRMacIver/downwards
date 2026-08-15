@@ -433,7 +433,7 @@ fn authored_structures_separate_the_five_intended_mechanic_axes() {
 
     let b4 = calibration_gallery_b4_room();
     assert_eq!(one_way_runs(&b4, 7), [2, 1, 1, 2]);
-    assert!((17..32).all(|column| b4.tile(column, 9) == Some(Tile::Hazard)));
+    assert!((17..32).all(|column| b4.tile(column, 9) == Some(Tile::HazardUp)));
     let landing_trace = one_way_landing_trace(
         &calibration_gallery_b4_scenario(),
         &calibration_gallery_b4_witness_actions(),
@@ -457,7 +457,7 @@ fn authored_structures_separate_the_five_intended_mechanic_axes() {
     let b5 = calibration_gallery_b5_room();
     for row in [2, 3] {
         for column in 20..=22 {
-            assert_eq!(b5.tile(column, row), Some(Tile::Hazard));
+            assert_eq!(b5.tile(column, row), Some(Tile::HazardDown));
             assert_eq!(b4.tile(column, row), Some(Tile::Empty));
         }
     }

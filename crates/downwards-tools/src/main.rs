@@ -377,7 +377,10 @@ fn print_room(room: &Room) {
                     Tile::Empty => '.',
                     Tile::Solid => '#',
                     Tile::OneWay => '=',
-                    Tile::Hazard => '^',
+                    Tile::HazardUp => '^',
+                    Tile::HazardDown => 'v',
+                    Tile::HazardLeft => '<',
+                    Tile::HazardRight => '>',
                 },
             )
             .collect();

@@ -53,7 +53,11 @@ impl SupportSurfaceMaterial {
         match tile {
             Tile::Solid => Some(Self::Solid),
             Tile::OneWay => Some(Self::OneWay),
-            Tile::Empty | Tile::Hazard => None,
+            Tile::Empty
+            | Tile::HazardUp
+            | Tile::HazardDown
+            | Tile::HazardLeft
+            | Tile::HazardRight => None,
         }
     }
 }

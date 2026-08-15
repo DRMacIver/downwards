@@ -85,7 +85,7 @@ impl CompositionalKey {
 pub enum CompositionalFeatureSet {
     /// Solids, one-way platforms, doors, and pickups, with no hazards.
     TerrainOnly,
-    /// Terrain plus static [`downwards_core::Tile::Hazard`] tiles.
+    /// Terrain plus static [`downwards_core::Tile::HazardUp`] tiles.
     StaticHazards,
     /// The complete current v6 output, including timed hazards.
     TimedHazards,
@@ -419,7 +419,7 @@ fn stage_candidate(
         .tiles()
         .iter()
         .map(|tile| {
-            if *tile == downwards_core::Tile::Hazard && !key.features.retains_static_hazards() {
+            if tile.is_hazard() && !key.features.retains_static_hazards() {
                 downwards_core::Tile::Empty
             } else {
                 *tile
@@ -517,7 +517,7 @@ mod tests {
             for seed in 0..SAMPLE {
                 let source = generate_uncurated(seed, abilities).unwrap();
                 let source_room = &source.generated.room;
-                saw_static_hazard |= source_room.tiles().contains(&Tile::Hazard);
+                saw_static_hazard |= source_room.tiles().iter().any(|tile| tile.is_hazard());
                 saw_timed_hazard |= !source_room.timed_hazards().is_empty();
 
                 let mut identities = HashSet::new();
@@ -548,7 +548,7 @@ mod tests {
                     }
                     assert_eq!(room.tiles().len(), source_room.tiles().len());
                     for (actual, source_tile) in room.tiles().iter().zip(source_room.tiles()) {
-                        let expected = if *source_tile == Tile::Hazard
+                        let expected = if source_tile.is_hazard()
                             && features == CompositionalFeatureSet::TerrainOnly
                         {
                             Tile::Empty
@@ -586,7 +586,14 @@ mod tests {
                     StagedCompositionalKey::new(source_key, CompositionalFeatureSet::TerrainOnly)
                         .regenerate()
                         .unwrap();
-                assert!(!terrain.generated.room.tiles().contains(&Tile::Hazard));
+                assert!(
+                    !terrain
+                        .generated
+                        .room
+                        .tiles()
+                        .iter()
+                        .any(|tile| tile.is_hazard())
+                );
                 assert!(terrain.generated.room.timed_hazards().is_empty());
                 assert_eq!(terrain.generated.metadata.stats.hazard_tiles, 0);
                 assert_eq!(terrain.generated.metadata.stats.hazard_clusters, 0);
@@ -693,7 +700,11 @@ mod tests {
                     .map(|tile| match tile {
                         Tile::Solid => 1,
                         Tile::OneWay => 2,
-                        Tile::Empty | Tile::Hazard => 0,
+                        Tile::Empty
+                        | Tile::HazardUp
+                        | Tile::HazardDown
+                        | Tile::HazardLeft
+                        | Tile::HazardRight => 0,
                     })
                     .collect::<Vec<_>>();
                 let mut doors = room
@@ -742,8 +753,11 @@ mod tests {
         match tile {
             Tile::Empty => 0,
             Tile::Solid => 1,
-            Tile::Hazard => 2,
+            Tile::HazardUp => 2,
             Tile::OneWay => 3,
+            Tile::HazardDown => 4,
+            Tile::HazardLeft => 5,
+            Tile::HazardRight => 6,
         }
     }
 }

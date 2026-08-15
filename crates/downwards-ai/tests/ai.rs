@@ -174,7 +174,7 @@ fn retry_only_room() -> Room {
     for x in 0..WIDTH {
         tiles[16 * WIDTH + x] = Tile::Solid;
     }
-    tiles[16 * WIDTH + 4] = Tile::Hazard;
+    tiles[16 * WIDTH + 4] = Tile::HazardUp;
     Room::new(
         "retry-only",
         "Retry-only false solution",

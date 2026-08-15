@@ -664,7 +664,7 @@ mod tests {
                         .room
                         .tiles()
                         .iter()
-                        .all(|&tile| tile != Tile::Hazard)
+                        .all(|&tile| !tile.is_hazard())
                 );
             }
         }

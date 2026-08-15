@@ -77,7 +77,10 @@ pub fn first_steps_room() -> Room {
             row.bytes().map(|tile| match tile {
                 b'.' => Tile::Empty,
                 b'#' => Tile::Solid,
-                b'^' => Tile::Hazard,
+                b'^' => Tile::HazardUp,
+                b'v' => Tile::HazardDown,
+                b'<' => Tile::HazardLeft,
+                b'>' => Tile::HazardRight,
                 b'=' => Tile::OneWay,
                 _ => unreachable!("First Steps contains an unsupported tile"),
             })
@@ -139,7 +142,10 @@ mod tests {
                     .map(|tile| match tile {
                         Tile::Empty => '.',
                         Tile::Solid => '#',
-                        Tile::Hazard => '^',
+                        Tile::HazardUp => '^',
+                        Tile::HazardDown => 'v',
+                        Tile::HazardLeft => '<',
+                        Tile::HazardRight => '>',
                         Tile::OneWay => '=',
                     })
                     .collect::<String>()
@@ -148,7 +154,7 @@ mod tests {
 
         assert_eq!(actual_rows, FIRST_STEPS_ROWS);
         assert_eq!(room.tiles()[10 * 32 + 18], Tile::OneWay);
-        assert_eq!(room.tiles()[16 * 32 + 15], Tile::Hazard);
+        assert_eq!(room.tiles()[16 * 32 + 15], Tile::HazardUp);
         assert_eq!(room.tiles()[15 * 32 + 31], Tile::Empty);
         assert_eq!(
             room.tiles()
@@ -167,7 +173,7 @@ mod tests {
         assert_eq!(
             room.tiles()
                 .iter()
-                .filter(|&&tile| tile == Tile::Hazard)
+                .filter(|&&tile| tile == Tile::HazardUp)
                 .count(),
             2
         );

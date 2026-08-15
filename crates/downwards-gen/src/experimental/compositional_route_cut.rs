@@ -2247,7 +2247,7 @@ fn validate_rasterized_ability_contract(
 
 fn room_rect_is_clear(room: &Room, rect: Rect) -> bool {
     room.tiles().iter().enumerate().all(|(index, &tile)| {
-        if !matches!(tile, Tile::Solid | Tile::Hazard) {
+        if tile != Tile::Solid && !tile.is_hazard() {
             return true;
         }
         let width = usize::from(room.width());
@@ -3160,7 +3160,7 @@ fn clear_standing_positions(room: &Room, support: SupportSpec) -> Vec<i32> {
         .filter(|&x| {
             let standing = Rect::new(x, standing_y, PLAYER_WIDTH, PLAYER_HEIGHT);
             room.tiles().iter().enumerate().all(|(index, &tile)| {
-                if !matches!(tile, Tile::Solid | Tile::Hazard) {
+                if tile != Tile::Solid && !tile.is_hazard() {
                     return true;
                 }
                 let width = usize::from(room.width());
@@ -3993,7 +3993,7 @@ mod tests {
                     .room
                     .tiles()
                     .iter()
-                    .all(|&tile| tile != Tile::Hazard)
+                    .all(|&tile| !tile.is_hazard())
             );
             assert!(first.embedding.descent_edges >= 1);
             assert!(first.embedding.horizontal_direction_reversals >= 1);
@@ -4244,8 +4244,11 @@ mod tests {
             digest.byte(match tile {
                 Tile::Empty => 0,
                 Tile::Solid => 1,
-                Tile::Hazard => 2,
+                Tile::HazardUp => 2,
                 Tile::OneWay => 3,
+                Tile::HazardDown => 4,
+                Tile::HazardLeft => 5,
+                Tile::HazardRight => 6,
             });
         }
         for door in candidate.generated.room.doors() {

@@ -78,7 +78,7 @@ impl From<DoorError> for RoomAblationError {
 pub fn room_ablation_variants(room: &Room) -> Result<Vec<RoomAblation>, RoomAblationError> {
     let terrain_components =
         tile_components(room, |tile| matches!(tile, Tile::Solid | Tile::OneWay));
-    let hazard_components = tile_components(room, |tile| tile == Tile::Hazard);
+    let hazard_components = tile_components(room, Tile::is_hazard);
     let mut variants = Vec::new();
 
     let mut interior_component_index = 0;

@@ -462,7 +462,7 @@ fn static_hazard_bounds(simulation: &Simulation) -> Vec<(HazardReference, Rect)>
     let mut hazards = Vec::new();
     for tile_y in 0..room.height() {
         for tile_x in 0..room.width() {
-            if room.tile(tile_x, tile_y) == Some(Tile::Hazard) {
+            if room.tile(tile_x, tile_y).is_some_and(Tile::is_hazard) {
                 hazards.push((
                     HazardReference::StaticTile { tile_x, tile_y },
                     room.tile_bounds(tile_x, tile_y),
@@ -878,7 +878,7 @@ mod tests {
         for x in 0..width {
             tiles[16 * width + x] = Tile::Solid;
         }
-        tiles[16 * width + 4] = Tile::Hazard;
+        tiles[16 * width + 4] = Tile::HazardUp;
         Room::new(
             "difficulty-retry-only",
             "Difficulty retry-only",
@@ -908,7 +908,7 @@ mod tests {
             tiles[16 * width + x] = Tile::Solid;
         }
         if let Some((x, y)) = hazard_tile {
-            tiles[y * width + x] = Tile::Hazard;
+            tiles[y * width + x] = Tile::HazardUp;
         }
         Room::new(
             "clearance",

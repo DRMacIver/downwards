@@ -500,7 +500,7 @@ fn authoritative_jump_hold_window_is_observable_for_search_state() {
 #[test]
 fn hazard_causes_an_instant_deterministic_reset() {
     let mut tiles = vec![Tile::Empty; WIDTH * HEIGHT];
-    tiles[8 * WIDTH + 4] = Tile::Hazard;
+    tiles[8 * WIDTH + 4] = Tile::HazardUp;
     let room = Room::new(
         "hazard",
         "Hazard",
@@ -544,6 +544,159 @@ fn hazard_causes_an_instant_deterministic_reset() {
         JUMP_BUFFER_TICKS - 1,
         "the fatal tick's held input must not leak into the fresh attempt"
     );
+}
+
+#[test]
+fn upward_spike_back_is_a_nonlethal_ceiling() {
+    let mut tiles = vec![Tile::Empty; WIDTH * HEIGHT];
+    tiles[8 * WIDTH + 4] = Tile::HazardUp;
+    for x in 0..WIDTH {
+        tiles[12 * WIDTH + x] = Tile::Solid;
+    }
+    let room = Room::new(
+        "spike-back",
+        "Spike back",
+        WIDTH as u16,
+        HEIGHT as u16,
+        TILE_SIZE,
+        tiles,
+        Point::new(41, 108),
+        vec![],
+    )
+    .unwrap();
+    let mut simulation = Simulation::new(room);
+    let mut minimum_y = simulation.player().position_subpixels().y;
+    for tick in 0..60 {
+        let report = simulation.step(Action {
+            jump: tick < 10,
+            ..Action::default()
+        });
+        assert!(
+            !report
+                .events
+                .iter()
+                .any(|event| matches!(event, SimulationEvent::Died(DeathReason::Hazard { .. })))
+        );
+        minimum_y = minimum_y.min(simulation.player().position_subpixels().y);
+    }
+    assert_eq!(minimum_y, 90 * SUBPIXELS_PER_PIXEL);
+    assert_eq!(simulation.deaths(), 0);
+}
+
+fn downward_spike_room(spawn_y: i32) -> Room {
+    let mut tiles = vec![Tile::Empty; WIDTH * HEIGHT];
+    tiles[8 * WIDTH + 4] = Tile::HazardDown;
+    for x in 0..WIDTH {
+        tiles[12 * WIDTH + x] = Tile::Solid;
+    }
+    Room::new(
+        "down-spike",
+        "Down spike",
+        WIDTH as u16,
+        HEIGHT as u16,
+        TILE_SIZE,
+        tiles,
+        Point::new(41, spawn_y),
+        vec![],
+    )
+    .unwrap()
+}
+
+#[test]
+fn downward_spike_back_is_safe_while_its_pointed_face_kills() {
+    let mut back = Simulation::new(downward_spike_room(40));
+    for _ in 0..90 {
+        let report = back.step(Action::default());
+        assert!(
+            !report
+                .events
+                .iter()
+                .any(|event| matches!(event, SimulationEvent::Died(DeathReason::Hazard { .. })))
+        );
+    }
+    assert_eq!(back.player().bounds().y, 68);
+
+    let mut front = Simulation::new(downward_spike_room(108));
+    let report = loop {
+        let report = front.step(Action {
+            jump: true,
+            ..Action::default()
+        });
+        if report
+            .events
+            .iter()
+            .any(|event| matches!(event, SimulationEvent::Died(DeathReason::Hazard { .. })))
+        {
+            break report;
+        }
+    };
+    assert!(report.events.iter().any(|event| matches!(
+        event,
+        SimulationEvent::Died(DeathReason::Hazard {
+            tile_x: 4,
+            tile_y: 8
+        })
+    )));
+}
+
+fn right_facing_wall_spike_room(spawn_x: i32) -> Room {
+    let mut tiles = vec![Tile::Empty; WIDTH * HEIGHT];
+    tiles[10 * WIDTH + 20] = Tile::HazardRight;
+    tiles[11 * WIDTH + 20] = Tile::HazardRight;
+    for x in 0..WIDTH {
+        tiles[12 * WIDTH + x] = Tile::Solid;
+    }
+    Room::new(
+        "wall-spike",
+        "Wall spike",
+        WIDTH as u16,
+        HEIGHT as u16,
+        TILE_SIZE,
+        tiles,
+        Point::new(spawn_x, 108),
+        vec![],
+    )
+    .unwrap()
+}
+
+#[test]
+fn wall_spike_back_blocks_while_its_pointed_face_kills() {
+    let mut back = Simulation::new(right_facing_wall_spike_room(160));
+    for _ in 0..90 {
+        let report = back.step(Action {
+            move_x: 1,
+            ..Action::default()
+        });
+        assert!(
+            !report
+                .events
+                .iter()
+                .any(|event| matches!(event, SimulationEvent::Died(DeathReason::Hazard { .. })))
+        );
+    }
+    assert_eq!(back.player().bounds().x, 192);
+
+    let mut front = Simulation::new(right_facing_wall_spike_room(230));
+    let report = loop {
+        let report = front.step(Action {
+            move_x: -1,
+            ..Action::default()
+        });
+        if report
+            .events
+            .iter()
+            .any(|event| matches!(event, SimulationEvent::Died(DeathReason::Hazard { .. })))
+        {
+            break report;
+        }
+    };
+    assert!(report.events.iter().any(|event| matches!(
+        event,
+        SimulationEvent::Died(DeathReason::Hazard {
+            tile_x: 20,
+            tile_y: 10..=11
+        })
+    )));
 }
 
 #[test]

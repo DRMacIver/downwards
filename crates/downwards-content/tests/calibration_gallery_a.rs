@@ -17,7 +17,8 @@ use downwards_ai::{
     audit_direct_controller_probes, solve_target,
 };
 use downwards_core::{
-    AbilitySet, Action, DeathReason, JumpKind, Rect, Simulation, SimulationEvent, Tile, WallSide,
+    AbilitySet, Action, HazardDirection, JumpKind, Rect, Simulation, SimulationEvent, Tile,
+    WallSide,
 };
 use std::collections::HashSet;
 
@@ -406,7 +407,7 @@ fn gallery_metadata_and_room_contracts_are_stable_and_unanchored() {
 fn structural_axes_are_explicit_in_the_authored_tiles() {
     let cases = calibration_gallery_a_cases();
     let a1 = (cases[0].room_factory)();
-    assert!(a1.tiles().iter().all(|tile| *tile != Tile::Hazard));
+    assert!(a1.tiles().iter().all(|tile| !tile.is_hazard()));
     for row in 0..18 {
         assert_eq!(a1.tile(11, row), Some(Tile::Solid));
     }
@@ -444,7 +445,7 @@ fn structural_axes_are_explicit_in_the_authored_tiles() {
 
     let a4 = (cases[3].room_factory)();
     for col in 20..=23 {
-        assert_eq!(a4.tile(col, 4), Some(Tile::Hazard));
+        assert_eq!(a4.tile(col, 4), Some(Tile::HazardDown));
     }
     for col in 17..=20 {
         assert_eq!(a4.tile(col, 7), Some(Tile::OneWay));
@@ -453,7 +454,7 @@ fn structural_axes_are_explicit_in_the_authored_tiles() {
         assert_eq!(a4.tile(col, 8), Some(Tile::OneWay));
     }
     for col in 17..=31 {
-        assert_eq!(a4.tile(col, 12), Some(Tile::Hazard));
+        assert_eq!(a4.tile(col, 12), Some(Tile::HazardUp));
     }
 
     let a5 = (cases[4].room_factory)();
@@ -465,7 +466,7 @@ fn structural_axes_are_explicit_in_the_authored_tiles() {
         assert_eq!(a5.tile(col, 10), Some(Tile::OneWay));
     }
     for col in 17..=27 {
-        assert_eq!(a5.tile(col, 13), Some(Tile::Hazard));
+        assert_eq!(a5.tile(col, 13), Some(Tile::HazardUp));
     }
     for col in 28..=31 {
         assert_eq!(a5.tile(col, 13), Some(Tile::Solid));
@@ -623,55 +624,47 @@ fn bounded_direct_probe_audit_records_capability_evidence_without_ranking() {
 }
 
 #[test]
-fn low_clearance_release_is_structurally_consequential() {
+fn low_clearance_route_and_spike_faces_are_structurally_consistent() {
     let canonical = calibration_gallery_a4_witness_actions();
-    assert!(!canonical[68].jump);
-    assert!(canonical[69].jump);
-    assert!(!canonical[70].jump);
+    let transfer_tick = canonical
+        .iter()
+        .enumerate()
+        .filter(|(index, action)| action.jump && (*index == 0 || !canonical[*index - 1].jump))
+        .map(|(index, _)| index)
+        .next_back()
+        .expect("Low Clearance witness has a final transfer jump");
+    assert!(!canonical[transfer_tick + 1].jump);
 
     let clean = observe_route(&calibration_gallery_a4_scenario(), &canonical);
     assert_eq!(clean.exit_tick, Some(canonical.len()));
     assert_eq!(clean.deaths, 0);
-
     let mut clearance_replay = calibration_gallery_a4_scenario();
+    let room = clearance_replay.room();
+    for x in 20..=23 {
+        assert_eq!(
+            room.hazard_direction(x, 4),
+            Some(HazardDirection::Down),
+            "the upper bank must point into the route below"
+        );
+    }
+    for x in 17..=31 {
+        assert_eq!(
+            room.hazard_direction(x, 12),
+            Some(HazardDirection::Up),
+            "the lower bank must point into the route above"
+        );
+    }
+
     let mut minimum_top_under_ceiling = i32::MAX;
     for (index, &action) in canonical.iter().enumerate() {
         clearance_replay.step(action);
         let player = clearance_replay.player().bounds();
-        if index >= 69 && player.x < 240 && player.right() > 200 {
+        if index >= transfer_tick && player.x < 240 && player.right() > 200 {
             minimum_top_under_ceiling = minimum_top_under_ceiling.min(player.y);
         }
     }
     assert_eq!(
         minimum_top_under_ceiling, 56,
         "the exact cut route should retain its documented 6px ceiling clearance"
-    );
-
-    let mut full_hold = canonical.clone();
-    for action in &mut full_hold[70..77] {
-        action.jump = true;
-    }
-    let mut simulation = calibration_gallery_a4_scenario();
-    let mut first_death = None;
-    for action in full_hold {
-        for event in simulation.step(action).events {
-            if let SimulationEvent::Died(reason) = event {
-                first_death.get_or_insert(reason);
-            }
-        }
-        if first_death.is_some() {
-            break;
-        }
-    }
-    assert_eq!(
-        first_death,
-        Some(DeathReason::Hazard {
-            tile_x: 22,
-            tile_y: 4,
-        })
-    );
-    assert_ne!(
-        simulation.reached_exit(),
-        Some(CALIBRATION_GALLERY_A_TARGET)
     );
 }

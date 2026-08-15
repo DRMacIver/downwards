@@ -28,24 +28,24 @@ const TILE_SIZE: i32 = 10;
 // The opening leads to a four-tile recovery lip, then a three-tile island and
 // a four-tile safe finish floor. There is no low ceiling demanding a jump cut.
 const MEDIUM_NO_DASH_ROWS: [&str; 18] = [
-    "..........#^....................",
-    "..........#^....................",
-    "..........#^....................",
-    "..........#^....................",
-    "..........#^....................",
+    "..........#>....................",
+    "..........#>....................",
+    "..........#>....................",
+    "..........#>....................",
+    "..........#>....................",
     "..........##....................",
     "..........##....................",
     "..........##.....====...........",
     "..........##....................",
     "..........##...##......===......",
     "..........##...##...............",
-    "..........#^...##...............",
+    "..........#>...##...............",
     "..........##...##^^^^^^^^^^^####",
-    "..........##...^#...............",
-    "..........##...^#...............",
-    "..........##...^#...............",
+    "..........##...<#...............",
+    "..........##...<#...............",
+    "..........##...<#...............",
     "..........#######...............",
-    "..........#^...^#...............",
+    "..........#>...<#...............",
 ];
 
 /// Construct the trusted hand-authored tutorial no-Dash room.
@@ -60,7 +60,10 @@ pub fn medium_no_dash_room() -> Room {
             row.bytes().map(|tile| match tile {
                 b'.' => Tile::Empty,
                 b'#' => Tile::Solid,
-                b'^' => Tile::Hazard,
+                b'^' => Tile::HazardUp,
+                b'v' => Tile::HazardDown,
+                b'<' => Tile::HazardLeft,
+                b'>' => Tile::HazardRight,
                 b'=' => Tile::OneWay,
                 _ => unreachable!("medium no-Dash challenge contains an unsupported tile"),
             })
@@ -132,7 +135,7 @@ mod tests {
             assert_eq!(room.tile(11, row), Some(Tile::Solid));
         }
         for row in [0, 1, 2, 3, 4, 11, 17] {
-            assert_eq!(room.tile(11, row), Some(Tile::Hazard));
+            assert_eq!(room.tile(11, row), Some(Tile::HazardRight));
         }
 
         // The middle-right band is four tiles tall. Its solid backing ends at
@@ -142,7 +145,7 @@ mod tests {
             assert_eq!(room.tile(16, row), Some(Tile::Solid));
         }
         for row in 13..=15 {
-            assert_eq!(room.tile(15, row), Some(Tile::Hazard));
+            assert_eq!(room.tile(15, row), Some(Tile::HazardLeft));
             assert_eq!(room.tile(16, row), Some(Tile::Solid));
         }
         for row in 0..=8 {
@@ -162,14 +165,14 @@ mod tests {
             assert_eq!(room.tile(col, 9), Some(Tile::OneWay));
         }
         for col in 17..=27 {
-            assert_eq!(room.tile(col, 12), Some(Tile::Hazard));
+            assert_eq!(room.tile(col, 12), Some(Tile::HazardUp));
         }
         for col in 28..=31 {
             assert_eq!(room.tile(col, 12), Some(Tile::Solid));
         }
         for row in 0..=6 {
             for col in 17..32 {
-                assert_ne!(room.tile(col, row), Some(Tile::Hazard));
+                assert!(!room.tile(col, row).is_some_and(Tile::is_hazard));
             }
         }
     }

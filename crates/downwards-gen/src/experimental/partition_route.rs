@@ -2319,8 +2319,11 @@ mod tests {
                         ^ match tile {
                             Tile::Empty => 0_u64,
                             Tile::Solid => 1,
-                            Tile::Hazard => 2,
+                            Tile::HazardUp => 2,
                             Tile::OneWay => 3,
+                            Tile::HazardDown => 4,
+                            Tile::HazardLeft => 5,
+                            Tile::HazardRight => 6,
                         })
                     .wrapping_mul(0x0000_0100_0000_01b3)
                 },
@@ -2388,7 +2391,7 @@ mod tests {
                             .room
                             .tiles()
                             .iter()
-                            .all(|tile| *tile != Tile::Hazard)
+                            .all(|tile| !tile.is_hazard())
                     );
 
                     let graph = derive_partition_graph(exact_key, seed).unwrap();

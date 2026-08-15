@@ -193,7 +193,8 @@ mod tests {
                         .generated
                         .room
                         .tiles()
-                        .contains(&downwards_core::Tile::Hazard)
+                        .iter()
+                        .any(|tile| tile.is_hazard())
             })
         }));
     }

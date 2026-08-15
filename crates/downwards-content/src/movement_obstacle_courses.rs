@@ -118,7 +118,7 @@ pub fn movement_course_mixed_witness_actions() -> Vec<Action> {
 
 #[cfg(test)]
 mod tests {
-    use downwards_core::{SimulationEvent, Tile};
+    use downwards_core::SimulationEvent;
 
     use super::*;
 
@@ -135,7 +135,7 @@ mod tests {
                     .room()
                     .tiles()
                     .iter()
-                    .all(|tile| *tile != Tile::Hazard)
+                    .all(|tile| !tile.is_hazard())
             );
             assert_eq!(simulation.room().timed_hazards().len(), 0);
             let actions = course.witness_actions();

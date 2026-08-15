@@ -861,7 +861,8 @@ fn grounded_target_for_support(
         let player = Rect::new(player_x, standing_y, PLAYER_WIDTH, PLAYER_HEIGHT);
         let blocked_by_tile = (0..room.height()).any(|tile_y| {
             (0..room.width()).any(|tile_x| {
-                matches!(room.tile(tile_x, tile_y), Some(Tile::Solid | Tile::Hazard))
+                room.tile(tile_x, tile_y)
+                    .is_some_and(|tile| tile == Tile::Solid || tile.is_hazard())
                     && player.intersects(room.tile_bounds(tile_x, tile_y))
             })
         });

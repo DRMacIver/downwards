@@ -205,7 +205,7 @@ pub fn observation_feature_vector(
         visual
             .tiles
             .iter()
-            .filter(|&&tile| tile == VisualTile::Hazard)
+            .filter(|&&tile| tile == VisualTile::HazardUp)
             .count() as f64
             / tile_count,
     );

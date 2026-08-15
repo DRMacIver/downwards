@@ -93,8 +93,11 @@ const fn tile_code(tile: Tile) -> u8 {
     match tile {
         Tile::Empty => 0,
         Tile::Solid => 1,
-        Tile::Hazard => 2,
+        Tile::HazardUp => 2,
         Tile::OneWay => 3,
+        Tile::HazardDown => 4,
+        Tile::HazardLeft => 5,
+        Tile::HazardRight => 6,
     }
 }
 
@@ -107,7 +110,11 @@ fn collision_topology(room: &Room) -> Vec<u8> {
         .map(|tile| match tile {
             Tile::Solid => 1,
             Tile::OneWay => 2,
-            Tile::Empty | Tile::Hazard => 0,
+            Tile::Empty
+            | Tile::HazardUp
+            | Tile::HazardDown
+            | Tile::HazardLeft
+            | Tile::HazardRight => 0,
         })
         .collect()
 }

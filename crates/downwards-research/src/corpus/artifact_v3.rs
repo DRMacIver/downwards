@@ -347,8 +347,12 @@ impl From<downwards_core::Rect> for RectRecordV3 {
 enum VisualTileRecordV3 {
     Empty,
     Solid,
+    /// Historical wire spelling for an explicitly upward-facing spike.
     Hazard,
     OneWay,
+    HazardDown,
+    HazardLeft,
+    HazardRight,
 }
 
 impl From<VisualTile> for VisualTileRecordV3 {
@@ -356,8 +360,11 @@ impl From<VisualTile> for VisualTileRecordV3 {
         match tile {
             VisualTile::Empty => Self::Empty,
             VisualTile::Solid => Self::Solid,
-            VisualTile::Hazard => Self::Hazard,
+            VisualTile::HazardUp => Self::Hazard,
             VisualTile::OneWay => Self::OneWay,
+            VisualTile::HazardDown => Self::HazardDown,
+            VisualTile::HazardLeft => Self::HazardLeft,
+            VisualTile::HazardRight => Self::HazardRight,
         }
     }
 }
@@ -5709,6 +5716,22 @@ mod tests {
 
     use super::*;
     use crate::corpus::{evaluate_route_matrices_v2_with, generate_seed_block_v2};
+
+    #[test]
+    fn visual_tile_wire_preserves_authored_spike_direction() {
+        let cases = [
+            (VisualTile::HazardUp, "\"hazard\""),
+            (VisualTile::HazardDown, "\"hazard-down\""),
+            (VisualTile::HazardLeft, "\"hazard-left\""),
+            (VisualTile::HazardRight, "\"hazard-right\""),
+        ];
+        for (tile, expected) in cases {
+            assert_eq!(
+                serde_json::to_string(&VisualTileRecordV3::from(tile)).unwrap(),
+                expected
+            );
+        }
+    }
 
     fn verified_bundle_v3() -> CorpusArtifactBundleV3 {
         static BUNDLE: OnceLock<CorpusArtifactBundleV3> = OnceLock::new();

@@ -931,7 +931,10 @@ fn report_exact_geometry(candidate: &CompositionalRouteCutCandidate) -> Result<(
                 Some(Tile::Empty) => '.',
                 Some(Tile::Solid) => '#',
                 Some(Tile::OneWay) => '=',
-                Some(Tile::Hazard) => '!',
+                Some(Tile::HazardUp) => '^',
+                Some(Tile::HazardDown) => 'v',
+                Some(Tile::HazardLeft) => '<',
+                Some(Tile::HazardRight) => '>',
                 None => '?',
             })
             .collect::<String>();

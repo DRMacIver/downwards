@@ -1267,8 +1267,11 @@ const fn visual_tile(tile: Tile) -> u8 {
     match tile {
         Tile::Empty => 0,
         Tile::Solid => 1,
-        Tile::Hazard => 2,
+        Tile::HazardUp => 2,
         Tile::OneWay => 3,
+        Tile::HazardDown => 4,
+        Tile::HazardLeft => 5,
+        Tile::HazardRight => 6,
     }
 }
 const fn rect_key(rect: &Rect) -> (i32, i32, i32, i32) {

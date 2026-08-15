@@ -74,7 +74,7 @@ pub fn room_embedding_prefix_from_parts(
     let static_hazard_tiles = room
         .tiles()
         .iter()
-        .filter(|&&tile| tile == Tile::Hazard)
+        .filter(|&&tile| tile.is_hazard())
         .count();
     let timed_hazard_area = room
         .timed_hazards()

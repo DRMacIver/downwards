@@ -8,8 +8,8 @@ mod simulation;
 
 pub use geometry::{Point, Rect};
 pub use room::{
-    BoundarySide, Door, DoorError, DoorSocket, Exit, Pickup, Room, RoomError, RoomObjectError,
-    Tile, TimedHazard,
+    BoundarySide, Door, DoorError, DoorSocket, Exit, HazardDirection, Pickup, Room, RoomError,
+    RoomObjectError, Tile, TimedHazard,
 };
 pub use simulation::{
     AbilitySet, Action, COYOTE_TICKS, DASH_TICKS, DashDirection, DeathReason, DoorEntryError,

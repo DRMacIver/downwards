@@ -2029,10 +2029,7 @@ fn route_feature_ahead(simulation: &Simulation, move_x: i8, lookahead_pixels: i3
         .iter()
         .enumerate()
         .any(|(index, &tile)| {
-            if !matches!(
-                tile,
-                downwards_core::Tile::Solid | downwards_core::Tile::Hazard
-            ) {
+            if tile != downwards_core::Tile::Solid && !tile.is_hazard() {
                 return false;
             }
             let width = usize::from(simulation.room().width());
@@ -2049,7 +2046,10 @@ fn route_feature_ahead(simulation: &Simulation, move_x: i8, lookahead_pixels: i3
             }
 
             match tile {
-                downwards_core::Tile::Hazard => {
+                downwards_core::Tile::HazardUp
+                | downwards_core::Tile::HazardDown
+                | downwards_core::Tile::HazardLeft
+                | downwards_core::Tile::HazardRight => {
                     bounds.y >= player.y - 4 && bounds.y <= player.bottom() + 12
                 }
                 downwards_core::Tile::Solid => bounds.y < player.y && player.y - bounds.y <= 55,

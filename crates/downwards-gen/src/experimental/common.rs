@@ -318,7 +318,7 @@ impl RoomDraft {
     pub(crate) fn clear_hazards(&mut self) -> (u16, u16) {
         let mut static_tiles = 0_u16;
         for tile in &mut self.tiles {
-            if *tile == Tile::Hazard {
+            if tile.is_hazard() {
                 *tile = Tile::Empty;
                 static_tiles = static_tiles.saturating_add(1);
             }
@@ -343,7 +343,7 @@ impl RoomDraft {
     pub(crate) fn hazard_run(&mut self, start_x: u16, end_x: u16) {
         debug_assert!(start_x > 0 && start_x < end_x && end_x < ROOM_WIDTH);
         for x in start_x..end_x {
-            self.set(x, WALKING_ROW, Tile::Hazard);
+            self.set(x, WALKING_ROW, Tile::HazardUp);
         }
         self.hazard_clusters = self.hazard_clusters.saturating_add(1);
     }
@@ -358,7 +358,7 @@ impl RoomDraft {
                 in_hazard = false;
                 continue;
             }
-            self.set(x, WALKING_ROW, Tile::Hazard);
+            self.set(x, WALKING_ROW, Tile::HazardUp);
             if !in_hazard {
                 self.hazard_clusters = self.hazard_clusters.saturating_add(1);
                 in_hazard = true;
@@ -418,7 +418,9 @@ impl RoomDraft {
                         }
                     }
                     Tile::OneWay => one_way_tiles = one_way_tiles.saturating_add(1),
-                    Tile::Hazard => hazard_tiles = hazard_tiles.saturating_add(1),
+                    Tile::HazardUp | Tile::HazardDown | Tile::HazardLeft | Tile::HazardRight => {
+                        hazard_tiles = hazard_tiles.saturating_add(1)
+                    }
                     Tile::Empty => {}
                 }
             }
@@ -466,7 +468,7 @@ impl RoomDraft {
         let existing = self.tiles[index];
         self.tiles[index] = match (existing, tile) {
             (Tile::Solid, _) | (_, Tile::Solid) => Tile::Solid,
-            (Tile::OneWay, Tile::Hazard) => Tile::OneWay,
+            (Tile::OneWay, replacement) if replacement.is_hazard() => Tile::OneWay,
             (_, replacement) => replacement,
         };
     }

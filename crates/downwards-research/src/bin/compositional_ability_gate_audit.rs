@@ -827,7 +827,7 @@ fn event_gate_ordinals(candidate: &CompositionalAbilityCandidate, player: Rect) 
 
 fn room_rect_is_clear(room: &downwards_core::Room, rect: Rect) -> bool {
     room.tiles().iter().enumerate().all(|(index, tile)| {
-        if !matches!(tile, Tile::Solid | Tile::Hazard) {
+        if *tile != Tile::Solid && !tile.is_hazard() {
             return true;
         }
         let width = usize::from(room.width());

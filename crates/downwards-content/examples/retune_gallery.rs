@@ -3,7 +3,7 @@
 //! Run from the workspace root with:
 //! `cargo run -p downwards-content --example retune_gallery`
 
-use std::{cmp::Ordering, env, fs, path::PathBuf};
+use std::{cmp::Ordering, collections::BTreeMap, env, fs, path::PathBuf};
 
 use downwards_ai::{SearchTarget, SolverConfig, TargetSolveOutcome, solve_target};
 use downwards_content::{CalibrationLevel, calibration_gallery};
@@ -184,7 +184,10 @@ fn action_key(action: Action) -> (i8, i8, bool, bool, bool) {
     )
 }
 
-fn select_witness(level: CalibrationLevel) -> (Vec<Action>, Observation) {
+fn select_witness(
+    level: CalibrationLevel,
+    previous: Option<&[Action]>,
+) -> (Vec<Action>, Observation) {
     let initial = level.scenario();
     assert_eq!(
         initial.movement_tuning(),
@@ -193,10 +196,11 @@ fn select_witness(level: CalibrationLevel) -> (Vec<Action>, Observation) {
         level.id()
     );
 
-    let previous = level.witness_actions();
     let mut candidates = Vec::new();
-    if observe(&initial, level.target(), &previous).reached_tick > 0 {
-        candidates.push(greedily_simplify(&initial, level.target(), &previous));
+    if let Some(previous) = previous
+        && observe(&initial, level.target(), previous).reached_tick > 0
+    {
+        candidates.push(greedily_simplify(&initial, level.target(), previous));
     }
 
     let mut config = SolverConfig::for_abilities(level.abilities());
@@ -223,6 +227,41 @@ fn select_witness(level: CalibrationLevel) -> (Vec<Action>, Observation) {
     (selected, observation)
 }
 
+fn parse_previous_artifact() -> BTreeMap<String, Vec<Action>> {
+    let Ok(artifact) = fs::read_to_string(DEFAULT_OUTPUT) else {
+        return BTreeMap::new();
+    };
+    let mut parsed = BTreeMap::new();
+    let mut current: Option<(String, Vec<Action>)> = None;
+    for line in artifact.lines().skip(3) {
+        if let Some(id) = line.strip_prefix("level ") {
+            assert!(current.is_none(), "nested generated witness level");
+            current = Some((id.to_owned(), Vec::new()));
+        } else if line == "end" {
+            let (id, actions) = current.take().expect("end without generated level");
+            assert!(!actions.is_empty(), "empty generated witness for {id}");
+            assert!(parsed.insert(id, actions).is_none());
+        } else if let Some(span) = line.strip_prefix("span ") {
+            let (_, actions) = current.as_mut().expect("span without generated level");
+            let fields = span.split_ascii_whitespace().collect::<Vec<_>>();
+            assert_eq!(fields.len(), 6, "malformed generated span");
+            let action = Action {
+                move_x: fields[0].parse().expect("invalid generated move_x"),
+                move_y: fields[1].parse().expect("invalid generated move_y"),
+                jump: fields[2] == "1",
+                dash: fields[3] == "1",
+                restart: fields[4] == "1",
+            };
+            let ticks = fields[5].parse().expect("invalid generated span ticks");
+            actions.extend(std::iter::repeat_n(action, ticks));
+        } else {
+            panic!("unknown generated witness record {line:?}");
+        }
+    }
+    assert!(current.is_none(), "unterminated generated witness level");
+    parsed
+}
+
 fn render_span(action: Action, ticks: usize) -> String {
     format!(
         "span {} {} {} {} {} {ticks}\n",
@@ -245,6 +284,7 @@ fn main() {
             .unwrap_or_else(|| PathBuf::from(DEFAULT_OUTPUT))
     };
     let tuning = MovementTuning::GAMEPLAY_DEFAULT;
+    let previous = parse_previous_artifact();
     let mut rendered = format!(
         "schema downwards-calibration-witnesses-v2\nplayer-movement-policy {PLAYER_MOVEMENT_POLICY_VERSION}\ntuning {} {} {} {} {} {}\n",
         tuning.top_speed_pixels_per_second,
@@ -256,7 +296,8 @@ fn main() {
     );
 
     for level in calibration_gallery().iter().copied() {
-        let (actions, observation) = select_witness(level);
+        let (actions, observation) =
+            select_witness(level, previous.get(level.id()).map(Vec::as_slice));
         eprintln!(
             "{} {:<18} {:>3} ticks / {:>2} jumps / {:>2} walls / {} same-wall",
             level.id(),

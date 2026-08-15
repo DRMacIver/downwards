@@ -65,68 +65,52 @@ ffmpeg -i docs/art/player-sprite-sheet-preview-v1.png \
 
 ## Environment
 
-`environment-tiles-preview-v1.png` is the built-in image-generation result, using the player sheet
-as a style-only reference. `environment-tiles-source-v1.png` is its transparent source produced by
-the image-generation skill's chroma-key helper, run through `uv` with an isolated Pillow
-dependency. `crates/downwards-client/assets/environment-tiles-v1.png` is the 96x72 runtime atlas of
-twelve 24x24 cells.
+`environment-tiles-preview-v2.png` is the current built-in image-generation result.
+`environment-tiles-source-v2.png` is the transparent chroma-keyed source, and
+`crates/downwards-client/assets/environment-tiles-v2.png` is the deterministic 96x72 runtime atlas
+of twelve 24x24 cells. The v1 files remain checked in as historical source material.
 
-The runtime atlas covers two stone variants, one-way platforms, upward/downward/horizontal spikes,
-an exit portal, a door, a pickup, and active/inactive timed hazards. Horizontal spikes are mirrored
-for exact left/right symmetry. Spike direction is inferred from the room's hazard strip, solid
-anchors, and nearest route corridor; it remains presentation-only and does not alter collision.
+The runtime atlas covers two seamless stone fill textures, a top-aligned one-way bridge,
+up/down/left/right spikes, an exit portal, a deliberately minimal unframed door, a pickup, and
+active/inactive timed hazards. Runtime code draws only the exposed outer contour of a connected
+solid region, so neighbouring blocks visually merge rather than appearing as individually framed
+boxes. The bridge art is flush with the exact top collision surface. Every spike sprite fills its
+24x24 collision cell so the visible dangerous envelope is not narrower than the physics.
+
+Spike direction is authored room data, not inferred presentation. The ASCII authoring characters
+are `^`, `v`, `<`, and `>`, mapping to `HazardUp`, `HazardDown`, `HazardLeft`, and `HazardRight`.
+The pointed face is lethal; the back and perpendicular faces are solid, nonlethal obstacles.
+Rendering, collision, room identity, descriptors, and artifact records all consume that same
+explicit direction.
 
 <details>
-<summary>Exact environment generation prompt</summary>
+<summary>Exact v2 environment edit prompt</summary>
 
-> Use case: stylized-concept
->
-> Asset type: production environment tileset for the same tiny fast-paced 2D pixel platformer
->
-> Input images: Image 1 is a STYLE REFERENCE ONLY for palette, pixel treatment, outlining, and
-> finish. Do not include the character or copy any character pose.
->
-> Primary request: Create a clean 4-column by 3-row pixel-art environment sheet with exactly 12
-> isolated landscape/object cells, visually matching Image 1.
->
-> Cell contents in exact reading order: Row 1: dark blue-grey stone block A with a bright chipped
-> top edge; dark blue-grey stone block B with a different subtle crack pattern; a slim one-way
-> platform with metal/ice-blue upper lip and dark underside; a pair of sharp triangular spikes
-> pointing UP. Row 2: the same spikes pointing DOWN; spikes pointing LEFT; spikes pointing RIGHT;
-> a small glowing cyan-green exit portal inset in dark stone. Row 3: a small blue doorway with cyan
-> rim and dark interior; a faceted gold coin/crystal pickup; a compact red timed-hazard block in
-> ACTIVE state; the same timed-hazard block in INACTIVE dark state.
->
-> Style/medium: authentic limited-palette pixel art, crisp hard square pixels, approximately 16x16
-> source-pixel detail per cell, no antialiasing, no subpixel blur, no painterly texture. Use the
-> reference's near-black navy, muted blue-grey, cream highlight, and bright cyan accents; reserve
-> warm red for hazards and gold for the pickup.
->
-> Composition/framing: exact regular 4x3 grid with equal padding; one centered asset per invisible
-> square cell; no overlaps, no grid lines, no labels. Each stone block and hazard block fills most
-> of its cell edge-to-edge so it can tile. Directional spike silhouettes must be unmistakable.
->
-> Scene/backdrop: perfectly flat solid #ff00ff chroma-key background. One uniform color, no
-> shadows, gradients, texture, floor plane, reflections, lighting variation, or grid. Do not use
-> magenta in any asset.
->
-> Constraints: no character, no text, no numbers, no watermark, no environmental scene, no cast
-> shadows, no glow extending across cell boundaries. Keep scale, palette, lighting direction,
-> outline weight, and material language consistent across all 12 cells.
+> Edit the supplied 4-column by 3-row pixel-art environment sheet while preserving the exact grid,
+> scale, palette, lighting, crisp pixel treatment, and every cell except the requested changes.
+> Replace the first two cells with dark blue-grey seamless stone fill textures: no baked frame,
+> bevel, border, bright top rim, or edge treatment, because adjacent runtime tiles must merge.
+> Retain two subtly different chipped/cracked variants. Replace row 3 column 1 with a very simple
+> narrow cyan-blue doorway/arch with a dark interior, no surrounding stone box, no pedestal, and no
+> oversized frame. Preserve the one-way platform, all directional spikes, exit, pickup, and both
+> timed-hazard cells. Keep the background perfectly flat solid #ff00ff, with no grid, labels, text,
+> character, cast shadows, or glow crossing cell boundaries.
 
 </details>
 
-The checked-in transparent source and production sheet can be rebuilt with:
+The checked-in transparent source and production sheet were built with Pillow isolated through
+`uv`. The atlas packer validates that solids and spikes fill their collision cells and that the
+bridge begins at the top collision surface:
 
 ```console
 uv run --with pillow python \
   "$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py" \
-  --input docs/art/environment-tiles-preview-v1.png \
-  --out docs/art/environment-tiles-source-v1.png \
+  --input docs/art/environment-tiles-preview-v2.png \
+  --out docs/art/environment-tiles-source-v2.png \
   --auto-key border --soft-matte --transparent-threshold 12 \
   --opaque-threshold 220 --despill --force
 
-ffmpeg -i docs/art/environment-tiles-source-v1.png \
-  -vf scale=96:72:flags=area \
-  crates/downwards-client/assets/environment-tiles-v1.png
+uv run --with pillow python docs/art/build_environment_atlas.py \
+  docs/art/environment-tiles-source-v2.png \
+  crates/downwards-client/assets/environment-tiles-v2.png
 ```

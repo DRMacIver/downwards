@@ -167,8 +167,10 @@ are the latest human-selected settings; both wall percentages start at a visible
 do not mix physics policies. Every applied change is
 appended immediately as a `downwards-movement-tuning-v1` event in the human-attempt JSONL history,
 and subsequent attempt rows include the same exact values. These defaults apply game-wide to live
-play and new AI solves. The selected policy and current calibration caveats are recorded in the
-[`player movement policy v2 report`](docs/validation/player-movement-policy-v2-2026-08-15.md).
+play and new AI solves. The selected tuning and current calibration caveats are recorded in the
+historical [`player movement policy v2 report`](docs/validation/player-movement-policy-v2-2026-08-15.md);
+the current explicit directional-spike contract is recorded in the
+[`player movement policy v3 report`](docs/validation/player-movement-policy-v3-2026-08-15.md).
 
 Gallery witnesses are generated rather than copied into hand-maintained tests. After a movement or
 authored-room change, update and verify the single policy-bound artifact with:

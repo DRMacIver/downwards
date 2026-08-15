@@ -186,16 +186,23 @@ fn simulation_geometry_identity_includes_timing_but_excludes_labels_and_order() 
 fn collision_topology_ignores_hazard_paint_but_preserves_directional_collision() {
     let empty = flat_room("empty", floor_tiles());
     let mut hazard_tiles = floor_tiles();
-    hazard_tiles[10 * usize::from(WIDTH) + 20] = Tile::Hazard;
+    hazard_tiles[10 * usize::from(WIDTH) + 20] = Tile::HazardUp;
     let hazard = flat_room("hazard", hazard_tiles);
 
     let empty_visual = StaticVisualDescriptor::from_room(&empty);
     let hazard_visual = StaticVisualDescriptor::from_room(&hazard);
     assert!(static_visual_distance(&empty_visual, &hazard_visual).tiles > 0.0);
+    let mut downward_tiles = floor_tiles();
+    downward_tiles[10 * usize::from(WIDTH) + 20] = Tile::HazardDown;
+    let downward_hazard = flat_room("downward-hazard", downward_tiles);
+    let downward_visual = StaticVisualDescriptor::from_room(&downward_hazard);
+    assert_ne!(hazard_visual, downward_visual);
 
     let empty_collision = CollisionTopologyDescriptor::from_room(&empty);
     let hazard_collision = CollisionTopologyDescriptor::from_room(&hazard);
+    let downward_collision = CollisionTopologyDescriptor::from_room(&downward_hazard);
     assert_eq!(empty_collision, hazard_collision);
+    assert_eq!(empty_collision, downward_collision);
 
     let mut one_way_tiles = floor_tiles();
     one_way_tiles[10 * usize::from(WIDTH) + 20] = Tile::OneWay;
@@ -508,7 +515,7 @@ fn room_ablation_variants_remove_one_canonical_feature_without_touching_boundary
         tiles[10 * usize::from(WIDTH) + x] = Tile::Solid;
     }
     for x in 20..=21 {
-        tiles[15 * usize::from(WIDTH) + x] = Tile::Hazard;
+        tiles[15 * usize::from(WIDTH) + x] = Tile::HazardUp;
     }
     let doors = vec![
         Door {
@@ -569,5 +576,5 @@ fn room_ablation_variants_remove_one_canonical_feature_without_touching_boundary
         .find(|variant| matches!(variant.kind, RoomAblationKind::TimedHazard { .. }))
         .unwrap();
     assert!(timed_hazard.room.timed_hazards().is_empty());
-    assert_eq!(timed_hazard.room.tile(20, 15), Some(Tile::Hazard));
+    assert_eq!(timed_hazard.room.tile(20, 15), Some(Tile::HazardUp));
 }
