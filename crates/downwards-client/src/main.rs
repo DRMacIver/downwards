@@ -3101,6 +3101,35 @@ impl ClientState {
             | DemoDungeonRoom::CrystalBridge
             | DemoDungeonRoom::GlassSeal => Some("east"),
             DemoDungeonRoom::CulletCache => Some("ceiling"),
+            DemoDungeonRoom::StarThreshold | DemoDungeonRoom::CometRun => Some("east"),
+            DemoDungeonRoom::OrbitFork if !run.inventory.has_coin("dungeon-coin-54") => {
+                Some("floor")
+            }
+            DemoDungeonRoom::OrbitFork | DemoDungeonRoom::ConstellationHall => Some("east"),
+            DemoDungeonRoom::MoonVault => Some("ceiling"),
+            DemoDungeonRoom::ZenithShaft => Some("east"),
+            DemoDungeonRoom::EclipseFork if !run.inventory.has_coin("dungeon-coin-56") => {
+                Some("ceiling")
+            }
+            DemoDungeonRoom::EclipseFork | DemoDungeonRoom::Observatory => Some("east"),
+            DemoDungeonRoom::ShadowDuct => Some("floor"),
+            DemoDungeonRoom::GravityLift if !run.inventory.has_coin("dungeon-coin-58") => {
+                Some("ceiling")
+            }
+            DemoDungeonRoom::GravityLift
+            | DemoDungeonRoom::MeteorRun
+            | DemoDungeonRoom::VacuumGallery => Some("east"),
+            DemoDungeonRoom::NovaNiche => Some("floor"),
+            DemoDungeonRoom::TidalFork if !run.inventory.has_coin("dungeon-coin-60") => {
+                Some("floor")
+            }
+            DemoDungeonRoom::TidalFork
+            | DemoDungeonRoom::AuroraSpire
+            | DemoDungeonRoom::VoidPass
+            | DemoDungeonRoom::StarwellClimb
+            | DemoDungeonRoom::Skybridge
+            | DemoDungeonRoom::AstralSeal => Some("east"),
+            DemoDungeonRoom::LunarCache => Some("ceiling"),
             DemoDungeonRoom::CoinLoft => Some("ceiling"),
             DemoDungeonRoom::NeedleRoom => Some("floor"),
             DemoDungeonRoom::Treasury => Some("west"),
@@ -8947,6 +8976,105 @@ mod tests {
         assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::GlassSeal);
         assert!(!client.observe_dungeon_progress(&report(&client, coins(&[51]))));
         assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 52);
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::StarThreshold
+        );
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[52]))));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::CometRun);
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[53]))));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::OrbitFork);
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::MoonVault);
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[54]))));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::ConstellationHall
+        );
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[55]))));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::ZenithShaft
+        );
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::EclipseFork
+        );
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::ShadowDuct
+        );
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[56]))));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::Observatory
+        );
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[57]))));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::GravityLift
+        );
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::NovaNiche);
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[58]))));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::MeteorRun);
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::VacuumGallery
+        );
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[59]))));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::TidalFork);
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::LunarCache
+        );
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[60]))));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::AuroraSpire
+        );
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[61]))));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::VoidPass);
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::StarwellClimb
+        );
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Skybridge);
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[62]))));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::AstralSeal
+        );
+        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 63);
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::AstralSeal
+        );
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[63]))));
+        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 64);
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
         assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Gatehouse);
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));

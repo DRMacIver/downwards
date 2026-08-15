@@ -14,7 +14,7 @@ pub const DEMO_DUNGEON_GLOVE_PICKUP: &str = "climbing-gloves";
 pub const DEMO_DUNGEON_BOOT_PICKUP: &str = "winged-boots";
 pub const DEMO_DUNGEON_CROWN_PICKUP: &str = "crown";
 pub const DEMO_DUNGEON_GOAL_EXIT: &str = "crown-goal";
-pub const DEMO_DUNGEON_TOTAL_COINS: u8 = 52;
+pub const DEMO_DUNGEON_TOTAL_COINS: u8 = 64;
 pub const DEMO_DUNGEON_GLOVE_GATE_REQUIREMENT: u8 = 6;
 pub const DEMO_DUNGEON_WALL_REGION_GATE_REQUIREMENT: u8 = 12;
 /// Opens the lower route containing the last pre-Dash coin branches.
@@ -26,7 +26,8 @@ pub const DEMO_DUNGEON_BOOT_GATE_REQUIREMENT: u8 = 21;
 pub const DEMO_DUNGEON_DASH_REGION_GATE_REQUIREMENT: u8 = 28;
 pub const DEMO_DUNGEON_FOUNDRY_GATE_REQUIREMENT: u8 = 40;
 pub const DEMO_DUNGEON_GLASSWORKS_GATE_REQUIREMENT: u8 = 52;
-pub const DEMO_DUNGEON_CROWN_GATE_REQUIREMENT: u8 = 52;
+pub const DEMO_DUNGEON_ASTRAL_GATE_REQUIREMENT: u8 = 64;
+pub const DEMO_DUNGEON_CROWN_GATE_REQUIREMENT: u8 = 64;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct DemoDungeonInventory {
@@ -185,6 +186,26 @@ pub enum DemoDungeonRoom {
     LatticeClimb,
     CrystalBridge,
     GlassSeal,
+    StarThreshold,
+    CometRun,
+    OrbitFork,
+    MoonVault,
+    ConstellationHall,
+    ZenithShaft,
+    EclipseFork,
+    ShadowDuct,
+    Observatory,
+    GravityLift,
+    NovaNiche,
+    MeteorRun,
+    VacuumGallery,
+    TidalFork,
+    LunarCache,
+    AuroraSpire,
+    VoidPass,
+    StarwellClimb,
+    Skybridge,
+    AstralSeal,
     CoinLoft,
     NeedleRoom,
     Treasury,
@@ -234,7 +255,7 @@ impl DemoDungeonRouteSpec {
 }
 
 impl DemoDungeonRoom {
-    pub const ALL: [Self; 81] = [
+    pub const ALL: [Self; 101] = [
         Self::HollowLanding,
         Self::MossWalk,
         Self::SplitRoot,
@@ -311,6 +332,26 @@ impl DemoDungeonRoom {
         Self::LatticeClimb,
         Self::CrystalBridge,
         Self::GlassSeal,
+        Self::StarThreshold,
+        Self::CometRun,
+        Self::OrbitFork,
+        Self::MoonVault,
+        Self::ConstellationHall,
+        Self::ZenithShaft,
+        Self::EclipseFork,
+        Self::ShadowDuct,
+        Self::Observatory,
+        Self::GravityLift,
+        Self::NovaNiche,
+        Self::MeteorRun,
+        Self::VacuumGallery,
+        Self::TidalFork,
+        Self::LunarCache,
+        Self::AuroraSpire,
+        Self::VoidPass,
+        Self::StarwellClimb,
+        Self::Skybridge,
+        Self::AstralSeal,
         Self::CoinLoft,
         Self::NeedleRoom,
         Self::Treasury,
@@ -397,6 +438,26 @@ impl DemoDungeonRoom {
             Self::LatticeClimb => "demo-dungeon.lattice-climb",
             Self::CrystalBridge => "demo-dungeon.crystal-bridge",
             Self::GlassSeal => "demo-dungeon.glass-seal",
+            Self::StarThreshold => "demo-dungeon.star-threshold",
+            Self::CometRun => "demo-dungeon.comet-run",
+            Self::OrbitFork => "demo-dungeon.orbit-fork",
+            Self::MoonVault => "demo-dungeon.moon-vault",
+            Self::ConstellationHall => "demo-dungeon.constellation-hall",
+            Self::ZenithShaft => "demo-dungeon.zenith-shaft",
+            Self::EclipseFork => "demo-dungeon.eclipse-fork",
+            Self::ShadowDuct => "demo-dungeon.shadow-duct",
+            Self::Observatory => "demo-dungeon.observatory",
+            Self::GravityLift => "demo-dungeon.gravity-lift",
+            Self::NovaNiche => "demo-dungeon.nova-niche",
+            Self::MeteorRun => "demo-dungeon.meteor-run",
+            Self::VacuumGallery => "demo-dungeon.vacuum-gallery",
+            Self::TidalFork => "demo-dungeon.tidal-fork",
+            Self::LunarCache => "demo-dungeon.lunar-cache",
+            Self::AuroraSpire => "demo-dungeon.aurora-spire",
+            Self::VoidPass => "demo-dungeon.void-pass",
+            Self::StarwellClimb => "demo-dungeon.starwell-climb",
+            Self::Skybridge => "demo-dungeon.skybridge",
+            Self::AstralSeal => "demo-dungeon.astral-seal",
             Self::CoinLoft => "demo-dungeon.coin-loft",
             Self::NeedleRoom => "demo-dungeon.needle-room",
             Self::Treasury => "demo-dungeon.treasury",
@@ -484,6 +545,26 @@ impl DemoDungeonRoom {
             Self::LatticeClimb => "Lattice Climb",
             Self::CrystalBridge => "Crystal Bridge",
             Self::GlassSeal => "The Glass Seal",
+            Self::StarThreshold => "Star Threshold",
+            Self::CometRun => "Comet Run",
+            Self::OrbitFork => "The Orbit Fork",
+            Self::MoonVault => "Moon Vault",
+            Self::ConstellationHall => "Constellation Hall",
+            Self::ZenithShaft => "Zenith Shaft",
+            Self::EclipseFork => "The Eclipse Fork",
+            Self::ShadowDuct => "Shadow Duct",
+            Self::Observatory => "The Observatory",
+            Self::GravityLift => "Gravity Lift",
+            Self::NovaNiche => "Nova Niche",
+            Self::MeteorRun => "Meteor Run",
+            Self::VacuumGallery => "Vacuum Gallery",
+            Self::TidalFork => "The Tidal Fork",
+            Self::LunarCache => "Lunar Cache",
+            Self::AuroraSpire => "Aurora Spire",
+            Self::VoidPass => "Void Pass",
+            Self::StarwellClimb => "Starwell Climb",
+            Self::Skybridge => "The Skybridge",
+            Self::AstralSeal => "The Astral Seal",
             Self::CoinLoft => "Rafter Mint",
             Self::NeedleRoom => "Needle Belfry",
             Self::Treasury => "The Deep Treasury",
@@ -579,8 +660,28 @@ impl DemoDungeonRoom {
             Self::LatticeClimb => 76,
             Self::CrystalBridge => 77,
             Self::GlassSeal => 78,
-            Self::Gatehouse => 79,
-            Self::CrownSanctum => 80,
+            Self::StarThreshold => 79,
+            Self::CometRun => 80,
+            Self::OrbitFork => 81,
+            Self::MoonVault => 82,
+            Self::ConstellationHall => 83,
+            Self::ZenithShaft => 84,
+            Self::EclipseFork => 85,
+            Self::ShadowDuct => 86,
+            Self::Observatory => 87,
+            Self::GravityLift => 88,
+            Self::NovaNiche => 89,
+            Self::MeteorRun => 90,
+            Self::VacuumGallery => 91,
+            Self::TidalFork => 92,
+            Self::LunarCache => 93,
+            Self::AuroraSpire => 94,
+            Self::VoidPass => 95,
+            Self::StarwellClimb => 96,
+            Self::Skybridge => 97,
+            Self::AstralSeal => 98,
+            Self::Gatehouse => 99,
+            Self::CrownSanctum => 100,
         })
     }
 
@@ -662,6 +763,26 @@ impl DemoDungeonRoom {
             Self::LatticeClimb => DungeonPaletteCourse::LatticeClimb,
             Self::CrystalBridge => DungeonPaletteCourse::CrystalBridge,
             Self::GlassSeal => DungeonPaletteCourse::GlassSeal,
+            Self::StarThreshold => DungeonPaletteCourse::StarThreshold,
+            Self::CometRun => DungeonPaletteCourse::CometRun,
+            Self::OrbitFork => DungeonPaletteCourse::OrbitFork,
+            Self::MoonVault => DungeonPaletteCourse::MoonVault,
+            Self::ConstellationHall => DungeonPaletteCourse::ConstellationHall,
+            Self::ZenithShaft => DungeonPaletteCourse::ZenithShaft,
+            Self::EclipseFork => DungeonPaletteCourse::EclipseFork,
+            Self::ShadowDuct => DungeonPaletteCourse::ShadowDuct,
+            Self::Observatory => DungeonPaletteCourse::Observatory,
+            Self::GravityLift => DungeonPaletteCourse::GravityLift,
+            Self::NovaNiche => DungeonPaletteCourse::NovaNiche,
+            Self::MeteorRun => DungeonPaletteCourse::MeteorRun,
+            Self::VacuumGallery => DungeonPaletteCourse::VacuumGallery,
+            Self::TidalFork => DungeonPaletteCourse::TidalFork,
+            Self::LunarCache => DungeonPaletteCourse::LunarCache,
+            Self::AuroraSpire => DungeonPaletteCourse::AuroraSpire,
+            Self::VoidPass => DungeonPaletteCourse::VoidPass,
+            Self::StarwellClimb => DungeonPaletteCourse::StarwellClimb,
+            Self::Skybridge => DungeonPaletteCourse::Skybridge,
+            Self::AstralSeal => DungeonPaletteCourse::AstralSeal,
             Self::CoinLoft => DungeonPaletteCourse::CoinLoft,
             Self::NeedleRoom => DungeonPaletteCourse::NeedleRoom,
             Self::Treasury => DungeonPaletteCourse::Treasury,
@@ -951,13 +1072,85 @@ impl DemoDungeonRoom {
             ],
             Self::GlassSeal => vec![
                 connection("west", Self::CrystalBridge, "east"),
+                connection("east", Self::StarThreshold, "west"),
+            ],
+            Self::StarThreshold => vec![
+                connection("west", Self::GlassSeal, "east"),
+                connection("east", Self::CometRun, "west"),
+            ],
+            Self::CometRun => vec![
+                connection("west", Self::StarThreshold, "east"),
+                connection("east", Self::OrbitFork, "west"),
+            ],
+            Self::OrbitFork => vec![
+                connection("west", Self::CometRun, "east"),
+                connection("east", Self::ConstellationHall, "west"),
+                connection("floor", Self::MoonVault, "ceiling"),
+            ],
+            Self::MoonVault => vec![connection("ceiling", Self::OrbitFork, "floor")],
+            Self::ConstellationHall => vec![
+                connection("west", Self::OrbitFork, "east"),
+                connection("east", Self::ZenithShaft, "west"),
+            ],
+            Self::ZenithShaft => vec![
+                connection("west", Self::ConstellationHall, "east"),
+                connection("east", Self::EclipseFork, "west"),
+            ],
+            Self::EclipseFork => vec![
+                connection("west", Self::ZenithShaft, "east"),
+                connection("east", Self::Observatory, "west"),
+                connection("ceiling", Self::ShadowDuct, "floor"),
+            ],
+            Self::ShadowDuct => vec![connection("floor", Self::EclipseFork, "ceiling")],
+            Self::Observatory => vec![
+                connection("west", Self::EclipseFork, "east"),
+                connection("east", Self::GravityLift, "west"),
+            ],
+            Self::GravityLift => vec![
+                connection("west", Self::Observatory, "east"),
+                connection("east", Self::MeteorRun, "west"),
+                connection("ceiling", Self::NovaNiche, "floor"),
+            ],
+            Self::NovaNiche => vec![connection("floor", Self::GravityLift, "ceiling")],
+            Self::MeteorRun => vec![
+                connection("west", Self::GravityLift, "east"),
+                connection("east", Self::VacuumGallery, "west"),
+            ],
+            Self::VacuumGallery => vec![
+                connection("west", Self::MeteorRun, "east"),
+                connection("east", Self::TidalFork, "west"),
+            ],
+            Self::TidalFork => vec![
+                connection("west", Self::VacuumGallery, "east"),
+                connection("east", Self::AuroraSpire, "west"),
+                connection("floor", Self::LunarCache, "ceiling"),
+            ],
+            Self::LunarCache => vec![connection("ceiling", Self::TidalFork, "floor")],
+            Self::AuroraSpire => vec![
+                connection("west", Self::TidalFork, "east"),
+                connection("east", Self::VoidPass, "west"),
+            ],
+            Self::VoidPass => vec![
+                connection("west", Self::AuroraSpire, "east"),
+                connection("east", Self::StarwellClimb, "west"),
+            ],
+            Self::StarwellClimb => vec![
+                connection("west", Self::VoidPass, "east"),
+                connection("east", Self::Skybridge, "west"),
+            ],
+            Self::Skybridge => vec![
+                connection("west", Self::StarwellClimb, "east"),
+                connection("east", Self::AstralSeal, "west"),
+            ],
+            Self::AstralSeal => vec![
+                connection("west", Self::Skybridge, "east"),
                 connection("east", Self::Gatehouse, "west"),
             ],
             Self::CoinLoft => vec![connection("ceiling", Self::Crossroads, "floor")],
             Self::NeedleRoom => vec![connection("floor", Self::WallGallery, "ceiling")],
             Self::Treasury => vec![connection("west", Self::Underpass, "east")],
             Self::Gatehouse => vec![
-                connection("west", Self::GlassSeal, "east"),
+                connection("west", Self::AstralSeal, "east"),
                 connection("east", Self::CrownSanctum, "west"),
             ],
             Self::CrownSanctum => vec![connection("west", Self::Gatehouse, "east")],
@@ -970,7 +1163,7 @@ impl DemoDungeonRoom {
 /// This is content metadata, not a difficulty ordering. The generated witness artifact binds an
 /// exact replay to each coordinate and tests replay it under the current movement policy.
 #[must_use]
-pub fn demo_dungeon_route_specs() -> [DemoDungeonRouteSpec; 81] {
+pub fn demo_dungeon_route_specs() -> [DemoDungeonRouteSpec; 101] {
     const EMPTY: DemoDungeonInventory = DemoDungeonInventory {
         climbing_gloves: false,
         winged_boots: false,
@@ -1070,6 +1263,26 @@ pub fn demo_dungeon_route_specs() -> [DemoDungeonRouteSpec; 81] {
             | DemoDungeonRoom::LatticeClimb
             | DemoDungeonRoom::CrystalBridge
             | DemoDungeonRoom::GlassSeal
+            | DemoDungeonRoom::StarThreshold
+            | DemoDungeonRoom::CometRun
+            | DemoDungeonRoom::OrbitFork
+            | DemoDungeonRoom::MoonVault
+            | DemoDungeonRoom::ConstellationHall
+            | DemoDungeonRoom::ZenithShaft
+            | DemoDungeonRoom::EclipseFork
+            | DemoDungeonRoom::ShadowDuct
+            | DemoDungeonRoom::Observatory
+            | DemoDungeonRoom::GravityLift
+            | DemoDungeonRoom::NovaNiche
+            | DemoDungeonRoom::MeteorRun
+            | DemoDungeonRoom::VacuumGallery
+            | DemoDungeonRoom::TidalFork
+            | DemoDungeonRoom::LunarCache
+            | DemoDungeonRoom::AuroraSpire
+            | DemoDungeonRoom::VoidPass
+            | DemoDungeonRoom::StarwellClimb
+            | DemoDungeonRoom::Skybridge
+            | DemoDungeonRoom::AstralSeal
             | DemoDungeonRoom::Treasury
             | DemoDungeonRoom::Gatehouse
             | DemoDungeonRoom::CrownSanctum => BOTH,
@@ -1087,11 +1300,16 @@ pub fn demo_dungeon_route_specs() -> [DemoDungeonRouteSpec; 81] {
             | DemoDungeonRoom::StormCache
             | DemoDungeonRoom::CoolingDuct
             | DemoDungeonRoom::SparkNiche => Some("floor"),
-            DemoDungeonRoom::MirrorDuct | DemoDungeonRoom::LensNiche => Some("floor"),
+            DemoDungeonRoom::MirrorDuct
+            | DemoDungeonRoom::LensNiche
+            | DemoDungeonRoom::ShadowDuct
+            | DemoDungeonRoom::NovaNiche => Some("floor"),
             DemoDungeonRoom::EmberVault
             | DemoDungeonRoom::AshCache
             | DemoDungeonRoom::ShardVault
-            | DemoDungeonRoom::CulletCache => Some("ceiling"),
+            | DemoDungeonRoom::CulletCache
+            | DemoDungeonRoom::MoonVault
+            | DemoDungeonRoom::LunarCache => Some("ceiling"),
             _ => Some("west"),
         };
         let target = match room {
@@ -1114,6 +1332,10 @@ pub fn demo_dungeon_route_specs() -> [DemoDungeonRouteSpec; 81] {
             | DemoDungeonRoom::SliverRun
             | DemoDungeonRoom::RazorPass
             | DemoDungeonRoom::LatticeClimb
+            | DemoDungeonRoom::ZenithShaft
+            | DemoDungeonRoom::MeteorRun
+            | DemoDungeonRoom::VoidPass
+            | DemoDungeonRoom::StarwellClimb
             | DemoDungeonRoom::Gatehouse => DemoDungeonRouteTarget::Door("east"),
             DemoDungeonRoom::SplitRoot
             | DemoDungeonRoom::BellSwitchback
@@ -1121,14 +1343,18 @@ pub fn demo_dungeon_route_specs() -> [DemoDungeonRouteSpec; 81] {
             | DemoDungeonRoom::SplitFurnace
             | DemoDungeonRoom::PressureFork
             | DemoDungeonRoom::SplitKiln
-            | DemoDungeonRoom::CulletFork => DemoDungeonRouteTarget::Door("floor"),
+            | DemoDungeonRoom::CulletFork
+            | DemoDungeonRoom::OrbitFork
+            | DemoDungeonRoom::TidalFork => DemoDungeonRouteTarget::Door("floor"),
             DemoDungeonRoom::LanternGallery
             | DemoDungeonRoom::SplitSpire
             | DemoDungeonRoom::StormSplit
             | DemoDungeonRoom::FoundryFork
             | DemoDungeonRoom::LiftShaft
             | DemoDungeonRoom::MirrorFork
-            | DemoDungeonRoom::FurnaceLift => DemoDungeonRouteTarget::Door("ceiling"),
+            | DemoDungeonRoom::FurnaceLift
+            | DemoDungeonRoom::EclipseFork
+            | DemoDungeonRoom::GravityLift => DemoDungeonRouteTarget::Door("ceiling"),
             DemoDungeonRoom::RootCellar => DemoDungeonRouteTarget::Pickup("dungeon-coin-03"),
             DemoDungeonRoom::WatchPost => DemoDungeonRouteTarget::Pickup("dungeon-coin-05"),
             DemoDungeonRoom::ClimberVault => {
@@ -1174,6 +1400,18 @@ pub fn demo_dungeon_route_specs() -> [DemoDungeonRouteSpec; 81] {
             DemoDungeonRoom::AnnealingSpire => DemoDungeonRouteTarget::Pickup("dungeon-coin-49"),
             DemoDungeonRoom::CrystalBridge => DemoDungeonRouteTarget::Pickup("dungeon-coin-50"),
             DemoDungeonRoom::GlassSeal => DemoDungeonRouteTarget::Pickup("dungeon-coin-51"),
+            DemoDungeonRoom::StarThreshold => DemoDungeonRouteTarget::Pickup("dungeon-coin-52"),
+            DemoDungeonRoom::CometRun => DemoDungeonRouteTarget::Pickup("dungeon-coin-53"),
+            DemoDungeonRoom::MoonVault => DemoDungeonRouteTarget::Pickup("dungeon-coin-54"),
+            DemoDungeonRoom::ConstellationHall => DemoDungeonRouteTarget::Pickup("dungeon-coin-55"),
+            DemoDungeonRoom::ShadowDuct => DemoDungeonRouteTarget::Pickup("dungeon-coin-56"),
+            DemoDungeonRoom::Observatory => DemoDungeonRouteTarget::Pickup("dungeon-coin-57"),
+            DemoDungeonRoom::NovaNiche => DemoDungeonRouteTarget::Pickup("dungeon-coin-58"),
+            DemoDungeonRoom::VacuumGallery => DemoDungeonRouteTarget::Pickup("dungeon-coin-59"),
+            DemoDungeonRoom::LunarCache => DemoDungeonRouteTarget::Pickup("dungeon-coin-60"),
+            DemoDungeonRoom::AuroraSpire => DemoDungeonRouteTarget::Pickup("dungeon-coin-61"),
+            DemoDungeonRoom::Skybridge => DemoDungeonRouteTarget::Pickup("dungeon-coin-62"),
+            DemoDungeonRoom::AstralSeal => DemoDungeonRouteTarget::Pickup("dungeon-coin-63"),
             DemoDungeonRoom::CoinLoft => DemoDungeonRouteTarget::Pickup("dungeon-coin-09"),
             DemoDungeonRoom::NeedleRoom => DemoDungeonRouteTarget::Pickup("dungeon-coin-11"),
             DemoDungeonRoom::Treasury => DemoDungeonRouteTarget::Pickup("dungeon-coin-15"),
@@ -1212,6 +1450,7 @@ pub const fn demo_dungeon_door_requirement(
         (DemoDungeonRoom::DashSeal, b"east") => DEMO_DUNGEON_DASH_REGION_GATE_REQUIREMENT,
         (DemoDungeonRoom::FoundrySeal, b"east") => DEMO_DUNGEON_FOUNDRY_GATE_REQUIREMENT,
         (DemoDungeonRoom::GlassSeal, b"east") => DEMO_DUNGEON_GLASSWORKS_GATE_REQUIREMENT,
+        (DemoDungeonRoom::AstralSeal, b"east") => DEMO_DUNGEON_ASTRAL_GATE_REQUIREMENT,
         (DemoDungeonRoom::WallGallery, b"floor") => DEMO_DUNGEON_LOWER_VAULT_REQUIREMENT,
         (DemoDungeonRoom::Crossroads, b"ceiling") | (DemoDungeonRoom::Underpass, b"west") => {
             DEMO_DUNGEON_BOOT_GATE_REQUIREMENT
@@ -1229,6 +1468,7 @@ pub const fn demo_dungeon_door_requirement(
         (DemoDungeonRoom::DashSeal, b"east") => TraversalMethods::one(TraversalMethod::Dash),
         (DemoDungeonRoom::FoundrySeal, b"east") => TraversalMethods::ALL_CURRENT,
         (DemoDungeonRoom::GlassSeal, b"east") => TraversalMethods::ALL_CURRENT,
+        (DemoDungeonRoom::AstralSeal, b"east") => TraversalMethods::ALL_CURRENT,
         (DemoDungeonRoom::Gatehouse, b"east") => TraversalMethods::ALL_CURRENT,
         _ => TraversalMethods::NONE,
     };
@@ -1281,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v9".to_owned(),
+        id: "demo-dungeon-v10".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -1415,6 +1655,18 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         DemoDungeonRoom::AnnealingSpire => vec![(49, Rect::new(214, 20, 8, 10))],
         DemoDungeonRoom::CrystalBridge => vec![(50, Rect::new(274, 30, 8, 10))],
         DemoDungeonRoom::GlassSeal => vec![(51, Rect::new(214, 50, 8, 10))],
+        DemoDungeonRoom::StarThreshold => vec![(52, Rect::new(264, 120, 8, 10))],
+        DemoDungeonRoom::CometRun => vec![(53, Rect::new(274, 60, 8, 10))],
+        DemoDungeonRoom::MoonVault => vec![(54, Rect::new(224, 30, 8, 10))],
+        DemoDungeonRoom::ConstellationHall => vec![(55, Rect::new(284, 30, 8, 10))],
+        DemoDungeonRoom::ShadowDuct => vec![(56, Rect::new(224, 30, 8, 10))],
+        DemoDungeonRoom::Observatory => vec![(57, Rect::new(214, 20, 8, 10))],
+        DemoDungeonRoom::NovaNiche => vec![(58, Rect::new(224, 30, 8, 10))],
+        DemoDungeonRoom::VacuumGallery => vec![(59, Rect::new(214, 110, 8, 10))],
+        DemoDungeonRoom::LunarCache => vec![(60, Rect::new(224, 30, 8, 10))],
+        DemoDungeonRoom::AuroraSpire => vec![(61, Rect::new(214, 20, 8, 10))],
+        DemoDungeonRoom::Skybridge => vec![(62, Rect::new(274, 60, 8, 10))],
+        DemoDungeonRoom::AstralSeal => vec![(63, Rect::new(224, 50, 8, 10))],
         DemoDungeonRoom::SplitRoot
         | DemoDungeonRoom::OldLift
         | DemoDungeonRoom::LanternGallery
@@ -1444,6 +1696,14 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         | DemoDungeonRoom::CulletFork
         | DemoDungeonRoom::RazorPass
         | DemoDungeonRoom::LatticeClimb
+        | DemoDungeonRoom::OrbitFork
+        | DemoDungeonRoom::ZenithShaft
+        | DemoDungeonRoom::EclipseFork
+        | DemoDungeonRoom::GravityLift
+        | DemoDungeonRoom::MeteorRun
+        | DemoDungeonRoom::TidalFork
+        | DemoDungeonRoom::VoidPass
+        | DemoDungeonRoom::StarwellClimb
         | DemoDungeonRoom::DashChasm
         | DemoDungeonRoom::Gatehouse
         | DemoDungeonRoom::CrownSanctum => vec![],
@@ -1693,6 +1953,23 @@ mod tests {
                 ],
                 (40..52).collect::<Vec<_>>(),
             ),
+            (
+                vec![
+                    DemoDungeonRoom::StarThreshold,
+                    DemoDungeonRoom::CometRun,
+                    DemoDungeonRoom::MoonVault,
+                    DemoDungeonRoom::ConstellationHall,
+                    DemoDungeonRoom::ShadowDuct,
+                    DemoDungeonRoom::Observatory,
+                    DemoDungeonRoom::NovaNiche,
+                    DemoDungeonRoom::VacuumGallery,
+                    DemoDungeonRoom::LunarCache,
+                    DemoDungeonRoom::AuroraSpire,
+                    DemoDungeonRoom::Skybridge,
+                    DemoDungeonRoom::AstralSeal,
+                ],
+                (52..64).collect::<Vec<_>>(),
+            ),
         ] {
             let mut actual = rooms
                 .into_iter()
@@ -1737,6 +2014,10 @@ mod tests {
         assert_eq!(
             demo_dungeon_door_coin_requirement(DemoDungeonRoom::GlassSeal, "east"),
             Some(DEMO_DUNGEON_GLASSWORKS_GATE_REQUIREMENT)
+        );
+        assert_eq!(
+            demo_dungeon_door_coin_requirement(DemoDungeonRoom::AstralSeal, "east"),
+            Some(DEMO_DUNGEON_ASTRAL_GATE_REQUIREMENT)
         );
         assert_eq!(
             demo_dungeon_door_coin_requirement(DemoDungeonRoom::Gatehouse, "east"),
@@ -2712,6 +2993,102 @@ mod tests {
         assert!(
             !matches!(outcome, TargetSolveOutcome::Solved(_)),
             "Wall-Jump-only search unexpectedly crossed the mixed Glass Seal: {outcome:?}"
+        );
+    }
+
+    #[test]
+    fn astral_routes_are_exact_and_retain_observed_strength_one_successes() {
+        for spec in demo_dungeon_route_specs()
+            .into_iter()
+            .filter(|spec| (79..=98).contains(&spec.room.authored_key().0))
+        {
+            let (initial, solution) = solve_route(
+                spec.room,
+                spec.entry_door,
+                spec.inventory,
+                route_spec_target(spec.target),
+            );
+            let report = evaluate_shaky_hand(
+                &initial,
+                &solution,
+                ShakyHandConfig {
+                    seed: stable_route_seed(spec.id()),
+                    trials_per_curve_point: 64,
+                    grace_ticks: 18,
+                    correlated_boundaries: 2,
+                    convergence_confirmation_ticks: 2,
+                },
+            )
+            .unwrap();
+            assert!(report.exact_control_succeeded, "{}", spec.id());
+            for curve in report.curves.iter().filter(|curve| {
+                curve.family != NoiseFamily::Exact && curve.strength_ticks == 1 && curve.trials > 0
+            }) {
+                assert!(
+                    curve.successes > 0,
+                    "{} has no observed success for {:?} strength-one perturbations: {:?}",
+                    spec.id(),
+                    curve.family,
+                    curve.trials_detail
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn astral_seal_known_positive_uses_both_unlocked_traversal_methods() {
+        let inventory = DemoDungeonInventory {
+            climbing_gloves: true,
+            winged_boots: true,
+            ..DemoDungeonInventory::with_coin_count_for_validation(
+                DEMO_DUNGEON_ASTRAL_GATE_REQUIREMENT,
+            )
+        };
+        let (initial, solution) = solve_route(
+            DemoDungeonRoom::AstralSeal,
+            Some("west"),
+            inventory,
+            SearchTarget::door("east"),
+        );
+        let mut replayed = initial;
+        let mut wall_jumps = 0;
+        let mut dashes = 0;
+        for action in solution.replay.actions() {
+            for event in replayed.step(action).events {
+                wall_jumps += usize::from(matches!(
+                    event,
+                    SimulationEvent::Jumped(JumpKind::Wall { .. })
+                ));
+                dashes += usize::from(matches!(event, SimulationEvent::Dashed { .. }));
+            }
+        }
+        assert_eq!(replayed.reached_exit(), Some("east"));
+        assert!(
+            wall_jumps > 0,
+            "the Astral Seal route bypassed its wall ascent"
+        );
+        assert!(
+            dashes > 0,
+            "the Astral Seal route bypassed its low Dash partition"
+        );
+
+        let wall_only = DemoDungeonInventory {
+            climbing_gloves: true,
+            winged_boots: false,
+            ..inventory
+        };
+        let room = demo_dungeon_room(DemoDungeonRoom::AstralSeal, wall_only);
+        let mut initial = Simulation::enter_via_door(room, wall_only.abilities(), "west").unwrap();
+        initial.enable_current_player_movement();
+        let outcome = solve_target(
+            &initial,
+            SearchTarget::door("east"),
+            &SolverConfig::for_abilities(wall_only.abilities()),
+        )
+        .unwrap();
+        assert!(
+            !matches!(outcome, TargetSolveOutcome::Solved(_)),
+            "Wall-Jump-only search unexpectedly crossed the mixed Astral Seal: {outcome:?}"
         );
     }
 

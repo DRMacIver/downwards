@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 9;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 10;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -95,6 +95,26 @@ pub enum DungeonPaletteCourse {
     LatticeClimb,
     CrystalBridge,
     GlassSeal,
+    StarThreshold,
+    CometRun,
+    OrbitFork,
+    MoonVault,
+    ConstellationHall,
+    ZenithShaft,
+    EclipseFork,
+    ShadowDuct,
+    Observatory,
+    GravityLift,
+    NovaNiche,
+    MeteorRun,
+    VacuumGallery,
+    TidalFork,
+    LunarCache,
+    AuroraSpire,
+    VoidPass,
+    StarwellClimb,
+    Skybridge,
+    AstralSeal,
     CoinLoft,
     NeedleRoom,
     Treasury,
@@ -103,7 +123,7 @@ pub enum DungeonPaletteCourse {
 }
 
 impl DungeonPaletteCourse {
-    pub const ALL: [Self; 81] = [
+    pub const ALL: [Self; 101] = [
         Self::HollowLanding,
         Self::MossWalk,
         Self::SplitRoot,
@@ -180,6 +200,26 @@ impl DungeonPaletteCourse {
         Self::LatticeClimb,
         Self::CrystalBridge,
         Self::GlassSeal,
+        Self::StarThreshold,
+        Self::CometRun,
+        Self::OrbitFork,
+        Self::MoonVault,
+        Self::ConstellationHall,
+        Self::ZenithShaft,
+        Self::EclipseFork,
+        Self::ShadowDuct,
+        Self::Observatory,
+        Self::GravityLift,
+        Self::NovaNiche,
+        Self::MeteorRun,
+        Self::VacuumGallery,
+        Self::TidalFork,
+        Self::LunarCache,
+        Self::AuroraSpire,
+        Self::VoidPass,
+        Self::StarwellClimb,
+        Self::Skybridge,
+        Self::AstralSeal,
         Self::CoinLoft,
         Self::NeedleRoom,
         Self::Treasury,
@@ -266,6 +306,26 @@ impl DungeonPaletteCourse {
             Self::LatticeClimb => "lattice-climb",
             Self::CrystalBridge => "crystal-bridge",
             Self::GlassSeal => "glass-seal",
+            Self::StarThreshold => "star-threshold",
+            Self::CometRun => "comet-run",
+            Self::OrbitFork => "orbit-fork",
+            Self::MoonVault => "moon-vault",
+            Self::ConstellationHall => "constellation-hall",
+            Self::ZenithShaft => "zenith-shaft",
+            Self::EclipseFork => "eclipse-fork",
+            Self::ShadowDuct => "shadow-duct",
+            Self::Observatory => "observatory",
+            Self::GravityLift => "gravity-lift",
+            Self::NovaNiche => "nova-niche",
+            Self::MeteorRun => "meteor-run",
+            Self::VacuumGallery => "vacuum-gallery",
+            Self::TidalFork => "tidal-fork",
+            Self::LunarCache => "lunar-cache",
+            Self::AuroraSpire => "aurora-spire",
+            Self::VoidPass => "void-pass",
+            Self::StarwellClimb => "starwell-climb",
+            Self::Skybridge => "skybridge",
+            Self::AstralSeal => "astral-seal",
             Self::CoinLoft => "coin-loft",
             Self::NeedleRoom => "needle-room",
             Self::Treasury => "treasury",
@@ -318,6 +378,18 @@ impl DungeonPaletteCourse {
             | Self::LatticeClimb
             | Self::CrystalBridge
             | Self::GlassSeal
+            | Self::StarThreshold
+            | Self::CometRun
+            | Self::ConstellationHall
+            | Self::ZenithShaft
+            | Self::Observatory
+            | Self::MeteorRun
+            | Self::VacuumGallery
+            | Self::AuroraSpire
+            | Self::VoidPass
+            | Self::StarwellClimb
+            | Self::Skybridge
+            | Self::AstralSeal
             | Self::Threshold => &[("west", BoundarySide::Left), ("east", BoundarySide::Right)],
             Self::SplitRoot => &[
                 ("west", BoundarySide::Left),
@@ -377,22 +449,38 @@ impl DungeonPaletteCourse {
                 ("ceiling", BoundarySide::Ceiling),
             ],
             Self::StormCache => &[("floor", BoundarySide::Floor)],
-            Self::SplitFurnace | Self::PressureFork | Self::SplitKiln | Self::CulletFork => &[
+            Self::SplitFurnace
+            | Self::PressureFork
+            | Self::SplitKiln
+            | Self::CulletFork
+            | Self::OrbitFork
+            | Self::TidalFork => &[
                 ("west", BoundarySide::Left),
                 ("east", BoundarySide::Right),
                 ("floor", BoundarySide::Floor),
             ],
-            Self::EmberVault | Self::AshCache | Self::ShardVault | Self::CulletCache => {
-                &[("ceiling", BoundarySide::Ceiling)]
-            }
-            Self::FoundryFork | Self::LiftShaft | Self::MirrorFork | Self::FurnaceLift => &[
+            Self::EmberVault
+            | Self::AshCache
+            | Self::ShardVault
+            | Self::CulletCache
+            | Self::MoonVault
+            | Self::LunarCache => &[("ceiling", BoundarySide::Ceiling)],
+            Self::FoundryFork
+            | Self::LiftShaft
+            | Self::MirrorFork
+            | Self::FurnaceLift
+            | Self::EclipseFork
+            | Self::GravityLift => &[
                 ("west", BoundarySide::Left),
                 ("east", BoundarySide::Right),
                 ("ceiling", BoundarySide::Ceiling),
             ],
-            Self::CoolingDuct | Self::SparkNiche | Self::MirrorDuct | Self::LensNiche => {
-                &[("floor", BoundarySide::Floor)]
-            }
+            Self::CoolingDuct
+            | Self::SparkNiche
+            | Self::MirrorDuct
+            | Self::LensNiche
+            | Self::ShadowDuct
+            | Self::NovaNiche => &[("floor", BoundarySide::Floor)],
             Self::CoinLoft => &[("ceiling", BoundarySide::Ceiling)],
             Self::NeedleRoom => &[("floor", BoundarySide::Floor)],
             Self::Treasury => &[("west", BoundarySide::Left)],
@@ -1405,6 +1493,252 @@ impl PaletteDraft<'_> {
                 self.horizontal(15, 18, 26, Tile::Solid);
                 self.vertical(26, 1, 16, Tile::Solid);
                 self.horizontal(9, 18, 25, Tile::HazardDown);
+            }
+            DungeonPaletteCourse::StarThreshold => {
+                self.horizontal(14, 3, 8, Tile::OneWay);
+                self.horizontal(12, 11, 15, Tile::OneWay);
+                self.horizontal(9, 18, 23, Tile::OneWay);
+                self.horizontal(6, 25, 29, Tile::OneWay);
+                self.horizontal(14, 27, 30, Tile::OneWay);
+                for (start, end) in [(8, 11), (15, 18), (23, 25)] {
+                    self.horizontal(16, start, end, Tile::HazardUp);
+                    self.horizontal(17, start, end, Tile::Solid);
+                }
+            }
+            DungeonPaletteCourse::CometRun => {
+                self.horizontal(14, 3, 7, Tile::OneWay);
+                self.horizontal(10, 10, 14, Tile::OneWay);
+                self.horizontal(13, 17, 21, Tile::OneWay);
+                self.horizontal(8, 24, 28, Tile::OneWay);
+                self.horizontal(16, 7, 10, Tile::HazardUp);
+                self.horizontal(17, 7, 10, Tile::Solid);
+                self.horizontal(16, 14, 17, Tile::HazardUp);
+                self.horizontal(17, 14, 17, Tile::Solid);
+                self.horizontal(16, 21, 24, Tile::HazardUp);
+                self.horizontal(17, 21, 24, Tile::Solid);
+                self.horizontal(5, 12, 21, Tile::HazardDown);
+            }
+            DungeonPaletteCourse::OrbitFork => {
+                self.horizontal(14, 3, 8, Tile::OneWay);
+                self.horizontal(10, 11, 17, Tile::OneWay);
+                self.horizontal(7, 21, 27, Tile::OneWay);
+                self.horizontal(14, 26, 30, Tile::OneWay);
+                self.horizontal(16, 8, 14, Tile::Solid);
+                self.horizontal(16, 18, 24, Tile::Solid);
+                self.horizontal(4, 14, 19, Tile::OneWay);
+                self.horizontal(4, 19, 24, Tile::HazardDown);
+            }
+            DungeonPaletteCourse::MoonVault => {
+                self.vertical(9, 5, 16, Tile::Solid);
+                self.vertical(17, 2, 13, Tile::Solid);
+                self.horizontal(16, 9, 13, Tile::Solid);
+                self.horizontal(16, 19, 23, Tile::Solid);
+                self.horizontal(12, 18, 24, Tile::OneWay);
+                self.horizontal(8, 10, 16, Tile::OneWay);
+                self.horizontal(4, 18, 25, Tile::OneWay);
+                self.vertical(16, 8, 11, Tile::HazardLeft);
+            }
+            DungeonPaletteCourse::ConstellationHall => {
+                self.horizontal(14, 3, 7, Tile::OneWay);
+                self.horizontal(11, 10, 13, Tile::OneWay);
+                self.horizontal(7, 16, 19, Tile::OneWay);
+                self.horizontal(10, 22, 25, Tile::OneWay);
+                self.horizontal(5, 27, 30, Tile::OneWay);
+                self.horizontal(16, 7, 10, Tile::HazardUp);
+                self.horizontal(17, 7, 10, Tile::Solid);
+                self.horizontal(16, 13, 16, Tile::HazardUp);
+                self.horizontal(17, 13, 16, Tile::Solid);
+                self.horizontal(16, 19, 22, Tile::HazardUp);
+                self.horizontal(17, 19, 22, Tile::Solid);
+                self.horizontal(16, 25, 27, Tile::HazardUp);
+                self.horizontal(17, 25, 27, Tile::Solid);
+            }
+            DungeonPaletteCourse::ZenithShaft => {
+                self.vertical(9, 1, 17, Tile::Solid);
+                self.vertical(16, 4, 17, Tile::Solid);
+                self.vertical(10, 1, 5, Tile::Solid);
+                self.vertical(10, 5, 8, Tile::HazardRight);
+                self.vertical(10, 8, 11, Tile::Solid);
+                self.vertical(10, 11, 14, Tile::HazardRight);
+                self.vertical(10, 14, 16, Tile::Solid);
+                self.vertical(15, 4, 6, Tile::Solid);
+                self.vertical(15, 6, 9, Tile::HazardLeft);
+                self.vertical(15, 9, 12, Tile::Solid);
+                self.vertical(15, 12, 15, Tile::HazardLeft);
+                self.vertical(15, 15, 17, Tile::Solid);
+                self.horizontal(4, 15, 24, Tile::Solid);
+                self.horizontal(14, 24, 30, Tile::OneWay);
+                for row in 13..16 {
+                    self.set(9, row, Tile::Empty);
+                    self.set(10, row, Tile::Empty);
+                }
+            }
+            DungeonPaletteCourse::EclipseFork => {
+                self.horizontal(14, 3, 8, Tile::OneWay);
+                self.horizontal(12, 11, 17, Tile::OneWay);
+                self.horizontal(8, 21, 27, Tile::OneWay);
+                self.horizontal(14, 26, 30, Tile::OneWay);
+                self.horizontal(16, 8, 14, Tile::Solid);
+                self.horizontal(16, 18, 24, Tile::Solid);
+                self.horizontal(5, 13, 19, Tile::OneWay);
+                self.horizontal(16, 14, 18, Tile::HazardUp);
+                self.horizontal(5, 19, 24, Tile::HazardDown);
+            }
+            DungeonPaletteCourse::ShadowDuct => {
+                self.vertical(10, 4, 16, Tile::Solid);
+                self.vertical(18, 2, 13, Tile::Solid);
+                self.horizontal(16, 10, 14, Tile::Solid);
+                self.horizontal(16, 20, 24, Tile::Solid);
+                self.horizontal(12, 19, 24, Tile::OneWay);
+                self.horizontal(8, 11, 16, Tile::OneWay);
+                self.horizontal(4, 19, 25, Tile::OneWay);
+                self.horizontal(16, 24, 27, Tile::HazardUp);
+            }
+            DungeonPaletteCourse::Observatory => {
+                self.vertical(12, 2, 16, Tile::Solid);
+                self.vertical(19, 5, 17, Tile::Solid);
+                self.horizontal(16, 12, 20, Tile::Solid);
+                self.horizontal(10, 20, 26, Tile::OneWay);
+                self.horizontal(7, 13, 17, Tile::OneWay);
+                self.horizontal(3, 14, 18, Tile::OneWay);
+                self.horizontal(14, 26, 30, Tile::OneWay);
+                self.horizontal(12, 20, 24, Tile::HazardDown);
+                for row in 13..16 {
+                    self.set(12, row, Tile::Empty);
+                }
+            }
+            DungeonPaletteCourse::GravityLift => {
+                self.horizontal(14, 4, 9, Tile::OneWay);
+                self.horizontal(10, 12, 18, Tile::OneWay);
+                self.horizontal(7, 21, 27, Tile::OneWay);
+                self.horizontal(6, 14, 19, Tile::OneWay);
+                self.horizontal(3, 14, 19, Tile::OneWay);
+                self.horizontal(14, 26, 30, Tile::OneWay);
+                self.horizontal(16, 9, 13, Tile::HazardUp);
+                self.horizontal(17, 9, 13, Tile::Solid);
+                self.horizontal(16, 19, 23, Tile::HazardUp);
+                self.horizontal(17, 19, 23, Tile::Solid);
+            }
+            DungeonPaletteCourse::NovaNiche => {
+                self.vertical(9, 4, 16, Tile::Solid);
+                self.vertical(17, 2, 13, Tile::Solid);
+                self.horizontal(16, 9, 13, Tile::Solid);
+                self.horizontal(16, 19, 23, Tile::Solid);
+                self.horizontal(11, 18, 23, Tile::OneWay);
+                self.horizontal(7, 10, 15, Tile::OneWay);
+                self.horizontal(3, 18, 24, Tile::OneWay);
+                self.vertical(16, 7, 10, Tile::HazardLeft);
+            }
+            DungeonPaletteCourse::MeteorRun => {
+                self.horizontal(14, 3, 7, Tile::OneWay);
+                self.horizontal(12, 10, 13, Tile::OneWay);
+                self.horizontal(8, 16, 19, Tile::OneWay);
+                self.horizontal(11, 22, 25, Tile::OneWay);
+                self.horizontal(6, 28, 30, Tile::OneWay);
+                for (start, end) in [(7, 10), (13, 16), (19, 22), (25, 28)] {
+                    self.horizontal(16, start, end, Tile::HazardUp);
+                    self.horizontal(17, start, end, Tile::Solid);
+                }
+            }
+            DungeonPaletteCourse::VacuumGallery => {
+                self.vertical(11, 2, 16, Tile::Solid);
+                self.vertical(18, 5, 17, Tile::Solid);
+                self.horizontal(16, 11, 19, Tile::Solid);
+                self.horizontal(12, 19, 25, Tile::OneWay);
+                self.horizontal(6, 12, 16, Tile::OneWay);
+                self.horizontal(3, 14, 18, Tile::OneWay);
+                self.horizontal(14, 26, 30, Tile::OneWay);
+                for row in 13..16 {
+                    self.set(11, row, Tile::Empty);
+                    self.set(18, row, Tile::Empty);
+                }
+            }
+            DungeonPaletteCourse::TidalFork => {
+                self.horizontal(14, 3, 8, Tile::OneWay);
+                self.horizontal(11, 11, 17, Tile::OneWay);
+                self.horizontal(7, 21, 27, Tile::OneWay);
+                self.horizontal(14, 26, 30, Tile::OneWay);
+                self.horizontal(16, 8, 14, Tile::Solid);
+                self.horizontal(16, 18, 24, Tile::Solid);
+                self.horizontal(5, 13, 19, Tile::OneWay);
+                self.horizontal(4, 19, 24, Tile::HazardDown);
+            }
+            DungeonPaletteCourse::LunarCache => {
+                self.vertical(10, 4, 16, Tile::Solid);
+                self.vertical(18, 2, 13, Tile::Solid);
+                self.horizontal(16, 10, 14, Tile::Solid);
+                self.horizontal(16, 20, 24, Tile::Solid);
+                self.horizontal(12, 19, 24, Tile::OneWay);
+                self.horizontal(8, 11, 16, Tile::OneWay);
+                self.horizontal(4, 19, 25, Tile::OneWay);
+                self.horizontal(16, 24, 28, Tile::HazardUp);
+            }
+            DungeonPaletteCourse::AuroraSpire => {
+                self.vertical(12, 2, 16, Tile::Solid);
+                self.vertical(19, 5, 17, Tile::Solid);
+                self.horizontal(16, 12, 20, Tile::Solid);
+                self.horizontal(10, 20, 26, Tile::OneWay);
+                self.horizontal(7, 13, 17, Tile::OneWay);
+                self.horizontal(3, 14, 18, Tile::OneWay);
+                self.horizontal(14, 26, 30, Tile::OneWay);
+                self.horizontal(16, 20, 23, Tile::HazardUp);
+                for row in 13..16 {
+                    self.set(12, row, Tile::Empty);
+                }
+            }
+            DungeonPaletteCourse::VoidPass => {
+                self.horizontal(14, 3, 7, Tile::OneWay);
+                self.horizontal(11, 11, 14, Tile::OneWay);
+                self.horizontal(8, 18, 21, Tile::OneWay);
+                self.horizontal(5, 25, 28, Tile::OneWay);
+                self.horizontal(14, 28, 30, Tile::OneWay);
+                for (start, end) in [(7, 11), (14, 18), (21, 25)] {
+                    self.horizontal(16, start, end, Tile::HazardUp);
+                    self.horizontal(17, start, end, Tile::Solid);
+                }
+                self.horizontal(3, 15, 24, Tile::HazardDown);
+            }
+            DungeonPaletteCourse::StarwellClimb => {
+                self.vertical(10, 1, 17, Tile::Solid);
+                self.vertical(17, 4, 17, Tile::Solid);
+                self.vertical(11, 1, 4, Tile::Solid);
+                self.vertical(11, 4, 7, Tile::HazardRight);
+                self.vertical(11, 7, 10, Tile::Solid);
+                self.vertical(11, 10, 13, Tile::HazardRight);
+                self.vertical(11, 13, 16, Tile::Solid);
+                self.vertical(16, 4, 7, Tile::Solid);
+                self.vertical(16, 7, 10, Tile::HazardLeft);
+                self.vertical(16, 10, 13, Tile::Solid);
+                self.vertical(16, 13, 16, Tile::HazardLeft);
+                self.horizontal(4, 16, 25, Tile::Solid);
+                self.horizontal(14, 25, 30, Tile::OneWay);
+                for row in 13..16 {
+                    self.set(10, row, Tile::Empty);
+                    self.set(11, row, Tile::Empty);
+                }
+            }
+            DungeonPaletteCourse::Skybridge => {
+                self.horizontal(14, 3, 7, Tile::OneWay);
+                self.horizontal(10, 11, 14, Tile::OneWay);
+                self.horizontal(7, 18, 21, Tile::OneWay);
+                self.horizontal(10, 25, 28, Tile::OneWay);
+                self.horizontal(14, 28, 30, Tile::OneWay);
+                for (start, end) in [(7, 11), (14, 18), (21, 25)] {
+                    self.horizontal(16, start, end, Tile::HazardUp);
+                    self.horizontal(17, start, end, Tile::Solid);
+                }
+                self.horizontal(4, 15, 24, Tile::HazardDown);
+            }
+            DungeonPaletteCourse::AstralSeal => {
+                self.horizontal(14, 3, 7, Tile::OneWay);
+                self.vertical(10, 3, 14, Tile::Solid);
+                self.vertical(17, 4, 17, Tile::Solid);
+                self.horizontal(16, 10, 18, Tile::Solid);
+                self.horizontal(6, 18, 24, Tile::OneWay);
+                self.horizontal(14, 26, 30, Tile::OneWay);
+                self.horizontal(15, 19, 27, Tile::Solid);
+                self.vertical(27, 1, 16, Tile::Solid);
+                self.horizontal(9, 19, 26, Tile::HazardDown);
             }
             DungeonPaletteCourse::CoinLoft => {
                 self.horizontal(14, 3, 10, Tile::OneWay);

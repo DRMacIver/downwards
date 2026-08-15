@@ -188,7 +188,7 @@ cargo run -- --dungeon
 
 This is an expanding hand-authored dungeon built from deterministic room-palette starting points,
 not a claim that a general dungeon generator can design the finished game. It currently contains
-81 connected floors and 52 persistent coins. The opening Rootworks region begins without traversal
+101 connected floors and 64 persistent coins. The opening Rootworks region begins without traversal
 powers: both coin branches are required to enter the Climber's Reliquary, whose pickup unlocks Wall
 Jump. A mandatory ten-floor Wall-Jump region follows, with two required coin branches and a final
 physical Wall-Jump gate; its six coins are needed before the older halls can be entered. The next
@@ -200,8 +200,9 @@ with two required branches follows. Six regional coins open a physical low-postu
 the twenty-floor Aerial Foundry beyond it. The Foundry has three required coin branches, twelve new
 coins, mixed Wall-Jump/Dash rooms, and a regional seal whose known positive uses both methods. A
 mandatory twenty-floor Glassworks follows, adding three more required branches, twelve coins, and
-a second mixed-method seal. All fifty-two coins are required at that seal and again at the Crown
-gate. The Crown ingress explicitly
+a second mixed-method seal. A final mandatory twenty-floor Astral Keep adds three more required
+branches, twelve coins, and a third mixed-method seal. All sixty-four coins are required there and
+again at the Crown gate. The Crown ingress explicitly
 requires both unlocked traversal
 methods as well as the coins. Deaths and restarts return to the door used to enter the current room
 without discarding gloves, boots, Crown, or coins. `V` demonstrates the next intended room-local
