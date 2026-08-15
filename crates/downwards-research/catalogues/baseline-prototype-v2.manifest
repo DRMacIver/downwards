@@ -1,0 +1,250 @@
+downwards-curation-manifest-v2
+manifest-version=2
+compositional-generation-version=6 experimental-backing-version=2
+descriptor-versions static-visual=2 collision-topology=1 visual-fingerprint=1 witness=2 representative-actions=1
+selection-version=3
+request start-seed=0 seeds-per-stratum=16 strategies=3 intents=3 quota-per-band=3 tier=baseline wall-jump=0 dash=0
+solver-config id=downwards-solver-config-v1-b296884368c27dd8 policy-version=2 max-expanded-nodes=60000 max-simulated-ticks=2000000 max-ticks-per-path=600 beam-width=96 position-quantum=512 velocity-quantum=128 probe-direct-routes=1 baseline-preview-max-expanded-nodes=10000 baseline-preview-max-simulated-ticks=250000 macros=9
+difficulty-config id=downwards-difficulty-config-v1-42f8b52bf7c7eb5a heuristic-version=1 perturbation-grace-ticks=12 interpretation=heuristic-not-human-difficulty
+route-band-policy version=1 score=ai-component-score-minus-solver-effort gentle=0..4 standard=5..10 technical=11+ ordered-source-target=true
+fairness-policy deaths-per-door-route=0 robustness-success-floor=1/4 no-applicable-perturbations=pass all-door-pairs=required all-pickups-from-all-doors=required
+selection-policy distinct-static-visuals=true distinct-rooms-across-bands=true branching=mrv-unmatched-socket-or-ability rank-priority=socket-self-closure,socket-mate-inventory,socket-match,ability,strategy,vertical,intent,qd,quality,distance qd=strategy,intent,port-count,cycle-rank-bin,vertical-span-bin route-quality=ability-contribution,temporal-robustness,hazard-clearance,lower-simulated-ticks,lower-expanded-nodes distance=equal-mean(static-visual,collision-topology,traversal,semantic-action) solver-effort-as-difficulty=false solver-effort-as-operational-quality=true vertical-port-preference=true socket-mate-closure=required representative-ability-policy=none node-budget=250000
+strategy-coverage distinct=3 cyclic-graph=1 reachability-growth=4 rhythm-weave=4
+intent-coverage distinct=2 gentle=6 standard=3 technical=0
+pool attempted=144 constructed=144 raw-unique-visuals=144 exact-visual-duplicates=0 certified-unique-visuals=113 socket-coverable-rooms=90 rejections=certification:door-route:28,certification:pickup-route:2,fairness:temporal-robustness:1
+coverage selected-rooms=9 qd-strata=8 rooms-with-vertical-port=4 vertical-port-rooms-ratio=4/9 sockets=23 vertical-sockets=6 socket-signatures=16 all-sockets-have-mate=true
+representative-ability-coverage wall-witnesses=0 dash-witnesses=0 both-on-one-route=0 required-wall=0 required-dash=0 satisfied=true
+socket-inventory side=left offset=90 span=20 count=1 mate-count=2
+socket-inventory side=left offset=110 span=20 count=1 mate-count=1
+socket-inventory side=left offset=120 span=20 count=2 mate-count=2
+socket-inventory side=left offset=130 span=20 count=1 mate-count=2
+socket-inventory side=left offset=150 span=20 count=3 mate-count=2
+socket-inventory side=right offset=90 span=20 count=2 mate-count=1
+socket-inventory side=right offset=110 span=20 count=1 mate-count=1
+socket-inventory side=right offset=120 span=20 count=2 mate-count=2
+socket-inventory side=right offset=130 span=20 count=2 mate-count=1
+socket-inventory side=right offset=150 span=20 count=2 mate-count=3
+socket-inventory side=ceiling offset=70 span=20 count=1 mate-count=1
+socket-inventory side=ceiling offset=120 span=20 count=1 mate-count=1
+socket-inventory side=ceiling offset=230 span=20 count=1 mate-count=1
+socket-inventory side=floor offset=70 span=20 count=1 mate-count=1
+socket-inventory side=floor offset=120 span=20 count=1 mate-count=1
+socket-inventory side=floor offset=230 span=20 count=1 mate-count=1
+room-begin index=0 id="prototype-v2-baseline-gentle-000" catalogue-band=gentle strategy=rhythm-weave intent=gentle seed=5 tier=baseline wall-jump=0 dash=0 metadata-generation-version=6 visual-fingerprint=downwards-static-v1-94ab24091b8eec21
+route-plan signature=88b560c3fd203e8b nodes=10 edges=10 ports=3 cycles=1 branch-nodes=1 vertical-span-rows=4 wall-edges=0 dash-edges=0
+qd-stratum strategy=rhythm-weave intent=gentle port-count=3 cycle-bin=1 vertical-span-bin=1
+socket-signature left:120:20,right:150:20,floor:230:20
+door id="port-east" side=right offset=150 span=20 arrival-x=300 arrival-y=158
+door id="port-floor" side=floor offset=230 span=20 arrival-x=280 arrival-y=138
+door id="port-west" side=left offset=120 span=20 arrival-x=12 arrival-y=128
+representative-route catalogue-band=gentle source="port-floor" target="port-east" witness=downwards-witness-v2-37bca2050e309635 successful-wall-jumps=0 successful-dashes=0
+representative-actions encoding=semantic-rle-v1 fields=move-x:move-y:jump:dash:restart*ticks total-ticks=16 spans=1 data="1:0:0:0:0*16"
+route-matrix count=6
+route index=0 source="port-east" target="port-floor" band=gentle diagnostic-ai-band=gentle witness=downwards-witness-v2-2fdc524e3ba01ea0 completion-ticks=42 input-transitions=3 jump-presses=1 dash-presses=0 successful-jumps=1 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:25:16:pixels=9:tick=22 robustness=10/10 robustness-not-applicable=2 curation-band-score=0 diagnostic-ai-complexity-score=0 components=completion:0,input:0,verbs:0,deaths:0,fragility:0,solver-effort:0 search=expanded:9,generated:9,simulated-ticks:1124,deepest-path-ticks:203
+route index=1 source="port-east" target="port-west" band=technical diagnostic-ai-band=technical witness=downwards-witness-v2-d264e6b2fa5d1ba0 completion-ticks=195 input-transitions=18 jump-presses=9 dash-presses=0 successful-jumps=9 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:25:16:pixels=10:tick=22 robustness=67/70 robustness-not-applicable=2 curation-band-score=11 diagnostic-ai-complexity-score=11 components=completion:3,input:4,verbs:4,deaths:0,fragility:0,solver-effort:0 search=expanded:4,generated:4,simulated-ticks:288,deepest-path-ticks:195
+route index=2 source="port-floor" target="port-east" band=gentle diagnostic-ai-band=gentle witness=downwards-witness-v2-37bca2050e309635 completion-ticks=16 input-transitions=1 jump-presses=0 dash-presses=0 successful-jumps=0 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:25:16:pixels=20:tick=1 robustness=2/2 robustness-not-applicable=2 curation-band-score=0 diagnostic-ai-complexity-score=0 components=completion:0,input:0,verbs:0,deaths:0,fragility:0,solver-effort:0 search=expanded:1,generated:1,simulated-ticks:16,deepest-path-ticks:16
+route index=3 source="port-floor" target="port-west" band=technical diagnostic-ai-band=technical witness=downwards-witness-v2-11a999b8d0a41b49 completion-ticks=182 input-transitions=21 jump-presses=11 dash-presses=0 successful-jumps=11 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:25:16:pixels=10:tick=19 robustness=82/82 robustness-not-applicable=2 curation-band-score=11 diagnostic-ai-complexity-score=11 components=completion:3,input:4,verbs:4,deaths:0,fragility:0,solver-effort:0 search=expanded:4,generated:4,simulated-ticks:246,deepest-path-ticks:182
+route index=4 source="port-west" target="port-east" band=gentle diagnostic-ai-band=gentle witness=downwards-witness-v2-795bfc69d6fe1b9d completion-ticks=195 input-transitions=1 jump-presses=0 dash-presses=0 successful-jumps=0 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:25:16:pixels=10:tick=167 robustness=2/2 robustness-not-applicable=2 curation-band-score=3 diagnostic-ai-complexity-score=3 components=completion:3,input:0,verbs:0,deaths:0,fragility:0,solver-effort:0 search=expanded:1,generated:1,simulated-ticks:195,deepest-path-ticks:195
+route index=5 source="port-west" target="port-floor" band=technical diagnostic-ai-band=technical witness=downwards-witness-v2-22c745cae90d0f82 completion-ticks=241 input-transitions=23 jump-presses=11 dash-presses=0 successful-jumps=10 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:25:16:pixels=4:tick=224 robustness=90/90 robustness-not-applicable=2 curation-band-score=12 diagnostic-ai-complexity-score=14 components=completion:4,input:4,verbs:4,deaths:0,fragility:0,solver-effort:2 search=expanded:242,generated:242,simulated-ticks:53354,deepest-path-ticks:359
+pickup-matrix count=3
+pickup-route source="port-east" pickup="optional-cache" witness=downwards-witness-v2-20413e0b4128ab47
+pickup-route source="port-floor" pickup="optional-cache" witness=downwards-witness-v2-705fb9e6bb6c7b94
+pickup-route source="port-west" pickup="optional-cache" witness=downwards-witness-v2-a0b5526858cf9fca
+representative-pickup source="port-floor" pickup="optional-cache" witness=downwards-witness-v2-705fb9e6bb6c7b94
+representative-pickup-actions encoding=semantic-rle-v1 fields=move-x:move-y:jump:dash:restart*ticks total-ticks=75 spans=9 data="-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*3"
+source-search-matrix count=3
+source-search source="port-east" expanded=9 generated=9 simulated-ticks=1124 deepest-path-ticks=203
+source-search source="port-floor" expanded=4 generated=4 simulated-ticks=246 deepest-path-ticks=182
+source-search source="port-west" expanded=242 generated=242 simulated-ticks=53354 deepest-path-ticks=359
+room-end
+room-begin index=1 id="prototype-v2-baseline-gentle-001" catalogue-band=gentle strategy=rhythm-weave intent=standard seed=9 tier=baseline wall-jump=0 dash=0 metadata-generation-version=6 visual-fingerprint=downwards-static-v1-0312d1171831e285
+route-plan signature=b92f63268d65bc32 nodes=16 edges=16 ports=4 cycles=1 branch-nodes=2 vertical-span-rows=13 wall-edges=0 dash-edges=0
+qd-stratum strategy=rhythm-weave intent=standard port-count=4 cycle-bin=1 vertical-span-bin=2
+socket-signature left:150:20,right:90:20,ceiling:230:20,floor:70:20
+door id="port-ceiling" side=ceiling offset=230 span=20 arrival-x=236 arrival-y=12
+door id="port-east" side=right offset=90 span=20 arrival-x=300 arrival-y=98
+door id="port-floor" side=floor offset=70 span=20 arrival-x=42 arrival-y=138
+door id="port-west" side=left offset=150 span=20 arrival-x=12 arrival-y=158
+representative-route catalogue-band=gentle source="port-ceiling" target="port-east" witness=downwards-witness-v2-3e492ebea48bae22 successful-wall-jumps=0 successful-dashes=0
+representative-actions encoding=semantic-rle-v1 fields=move-x:move-y:jump:dash:restart*ticks total-ticks=55 spans=1 data="1:0:0:0:0*55"
+route-matrix count=12
+route index=0 source="port-ceiling" target="port-east" band=gentle diagnostic-ai-band=gentle witness=downwards-witness-v2-3e492ebea48bae22 completion-ticks=55 input-transitions=1 jump-presses=0 dash-presses=0 successful-jumps=0 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:22:16:pixels=50:tick=38 robustness=2/2 robustness-not-applicable=2 curation-band-score=0 diagnostic-ai-complexity-score=0 components=completion:0,input:0,verbs:0,deaths:0,fragility:0,solver-effort:0 search=expanded:1,generated:1,simulated-ticks:55,deepest-path-ticks:55
+route index=1 source="port-ceiling" target="port-floor" band=standard diagnostic-ai-band=technical witness=downwards-witness-v2-8577c19d109122ac completion-ticks=108 input-transitions=20 jump-presses=8 dash-presses=0 successful-jumps=4 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:6:16:pixels=7:tick=108 robustness=48/78 robustness-not-applicable=2 curation-band-score=10 diagnostic-ai-complexity-score=12 components=completion:1,input:4,verbs:2,deaths:0,fragility:3,solver-effort:2 search=expanded:2851,generated:20955,simulated-ticks:159549,deepest-path-ticks:352
+route index=2 source="port-ceiling" target="port-west" band=gentle diagnostic-ai-band=gentle witness=downwards-witness-v2-58451783332e1463 completion-ticks=152 input-transitions=1 jump-presses=0 dash-presses=0 successful-jumps=0 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:5:16:pixels=14:tick=140 robustness=2/2 robustness-not-applicable=2 curation-band-score=2 diagnostic-ai-complexity-score=2 components=completion:2,input:0,verbs:0,deaths:0,fragility:0,solver-effort:0 search=expanded:3,generated:3,simulated-ticks:278,deepest-path-ticks:152
+route index=3 source="port-east" target="port-ceiling" band=standard diagnostic-ai-band=technical witness=downwards-witness-v2-8c56fb11ee67d87f completion-ticks=79 input-transitions=19 jump-presses=6 dash-presses=0 successful-jumps=5 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:24:16:pixels=50:tick=1 robustness=58/74 robustness-not-applicable=2 curation-band-score=9 diagnostic-ai-complexity-score=11 components=completion:1,input:4,verbs:2,deaths:0,fragility:2,solver-effort:2 search=expanded:1885,generated:14608,simulated-ticks:118022,deepest-path-ticks:407
+route index=4 source="port-east" target="port-floor" band=technical diagnostic-ai-band=technical witness=downwards-witness-v2-d44bf7dc9021a65a completion-ticks=148 input-transitions=27 jump-presses=11 dash-presses=0 successful-jumps=7 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:9:16:pixels=7:tick=148 robustness=67/106 robustness-not-applicable=2 curation-band-score=12 diagnostic-ai-complexity-score=14 components=completion:2,input:4,verbs:3,deaths:0,fragility:3,solver-effort:2 search=expanded:3515,generated:29275,simulated-ticks:174419,deepest-path-ticks:407
+route index=5 source="port-east" target="port-west" band=gentle diagnostic-ai-band=gentle witness=downwards-witness-v2-7a8c89369272825d completion-ticks=194 input-transitions=1 jump-presses=0 dash-presses=0 successful-jumps=0 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=timed:0:pixels=8:tick=154 robustness=2/2 robustness-not-applicable=2 curation-band-score=3 diagnostic-ai-complexity-score=3 components=completion:3,input:0,verbs:0,deaths:0,fragility:0,solver-effort:0 search=expanded:1,generated:1,simulated-ticks:194,deepest-path-ticks:194
+route index=6 source="port-floor" target="port-ceiling" band=technical diagnostic-ai-band=technical witness=downwards-witness-v2-2029560c492a5091 completion-ticks=203 input-transitions=28 jump-presses=9 dash-presses=0 successful-jumps=9 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=timed:0:pixels=1:tick=11 robustness=60/110 robustness-not-applicable=2 curation-band-score=15 diagnostic-ai-complexity-score=17 components=completion:3,input:4,verbs:4,deaths:0,fragility:4,solver-effort:2 search=expanded:5178,generated:41911,simulated-ticks:181685,deepest-path-ticks:377
+route index=7 source="port-floor" target="port-east" band=standard diagnostic-ai-band=standard witness=downwards-witness-v2-be53395cb329999c completion-ticks=176 input-transitions=20 jump-presses=10 dash-presses=0 successful-jumps=10 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=timed:0:pixels=1:tick=10 robustness=76/78 robustness-not-applicable=2 curation-band-score=10 diagnostic-ai-complexity-score=10 components=completion:2,input:4,verbs:4,deaths:0,fragility:0,solver-effort:0 search=expanded:3,generated:3,simulated-ticks:220,deepest-path-ticks:176
+route index=8 source="port-floor" target="port-west" band=gentle diagnostic-ai-band=gentle witness=downwards-witness-v2-72bdfd7f900e473f completion-ticks=22 input-transitions=1 jump-presses=0 dash-presses=0 successful-jumps=0 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:5:16:pixels=10:tick=1 robustness=2/2 robustness-not-applicable=2 curation-band-score=0 diagnostic-ai-complexity-score=0 components=completion:0,input:0,verbs:0,deaths:0,fragility:0,solver-effort:0 search=expanded:2,generated:2,simulated-ticks:44,deepest-path-ticks:22
+route index=9 source="port-west" target="port-ceiling" band=technical diagnostic-ai-band=technical witness=downwards-witness-v2-3410c1d5d8518126 completion-ticks=200 input-transitions=29 jump-presses=12 dash-presses=0 successful-jumps=10 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=timed:0:pixels=3:tick=28 robustness=101/114 robustness-not-applicable=2 curation-band-score=12 diagnostic-ai-complexity-score=14 components=completion:3,input:4,verbs:4,deaths:0,fragility:1,solver-effort:2 search=expanded:4764,generated:40520,simulated-ticks:176177,deepest-path-ticks:317
+route index=10 source="port-west" target="port-east" band=standard diagnostic-ai-band=standard witness=downwards-witness-v2-871867f91b5e977c completion-ticks=196 input-transitions=12 jump-presses=6 dash-presses=0 successful-jumps=6 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=timed:0:pixels=2:tick=39 robustness=43/46 robustness-not-applicable=2 curation-band-score=10 diagnostic-ai-complexity-score=10 components=completion:3,input:3,verbs:3,deaths:0,fragility:1,solver-effort:0 search=expanded:7,generated:7,simulated-ticks:376,deepest-path-ticks:196
+route index=11 source="port-west" target="port-floor" band=gentle diagnostic-ai-band=gentle witness=downwards-witness-v2-c009bdcfe1e65f5c completion-ticks=42 input-transitions=3 jump-presses=1 dash-presses=0 successful-jumps=1 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:5:16:pixels=4:tick=20 robustness=6/10 robustness-not-applicable=2 curation-band-score=3 diagnostic-ai-complexity-score=3 components=completion:0,input:0,verbs:0,deaths:0,fragility:3,solver-effort:0 search=expanded:9,generated:9,simulated-ticks:613,deepest-path-ticks:196
+pickup-matrix count=4
+pickup-route source="port-ceiling" pickup="optional-cache" witness=downwards-witness-v2-55736e0fcfad68b4
+pickup-route source="port-east" pickup="optional-cache" witness=downwards-witness-v2-f0ae3c17420e12d9
+pickup-route source="port-floor" pickup="optional-cache" witness=downwards-witness-v2-a34d025ddf3cb750
+pickup-route source="port-west" pickup="optional-cache" witness=downwards-witness-v2-442698477cd21189
+representative-pickup source="port-ceiling" pickup="optional-cache" witness=downwards-witness-v2-55736e0fcfad68b4
+representative-pickup-actions encoding=semantic-rle-v1 fields=move-x:move-y:jump:dash:restart*ticks total-ticks=103 spans=13 data="1:0:1:0:0*5,1:0:0:0:0*13,1:0:1:0:0*5,1:0:0:0:0*13,1:0:1:0:0*5,1:0:0:0:0*13,1:0:1:0:0*2,-1:0:1:0:0*3,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*8"
+source-search-matrix count=4
+source-search source="port-ceiling" expanded=2851 generated=20955 simulated-ticks=159549 deepest-path-ticks=352
+source-search source="port-east" expanded=3515 generated=29275 simulated-ticks=174419 deepest-path-ticks=407
+source-search source="port-floor" expanded=5178 generated=41911 simulated-ticks=181685 deepest-path-ticks=377
+source-search source="port-west" expanded=4764 generated=40520 simulated-ticks=176177 deepest-path-ticks=317
+room-end
+room-begin index=2 id="prototype-v2-baseline-gentle-002" catalogue-band=gentle strategy=rhythm-weave intent=standard seed=13 tier=baseline wall-jump=0 dash=0 metadata-generation-version=6 visual-fingerprint=downwards-static-v1-0d18daf9a2d1da34
+route-plan signature=e15d2ddc79e50997 nodes=18 edges=18 ports=3 cycles=1 branch-nodes=2 vertical-span-rows=13 wall-edges=0 dash-edges=0
+qd-stratum strategy=rhythm-weave intent=standard port-count=3 cycle-bin=1 vertical-span-bin=2
+socket-signature left:90:20,right:150:20,ceiling:70:20
+door id="port-ceiling" side=ceiling offset=70 span=20 arrival-x=76 arrival-y=12
+door id="port-east" side=right offset=150 span=20 arrival-x=300 arrival-y=158
+door id="port-west" side=left offset=90 span=20 arrival-x=12 arrival-y=98
+representative-route catalogue-band=gentle source="port-ceiling" target="port-west" witness=downwards-witness-v2-7bb8adcaacb5ea43 successful-wall-jumps=0 successful-dashes=0
+representative-actions encoding=semantic-rle-v1 fields=move-x:move-y:jump:dash:restart*ticks total-ticks=46 spans=1 data="-1:0:0:0:0*46"
+route-matrix count=6
+route index=0 source="port-ceiling" target="port-east" band=gentle diagnostic-ai-band=gentle witness=downwards-witness-v2-c04e66b7728195bd completion-ticks=153 input-transitions=1 jump-presses=0 dash-presses=0 successful-jumps=0 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:19:16:pixels=10:tick=92 robustness=2/2 robustness-not-applicable=2 curation-band-score=2 diagnostic-ai-complexity-score=2 components=completion:2,input:0,verbs:0,deaths:0,fragility:0,solver-effort:0 search=expanded:1,generated:1,simulated-ticks:153,deepest-path-ticks:153
+route index=1 source="port-ceiling" target="port-west" band=gentle diagnostic-ai-band=gentle witness=downwards-witness-v2-7bb8adcaacb5ea43 completion-ticks=46 input-transitions=1 jump-presses=0 dash-presses=0 successful-jumps=0 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:1:16:pixels=50:tick=38 robustness=2/2 robustness-not-applicable=2 curation-band-score=0 diagnostic-ai-complexity-score=0 components=completion:0,input:0,verbs:0,deaths:0,fragility:0,solver-effort:0 search=expanded:2,generated:2,simulated-ticks:199,deepest-path-ticks:153
+route index=2 source="port-east" target="port-ceiling" band=technical diagnostic-ai-band=technical witness=downwards-witness-v2-a1b7ea84d8b176a0 completion-ticks=224 input-transitions=32 jump-presses=10 dash-presses=0 successful-jumps=9 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:26:16:pixels=18:tick=10 robustness=86/126 robustness-not-applicable=2 curation-band-score=14 diagnostic-ai-complexity-score=17 components=completion:3,input:4,verbs:4,deaths:0,fragility:3,solver-effort:3 search=expanded:5339,generated:45702,simulated-ticks:228929,deepest-path-ticks:406
+route index=3 source="port-east" target="port-west" band=technical diagnostic-ai-band=technical witness=downwards-witness-v2-f2fc05f2e908d243 completion-ticks=195 input-transitions=18 jump-presses=9 dash-presses=0 successful-jumps=9 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:26:16:pixels=10:tick=16 robustness=68/70 robustness-not-applicable=2 curation-band-score=11 diagnostic-ai-complexity-score=11 components=completion:3,input:4,verbs:4,deaths:0,fragility:0,solver-effort:0 search=expanded:3,generated:3,simulated-ticks:251,deepest-path-ticks:195
+route index=4 source="port-west" target="port-ceiling" band=standard diagnostic-ai-band=technical witness=downwards-witness-v2-5422fb733db5e7d3 completion-ticks=88 input-transitions=12 jump-presses=4 dash-presses=0 successful-jumps=4 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:1:16:pixels=50:tick=1 robustness=22/46 robustness-not-applicable=2 curation-band-score=10 diagnostic-ai-complexity-score=12 components=completion:1,input:3,verbs:2,deaths:0,fragility:4,solver-effort:2 search=expanded:2074,generated:16318,simulated-ticks:128973,deepest-path-ticks:406
+route index=5 source="port-west" target="port-east" band=gentle diagnostic-ai-band=gentle witness=downwards-witness-v2-f682636b91dc121a completion-ticks=195 input-transitions=1 jump-presses=0 dash-presses=0 successful-jumps=0 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:19:16:pixels=10:tick=134 robustness=2/2 robustness-not-applicable=2 curation-band-score=3 diagnostic-ai-complexity-score=3 components=completion:3,input:0,verbs:0,deaths:0,fragility:0,solver-effort:0 search=expanded:1,generated:1,simulated-ticks:195,deepest-path-ticks:195
+pickup-matrix count=3
+pickup-route source="port-ceiling" pickup="optional-cache" witness=downwards-witness-v2-2ae2cbc4be1f5902
+pickup-route source="port-east" pickup="optional-cache" witness=downwards-witness-v2-41e111b94bad2112
+pickup-route source="port-west" pickup="optional-cache" witness=downwards-witness-v2-9ec613194021ae94
+representative-pickup source="port-ceiling" pickup="optional-cache" witness=downwards-witness-v2-2ae2cbc4be1f5902
+representative-pickup-actions encoding=semantic-rle-v1 fields=move-x:move-y:jump:dash:restart*ticks total-ticks=112 spans=12 data="1:0:1:0:0*7,1:0:0:0:0*15,1:0:1:0:0*7,1:0:0:0:0*15,1:0:1:0:0*7,1:0:0:0:0*5,-1:0:0:0:0*10,-1:0:1:0:0*7,-1:0:0:0:0*15,-1:0:1:0:0*7,-1:0:0:0:0*15,-1:0:1:0:0*2"
+source-search-matrix count=3
+source-search source="port-ceiling" expanded=103 generated=103 simulated-ticks=10534 deepest-path-ticks=173
+source-search source="port-east" expanded=5339 generated=45702 simulated-ticks=228929 deepest-path-ticks=406
+source-search source="port-west" expanded=2074 generated=16318 simulated-ticks=128973 deepest-path-ticks=406
+room-end
+room-begin index=3 id="prototype-v2-baseline-standard-003" catalogue-band=standard strategy=reachability-growth intent=gentle seed=11 tier=baseline wall-jump=0 dash=0 metadata-generation-version=6 visual-fingerprint=downwards-static-v1-6ec94a4e12f62b61
+route-plan signature=5cc5000c6521794a nodes=10 edges=16 ports=2 cycles=7 branch-nodes=6 vertical-span-rows=5 wall-edges=0 dash-edges=0
+qd-stratum strategy=reachability-growth intent=gentle port-count=2 cycle-bin=3 vertical-span-bin=1
+socket-signature left:130:20,right:130:20
+door id="port-east" side=right offset=130 span=20 arrival-x=302 arrival-y=138
+door id="port-west" side=left offset=130 span=20 arrival-x=10 arrival-y=138
+representative-route catalogue-band=standard source="port-west" target="port-east" witness=downwards-witness-v2-f7a04a7408996b85 successful-wall-jumps=0 successful-dashes=0
+representative-actions encoding=semantic-rle-v1 fields=move-x:move-y:jump:dash:restart*ticks total-ticks=213 spans=13 data="1:0:0:0:0*20,1:0:1:0:0*8,1:0:0:0:0*17,1:0:1:0:0*8,1:0:0:0:0*65,1:0:1:0:0*8,1:0:0:0:0*11,1:0:1:0:0*8,1:0:0:0:0*20,1:0:1:0:0*8,1:0:0:0:0*11,1:0:1:0:0*8,1:0:0:0:0*21"
+route-matrix count=2
+route index=0 source="port-east" target="port-west" band=technical diagnostic-ai-band=technical witness=downwards-witness-v2-46be8b0f969387e1 completion-ticks=213 input-transitions=17 jump-presses=9 dash-presses=0 successful-jumps=9 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:29:16:pixels=10:tick=1 robustness=64/66 robustness-not-applicable=2 curation-band-score=11 diagnostic-ai-complexity-score=11 components=completion:3,input:4,verbs:4,deaths:0,fragility:0,solver-effort:0 search=expanded:4,generated:4,simulated-ticks:343,deepest-path-ticks:213
+route index=1 source="port-west" target="port-east" band=standard diagnostic-ai-band=standard witness=downwards-witness-v2-f7a04a7408996b85 completion-ticks=213 input-transitions=13 jump-presses=6 dash-presses=0 successful-jumps=6 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:24:16:pixels=1:tick=163 robustness=47/50 robustness-not-applicable=2 curation-band-score=9 diagnostic-ai-complexity-score=9 components=completion:3,input:3,verbs:3,deaths:0,fragility:0,solver-effort:0 search=expanded:40,generated:40,simulated-ticks:4298,deepest-path-ticks:600
+pickup-matrix count=2
+pickup-route source="port-east" pickup="growth-cache" witness=downwards-witness-v2-cbb66308a3b55ede
+pickup-route source="port-west" pickup="growth-cache" witness=downwards-witness-v2-1d560016607e68f7
+representative-pickup source="port-west" pickup="growth-cache" witness=downwards-witness-v2-1d560016607e68f7
+representative-pickup-actions encoding=semantic-rle-v1 fields=move-x:move-y:jump:dash:restart*ticks total-ticks=83 spans=6 data="1:0:0:0:0*29,1:0:1:0:0*4,1:0:0:0:0*14,1:0:1:0:0*4,1:0:0:0:0*31,1:0:1:0:0*1"
+source-search-matrix count=2
+source-search source="port-east" expanded=27 generated=27 simulated-ticks=2081 deepest-path-ticks=213
+source-search source="port-west" expanded=40 generated=40 simulated-ticks=4298 deepest-path-ticks=600
+room-end
+room-begin index=4 id="prototype-v2-baseline-standard-004" catalogue-band=standard strategy=reachability-growth intent=gentle seed=13 tier=baseline wall-jump=0 dash=0 metadata-generation-version=6 visual-fingerprint=downwards-static-v1-61d3c19ce9da135b
+route-plan signature=5bd35ad164485ee9 nodes=10 edges=13 ports=3 cycles=4 branch-nodes=5 vertical-span-rows=11 wall-edges=0 dash-edges=0
+qd-stratum strategy=reachability-growth intent=gentle port-count=3 cycle-bin=3 vertical-span-bin=2
+socket-signature right:90:20,ceiling:120:20,floor:120:20
+door id="port-ceiling" side=ceiling offset=120 span=20 arrival-x=126 arrival-y=10
+door id="port-east" side=right offset=90 span=20 arrival-x=302 arrival-y=98
+door id="port-floor" side=floor offset=120 span=20 arrival-x=166 arrival-y=138
+representative-route catalogue-band=standard source="port-ceiling" target="port-east" witness=downwards-witness-v2-b94360f1b4062e17 successful-wall-jumps=0 successful-dashes=0
+representative-actions encoding=semantic-rle-v1 fields=move-x:move-y:jump:dash:restart*ticks total-ticks=139 spans=13 data="1:0:1:0:0*7,1:0:0:0:0*15,1:0:1:0:0*7,1:0:0:0:0*15,1:0:1:0:0*7,1:0:0:0:0*15,1:0:1:0:0*7,1:0:0:0:0*15,1:0:1:0:0*7,1:0:0:0:0*15,1:0:1:0:0*7,1:0:0:0:0*15,1:0:1:0:0*7"
+route-matrix count=6
+route index=0 source="port-ceiling" target="port-east" band=standard diagnostic-ai-band=standard witness=downwards-witness-v2-b94360f1b4062e17 completion-ticks=139 input-transitions=13 jump-presses=7 dash-presses=0 successful-jumps=5 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:21:16:pixels=50:tick=98 robustness=47/50 robustness-not-applicable=2 curation-band-score=7 diagnostic-ai-complexity-score=7 components=completion:2,input:3,verbs:2,deaths:0,fragility:0,solver-effort:0 search=expanded:5,generated:5,simulated-ticks:1459,deepest-path-ticks:600
+route index=1 source="port-ceiling" target="port-floor" band=technical diagnostic-ai-band=technical witness=downwards-witness-v2-b0ee4d70549a5650 completion-ticks=263 input-transitions=57 jump-presses=14 dash-presses=0 successful-jumps=7 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:11:16:pixels=0:tick=263 robustness=127/226 robustness-not-applicable=2 curation-band-score=15 diagnostic-ai-complexity-score=18 components=completion:4,input:4,verbs:3,deaths:0,fragility:4,solver-effort:3 search=expanded:6596,generated:54652,simulated-ticks:306061,deepest-path-ticks:600
+route index=2 source="port-east" target="port-ceiling" band=standard diagnostic-ai-band=standard witness=downwards-witness-v2-38664670e33c1b10 completion-ticks=120 input-transitions=12 jump-presses=6 dash-presses=0 successful-jumps=6 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:25:16:pixels=50:tick=1 robustness=34/45 robustness-not-applicable=3 curation-band-score=10 diagnostic-ai-complexity-score=10 components=completion:2,input:3,verbs:3,deaths:0,fragility:2,solver-effort:0 search=expanded:51,generated:51,simulated-ticks:3292,deepest-path-ticks:196
+route index=3 source="port-east" target="port-floor" band=standard diagnostic-ai-band=standard witness=downwards-witness-v2-728385fcc591f3b1 completion-ticks=123 input-transitions=10 jump-presses=3 dash-presses=0 successful-jumps=1 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:11:16:pixels=0:tick=123 robustness=27/38 robustness-not-applicable=2 curation-band-score=6 diagnostic-ai-complexity-score=8 components=completion:2,input:2,verbs:0,deaths:0,fragility:2,solver-effort:2 search=expanded:2967,generated:24343,simulated-ticks:121468,deepest-path-ticks:600
+route index=4 source="port-floor" target="port-ceiling" band=technical diagnostic-ai-band=technical witness=downwards-witness-v2-04d24106568d5771 completion-ticks=151 input-transitions=17 jump-presses=8 dash-presses=0 successful-jumps=8 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:20:16:pixels=12:tick=12 robustness=49/65 robustness-not-applicable=3 curation-band-score=12 diagnostic-ai-complexity-score=12 components=completion:2,input:4,verbs:4,deaths:0,fragility:2,solver-effort:0 search=expanded:154,generated:154,simulated-ticks:9806,deepest-path-ticks:600
+route index=5 source="port-floor" target="port-east" band=standard diagnostic-ai-band=standard witness=downwards-witness-v2-b9ada35319c1c2c8 completion-ticks=109 input-transitions=9 jump-presses=5 dash-presses=0 successful-jumps=5 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:20:16:pixels=10:tick=14 robustness=30/34 robustness-not-applicable=2 curation-band-score=6 diagnostic-ai-complexity-score=6 components=completion:1,input:2,verbs:2,deaths:0,fragility:1,solver-effort:0 search=expanded:8,generated:8,simulated-ticks:391,deepest-path-ticks:109
+pickup-matrix count=3
+pickup-route source="port-ceiling" pickup="growth-cache" witness=downwards-witness-v2-a7b216f81c6e23a6
+pickup-route source="port-east" pickup="growth-cache" witness=downwards-witness-v2-194de7d0c60cd1c3
+pickup-route source="port-floor" pickup="growth-cache" witness=downwards-witness-v2-a7c3fae6b7df9d5f
+representative-pickup source="port-ceiling" pickup="growth-cache" witness=downwards-witness-v2-a7b216f81c6e23a6
+representative-pickup-actions encoding=semantic-rle-v1 fields=move-x:move-y:jump:dash:restart*ticks total-ticks=64 spans=12 data="1:1:1:0:0*1,1:1:0:0:0*11,1:1:1:0:0*1,1:1:0:0:0*11,1:1:1:0:0*1,1:1:0:0:0*11,1:1:1:0:0*1,1:1:0:0:0*11,1:1:1:0:0*1,1:1:0:0:0*11,1:1:1:0:0*1,1:1:0:0:0*3"
+source-search-matrix count=3
+source-search source="port-ceiling" expanded=6596 generated=54652 simulated-ticks=306061 deepest-path-ticks=600
+source-search source="port-east" expanded=2967 generated=24343 simulated-ticks=121468 deepest-path-ticks=600
+source-search source="port-floor" expanded=154 generated=154 simulated-ticks=9806 deepest-path-ticks=600
+room-end
+room-begin index=5 id="prototype-v2-baseline-standard-005" catalogue-band=standard strategy=rhythm-weave intent=gentle seed=14 tier=baseline wall-jump=0 dash=0 metadata-generation-version=6 visual-fingerprint=downwards-static-v1-c0f97dc8ed67e513
+route-plan signature=f9f9b7063514e760 nodes=10 edges=10 ports=2 cycles=1 branch-nodes=1 vertical-span-rows=4 wall-edges=0 dash-edges=0
+qd-stratum strategy=rhythm-weave intent=gentle port-count=2 cycle-bin=1 vertical-span-bin=1
+socket-signature left:150:20,right:120:20
+door id="port-east" side=right offset=120 span=20 arrival-x=300 arrival-y=128
+door id="port-west" side=left offset=150 span=20 arrival-x=12 arrival-y=158
+representative-route catalogue-band=standard source="port-west" target="port-east" witness=downwards-witness-v2-5317ef5280ff8d47 successful-wall-jumps=0 successful-dashes=0
+representative-actions encoding=semantic-rle-v1 fields=move-x:move-y:jump:dash:restart*ticks total-ticks=202 spans=14 data="1:0:1:0:0*10,1:0:0:0:0*20,1:0:1:0:0*10,1:0:0:0:0*20,1:0:1:0:0*10,1:0:0:0:0*20,1:0:1:0:0*10,1:0:0:0:0*20,1:0:1:0:0*10,1:0:0:0:0*20,1:0:1:0:0*10,1:0:0:0:0*20,1:0:1:0:0*10,1:0:0:0:0*12"
+route-matrix count=2
+route index=0 source="port-east" target="port-west" band=technical diagnostic-ai-band=technical witness=downwards-witness-v2-85c667e72d79407c completion-ticks=195 input-transitions=18 jump-presses=9 dash-presses=0 successful-jumps=9 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:24:16:pixels=20:tick=22 robustness=68/70 robustness-not-applicable=2 curation-band-score=11 diagnostic-ai-complexity-score=11 components=completion:3,input:4,verbs:4,deaths:0,fragility:0,solver-effort:0 search=expanded:3,generated:3,simulated-ticks:275,deepest-path-ticks:195
+route index=1 source="port-west" target="port-east" band=standard diagnostic-ai-band=standard witness=downwards-witness-v2-5317ef5280ff8d47 completion-ticks=202 input-transitions=14 jump-presses=7 dash-presses=0 successful-jumps=7 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:7:16:pixels=10:tick=30 robustness=54/54 robustness-not-applicable=2 curation-band-score=9 diagnostic-ai-complexity-score=9 components=completion:3,input:3,verbs:3,deaths:0,fragility:0,solver-effort:0 search=expanded:5,generated:5,simulated-ticks:594,deepest-path-ticks:202
+pickup-matrix count=2
+pickup-route source="port-east" pickup="optional-cache" witness=downwards-witness-v2-04db23a9e1f10230
+pickup-route source="port-west" pickup="optional-cache" witness=downwards-witness-v2-8dbbf084694ba3a2
+representative-pickup source="port-west" pickup="optional-cache" witness=downwards-witness-v2-8dbbf084694ba3a2
+representative-pickup-actions encoding=semantic-rle-v1 fields=move-x:move-y:jump:dash:restart*ticks total-ticks=45 spans=5 data="1:0:1:0:0*7,1:0:0:0:0*15,1:0:1:0:0*7,1:0:0:0:0*15,1:0:1:0:0*1"
+source-search-matrix count=2
+source-search source="port-east" expanded=3 generated=3 simulated-ticks=275 deepest-path-ticks=195
+source-search source="port-west" expanded=5 generated=5 simulated-ticks=594 deepest-path-ticks=202
+room-end
+room-begin index=6 id="prototype-v2-baseline-technical-006" catalogue-band=technical strategy=cyclic-graph intent=gentle seed=2 tier=baseline wall-jump=0 dash=0 metadata-generation-version=6 visual-fingerprint=downwards-static-v1-835278f4ef2bd686
+route-plan signature=4d9c041b30ab5973 nodes=13 edges=13 ports=2 cycles=1 branch-nodes=2 vertical-span-rows=6 wall-edges=0 dash-edges=0
+qd-stratum strategy=cyclic-graph intent=gentle port-count=2 cycle-bin=1 vertical-span-bin=1
+socket-signature left:150:20,right:130:20
+door id="port-east" side=right offset=130 span=20 arrival-x=300 arrival-y=138
+door id="port-west" side=left offset=150 span=20 arrival-x=12 arrival-y=158
+representative-route catalogue-band=technical source="port-east" target="port-west" witness=downwards-witness-v2-e0f2bfd6fbd406a9 successful-wall-jumps=0 successful-dashes=0
+representative-actions encoding=semantic-rle-v1 fields=move-x:move-y:jump:dash:restart*ticks total-ticks=195 spans=22 data="-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*10"
+route-matrix count=2
+route index=0 source="port-east" target="port-west" band=technical diagnostic-ai-band=technical witness=downwards-witness-v2-e0f2bfd6fbd406a9 completion-ticks=195 input-transitions=22 jump-presses=11 dash-presses=0 successful-jumps=9 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:26:16:pixels=10:tick=19 robustness=86/86 robustness-not-applicable=2 curation-band-score=11 diagnostic-ai-complexity-score=11 components=completion:3,input:4,verbs:4,deaths:0,fragility:0,solver-effort:0 search=expanded:2,generated:2,simulated-ticks:271,deepest-path-ticks:195
+route index=1 source="port-west" target="port-east" band=technical diagnostic-ai-band=technical witness=downwards-witness-v2-0e51587e5d40f53b completion-ticks=196 input-transitions=18 jump-presses=9 dash-presses=0 successful-jumps=9 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:6:16:pixels=5:tick=26 robustness=68/70 robustness-not-applicable=2 curation-band-score=11 diagnostic-ai-complexity-score=11 components=completion:3,input:4,verbs:4,deaths:0,fragility:0,solver-effort:0 search=expanded:3,generated:3,simulated-ticks:260,deepest-path-ticks:196
+pickup-matrix count=2
+pickup-route source="port-east" pickup="coin-cycle" witness=downwards-witness-v2-85060e6126ad2a76
+pickup-route source="port-west" pickup="coin-cycle" witness=downwards-witness-v2-8233d61c40329c19
+representative-pickup source="port-east" pickup="coin-cycle" witness=downwards-witness-v2-85060e6126ad2a76
+representative-pickup-actions encoding=semantic-rle-v1 fields=move-x:move-y:jump:dash:restart*ticks total-ticks=67 spans=7 data="-1:0:1:0:0*7,-1:0:0:0:0*15,-1:0:1:0:0*7,-1:0:0:0:0*15,-1:0:1:0:0*7,-1:0:0:0:0*15,-1:0:1:0:0*1"
+source-search-matrix count=2
+source-search source="port-east" expanded=3 generated=3 simulated-ticks=338 deepest-path-ticks=195
+source-search source="port-west" expanded=3 generated=3 simulated-ticks=260 deepest-path-ticks=196
+room-end
+room-begin index=7 id="prototype-v2-baseline-technical-007" catalogue-band=technical strategy=reachability-growth intent=gentle seed=12 tier=baseline wall-jump=0 dash=0 metadata-generation-version=6 visual-fingerprint=downwards-static-v1-15788d004c4aba5e
+route-plan signature=b7935302f40abd99 nodes=8 edges=11 ports=2 cycles=4 branch-nodes=4 vertical-span-rows=5 wall-edges=0 dash-edges=0
+qd-stratum strategy=reachability-growth intent=gentle port-count=2 cycle-bin=3 vertical-span-bin=1
+socket-signature left:120:20,right:120:20
+door id="port-east" side=right offset=120 span=20 arrival-x=302 arrival-y=128
+door id="port-west" side=left offset=120 span=20 arrival-x=10 arrival-y=128
+representative-route catalogue-band=technical source="port-west" target="port-east" witness=downwards-witness-v2-c4372943d6a3bb4a successful-wall-jumps=0 successful-dashes=0
+representative-actions encoding=semantic-rle-v1 fields=move-x:move-y:jump:dash:restart*ticks total-ticks=213 spans=17 data="1:0:1:0:0*9,1:0:0:0:0*17,1:0:1:0:0*9,1:0:0:0:0*17,1:0:1:0:0*9,1:0:0:0:0*17,1:0:1:0:0*9,1:0:0:0:0*17,1:0:1:0:0*9,1:0:0:0:0*17,1:0:1:0:0*9,1:0:0:0:0*17,1:0:1:0:0*9,1:0:0:0:0*17,1:0:1:0:0*9,1:0:0:0:0*17,1:0:1:0:0*5"
+route-matrix count=2
+route index=0 source="port-east" target="port-west" band=technical diagnostic-ai-band=technical witness=downwards-witness-v2-d1c07ae837ce7951 completion-ticks=202 input-transitions=23 jump-presses=12 dash-presses=0 successful-jumps=12 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:15:16:pixels=10:tick=92 robustness=67/90 robustness-not-applicable=2 curation-band-score=13 diagnostic-ai-complexity-score=13 components=completion:3,input:4,verbs:4,deaths:0,fragility:2,solver-effort:0 search=expanded:2,generated:2,simulated-ticks:311,deepest-path-ticks:202
+route index=1 source="port-west" target="port-east" band=technical diagnostic-ai-band=technical witness=downwards-witness-v2-c4372943d6a3bb4a completion-ticks=213 input-transitions=17 jump-presses=9 dash-presses=0 successful-jumps=9 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:1:16:pixels=20:tick=1 robustness=64/66 robustness-not-applicable=2 curation-band-score=11 diagnostic-ai-complexity-score=11 components=completion:3,input:4,verbs:4,deaths:0,fragility:0,solver-effort:0 search=expanded:4,generated:4,simulated-ticks:350,deepest-path-ticks:213
+pickup-matrix count=2
+pickup-route source="port-east" pickup="growth-cache" witness=downwards-witness-v2-32697dcb2f01e257
+pickup-route source="port-west" pickup="growth-cache" witness=downwards-witness-v2-bffafb2300a41c2a
+representative-pickup source="port-west" pickup="growth-cache" witness=downwards-witness-v2-bffafb2300a41c2a
+representative-pickup-actions encoding=semantic-rle-v1 fields=move-x:move-y:jump:dash:restart*ticks total-ticks=175 spans=15 data="1:0:1:0:0*9,1:0:0:0:0*17,1:0:1:0:0*9,1:0:0:0:0*17,1:0:1:0:0*9,1:0:0:0:0*17,1:0:1:0:0*9,1:0:0:0:0*17,1:0:1:0:0*9,1:0:0:0:0*17,1:0:1:0:0*9,1:0:0:0:0*5,-1:0:0:0:0*12,-1:0:1:0:0*9,-1:0:0:0:0*10"
+source-search-matrix count=2
+source-search source="port-east" expanded=2 generated=2 simulated-ticks=311 deepest-path-ticks=202
+source-search source="port-west" expanded=188 generated=188 simulated-ticks=10856 deepest-path-ticks=280
+room-end
+room-begin index=8 id="prototype-v2-baseline-technical-008" catalogue-band=technical strategy=reachability-growth intent=standard seed=12 tier=baseline wall-jump=0 dash=0 metadata-generation-version=6 visual-fingerprint=downwards-static-v1-8eadb890400995e4
+route-plan signature=9bd9e0318e727cee nodes=11 edges=15 ports=2 cycles=5 branch-nodes=6 vertical-span-rows=8 wall-edges=0 dash-edges=0
+qd-stratum strategy=reachability-growth intent=standard port-count=2 cycle-bin=3 vertical-span-bin=2
+socket-signature left:110:20,right:110:20
+door id="port-east" side=right offset=110 span=20 arrival-x=302 arrival-y=118
+door id="port-west" side=left offset=110 span=20 arrival-x=10 arrival-y=118
+representative-route catalogue-band=technical source="port-east" target="port-west" witness=downwards-witness-v2-4c3f7b07199aef10 successful-wall-jumps=0 successful-dashes=0
+representative-actions encoding=semantic-rle-v1 fields=move-x:move-y:jump:dash:restart*ticks total-ticks=202 spans=23 data="-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*4"
+route-matrix count=2
+route index=0 source="port-east" target="port-west" band=technical diagnostic-ai-band=technical witness=downwards-witness-v2-4c3f7b07199aef10 completion-ticks=202 input-transitions=23 jump-presses=12 dash-presses=0 successful-jumps=11 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=static:28:16:pixels=30:tick=1 robustness=88/90 robustness-not-applicable=2 curation-band-score=11 diagnostic-ai-complexity-score=11 components=completion:3,input:4,verbs:4,deaths:0,fragility:0,solver-effort:0 search=expanded:2,generated:2,simulated-ticks:256,deepest-path-ticks:202
+route index=1 source="port-west" target="port-east" band=technical diagnostic-ai-band=technical witness=downwards-witness-v2-439e67523f1e3bbe completion-ticks=202 input-transitions=19 jump-presses=10 dash-presses=0 successful-jumps=10 successful-wall-jumps=0 successful-dashes=0 deaths=0 hazard-clearance=timed:1:pixels=24:tick=31 robustness=65/74 robustness-not-applicable=2 curation-band-score=12 diagnostic-ai-complexity-score=12 components=completion:3,input:4,verbs:4,deaths:0,fragility:1,solver-effort:0 search=expanded:3,generated:3,simulated-ticks:294,deepest-path-ticks:202
+pickup-matrix count=2
+pickup-route source="port-east" pickup="growth-cache" witness=downwards-witness-v2-03ea447bc037ca10
+pickup-route source="port-west" pickup="growth-cache" witness=downwards-witness-v2-f628c140d4efec4c
+representative-pickup source="port-east" pickup="growth-cache" witness=downwards-witness-v2-03ea447bc037ca10
+representative-pickup-actions encoding=semantic-rle-v1 fields=move-x:move-y:jump:dash:restart*ticks total-ticks=149 spans=17 data="-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5,-1:0:0:0:0*13,-1:0:1:0:0*5"
+source-search-matrix count=2
+source-search source="port-east" expanded=2 generated=2 simulated-ticks=256 deepest-path-ticks=202
+source-search source="port-west" expanded=3 generated=3 simulated-ticks=294 deepest-path-ticks=202
+room-end
+manifest-fingerprint=downwards-curation-manifest-v2-629fb51d5e0160ed

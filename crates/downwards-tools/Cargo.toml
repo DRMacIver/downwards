@@ -1,0 +1,17 @@
+[package]
+name = "downwards-tools"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+downwards-ai.workspace = true
+downwards-content.workspace = true
+downwards-core.workspace = true
+downwards-gen.workspace = true
+downwards-validation.workspace = true
+
+[[bin]]
+name = "downwards-tools"
+path = "src/main.rs"

@@ -1,0 +1,12 @@
+[package]
+name = "downwards-gen"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+downwards-core = { path = "../downwards-core" }
+
+[lib]
+path = "src/lib.rs"

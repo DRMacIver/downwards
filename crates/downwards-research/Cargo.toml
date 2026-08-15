@@ -1,0 +1,26 @@
+[package]
+name = "downwards-research"
+default-run = "downwards-research"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.92"
+license = "MIT OR Apache-2.0"
+description = "Reproducible procedural-generation experiments for Downwards"
+
+[dependencies]
+downwards-ai = { path = "../downwards-ai" }
+downwards-catalogue = { path = "../downwards-catalogue" }
+downwards-core = { path = "../downwards-core" }
+downwards-gen = { path = "../downwards-gen" }
+downwards-lab = { path = "../downwards-lab" }
+downwards-validation = { path = "../downwards-validation" }
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+
+[[bin]]
+name = "downwards-research"
+path = "src/main.rs"
+
+# Experiments are intentionally outside the production workspace until a
+# strategy is promoted. This avoids accidentally shipping research machinery.
+[workspace]

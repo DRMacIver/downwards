@@ -1,0 +1,20 @@
+[package]
+name = "downwards-client"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+downwards-ai.workspace = true
+downwards-catalogue.workspace = true
+downwards-content.workspace = true
+downwards-core.workspace = true
+downwards-gen.workspace = true
+macroquad.workspace = true
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+
+[[bin]]
+name = "downwards"
+path = "src/main.rs"

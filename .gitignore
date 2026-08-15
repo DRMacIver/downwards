@@ -1,0 +1,5 @@
+target/
+/artifacts/
+*.log
+/playtest-history/
+.DS_Store

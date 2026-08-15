@@ -1,0 +1,34 @@
+[workspace]
+members = [
+    "crates/downwards-ai",
+    "crates/downwards-catalogue",
+    "crates/downwards-client",
+    "crates/downwards-content",
+    "crates/downwards-core",
+    "crates/downwards-gen",
+    "crates/downwards-tools",
+    "crates/downwards-validation",
+]
+default-members = ["crates/downwards-client"]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.92"
+license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+downwards-ai = { path = "crates/downwards-ai" }
+downwards-catalogue = { path = "crates/downwards-catalogue" }
+downwards-content = { path = "crates/downwards-content" }
+downwards-core = { path = "crates/downwards-core" }
+downwards-gen = { path = "crates/downwards-gen" }
+downwards-validation = { path = "crates/downwards-validation" }
+macroquad = "=0.4.15"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3

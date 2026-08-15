@@ -1,0 +1,19 @@
+[package]
+name = "downwards-lab"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.92"
+license = "MIT OR Apache-2.0"
+description = "Experimental room and AI-witness measurements for Downwards"
+
+[dependencies]
+downwards-ai = { path = "../downwards-ai" }
+downwards-core = { path = "../downwards-core" }
+
+[lib]
+path = "src/lib.rs"
+
+# This is intentionally a standalone experimental crate. Keeping it out of
+# the production workspace prevents prototype analysis code from becoming a
+# release dependency by accident.
+[workspace]
