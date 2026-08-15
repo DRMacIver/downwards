@@ -10,7 +10,7 @@ Run it with:
 cargo run -- --dungeon
 ```
 
-The 21 room shells are deterministic `downwards-gen` palette outputs. Their graph is currently
+The 31 room shells are deterministic `downwards-gen` palette outputs. Their graph is currently
 assembled by trusted content rather than by a general topology generator:
 
 ```text
@@ -18,18 +18,24 @@ Hollow Landing ─ Moss Walk ─ Split Root ─ Broken Aqueduct ─ Old Lift ─
                               │                                      │
                          Root Cellar                           Sunken Watchpost
                                                                                          │
-                  Winged Vault ───── Rootbound Underpass ─ Eight-Coin Treasury
+Stone Lessons ─ Broad Chimney ─ Bell Switchback ─ Evening Measure ─ Split Spire ─ Landing Chain ─ Needle Turn ─ Climber's Gate
+                                │                                  │
+                          The Bell Niche                       Rafter Shrine
+                                                                                         │
+                  Winged Vault ───── Rootbound Underpass ─ The Deep Treasury
                        │                       │
-Threshold ─ Three-Way Hall ───────── Climbers' Gallery ─ Gale Chasm ─ Ten-Coin Gate ─ Crown
+Threshold ─ Three-Way Hall ───────── Climbers' Gallery ─ Gale Chasm ─ The Crown Gate ─ Crown
                        │                       │
                   Rafter Mint            Needle Belfry
 ```
 
 The run begins with ordinary movement and no traversal unlocks. Six coins distributed across both
 Rootworks branches open the Climber's Reliquary; collecting the Climbing Gloves there enables Wall
-Jump and is a method-gated prerequisite for the older region. The Winged Boots are another
+Jump. The next ten floors are mandatory: two side branches hold coins, the Climber's Gate needs all
+six regional coins, and its physical route has an observed multi-wall positive while an equivalent
+bounded baseline search has no positive. The Winged Boots are another
 room-local pickup whose stable ID is interpreted by client run state. Their floor door is sealed
-until twelve coins have been collected, and the reward sits above the gallery-calibrated “Even
+until eighteen coins have been collected, and the reward sits above the gallery-calibrated “Even
 Tempo” pattern: alternating safe wall bands separated by inward-facing hazard bands. Collecting the
 boots grants Dash immediately and omits the pickup on later visits. Horizontal Dash uses a low
 posture in the current movement policy, so an eight-pixel body can traverse a ten-pixel tunnel that
@@ -40,12 +46,13 @@ The Winged Boots and Crown use a dedicated nearest-neighbour 16-pixel pickup she
 the earlier debug rectangles. The Crown trigger has no generic exit frame drawn over it, so the
 item itself remains the final room's visual goal.
 
-Sixteen stable coin IDs are distributed across the graph. Their collection mask persists across
-room reconstruction and is shown in both HUD rails. Exactly six are available before the Climbing
-Gloves. Another six are available in the Threshold, Three-Way Hall, Rafter Mint, Climbers' Gallery,
-and Needle Belfry; collecting all twelve is therefore required to enter the Winged Vault or lower
-loop. The vault and Underpass contribute the thirteenth and fourteenth, opening the Treasury. Its
-final two coins open the 16-coin Gatehouse. A rejected door
+Twenty-two stable coin IDs are distributed across the graph. Their 128-bit collection mask persists
+across room reconstruction and is shown in both HUD rails. Exactly six are available before the
+Climbing Gloves. Six more are distributed through the mandatory Wall-Jump course, including both
+branches; all twelve are needed to leave it. Another six are available in the Threshold, Three-Way
+Hall, Rafter Mint, Climbers' Gallery, and Needle Belfry; collecting all eighteen is therefore
+required to enter the Winged Vault or lower loop. The vault and Underpass contribute the nineteenth
+and twentieth, opening the Treasury. Its final two coins open the 22-coin Crown Gate. A rejected door
 returns the player to its validated interior arrival without resetting room-local progress. The
 Crown similarly persists and is the only terminal goal. Ordinary door exits change rooms and are
 deliberately not counted as whole-level victories.

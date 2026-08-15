@@ -1,15 +1,16 @@
 # Authored dungeon roadmap — 2026-08-15
 
 The active target is a hand-authored dungeon of at least 100 playable floors. The current playable
-build has 21. The 21 are not being relabelled as completion: they are the first two progression
+build has 31. The 31 are not being relabelled as completion: they are the first three progression
 regions and the integration testbed for the authoring/runtime contracts needed by the full game.
 
 ## Current progression
 
 - Floors 1–10: Rootworks, ordinary movement, six coins, Climbing Gloves unlock Wall Jump.
-- Floors 11–21: the earlier vertical slice, six more coins, Winged Boots unlock Dash, four final
+- Floors 11–20: a mandatory Wall-Jump course with two required branches and six coins.
+- Floors 21–31: the earlier vertical slice, six more coins, Winged Boots unlock Dash, four final
   coins, then the Crown.
-- Crown ingress requires all 16 current coins and both traversal methods. This is deliberately
+- Crown ingress requires all 22 current coins and both traversal methods. This is deliberately
   stronger than the final contract's minimum of one third of all dungeon coins.
 
 The generator palette is scaffolding for geometry, not an authority on quality. Every floor has an
@@ -43,18 +44,20 @@ An authored floor is not accepted merely because a search returns a number. Each
    success into a human difficulty score;
 5. eventual human playtest feedback, especially for the late-game floors.
 
-The current Rootworks routes have exact positives and observed strength-one noisy successes. This is
-early robustness evidence only. Replanning under perturbation, durable per-floor witness artifacts,
-and full-dungeon route verification remain required work.
+The current Rootworks routes have exact positives and observed strength-one noisy successes. The
+Wall-Jump region has exact positives for every required leg, exact return routes from both coin
+branches, and a final physical gate whose known positive uses both walls while the same bounded
+baseline search has no positive. This is early robustness evidence only. Replanning under
+perturbation, durable per-floor witness artifacts, and full-dungeon route verification remain
+required work.
 
 ## Next authored regions
 
-The remaining 79+ floors will be added in bounded regions rather than as generated filler:
+The remaining 69+ floors will be added in bounded regions rather than as generated filler:
 
-1. a Wall-Jump region that revisits Rootworks spaces from new routes;
-2. a Dash region with optional coin vaults and mandatory method checks;
-3. mixed-method traversal and navigation puzzles;
-4. a late Crown Citadel using the calibrated hard-gallery execution envelope.
+1. a Dash region with optional coin vaults and mandatory method checks;
+2. mixed-method traversal and navigation puzzles;
+3. a late Crown Citadel using the calibrated hard-gallery execution envelope.
 
 Each region should introduce new authored geometry and puzzle vocabulary. Reusing a palette shell is
 acceptable for a first draft, but repeated shells do not satisfy the final hand-authored requirement.

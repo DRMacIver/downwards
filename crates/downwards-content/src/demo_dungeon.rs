@@ -14,18 +14,19 @@ pub const DEMO_DUNGEON_GLOVE_PICKUP: &str = "climbing-gloves";
 pub const DEMO_DUNGEON_BOOT_PICKUP: &str = "winged-boots";
 pub const DEMO_DUNGEON_CROWN_PICKUP: &str = "crown";
 pub const DEMO_DUNGEON_GOAL_EXIT: &str = "crown-goal";
-pub const DEMO_DUNGEON_TOTAL_COINS: u8 = 16;
+pub const DEMO_DUNGEON_TOTAL_COINS: u8 = 22;
 pub const DEMO_DUNGEON_GLOVE_GATE_REQUIREMENT: u8 = 6;
-pub const DEMO_DUNGEON_BOOT_GATE_REQUIREMENT: u8 = 12;
-pub const DEMO_DUNGEON_TREASURY_REQUIREMENT: u8 = 14;
-pub const DEMO_DUNGEON_CROWN_GATE_REQUIREMENT: u8 = 16;
+pub const DEMO_DUNGEON_WALL_REGION_GATE_REQUIREMENT: u8 = 12;
+pub const DEMO_DUNGEON_BOOT_GATE_REQUIREMENT: u8 = 18;
+pub const DEMO_DUNGEON_TREASURY_REQUIREMENT: u8 = 20;
+pub const DEMO_DUNGEON_CROWN_GATE_REQUIREMENT: u8 = 22;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct DemoDungeonInventory {
     pub climbing_gloves: bool,
     pub winged_boots: bool,
     pub crown: bool,
-    coin_mask: u16,
+    coin_mask: u128,
 }
 
 impl DemoDungeonInventory {
@@ -41,14 +42,14 @@ impl DemoDungeonInventory {
 
     #[must_use]
     pub fn has_coin(self, id: &str) -> bool {
-        coin_index(id).is_some_and(|index| self.coin_mask & (1 << index) != 0)
+        coin_index(id).is_some_and(|index| self.coin_mask & (1_u128 << index) != 0)
     }
 
     pub fn collect_coin(&mut self, id: &str) -> bool {
         let Some(index) = coin_index(id) else {
             return false;
         };
-        let bit = 1 << index;
+        let bit = 1_u128 << index;
         let newly_collected = self.coin_mask & bit == 0;
         self.coin_mask |= bit;
         newly_collected
@@ -73,10 +74,10 @@ impl DemoDungeonInventory {
             climbing_gloves: false,
             winged_boots: false,
             crown: false,
-            coin_mask: if count == 16 {
-                u16::MAX
+            coin_mask: if count == 128 {
+                u128::MAX
             } else {
-                (1_u16 << count) - 1
+                (1_u128 << count) - 1
             },
         }
     }
@@ -85,7 +86,7 @@ impl DemoDungeonInventory {
     pub fn authored_progression_inventory(self) -> AuthoredDungeonInventory {
         let mut inventory = AuthoredDungeonInventory::new(TraversalMethods::NONE);
         for index in 0..DEMO_DUNGEON_TOTAL_COINS {
-            if self.coin_mask & (1 << index) != 0 {
+            if self.coin_mask & (1_u128 << index) != 0 {
                 inventory.collect_coin(u16::from(index));
             }
         }
@@ -111,6 +112,16 @@ pub enum DemoDungeonRoom {
     WatchPost,
     Sluice,
     ClimberVault,
+    WallAntechamber,
+    BroadChimney,
+    BellSwitchback,
+    BellNiche,
+    TempoHall,
+    SplitSpire,
+    RafterShrine,
+    LandingChain,
+    NeedleTurn,
+    WallGate,
     Threshold,
     Crossroads,
     WallGallery,
@@ -125,7 +136,7 @@ pub enum DemoDungeonRoom {
 }
 
 impl DemoDungeonRoom {
-    pub const ALL: [Self; 21] = [
+    pub const ALL: [Self; 31] = [
         Self::HollowLanding,
         Self::MossWalk,
         Self::SplitRoot,
@@ -136,6 +147,16 @@ impl DemoDungeonRoom {
         Self::WatchPost,
         Self::Sluice,
         Self::ClimberVault,
+        Self::WallAntechamber,
+        Self::BroadChimney,
+        Self::BellSwitchback,
+        Self::BellNiche,
+        Self::TempoHall,
+        Self::SplitSpire,
+        Self::RafterShrine,
+        Self::LandingChain,
+        Self::NeedleTurn,
+        Self::WallGate,
         Self::Threshold,
         Self::Crossroads,
         Self::WallGallery,
@@ -162,6 +183,16 @@ impl DemoDungeonRoom {
             Self::WatchPost => "demo-dungeon.watch-post",
             Self::Sluice => "demo-dungeon.sluice",
             Self::ClimberVault => "demo-dungeon.climber-vault",
+            Self::WallAntechamber => "demo-dungeon.wall-antechamber",
+            Self::BroadChimney => "demo-dungeon.broad-chimney",
+            Self::BellSwitchback => "demo-dungeon.bell-switchback",
+            Self::BellNiche => "demo-dungeon.bell-niche",
+            Self::TempoHall => "demo-dungeon.tempo-hall",
+            Self::SplitSpire => "demo-dungeon.split-spire",
+            Self::RafterShrine => "demo-dungeon.rafter-shrine",
+            Self::LandingChain => "demo-dungeon.landing-chain",
+            Self::NeedleTurn => "demo-dungeon.needle-turn",
+            Self::WallGate => "demo-dungeon.wall-gate",
             Self::Threshold => "demo-dungeon.threshold",
             Self::Crossroads => "demo-dungeon.crossroads",
             Self::WallGallery => "demo-dungeon.wall-gallery",
@@ -189,6 +220,16 @@ impl DemoDungeonRoom {
             Self::WatchPost => "Sunken Watchpost",
             Self::Sluice => "The Dry Sluice",
             Self::ClimberVault => "Climber's Reliquary",
+            Self::WallAntechamber => "Stone Lessons",
+            Self::BroadChimney => "The Broad Chimney",
+            Self::BellSwitchback => "Bell Switchback",
+            Self::BellNiche => "The Bell Niche",
+            Self::TempoHall => "Evening Measure",
+            Self::SplitSpire => "The Split Spire",
+            Self::RafterShrine => "Rafter Shrine",
+            Self::LandingChain => "The Landing Chain",
+            Self::NeedleTurn => "Needle Turn",
+            Self::WallGate => "Climber's Gate",
             Self::Threshold => "Mosslit Threshold",
             Self::Crossroads => "Three-Way Hall",
             Self::WallGallery => "Climbers' Gallery",
@@ -197,8 +238,8 @@ impl DemoDungeonRoom {
             Self::DashChasm => "Gale Chasm",
             Self::CoinLoft => "Rafter Mint",
             Self::NeedleRoom => "Needle Belfry",
-            Self::Treasury => "Eight-Coin Treasury",
-            Self::Gatehouse => "Ten-Coin Gate",
+            Self::Treasury => "The Deep Treasury",
+            Self::Gatehouse => "The Crown Gate",
             Self::CrownSanctum => "The Empty Throne",
         }
     }
@@ -221,17 +262,27 @@ impl DemoDungeonRoom {
             Self::WatchPost => 7,
             Self::Sluice => 8,
             Self::ClimberVault => 9,
-            Self::Threshold => 10,
-            Self::Crossroads => 11,
-            Self::CoinLoft => 12,
-            Self::WallGallery => 13,
-            Self::NeedleRoom => 14,
-            Self::BootsVault => 15,
-            Self::Underpass => 16,
-            Self::Treasury => 17,
-            Self::DashChasm => 18,
-            Self::Gatehouse => 19,
-            Self::CrownSanctum => 20,
+            Self::WallAntechamber => 10,
+            Self::BroadChimney => 11,
+            Self::BellSwitchback => 12,
+            Self::BellNiche => 13,
+            Self::TempoHall => 14,
+            Self::SplitSpire => 15,
+            Self::RafterShrine => 16,
+            Self::LandingChain => 17,
+            Self::NeedleTurn => 18,
+            Self::WallGate => 19,
+            Self::Threshold => 20,
+            Self::Crossroads => 21,
+            Self::CoinLoft => 22,
+            Self::WallGallery => 23,
+            Self::NeedleRoom => 24,
+            Self::BootsVault => 25,
+            Self::Underpass => 26,
+            Self::Treasury => 27,
+            Self::DashChasm => 28,
+            Self::Gatehouse => 29,
+            Self::CrownSanctum => 30,
         })
     }
 
@@ -247,6 +298,16 @@ impl DemoDungeonRoom {
             Self::WatchPost => DungeonPaletteCourse::WatchPost,
             Self::Sluice => DungeonPaletteCourse::Sluice,
             Self::ClimberVault => DungeonPaletteCourse::ClimberVault,
+            Self::WallAntechamber => DungeonPaletteCourse::WallAntechamber,
+            Self::BroadChimney => DungeonPaletteCourse::BroadChimney,
+            Self::BellSwitchback => DungeonPaletteCourse::BellSwitchback,
+            Self::BellNiche => DungeonPaletteCourse::BellNiche,
+            Self::TempoHall => DungeonPaletteCourse::TempoHall,
+            Self::SplitSpire => DungeonPaletteCourse::SplitSpire,
+            Self::RafterShrine => DungeonPaletteCourse::RafterShrine,
+            Self::LandingChain => DungeonPaletteCourse::LandingChain,
+            Self::NeedleTurn => DungeonPaletteCourse::NeedleTurn,
+            Self::WallGate => DungeonPaletteCourse::WallGate,
             Self::Threshold => DungeonPaletteCourse::Threshold,
             Self::Crossroads => DungeonPaletteCourse::Crossroads,
             Self::WallGallery => DungeonPaletteCourse::WallGallery,
@@ -297,10 +358,46 @@ impl DemoDungeonRoom {
             ],
             Self::ClimberVault => vec![
                 connection("west", Self::Sluice, "east"),
+                connection("east", Self::WallAntechamber, "west"),
+            ],
+            Self::WallAntechamber => vec![
+                connection("west", Self::ClimberVault, "east"),
+                connection("east", Self::BroadChimney, "west"),
+            ],
+            Self::BroadChimney => vec![
+                connection("west", Self::WallAntechamber, "east"),
+                connection("east", Self::BellSwitchback, "west"),
+            ],
+            Self::BellSwitchback => vec![
+                connection("west", Self::BroadChimney, "east"),
+                connection("east", Self::TempoHall, "west"),
+                connection("floor", Self::BellNiche, "ceiling"),
+            ],
+            Self::BellNiche => vec![connection("ceiling", Self::BellSwitchback, "floor")],
+            Self::TempoHall => vec![
+                connection("west", Self::BellSwitchback, "east"),
+                connection("east", Self::SplitSpire, "west"),
+            ],
+            Self::SplitSpire => vec![
+                connection("west", Self::TempoHall, "east"),
+                connection("east", Self::LandingChain, "west"),
+                connection("ceiling", Self::RafterShrine, "floor"),
+            ],
+            Self::RafterShrine => vec![connection("floor", Self::SplitSpire, "ceiling")],
+            Self::LandingChain => vec![
+                connection("west", Self::SplitSpire, "east"),
+                connection("east", Self::NeedleTurn, "west"),
+            ],
+            Self::NeedleTurn => vec![
+                connection("west", Self::LandingChain, "east"),
+                connection("east", Self::WallGate, "west"),
+            ],
+            Self::WallGate => vec![
+                connection("west", Self::NeedleTurn, "east"),
                 connection("east", Self::Threshold, "west"),
             ],
             Self::Threshold => vec![
-                connection("west", Self::ClimberVault, "east"),
+                connection("west", Self::WallGate, "east"),
                 connection("east", Self::Crossroads, "west"),
             ],
             Self::Crossroads => vec![
@@ -360,6 +457,7 @@ pub const fn demo_dungeon_door_requirement(
 ) -> AuthoredDoorRequirement {
     let coins = match (room, door_id.as_bytes()) {
         (DemoDungeonRoom::Sluice, b"east") => DEMO_DUNGEON_GLOVE_GATE_REQUIREMENT,
+        (DemoDungeonRoom::WallGate, b"east") => DEMO_DUNGEON_WALL_REGION_GATE_REQUIREMENT,
         (DemoDungeonRoom::Crossroads, b"ceiling") | (DemoDungeonRoom::WallGallery, b"floor") => {
             DEMO_DUNGEON_BOOT_GATE_REQUIREMENT
         }
@@ -371,6 +469,7 @@ pub const fn demo_dungeon_door_requirement(
         (DemoDungeonRoom::ClimberVault, b"east") => {
             TraversalMethods::one(TraversalMethod::WallJump)
         }
+        (DemoDungeonRoom::WallGate, b"east") => TraversalMethods::one(TraversalMethod::WallJump),
         (DemoDungeonRoom::WallGallery, b"east") => TraversalMethods::one(TraversalMethod::Dash),
         (DemoDungeonRoom::Gatehouse, b"east") => TraversalMethods::ALL_CURRENT,
         _ => TraversalMethods::NONE,
@@ -424,7 +523,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v4".to_owned(),
+        id: "demo-dungeon-v5".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -522,11 +621,21 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
             (14, Rect::new(144, 100, 8, 10)),
             (15, Rect::new(244, 70, 8, 10)),
         ],
+        DemoDungeonRoom::WallAntechamber => vec![(16, Rect::new(264, 120, 8, 10))],
+        DemoDungeonRoom::BroadChimney => vec![(17, Rect::new(204, 30, 8, 10))],
+        DemoDungeonRoom::BellNiche => vec![(18, Rect::new(144, 20, 8, 10))],
+        DemoDungeonRoom::TempoHall => vec![(19, Rect::new(204, 20, 8, 10))],
+        DemoDungeonRoom::RafterShrine => vec![(20, Rect::new(194, 10, 8, 10))],
+        DemoDungeonRoom::NeedleTurn => vec![(21, Rect::new(204, 50, 8, 10))],
         DemoDungeonRoom::SplitRoot
         | DemoDungeonRoom::OldLift
         | DemoDungeonRoom::LanternGallery
         | DemoDungeonRoom::Sluice
         | DemoDungeonRoom::ClimberVault
+        | DemoDungeonRoom::BellSwitchback
+        | DemoDungeonRoom::SplitSpire
+        | DemoDungeonRoom::LandingChain
+        | DemoDungeonRoom::WallGate
         | DemoDungeonRoom::DashChasm
         | DemoDungeonRoom::Gatehouse
         | DemoDungeonRoom::CrownSanctum => vec![],
@@ -720,6 +829,17 @@ mod tests {
                 vec![DemoDungeonRoom::Treasury],
                 (14..16).collect::<Vec<_>>(),
             ),
+            (
+                vec![
+                    DemoDungeonRoom::WallAntechamber,
+                    DemoDungeonRoom::BroadChimney,
+                    DemoDungeonRoom::BellNiche,
+                    DemoDungeonRoom::TempoHall,
+                    DemoDungeonRoom::RafterShrine,
+                    DemoDungeonRoom::NeedleTurn,
+                ],
+                (16..22).collect::<Vec<_>>(),
+            ),
         ] {
             let mut actual = rooms
                 .into_iter()
@@ -732,6 +852,10 @@ mod tests {
         assert_eq!(
             demo_dungeon_door_coin_requirement(DemoDungeonRoom::Sluice, "east"),
             Some(DEMO_DUNGEON_GLOVE_GATE_REQUIREMENT)
+        );
+        assert_eq!(
+            demo_dungeon_door_coin_requirement(DemoDungeonRoom::WallGate, "east"),
+            Some(DEMO_DUNGEON_WALL_REGION_GATE_REQUIREMENT)
         );
         assert_eq!(
             demo_dungeon_door_coin_requirement(DemoDungeonRoom::Crossroads, "ceiling"),
@@ -800,6 +924,22 @@ mod tests {
             matches!(outcome, TargetSolveOutcome::Solved(_)),
             "{room_id:?} from {entry_door:?} did not reach {target:?}: {outcome:?}"
         );
+    }
+
+    fn inventory_with_coin_indices(
+        indices: impl IntoIterator<Item = u8>,
+        climbing_gloves: bool,
+        winged_boots: bool,
+    ) -> DemoDungeonInventory {
+        let mut inventory = DemoDungeonInventory {
+            climbing_gloves,
+            winged_boots,
+            ..DemoDungeonInventory::default()
+        };
+        for index in indices {
+            assert!(inventory.collect_coin(&coin_id(index)));
+        }
+        inventory
     }
 
     fn solve_route(
@@ -920,9 +1060,106 @@ mod tests {
             SearchTarget::door("east"),
         );
         assert_route(
-            DemoDungeonRoom::Threshold,
+            DemoDungeonRoom::WallAntechamber,
             Some("west"),
             gloves,
+            SearchTarget::pickup(coin_id(16)),
+        );
+        assert_route(
+            DemoDungeonRoom::WallAntechamber,
+            Some("west"),
+            gloves,
+            SearchTarget::door("east"),
+        );
+        assert_route(
+            DemoDungeonRoom::BroadChimney,
+            Some("west"),
+            gloves,
+            SearchTarget::pickup(coin_id(17)),
+        );
+        assert_route(
+            DemoDungeonRoom::BroadChimney,
+            Some("west"),
+            gloves,
+            SearchTarget::door("east"),
+        );
+        assert_route(
+            DemoDungeonRoom::BellSwitchback,
+            Some("west"),
+            gloves,
+            SearchTarget::door("floor"),
+        );
+        assert_route(
+            DemoDungeonRoom::BellNiche,
+            Some("ceiling"),
+            gloves,
+            SearchTarget::pickup(coin_id(18)),
+        );
+        assert_route(
+            DemoDungeonRoom::BellSwitchback,
+            Some("west"),
+            gloves,
+            SearchTarget::door("east"),
+        );
+        assert_route(
+            DemoDungeonRoom::TempoHall,
+            Some("west"),
+            gloves,
+            SearchTarget::pickup(coin_id(19)),
+        );
+        assert_route(
+            DemoDungeonRoom::TempoHall,
+            Some("west"),
+            gloves,
+            SearchTarget::door("east"),
+        );
+        assert_route(
+            DemoDungeonRoom::SplitSpire,
+            Some("west"),
+            gloves,
+            SearchTarget::door("ceiling"),
+        );
+        assert_route(
+            DemoDungeonRoom::RafterShrine,
+            Some("floor"),
+            gloves,
+            SearchTarget::pickup(coin_id(20)),
+        );
+        assert_route(
+            DemoDungeonRoom::SplitSpire,
+            Some("west"),
+            gloves,
+            SearchTarget::door("east"),
+        );
+        assert_route(
+            DemoDungeonRoom::LandingChain,
+            Some("west"),
+            gloves,
+            SearchTarget::door("east"),
+        );
+        assert_route(
+            DemoDungeonRoom::NeedleTurn,
+            Some("west"),
+            gloves,
+            SearchTarget::pickup(coin_id(21)),
+        );
+        assert_route(
+            DemoDungeonRoom::NeedleTurn,
+            Some("west"),
+            gloves,
+            SearchTarget::door("east"),
+        );
+        let wall_region_complete = inventory_with_coin_indices((0..6).chain(16..22), true, false);
+        assert_route(
+            DemoDungeonRoom::WallGate,
+            Some("west"),
+            wall_region_complete,
+            SearchTarget::door("east"),
+        );
+        assert_route(
+            DemoDungeonRoom::Threshold,
+            Some("west"),
+            wall_region_complete,
             SearchTarget::door("east"),
         );
         assert_route(
@@ -955,13 +1192,7 @@ mod tests {
             gloves,
             SearchTarget::pickup(coin_id(11)),
         );
-        let pre_boots = DemoDungeonInventory::with_coin_count_for_validation(
-            DEMO_DUNGEON_BOOT_GATE_REQUIREMENT,
-        );
-        let pre_boots = DemoDungeonInventory {
-            climbing_gloves: true,
-            ..pre_boots
-        };
+        let pre_boots = inventory_with_coin_indices((0..12).chain(16..22), true, false);
         assert_route(
             DemoDungeonRoom::Crossroads,
             Some("west"),
@@ -974,12 +1205,7 @@ mod tests {
             pre_boots,
             SearchTarget::pickup(DEMO_DUNGEON_BOOT_PICKUP),
         );
-        let boots = DemoDungeonInventory {
-            climbing_gloves: true,
-            winged_boots: true,
-            crown: false,
-            ..DemoDungeonInventory::with_coin_count_for_validation(13)
-        };
+        let boots = inventory_with_coin_indices((0..13).chain(16..22), true, true);
         assert_route(
             DemoDungeonRoom::BootsVault,
             None,
@@ -992,13 +1218,7 @@ mod tests {
             boots,
             SearchTarget::pickup(coin_id(13)),
         );
-        let treasury_ready = DemoDungeonInventory {
-            climbing_gloves: true,
-            winged_boots: true,
-            ..DemoDungeonInventory::with_coin_count_for_validation(
-                DEMO_DUNGEON_TREASURY_REQUIREMENT,
-            )
-        };
+        let treasury_ready = inventory_with_coin_indices((0..14).chain(16..22), true, true);
         assert_route(
             DemoDungeonRoom::Underpass,
             Some("west"),
@@ -1286,6 +1506,26 @@ mod tests {
             climbing_gloves: true,
             ..DemoDungeonInventory::default()
         };
+        let bell_niche = Simulation::enter_via_door(
+            demo_dungeon_room(DemoDungeonRoom::BellNiche, gloves),
+            gloves.abilities(),
+            "ceiling",
+        )
+        .unwrap();
+        let bell_niche = solve_and_advance(bell_niche, SearchTarget::pickup(coin_id(18)));
+        let bell_niche = solve_and_advance(bell_niche, SearchTarget::door("ceiling"));
+        assert_eq!(bell_niche.reached_exit(), Some("ceiling"));
+
+        let rafter_shrine = Simulation::enter_via_door(
+            demo_dungeon_room(DemoDungeonRoom::RafterShrine, gloves),
+            gloves.abilities(),
+            "floor",
+        )
+        .unwrap();
+        let rafter_shrine = solve_and_advance(rafter_shrine, SearchTarget::pickup(coin_id(20)));
+        let rafter_shrine = solve_and_advance(rafter_shrine, SearchTarget::door("floor"));
+        assert_eq!(rafter_shrine.reached_exit(), Some("floor"));
+
         let coin_loft = Simulation::enter_via_door(
             demo_dungeon_room(DemoDungeonRoom::CoinLoft, gloves),
             gloves.abilities(),
@@ -1306,13 +1546,7 @@ mod tests {
         let needle = solve_and_advance(needle, SearchTarget::door("floor"));
         assert_eq!(needle.reached_exit(), Some("floor"));
 
-        let treasury_ready = DemoDungeonInventory {
-            climbing_gloves: true,
-            winged_boots: true,
-            ..DemoDungeonInventory::with_coin_count_for_validation(
-                DEMO_DUNGEON_TREASURY_REQUIREMENT,
-            )
-        };
+        let treasury_ready = inventory_with_coin_indices((0..14).chain(16..22), true, true);
         let treasury = Simulation::enter_via_door(
             demo_dungeon_room(DemoDungeonRoom::Treasury, treasury_ready),
             treasury_ready.abilities(),
@@ -1343,6 +1577,57 @@ mod tests {
         assert!(
             matches!(outcome, TargetSolveOutcome::Inconclusive { .. }),
             "wall-jump-only search unexpectedly crossed the Dash gate: {outcome:?}"
+        );
+    }
+
+    #[test]
+    fn wall_region_gate_requires_an_observed_multi_wall_climb() {
+        let inventory = DemoDungeonInventory {
+            climbing_gloves: true,
+            ..DemoDungeonInventory::default()
+        };
+        let room = demo_dungeon_room(DemoDungeonRoom::WallGate, inventory);
+        let mut initial = Simulation::enter_via_door(room, inventory.abilities(), "west").unwrap();
+        initial.enable_current_player_movement();
+        let outcome = solve_target(
+            &initial,
+            SearchTarget::door("east"),
+            &SolverConfig::for_abilities(inventory.abilities()),
+        )
+        .unwrap();
+        let TargetSolveOutcome::Solved(solution) = outcome else {
+            panic!("Wall-region gate lost its known positive: {outcome:?}");
+        };
+        let mut replayed = initial;
+        let mut wall_sides = Vec::new();
+        for action in solution.replay.actions() {
+            for event in replayed.step(action).events {
+                if let SimulationEvent::Jumped(JumpKind::Wall { side }) = event {
+                    wall_sides.push(side);
+                }
+            }
+        }
+        assert_eq!(replayed.reached_exit(), Some("east"));
+        assert!(
+            wall_sides.len() >= 4
+                && wall_sides.contains(&downwards_core::WallSide::Left)
+                && wall_sides.contains(&downwards_core::WallSide::Right),
+            "the mandatory wall gate must use both walls in a substantial climb: {wall_sides:?}"
+        );
+
+        let baseline = DemoDungeonInventory::default();
+        let room = demo_dungeon_room(DemoDungeonRoom::WallGate, baseline);
+        let mut initial = Simulation::enter_via_door(room, baseline.abilities(), "west").unwrap();
+        initial.enable_current_player_movement();
+        let outcome = solve_target(
+            &initial,
+            SearchTarget::door("east"),
+            &SolverConfig::for_abilities(baseline.abilities()),
+        )
+        .unwrap();
+        assert!(
+            matches!(outcome, TargetSolveOutcome::Inconclusive { .. }),
+            "baseline search unexpectedly crossed the mandatory Wall Jump gate: {outcome:?}"
         );
     }
 

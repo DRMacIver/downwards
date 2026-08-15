@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 4;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 5;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -29,6 +29,16 @@ pub enum DungeonPaletteCourse {
     WatchPost,
     Sluice,
     ClimberVault,
+    WallAntechamber,
+    BroadChimney,
+    BellSwitchback,
+    BellNiche,
+    TempoHall,
+    SplitSpire,
+    RafterShrine,
+    LandingChain,
+    NeedleTurn,
+    WallGate,
     Threshold,
     Crossroads,
     WallGallery,
@@ -43,6 +53,40 @@ pub enum DungeonPaletteCourse {
 }
 
 impl DungeonPaletteCourse {
+    pub const ALL: [Self; 31] = [
+        Self::HollowLanding,
+        Self::MossWalk,
+        Self::SplitRoot,
+        Self::RootCellar,
+        Self::BrokenAqueduct,
+        Self::OldLift,
+        Self::LanternGallery,
+        Self::WatchPost,
+        Self::Sluice,
+        Self::ClimberVault,
+        Self::WallAntechamber,
+        Self::BroadChimney,
+        Self::BellSwitchback,
+        Self::BellNiche,
+        Self::TempoHall,
+        Self::SplitSpire,
+        Self::RafterShrine,
+        Self::LandingChain,
+        Self::NeedleTurn,
+        Self::WallGate,
+        Self::Threshold,
+        Self::Crossroads,
+        Self::WallGallery,
+        Self::BootsVault,
+        Self::Underpass,
+        Self::DashChasm,
+        Self::CoinLoft,
+        Self::NeedleRoom,
+        Self::Treasury,
+        Self::Gatehouse,
+        Self::CrownSanctum,
+    ];
+
     #[must_use]
     pub const fn slug(self) -> &'static str {
         match self {
@@ -56,6 +100,16 @@ impl DungeonPaletteCourse {
             Self::WatchPost => "watch-post",
             Self::Sluice => "sluice",
             Self::ClimberVault => "climber-vault",
+            Self::WallAntechamber => "wall-antechamber",
+            Self::BroadChimney => "broad-chimney",
+            Self::BellSwitchback => "bell-switchback",
+            Self::BellNiche => "bell-niche",
+            Self::TempoHall => "tempo-hall",
+            Self::SplitSpire => "split-spire",
+            Self::RafterShrine => "rafter-shrine",
+            Self::LandingChain => "landing-chain",
+            Self::NeedleTurn => "needle-turn",
+            Self::WallGate => "wall-gate",
             Self::Threshold => "threshold",
             Self::Crossroads => "crossroads",
             Self::WallGallery => "wall-gallery",
@@ -78,6 +132,12 @@ impl DungeonPaletteCourse {
             | Self::OldLift
             | Self::Sluice
             | Self::ClimberVault
+            | Self::WallAntechamber
+            | Self::BroadChimney
+            | Self::TempoHall
+            | Self::LandingChain
+            | Self::NeedleTurn
+            | Self::WallGate
             | Self::Threshold => &[("west", BoundarySide::Left), ("east", BoundarySide::Right)],
             Self::SplitRoot => &[
                 ("west", BoundarySide::Left),
@@ -91,6 +151,18 @@ impl DungeonPaletteCourse {
                 ("ceiling", BoundarySide::Ceiling),
             ],
             Self::WatchPost => &[("floor", BoundarySide::Floor)],
+            Self::BellSwitchback => &[
+                ("west", BoundarySide::Left),
+                ("east", BoundarySide::Right),
+                ("floor", BoundarySide::Floor),
+            ],
+            Self::BellNiche => &[("ceiling", BoundarySide::Ceiling)],
+            Self::SplitSpire => &[
+                ("west", BoundarySide::Left),
+                ("east", BoundarySide::Right),
+                ("ceiling", BoundarySide::Ceiling),
+            ],
+            Self::RafterShrine => &[("floor", BoundarySide::Floor)],
             Self::Crossroads => &[
                 ("west", BoundarySide::Left),
                 ("east", BoundarySide::Right),
@@ -411,6 +483,112 @@ impl PaletteDraft<'_> {
                 self.horizontal(14, 24, 30, Tile::OneWay);
                 self.vertical(17, 10, 15, Tile::Solid);
             }
+            DungeonPaletteCourse::WallAntechamber => {
+                self.horizontal(14, 3, 9, Tile::OneWay);
+                self.horizontal(12, 11, 16, Tile::OneWay);
+                self.horizontal(9, 18, 23, Tile::OneWay);
+                self.horizontal(6, 24, 29, Tile::OneWay);
+                self.horizontal(14, 24, 30, Tile::OneWay);
+                self.vertical(16, 7, 15, Tile::Solid);
+            }
+            DungeonPaletteCourse::BroadChimney => {
+                // The west entry opens directly into the bottom of the shaft; the opposing
+                // walls begin above it so the player must climb rather than detour around it.
+                self.vertical(10, 3, 12, Tile::Solid);
+                self.vertical(16, 3, 17, Tile::Solid);
+                self.horizontal(16, 10, 17, Tile::Solid);
+                self.horizontal(5, 17, 25, Tile::OneWay);
+                self.horizontal(14, 23, 30, Tile::OneWay);
+            }
+            DungeonPaletteCourse::BellSwitchback => {
+                self.vertical(10, 4, 12, Tile::Solid);
+                self.vertical(16, 3, 13, Tile::Solid);
+                self.horizontal(16, 10, 14, Tile::Solid);
+                self.horizontal(16, 18, 23, Tile::Solid);
+                self.horizontal(7, 17, 25, Tile::OneWay);
+                self.horizontal(14, 24, 30, Tile::OneWay);
+            }
+            DungeonPaletteCourse::BellNiche => {
+                self.vertical(11, 2, 16, Tile::Solid);
+                self.vertical(17, 4, 17, Tile::Solid);
+                self.horizontal(16, 11, 18, Tile::Solid);
+                self.horizontal(8, 18, 25, Tile::OneWay);
+                self.horizontal(4, 13, 16, Tile::OneWay);
+            }
+            DungeonPaletteCourse::TempoHall => {
+                self.vertical(10, 1, 17, Tile::Solid);
+                self.vertical(16, 4, 17, Tile::Solid);
+                self.vertical(11, 1, 4, Tile::Solid);
+                self.vertical(11, 4, 7, Tile::HazardRight);
+                self.vertical(11, 7, 10, Tile::Solid);
+                self.vertical(11, 10, 13, Tile::HazardRight);
+                self.vertical(11, 13, 16, Tile::Solid);
+                self.vertical(15, 4, 7, Tile::Solid);
+                self.vertical(15, 7, 10, Tile::HazardLeft);
+                self.vertical(15, 10, 13, Tile::Solid);
+                self.vertical(15, 13, 16, Tile::HazardLeft);
+                self.horizontal(4, 15, 25, Tile::Solid);
+                self.horizontal(14, 23, 30, Tile::OneWay);
+                for row in 13..16 {
+                    self.set(10, row, Tile::Empty);
+                    self.set(11, row, Tile::Empty);
+                }
+            }
+            DungeonPaletteCourse::SplitSpire => {
+                self.vertical(12, 2, 16, Tile::Solid);
+                self.vertical(18, 5, 17, Tile::Solid);
+                self.horizontal(16, 12, 19, Tile::Solid);
+                self.horizontal(9, 19, 26, Tile::OneWay);
+                self.horizontal(6, 13, 17, Tile::OneWay);
+                self.horizontal(3, 14, 18, Tile::OneWay);
+                self.horizontal(14, 25, 30, Tile::OneWay);
+                for row in 13..16 {
+                    self.set(12, row, Tile::Empty);
+                }
+            }
+            DungeonPaletteCourse::RafterShrine => {
+                self.vertical(10, 4, 16, Tile::Solid);
+                self.vertical(16, 2, 13, Tile::Solid);
+                self.horizontal(16, 10, 14, Tile::Solid);
+                self.horizontal(16, 18, 23, Tile::Solid);
+                self.horizontal(10, 17, 24, Tile::OneWay);
+                self.horizontal(6, 11, 15, Tile::OneWay);
+                self.horizontal(3, 17, 24, Tile::OneWay);
+            }
+            DungeonPaletteCourse::LandingChain => {
+                self.vertical(9, 6, 16, Tile::Solid);
+                self.vertical(15, 3, 13, Tile::Solid);
+                self.horizontal(14, 3, 8, Tile::OneWay);
+                self.horizontal(11, 16, 20, Tile::OneWay);
+                self.horizontal(8, 21, 24, Tile::OneWay);
+                self.horizontal(5, 25, 28, Tile::OneWay);
+                self.horizontal(14, 25, 30, Tile::OneWay);
+                for row in 13..16 {
+                    self.set(9, row, Tile::Empty);
+                }
+            }
+            DungeonPaletteCourse::NeedleTurn => {
+                self.vertical(10, 8, 17, Tile::Solid);
+                self.vertical(16, 7, 17, Tile::Solid);
+                self.vertical(11, 8, 10, Tile::HazardRight);
+                self.vertical(11, 12, 14, Tile::HazardRight);
+                self.vertical(15, 10, 12, Tile::HazardLeft);
+                self.vertical(15, 14, 16, Tile::HazardLeft);
+                self.horizontal(7, 16, 25, Tile::OneWay);
+                self.horizontal(14, 24, 30, Tile::OneWay);
+                for row in 14..16 {
+                    self.set(10, row, Tile::Empty);
+                    self.set(11, row, Tile::Empty);
+                }
+            }
+            DungeonPaletteCourse::WallGate => {
+                self.horizontal(14, 3, 9, Tile::OneWay);
+                self.vertical(10, 4, 12, Tile::Solid);
+                self.vertical(16, 4, 17, Tile::Solid);
+                self.horizontal(5, 17, 24, Tile::OneWay);
+                self.horizontal(9, 23, 28, Tile::OneWay);
+                self.horizontal(14, 25, 30, Tile::OneWay);
+            }
             DungeonPaletteCourse::Threshold => {
                 self.horizontal(14, 5, 11, Tile::OneWay);
                 self.horizontal(11, 14, 20, Tile::OneWay);
@@ -547,30 +725,7 @@ mod tests {
 
     #[test]
     fn every_palette_course_materializes_with_exact_connected_sockets() {
-        let courses = [
-            DungeonPaletteCourse::HollowLanding,
-            DungeonPaletteCourse::MossWalk,
-            DungeonPaletteCourse::SplitRoot,
-            DungeonPaletteCourse::RootCellar,
-            DungeonPaletteCourse::BrokenAqueduct,
-            DungeonPaletteCourse::OldLift,
-            DungeonPaletteCourse::LanternGallery,
-            DungeonPaletteCourse::WatchPost,
-            DungeonPaletteCourse::Sluice,
-            DungeonPaletteCourse::ClimberVault,
-            DungeonPaletteCourse::Threshold,
-            DungeonPaletteCourse::Crossroads,
-            DungeonPaletteCourse::WallGallery,
-            DungeonPaletteCourse::BootsVault,
-            DungeonPaletteCourse::Underpass,
-            DungeonPaletteCourse::DashChasm,
-            DungeonPaletteCourse::CoinLoft,
-            DungeonPaletteCourse::NeedleRoom,
-            DungeonPaletteCourse::Treasury,
-            DungeonPaletteCourse::Gatehouse,
-            DungeonPaletteCourse::CrownSanctum,
-        ];
-        for course in courses {
+        for course in DungeonPaletteCourse::ALL {
             let candidate = DungeonPaletteKey::new(7, course).generate();
             let connections = course
                 .door_sides()
@@ -621,29 +776,7 @@ mod tests {
 
     #[test]
     fn every_authored_bridge_has_full_player_headroom() {
-        for course in [
-            DungeonPaletteCourse::HollowLanding,
-            DungeonPaletteCourse::MossWalk,
-            DungeonPaletteCourse::SplitRoot,
-            DungeonPaletteCourse::RootCellar,
-            DungeonPaletteCourse::BrokenAqueduct,
-            DungeonPaletteCourse::OldLift,
-            DungeonPaletteCourse::LanternGallery,
-            DungeonPaletteCourse::WatchPost,
-            DungeonPaletteCourse::Sluice,
-            DungeonPaletteCourse::ClimberVault,
-            DungeonPaletteCourse::Threshold,
-            DungeonPaletteCourse::Crossroads,
-            DungeonPaletteCourse::WallGallery,
-            DungeonPaletteCourse::BootsVault,
-            DungeonPaletteCourse::Underpass,
-            DungeonPaletteCourse::DashChasm,
-            DungeonPaletteCourse::CoinLoft,
-            DungeonPaletteCourse::NeedleRoom,
-            DungeonPaletteCourse::Treasury,
-            DungeonPaletteCourse::Gatehouse,
-            DungeonPaletteCourse::CrownSanctum,
-        ] {
+        for course in DungeonPaletteCourse::ALL {
             let candidate = DungeonPaletteKey::new(0xD06E_0A11, course).generate();
             let mut tiles = candidate.tiles.clone();
             let draft = PaletteDraft { tiles: &mut tiles };
