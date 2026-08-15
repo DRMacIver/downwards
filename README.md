@@ -186,6 +186,14 @@ To play the first multi-room dungeon vertical slice:
 cargo run -- --dungeon
 ```
 
+Dungeon progress is checkpointed after every coin, unlock, Crown pickup, and room transition in
+`playtest-history/demo-dungeon-save-v1.json`; launching `--dungeon` resumes it. To begin again
+without destroying the old run, use `cargo run -- --dungeon-new`: the previous save is renamed to a
+timestamped `.bak`. `--dungeon-save PATH` selects a separate checkpoint for A/B playthroughs.
+Transitions, sealed-door attempts, coins, and unlocks are also appended as typed
+`downwards-dungeon-progress-v1` records to the ordinary `--history` JSONL stream, alongside the
+per-attempt input/replay records.
+
 This is an expanding hand-authored dungeon built from deterministic room-palette starting points,
 not a claim that a general dungeon generator can design the finished game. It currently contains
 101 connected floors and 64 persistent coins. The opening Rootworks region begins without traversal

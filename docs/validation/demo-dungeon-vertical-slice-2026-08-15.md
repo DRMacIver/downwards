@@ -10,6 +10,15 @@ Run it with:
 cargo run -- --dungeon
 ```
 
+The default launch resumes the version-bound atomic checkpoint at
+`playtest-history/demo-dungeon-save-v1.json`. `--dungeon-new` archives that file before starting a
+fresh run, and `--dungeon-save PATH` isolates a separate playthrough. Every persistent-state change
+is read back after publication. Unknown schemas, stale authored-dungeon or palette versions,
+duplicate/out-of-range coins, invalid unlock order, and unknown room/entry-door coordinates are
+rejected rather than silently reset. The existing human-history JSONL also receives typed records
+for coins, unlocks, sealed-door attempts, room transitions, and the Crown; deaths and full input
+traces remain in its ordinary attempt records.
+
 The 101 room shells are deterministic `downwards-gen` palette outputs. Their graph is currently
 assembled by trusted content rather than by a general topology generator:
 
@@ -104,8 +113,8 @@ change earlier observations. The current policy uses 64 trials per curve point r
 original eight. This does not turn blind continuation into adaptive play, and nonzero success is
 not a human difficulty score.
 
-This does not claim a strong dungeon generator, calibrated whole-run difficulty, or durable
-save-game persistence. It is a playable integration prototype intended to expose graph, pacing,
+This does not claim a strong dungeon generator or calibrated whole-run difficulty. It is a
+playable integration prototype intended to expose graph, pacing,
 unlock, and room-transition problems before generalising the generator.
 
 Regenerate or verify the exact route artifact with:

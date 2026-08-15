@@ -21,9 +21,9 @@ use downwards_content::{
     DEMO_DUNGEON_GLOVE_GATE_REQUIREMENT, DEMO_DUNGEON_GLOVE_PICKUP, DEMO_DUNGEON_GOAL_EXIT,
     DEMO_DUNGEON_TOTAL_COINS, DemoDungeonInventory, DemoDungeonRoom, HARD_NO_DASH_ABILITIES,
     HARD_NO_DASH_TARGET, MEDIUM_NO_DASH_ABILITIES, MEDIUM_NO_DASH_TARGET, TraversalMethod,
-    calibrated_generator_playtest, calibration_gallery, demo_dungeon_door_requirement,
-    demo_dungeon_room, first_steps_room, hard_no_dash_scenario, hard_no_dash_witness_actions,
-    medium_no_dash_scenario, medium_no_dash_witness_actions,
+    calibrated_generator_playtest, calibration_gallery, demo_dungeon_definition,
+    demo_dungeon_door_requirement, demo_dungeon_room, first_steps_room, hard_no_dash_scenario,
+    hard_no_dash_witness_actions, medium_no_dash_scenario, medium_no_dash_witness_actions,
 };
 use downwards_core::{
     AbilitySet, Action, BoundarySide, DeathReason, HazardDirection, JUMP_BUFFER_TICKS, JumpKind,
@@ -32,10 +32,11 @@ use downwards_core::{
 };
 use downwards_gen::{
     AbilityTier, CALIBRATED_WALL_JUMP_GENERATION_VERSION, COMPOSITIONAL_GENERATION_VERSION,
-    experimental::GenerationStrategy, generate_compositional, generate_uncurated,
+    DUNGEON_PALETTE_GENERATION_VERSION, experimental::GenerationStrategy, generate_compositional,
+    generate_uncurated,
 };
 use macroquad::prelude::*;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::playable_catalogue::{PlayableCatalogue, PlayableEntry};
 
@@ -55,6 +56,8 @@ const HISTORICAL_CATALOGUE_WITNESS_MOVEMENT_POLICY_VERSION: u32 = 1;
 const HUMAN_JUMP_TAP_WINDOW_MICROS: u64 = 100_000;
 const HUMAN_HISTORY_SCHEMA: &str = "downwards-human-attempt-v1";
 const DEFAULT_HUMAN_HISTORY_PATH: &str = "playtest-history/human-attempts-v1.jsonl";
+const DUNGEON_SAVE_SCHEMA: &str = "downwards-demo-dungeon-save-v1";
+const DEFAULT_DUNGEON_SAVE_PATH: &str = "playtest-history/demo-dungeon-save-v1.json";
 // The ordinary level browser starts at the first offline-curated baseline route. Raw seeds remain
 // available only through the explicit developer command-line mode.
 const DEFAULT_SEED: u64 = 0;
@@ -73,7 +76,8 @@ Usage: downwards [--seed <u64>] [--tier <1|2|3|4>] [--development]
        downwards --challenge [hard|tutorial]
        downwards --gallery
        downwards --calibrated [seed]
-       downwards --dungeon
+       downwards --dungeon [--dungeon-save <path>]
+       downwards --dungeon-new [--dungeon-save <path>]
 
   (no options)   open the offline-curated v6 route catalogue
   --seed N       explicit developer mode: uncurated v6 seed
@@ -84,7 +88,10 @@ Usage: downwards [--seed <u64>] [--tier <1|2|3|4>] [--development]
   --gallery      open the authored no-Dash calibration gallery
   --calibrated [seed]
                  play the generated WallJump-only calibration batch
-  --dungeon      enter the seven-room crown-and-boots dungeon vertical slice
+  --dungeon      resume the 101-floor dungeon (or begin it if no save exists)
+  --dungeon-new  archive the current save and begin a fresh dungeon run
+  --dungeon-save PATH
+                 use PATH for durable dungeon progress
   --generated    return to the curated catalogue (the default)
   --corpus PATH  play the strict native-keyed corpus playtest manifest
   --history PATH append completed human attempts and input timings to PATH
@@ -208,15 +215,21 @@ async fn main() {
         return;
     }
 
-    let mut client = ClientState::new_with_history(
+    let dungeon_save = (options.selection.mode == RoomMode::Dungeon)
+        .then_some((options.dungeon_save_path.as_path(), options.fresh_dungeon));
+    let mut client = ClientState::new_with_persistence(
         options.selection,
         options.corpus_manifest.as_deref(),
         options.allow_provisional_corpus,
         Some(&options.history_path),
+        dungeon_save,
     )
     .unwrap_or_else(|error| panic!("could not start level lab: {error}"));
     let visual_assets = VisualAssets::load();
     eprintln!("human attempt history: {}", options.history_path.display());
+    if options.selection.mode == RoomMode::Dungeon {
+        eprintln!("dungeon progress: {}", options.dungeon_save_path.display());
+    }
     let session_clock = Instant::now();
     let mut render_frame_index = 0_u64;
     let mut accumulated_seconds = 0.0;
@@ -935,6 +948,8 @@ struct LaunchOptions {
     corpus_manifest: Option<String>,
     allow_provisional_corpus: bool,
     history_path: PathBuf,
+    dungeon_save_path: PathBuf,
+    fresh_dungeon: bool,
 }
 
 fn parse_launch_options<I, S>(arguments: I) -> Result<LaunchOptions, String>
@@ -948,12 +963,15 @@ where
         corpus_manifest: None,
         allow_provisional_corpus: false,
         history_path: PathBuf::from(DEFAULT_HUMAN_HISTORY_PATH),
+        dungeon_save_path: PathBuf::from(DEFAULT_DUNGEON_SAVE_PATH),
+        fresh_dungeon: false,
     };
     let mut arguments = arguments.into_iter().map(Into::into).peekable();
     let mut challenge_requested = false;
     let mut gallery_requested = false;
     let mut calibrated_requested = false;
     let mut dungeon_requested = false;
+    let mut dungeon_save_explicit = false;
     let mut authored_mode_conflict = false;
     let mut tier_explicit = false;
 
@@ -1007,6 +1025,26 @@ where
                 options.selection.mode = RoomMode::Dungeon;
                 options.selection.seed = 0;
                 options.selection.tier = AbilityTier::Baseline;
+            }
+            "--dungeon-new" => {
+                if dungeon_requested {
+                    return Err("--dungeon/--dungeon-new may be specified only once".to_owned());
+                }
+                dungeon_requested = true;
+                options.fresh_dungeon = true;
+                options.selection.mode = RoomMode::Dungeon;
+                options.selection.seed = 0;
+                options.selection.tier = AbilityTier::Baseline;
+            }
+            "--dungeon-save" => {
+                dungeon_save_explicit = true;
+                let path = arguments
+                    .next()
+                    .ok_or_else(|| "--dungeon-save needs a file path".to_owned())?;
+                if path.is_empty() {
+                    return Err("--dungeon-save needs a nonempty file path".to_owned());
+                }
+                options.dungeon_save_path = PathBuf::from(path);
             }
             "--development" => {
                 authored_mode_conflict = true;
@@ -1074,6 +1112,14 @@ where
                 }
                 options.history_path = PathBuf::from(path);
             }
+            _ if argument.starts_with("--dungeon-save=") => {
+                dungeon_save_explicit = true;
+                let path = &argument[15..];
+                if path.is_empty() {
+                    return Err("--dungeon-save needs a nonempty file path".to_owned());
+                }
+                options.dungeon_save_path = PathBuf::from(path);
+            }
             _ if argument.starts_with("--challenge=") => {
                 if challenge_requested {
                     return Err("--challenge may be specified only once".to_owned());
@@ -1134,6 +1180,9 @@ where
 
     if options.allow_provisional_corpus && options.corpus_manifest.is_none() {
         return Err("--allow-provisional-corpus requires --corpus".to_owned());
+    }
+    if dungeon_save_explicit && !dungeon_requested {
+        return Err("--dungeon-save requires --dungeon or --dungeon-new".to_owned());
     }
     if options.corpus_manifest.is_some() && options.selection.mode != RoomMode::Generated {
         return Err("--corpus cannot be combined with --seed or --development".to_owned());
@@ -1733,6 +1782,16 @@ struct PersistentHumanHistory {
     session_started_unix_ms: u64,
     next_attempt_index: u64,
     next_tuning_change_index: u64,
+    next_dungeon_event_index: u64,
+}
+
+#[derive(Clone, Copy)]
+struct DungeonEventContext<'a> {
+    event: &'a str,
+    room: DemoDungeonRoom,
+    destination: Option<DemoDungeonRoom>,
+    door: Option<&'a str>,
+    item_id: Option<&'a str>,
 }
 
 impl PersistentHumanHistory {
@@ -1768,6 +1827,7 @@ impl PersistentHumanHistory {
             session_started_unix_ms,
             next_attempt_index: 1,
             next_tuning_change_index: 1,
+            next_dungeon_event_index: 1,
         })
     }
 
@@ -1872,6 +1932,59 @@ impl PersistentHumanHistory {
             .and_then(|()| self.writer.flush())
             .map_err(|error| format!("could not persist movement-tuning change: {error}"))?;
         self.next_tuning_change_index = self.next_tuning_change_index.saturating_add(1);
+        Ok(())
+    }
+
+    fn append_dungeon_event(
+        &mut self,
+        context: DungeonEventContext<'_>,
+        inventory: DemoDungeonInventory,
+        movement_tuning: MovementTuning,
+    ) -> Result<(), String> {
+        #[derive(Serialize)]
+        struct PersistentDungeonEventV1<'a> {
+            schema: &'static str,
+            session_id: &'a str,
+            recorded_at_unix_ms: u64,
+            event_index: u64,
+            event: &'a str,
+            room_id: &'static str,
+            destination_room_id: Option<&'static str>,
+            door_id: Option<&'a str>,
+            item_id: Option<&'a str>,
+            coins: u8,
+            climbing_gloves: bool,
+            winged_boots: bool,
+            crown: bool,
+            player_movement_policy_version: u32,
+            movement_tuning: PersistentMovementTuningV1,
+        }
+
+        let record = PersistentDungeonEventV1 {
+            schema: "downwards-dungeon-progress-v1",
+            session_id: &self.session_id,
+            recorded_at_unix_ms: unix_time_ms(),
+            event_index: self.next_dungeon_event_index,
+            event: context.event,
+            room_id: context.room.id(),
+            destination_room_id: context.destination.map(DemoDungeonRoom::id),
+            door_id: context.door,
+            item_id: context.item_id,
+            coins: inventory.coin_count(),
+            climbing_gloves: inventory.climbing_gloves,
+            winged_boots: inventory.winged_boots,
+            crown: inventory.crown,
+            player_movement_policy_version: PLAYER_MOVEMENT_POLICY_VERSION,
+            movement_tuning: movement_tuning.into(),
+        };
+        let mut line = serde_json::to_vec(&record)
+            .map_err(|error| format!("could not serialize dungeon progress: {error}"))?;
+        line.push(b'\n');
+        self.writer
+            .write_all(&line)
+            .and_then(|()| self.writer.flush())
+            .map_err(|error| format!("could not persist dungeon progress: {error}"))?;
+        self.next_dungeon_event_index = self.next_dungeon_event_index.saturating_add(1);
         Ok(())
     }
 }
@@ -2214,6 +2327,7 @@ struct ClientState {
     replay_mode: ReplayMode,
     replay_notice: Option<ReplayNotice>,
     dungeon_run: Option<DungeonRunState>,
+    dungeon_persistence: Option<DungeonPersistence>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -2231,6 +2345,214 @@ impl Default for DungeonRunState {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+struct DungeonSaveV1 {
+    schema: String,
+    dungeon_id: String,
+    palette_generation_version: u32,
+    floor_count: u16,
+    total_coins: u8,
+    room_id: String,
+    entry_door: Option<String>,
+    climbing_gloves: bool,
+    winged_boots: bool,
+    crown: bool,
+    collected_coins: Vec<u8>,
+    saved_at_unix_ms: u64,
+}
+
+impl DungeonSaveV1 {
+    fn from_run(run: DungeonRunState, entry_door: Option<&str>) -> Self {
+        Self {
+            schema: DUNGEON_SAVE_SCHEMA.to_owned(),
+            dungeon_id: demo_dungeon_definition().id,
+            palette_generation_version: DUNGEON_PALETTE_GENERATION_VERSION,
+            floor_count: DemoDungeonRoom::ALL.len() as u16,
+            total_coins: DEMO_DUNGEON_TOTAL_COINS,
+            room_id: run.room.id().to_owned(),
+            entry_door: entry_door.map(str::to_owned),
+            climbing_gloves: run.inventory.climbing_gloves,
+            winged_boots: run.inventory.winged_boots,
+            crown: run.inventory.crown,
+            collected_coins: (0..DEMO_DUNGEON_TOTAL_COINS)
+                .filter(|index| run.inventory.has_coin(&format!("dungeon-coin-{index:02}")))
+                .collect(),
+            saved_at_unix_ms: unix_time_ms(),
+        }
+    }
+
+    fn validate(&self) -> Result<(DungeonRunState, Option<String>), String> {
+        if self.schema != DUNGEON_SAVE_SCHEMA {
+            return Err(format!(
+                "dungeon save schema {:?} is not current {:?}",
+                self.schema, DUNGEON_SAVE_SCHEMA
+            ));
+        }
+        let definition = demo_dungeon_definition();
+        if self.dungeon_id != definition.id
+            || self.palette_generation_version != DUNGEON_PALETTE_GENERATION_VERSION
+            || self.floor_count != DemoDungeonRoom::ALL.len() as u16
+            || self.total_coins != DEMO_DUNGEON_TOTAL_COINS
+        {
+            return Err("dungeon save belongs to a different authored dungeon version".to_owned());
+        }
+        if self
+            .collected_coins
+            .windows(2)
+            .any(|pair| pair[0] >= pair[1])
+            || self
+                .collected_coins
+                .iter()
+                .any(|index| *index >= DEMO_DUNGEON_TOTAL_COINS)
+        {
+            return Err(
+                "dungeon save coin indices must be unique, sorted, and in range".to_owned(),
+            );
+        }
+        if self.winged_boots && !self.climbing_gloves {
+            return Err("dungeon save grants Dash without the earlier Wall Jump unlock".to_owned());
+        }
+        if self.crown
+            && (!self.winged_boots
+                || self.collected_coins.len() != usize::from(DEMO_DUNGEON_TOTAL_COINS))
+        {
+            return Err("dungeon save grants the Crown without full progression".to_owned());
+        }
+        let room = DemoDungeonRoom::from_id(&self.room_id)
+            .ok_or_else(|| format!("dungeon save names unknown room {:?}", self.room_id))?;
+        let mut inventory = DemoDungeonInventory::default();
+        inventory.climbing_gloves = self.climbing_gloves;
+        inventory.winged_boots = self.winged_boots;
+        inventory.crown = self.crown;
+        for index in &self.collected_coins {
+            let inserted = inventory.collect_coin(&format!("dungeon-coin-{index:02}"));
+            debug_assert!(inserted);
+        }
+        let restored_room = demo_dungeon_room(room, inventory);
+        match self.entry_door.as_deref() {
+            Some(entry) if !restored_room.doors().iter().any(|door| door.id == entry) => {
+                return Err(format!(
+                    "dungeon save entry door {entry:?} does not exist in {:?}",
+                    self.room_id
+                ));
+            }
+            None if room != DemoDungeonRoom::HollowLanding => {
+                return Err("only the initial dungeon room may omit its entry door".to_owned());
+            }
+            Some(_) | None => {}
+        }
+        Ok((DungeonRunState { room, inventory }, self.entry_door.clone()))
+    }
+}
+
+#[derive(Debug)]
+struct DungeonPersistence {
+    path: PathBuf,
+}
+
+type LoadedDungeonProgress = (DungeonRunState, Option<String>);
+
+impl DungeonPersistence {
+    fn open(path: &Path, fresh: bool) -> Result<(Self, Option<LoadedDungeonProgress>), String> {
+        if let Some(parent) = path.parent()
+            && !parent.as_os_str().is_empty()
+        {
+            fs::create_dir_all(parent).map_err(|error| {
+                format!(
+                    "could not create dungeon-save directory {}: {error}",
+                    parent.display()
+                )
+            })?;
+        }
+        if fresh && path.exists() {
+            let file_name = path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or("demo-dungeon-save-v1.json");
+            let mut archive = path.with_file_name(format!("{file_name}.{}.bak", unix_time_ms()));
+            let mut suffix = 1_u16;
+            while archive.exists() {
+                archive =
+                    path.with_file_name(format!("{file_name}.{}.{}.bak", unix_time_ms(), suffix));
+                suffix = suffix.saturating_add(1);
+            }
+            fs::rename(path, &archive).map_err(|error| {
+                format!(
+                    "could not archive dungeon save {} as {}: {error}",
+                    path.display(),
+                    archive.display()
+                )
+            })?;
+            eprintln!("archived previous dungeon save: {}", archive.display());
+        }
+        let loaded = if path.exists() {
+            let bytes = fs::read(path).map_err(|error| {
+                format!("could not read dungeon save {}: {error}", path.display())
+            })?;
+            let save: DungeonSaveV1 = serde_json::from_slice(&bytes).map_err(|error| {
+                format!("could not parse dungeon save {}: {error}", path.display())
+            })?;
+            Some(save.validate()?)
+        } else {
+            None
+        };
+        Ok((
+            Self {
+                path: path.to_owned(),
+            },
+            loaded,
+        ))
+    }
+
+    fn persist(&self, run: DungeonRunState, entry_door: Option<&str>) -> Result<(), String> {
+        let save = DungeonSaveV1::from_run(run, entry_door);
+        let mut bytes = serde_json::to_vec_pretty(&save)
+            .map_err(|error| format!("could not serialize dungeon save: {error}"))?;
+        bytes.push(b'\n');
+        let file_name = self
+            .path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("demo-dungeon-save-v1.json");
+        let temporary = self.path.with_file_name(format!(
+            ".{file_name}.tmp-{}-{}",
+            std::process::id(),
+            unix_time_ms()
+        ));
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temporary)
+            .map_err(|error| {
+                format!(
+                    "could not create temporary dungeon save {}: {error}",
+                    temporary.display()
+                )
+            })?;
+        file.write_all(&bytes)
+            .and_then(|()| file.sync_all())
+            .map_err(|error| format!("could not write dungeon save: {error}"))?;
+        fs::rename(&temporary, &self.path).map_err(|error| {
+            format!(
+                "could not publish dungeon save {}: {error}",
+                self.path.display()
+            )
+        })?;
+        let readback = fs::read(&self.path).map_err(|error| {
+            format!(
+                "could not read back dungeon save {}: {error}",
+                self.path.display()
+            )
+        })?;
+        let parsed: DungeonSaveV1 = serde_json::from_slice(&readback)
+            .map_err(|error| format!("published dungeon save is not readable: {error}"))?;
+        if parsed.validate()? != (run, entry_door.map(str::to_owned)) {
+            return Err("published dungeon save readback changed the run state".to_owned());
+        }
+        Ok(())
+    }
+}
+
 impl ClientState {
     #[cfg(test)]
     fn new(
@@ -2241,11 +2563,28 @@ impl ClientState {
         Self::new_with_history(selection, corpus_manifest, allow_provisional_corpus, None)
     }
 
+    #[cfg(test)]
     fn new_with_history(
+        selection: ScenarioSelection,
+        corpus_manifest: Option<&str>,
+        allow_provisional_corpus: bool,
+        history_path: Option<&Path>,
+    ) -> Result<Self, String> {
+        Self::new_with_persistence(
+            selection,
+            corpus_manifest,
+            allow_provisional_corpus,
+            history_path,
+            None,
+        )
+    }
+
+    fn new_with_persistence(
         mut selection: ScenarioSelection,
         corpus_manifest: Option<&str>,
         allow_provisional_corpus: bool,
         history_path: Option<&Path>,
+        dungeon_save: Option<(&Path, bool)>,
     ) -> Result<Self, String> {
         selection = selection.canonicalized();
         let catalogue = load_playable_catalogue(corpus_manifest, allow_provisional_corpus)?;
@@ -2254,6 +2593,33 @@ impl ClientState {
             selection.seed = 0;
         }
         let (mut simulation, generated_provenance) = load_scenario(selection, &catalogue)?;
+        let mut dungeon_run = (selection.mode == RoomMode::Dungeon).then(DungeonRunState::default);
+        let dungeon_persistence = match (selection.mode, dungeon_save) {
+            (RoomMode::Dungeon, Some((path, fresh))) => {
+                let (persistence, loaded) = DungeonPersistence::open(path, fresh)?;
+                if let Some((loaded_run, entry_door)) = loaded {
+                    let room = demo_dungeon_room(loaded_run.room, loaded_run.inventory);
+                    simulation = match entry_door.as_deref() {
+                        Some(door) => {
+                            Simulation::enter_via_door(room, loaded_run.inventory.abilities(), door)
+                                .map_err(|error| {
+                                    format!("could not restore dungeon entry: {error}")
+                                })?
+                        }
+                        None => Simulation::with_abilities(room, loaded_run.inventory.abilities()),
+                    };
+                    dungeon_run = Some(loaded_run);
+                }
+                let run = dungeon_run.expect("dungeon mode initializes run state");
+                persistence.persist(run, simulation.entry_door())?;
+                Some(persistence)
+            }
+            (RoomMode::Dungeon, None) => None,
+            (_, Some(_)) => {
+                return Err("dungeon persistence requires dungeon mode".to_owned());
+            }
+            (_, None) => None,
+        };
         let movement_tuning = MovementTuning::GAMEPLAY_DEFAULT;
         configure_live_simulation(&mut simulation, movement_tuning);
         let human_recorder = HumanRecorder::new(&simulation);
@@ -2300,7 +2666,8 @@ impl ClientState {
             level_stats: HashMap::new(),
             replay_mode: ReplayMode::Human,
             replay_notice: None,
-            dungeon_run: (selection.mode == RoomMode::Dungeon).then(DungeonRunState::default),
+            dungeon_run,
+            dungeon_persistence,
         })
     }
 
@@ -2317,6 +2684,7 @@ impl ClientState {
         self.replay_notice = None;
         self.movement_tuning_menu = None;
         self.dungeon_run = (selection.mode == RoomMode::Dungeon).then(DungeonRunState::default);
+        self.dungeon_persistence = None;
         Ok(())
     }
 
@@ -3711,11 +4079,13 @@ impl ClientState {
             // initial digest and subsequent frames share one movement-policy domain.
             self.human_recorder.resume_at(&self.simulation);
         }
-        let expected_target = self.selected_target_id().map(str::to_owned);
+        // Every connected door is a legitimate room-local completion in dungeon mode. The Crown
+        // remains the run-level target, but classifying intermediate doors against that ID would
+        // corrupt playtest history by recording every successful transition as a wrong door.
+        let expected_target = (self.selection.mode != RoomMode::Dungeon)
+            .then(|| self.selected_target_id().map(str::to_owned))
+            .flatten();
         let report = self.step(action);
-        if self.observe_dungeon_progress(&report) {
-            return report;
-        }
         let completed = self.human_recorder.observe_step(
             action,
             &report,
@@ -3732,7 +4102,7 @@ impl ClientState {
             .entry(self.stats_key(self.selection))
             .or_default()
             .observe_human_step(&report.events, completed.as_ref(), attempt_ticks);
-        if let Some(outcome) = completed {
+        let completed_notice = if let Some(outcome) = completed {
             let level_id = self.stats_key(self.selection);
             let level_name = self.level_name(self.selection);
             let history_error = self
@@ -3748,7 +4118,7 @@ impl ClientState {
                 eprintln!("human attempt history disabled after write failure: {error}");
                 self.human_history = None;
             }
-            self.replay_notice = Some(match &outcome {
+            Some(match &outcome {
                 AttemptOutcome::WrongDoor(id) => ReplayNotice {
                     title: "WRONG DOOR".to_owned(),
                     detail: format!("reached {id}; R retries the selected route, M opens levels"),
@@ -3759,7 +4129,13 @@ impl ClientState {
                     detail: "H replays the latest successful or completed attempt".to_owned(),
                     is_error: false,
                 },
-            });
+            })
+        } else {
+            None
+        };
+        let dungeon_boundary = self.observe_dungeon_progress(&report);
+        if !dungeon_boundary && let Some(notice) = completed_notice {
+            self.replay_notice = Some(notice);
         }
         report
     }
@@ -3769,6 +4145,53 @@ impl ClientState {
     /// Returns `true` when this tick crossed an attempt boundary (a room transition or the boots
     /// unlock). The ordinary single-room recorder must not append across that digest/loadout
     /// boundary; it is resumed against the newly authoritative state here instead.
+    fn persist_dungeon_progress(&mut self) {
+        let result = match (self.dungeon_persistence.as_ref(), self.dungeon_run) {
+            (Some(persistence), Some(run)) => {
+                persistence.persist(run, self.simulation.entry_door())
+            }
+            (None, _) | (_, None) => return,
+        };
+        if let Err(error) = result {
+            eprintln!("dungeon persistence disabled after write failure: {error}");
+            self.dungeon_persistence = None;
+            self.replay_notice = Some(ReplayNotice {
+                title: "DUNGEON SAVE FAILED".to_owned(),
+                detail: "The current run continues, but progress is no longer being saved"
+                    .to_owned(),
+                is_error: true,
+            });
+        }
+    }
+
+    fn record_dungeon_event(
+        &mut self,
+        event: &str,
+        room: DemoDungeonRoom,
+        destination: Option<DemoDungeonRoom>,
+        door: Option<&str>,
+        item_id: Option<&str>,
+        inventory: DemoDungeonInventory,
+    ) {
+        let result = self.human_history.as_mut().map(|history| {
+            history.append_dungeon_event(
+                DungeonEventContext {
+                    event,
+                    room,
+                    destination,
+                    door,
+                    item_id,
+                },
+                inventory,
+                self.movement_tuning,
+            )
+        });
+        if let Some(Err(error)) = result {
+            eprintln!("human attempt history disabled after dungeon-event failure: {error}");
+            self.human_history = None;
+        }
+    }
+
     fn observe_dungeon_progress(&mut self, report: &StepReport) -> bool {
         let Some(mut run) = self.dungeon_run else {
             return false;
@@ -3798,14 +4221,16 @@ impl ClientState {
             return true;
         }
 
-        let mut collected_new_coin = false;
+        let mut collected_coin_ids = Vec::new();
         for id in report.events.iter().filter_map(|event| match event {
             SimulationEvent::PickupCollected { id } => Some(id.as_str()),
             _ => None,
         }) {
-            collected_new_coin |= run.inventory.collect_coin(id);
+            if run.inventory.collect_coin(id) {
+                collected_coin_ids.push(id.to_owned());
+            }
         }
-        if collected_new_coin {
+        if !collected_coin_ids.is_empty() {
             self.dungeon_run = Some(run);
             self.replay_notice = Some(ReplayNotice {
                 title: format!(
@@ -3816,6 +4241,17 @@ impl ClientState {
                 detail: "Coins persist across rooms and open sealed doors".to_owned(),
                 is_error: false,
             });
+            self.persist_dungeon_progress();
+            for id in &collected_coin_ids {
+                self.record_dungeon_event(
+                    "coin_collected",
+                    run.room,
+                    None,
+                    None,
+                    Some(id),
+                    run.inventory,
+                );
+            }
         }
 
         let collected_gloves = report.events.iter().any(|event| {
@@ -3832,6 +4268,15 @@ impl ClientState {
                 detail: "Wall Jump unlocked: hold toward a wall and press Jump".to_owned(),
                 is_error: false,
             });
+            self.persist_dungeon_progress();
+            self.record_dungeon_event(
+                "traversal_unlocked",
+                run.room,
+                None,
+                None,
+                Some(DEMO_DUNGEON_GLOVE_PICKUP),
+                run.inventory,
+            );
             return true;
         }
 
@@ -3849,6 +4294,15 @@ impl ClientState {
                 detail: "Dash unlocked: hold a direction and press X or Shift".to_owned(),
                 is_error: false,
             });
+            self.persist_dungeon_progress();
+            self.record_dungeon_event(
+                "traversal_unlocked",
+                run.room,
+                None,
+                None,
+                Some(DEMO_DUNGEON_BOOT_PICKUP),
+                run.inventory,
+            );
             return true;
         }
 
@@ -3857,6 +4311,15 @@ impl ClientState {
         }) {
             run.inventory.crown = true;
             self.dungeon_run = Some(run);
+            self.persist_dungeon_progress();
+            self.record_dungeon_event(
+                "crown_collected",
+                run.room,
+                None,
+                None,
+                Some(DEMO_DUNGEON_CROWN_PICKUP),
+                run.inventory,
+            );
         }
 
         let Some(exit_id) = report.events.iter().find_map(|event| match event {
@@ -3894,6 +4357,14 @@ impl ClientState {
                 ),
                 is_error: true,
             });
+            self.record_dungeon_event(
+                "sealed_door_rejected",
+                run.room,
+                None,
+                Some(&door.id),
+                None,
+                run.inventory,
+            );
             return true;
         }
         let Some(destination_room) = door
@@ -3912,6 +4383,7 @@ impl ClientState {
             .destination_door
             .as_deref()
             .expect("built-in dungeon doors always name their mate");
+        let source_room = run.room;
         run.room = destination_room;
         let room = demo_dungeon_room(run.room, run.inventory);
         let mut simulation =
@@ -3946,6 +4418,15 @@ impl ClientState {
             },
             is_error: false,
         });
+        self.persist_dungeon_progress();
+        self.record_dungeon_event(
+            "room_transition",
+            source_room,
+            Some(destination_room),
+            Some(&door.id),
+            None,
+            run.inventory,
+        );
         true
     }
 }
@@ -6592,6 +7073,16 @@ mod tests {
 
     use super::*;
 
+    fn temporary_test_path(label: &str, file_name: &str) -> PathBuf {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("test clock follows Unix epoch")
+            .as_nanos();
+        std::env::temp_dir()
+            .join(format!("downwards-{label}-{}-{nonce}", std::process::id()))
+            .join(file_name)
+    }
+
     #[test]
     fn command_line_defaults_are_deterministic_and_generated() {
         let options = parse_launch_options(Vec::<String>::new()).unwrap();
@@ -6601,6 +7092,11 @@ mod tests {
             options.history_path,
             PathBuf::from(DEFAULT_HUMAN_HISTORY_PATH)
         );
+        assert_eq!(
+            options.dungeon_save_path,
+            PathBuf::from(DEFAULT_DUNGEON_SAVE_PATH)
+        );
+        assert!(!options.fresh_dungeon);
     }
 
     #[test]
@@ -6626,6 +7122,9 @@ mod tests {
         assert!(parse_launch_options(["--seed", "-1"]).is_err());
         assert!(parse_launch_options(["--history"]).is_err());
         assert!(parse_launch_options(["--history="]).is_err());
+        assert!(parse_launch_options(["--dungeon-save"]).is_err());
+        assert!(parse_launch_options(["--dungeon-save="]).is_err());
+        assert!(parse_launch_options(["--dungeon-save", "save.json"]).is_err());
         assert!(parse_launch_options(["--tier", "5"]).is_err());
         assert!(parse_launch_options(["42"]).is_err());
     }
@@ -6716,9 +7215,203 @@ mod tests {
         assert_eq!(options.selection.mode, RoomMode::Dungeon);
         assert_eq!(options.selection.seed, 0);
         assert_eq!(options.selection.tier, AbilityTier::Baseline);
+        assert!(!options.fresh_dungeon);
+        let fresh =
+            parse_launch_options(["--dungeon-new", "--dungeon-save", "feedback/dungeon.json"])
+                .unwrap();
+        assert_eq!(fresh.selection.mode, RoomMode::Dungeon);
+        assert!(fresh.fresh_dungeon);
+        assert_eq!(
+            fresh.dungeon_save_path,
+            PathBuf::from("feedback/dungeon.json")
+        );
         assert!(parse_launch_options(["--dungeon", "--tier", "dash"]).is_err());
         assert!(parse_launch_options(["--dungeon", "--gallery"]).is_err());
         assert!(parse_launch_options(["--dungeon", "--seed", "3"]).is_err());
+        assert!(parse_launch_options(["--dungeon", "--dungeon-new"]).is_err());
+    }
+
+    #[test]
+    fn dungeon_save_roundtrips_exact_progress_and_rejects_corruption() {
+        let path = temporary_test_path("dungeon-save-roundtrip", "save.json");
+        let (persistence, loaded) = DungeonPersistence::open(&path, false).unwrap();
+        assert!(loaded.is_none());
+        let mut inventory = DemoDungeonInventory::default();
+        inventory.climbing_gloves = true;
+        assert!(inventory.collect_coin("dungeon-coin-00"));
+        assert!(inventory.collect_coin("dungeon-coin-17"));
+        let expected = DungeonRunState {
+            room: DemoDungeonRoom::BroadChimney,
+            inventory,
+        };
+        persistence.persist(expected, Some("west")).unwrap();
+
+        let (_, loaded) = DungeonPersistence::open(&path, false).unwrap();
+        assert_eq!(loaded, Some((expected, Some("west".to_owned()))));
+        let mut save: DungeonSaveV1 = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+        save.collected_coins = vec![0, 0];
+        assert!(save.validate().unwrap_err().contains("unique, sorted"));
+        save.collected_coins = vec![0, 17];
+        save.palette_generation_version += 1;
+        assert!(
+            save.validate()
+                .unwrap_err()
+                .contains("different authored dungeon version")
+        );
+        fs::write(&path, b"{}\n").unwrap();
+        assert!(
+            DungeonPersistence::open(&path, false)
+                .unwrap_err()
+                .contains("parse")
+        );
+    }
+
+    #[test]
+    fn fresh_dungeon_archives_the_previous_save_instead_of_erasing_it() {
+        let path = temporary_test_path("dungeon-save-fresh", "save.json");
+        let (persistence, _) = DungeonPersistence::open(&path, false).unwrap();
+        persistence
+            .persist(DungeonRunState::default(), None)
+            .unwrap();
+        let original = fs::read(&path).unwrap();
+
+        let (_, loaded) = DungeonPersistence::open(&path, true).unwrap();
+        assert!(loaded.is_none());
+        assert!(!path.exists());
+        let archives = fs::read_dir(path.parent().unwrap())
+            .unwrap()
+            .filter_map(Result::ok)
+            .map(|entry| entry.path())
+            .filter(|candidate| {
+                candidate
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .is_some_and(|name| name.ends_with(".bak"))
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(archives.len(), 1);
+        assert_eq!(fs::read(&archives[0]).unwrap(), original);
+    }
+
+    #[test]
+    fn dungeon_client_resumes_room_inventory_and_logs_progress_events() {
+        let save_path = temporary_test_path("dungeon-client-resume", "save.json");
+        let history_path = save_path.parent().unwrap().join("history.jsonl");
+        let selection = ScenarioSelection {
+            mode: RoomMode::Dungeon,
+            seed: 0,
+            tier: AbilityTier::Baseline,
+        };
+        let mut client = ClientState::new_with_persistence(
+            selection,
+            None,
+            false,
+            Some(&history_path),
+            Some((&save_path, false)),
+        )
+        .unwrap();
+        let report = |client: &ClientState, events: Vec<SimulationEvent>| StepReport {
+            tick: client.simulation.tick(),
+            events,
+            digest: client.simulation.digest(),
+        };
+        assert!(!client.observe_dungeon_progress(&report(
+            &client,
+            vec![SimulationEvent::PickupCollected {
+                id: "dungeon-coin-00".to_owned(),
+            }],
+        )));
+        assert!(client.observe_dungeon_progress(&report(
+            &client,
+            vec![SimulationEvent::ExitReached {
+                id: "east".to_owned(),
+            }],
+        )));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::MossWalk);
+        drop(client);
+
+        let resumed = ClientState::new_with_persistence(
+            selection,
+            None,
+            false,
+            None,
+            Some((&save_path, false)),
+        )
+        .unwrap();
+        let run = resumed.dungeon_run.unwrap();
+        assert_eq!(run.room, DemoDungeonRoom::MossWalk);
+        assert!(run.inventory.has_coin("dungeon-coin-00"));
+        assert_eq!(resumed.simulation.entry_door(), Some("west"));
+        assert!(
+            resumed
+                .simulation
+                .room()
+                .pickups()
+                .iter()
+                .all(|pickup| pickup.id() != "dungeon-coin-00")
+        );
+
+        let progress = fs::read_to_string(&history_path).unwrap();
+        let events = progress
+            .lines()
+            .map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap())
+            .filter(|record| record["schema"] == "downwards-dungeon-progress-v1")
+            .collect::<Vec<_>>();
+        assert_eq!(events.len(), 2);
+        assert_eq!(events[0]["event"], "coin_collected");
+        assert_eq!(events[0]["item_id"], "dungeon-coin-00");
+        assert_eq!(events[1]["event"], "room_transition");
+        assert_eq!(
+            events[1]["destination_room_id"],
+            DemoDungeonRoom::MossWalk.id()
+        );
+    }
+
+    #[test]
+    fn dungeon_transition_persists_the_completed_human_attempt_before_loading_next_room() {
+        let save_path = temporary_test_path("dungeon-attempt-transition", "save.json");
+        let history_path = save_path.parent().unwrap().join("history.jsonl");
+        let selection = ScenarioSelection {
+            mode: RoomMode::Dungeon,
+            seed: 0,
+            tier: AbilityTier::Baseline,
+        };
+        let mut client = ClientState::new_with_persistence(
+            selection,
+            None,
+            false,
+            Some(&history_path),
+            Some((&save_path, false)),
+        )
+        .unwrap();
+        for _ in 0..400 {
+            client.step_human(Action {
+                move_x: 1,
+                ..Action::default()
+            });
+            if client.dungeon_run.unwrap().room == DemoDungeonRoom::MossWalk {
+                break;
+            }
+        }
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::MossWalk);
+        drop(client);
+
+        let records = fs::read_to_string(&history_path)
+            .unwrap()
+            .lines()
+            .map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap())
+            .collect::<Vec<_>>();
+        let attempt = records
+            .iter()
+            .find(|record| record["schema"] == HUMAN_HISTORY_SCHEMA)
+            .expect("room-local human attempt was persisted before transition");
+        assert_eq!(attempt["room_id"], DemoDungeonRoom::HollowLanding.id());
+        assert_eq!(attempt["outcome"]["kind"], "success");
+        assert_eq!(attempt["outcome"]["detail"], "east");
+        assert!(records.iter().any(|record| {
+            record["schema"] == "downwards-dungeon-progress-v1"
+                && record["event"] == "room_transition"
+        }));
     }
 
     #[test]
