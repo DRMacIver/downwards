@@ -1434,3 +1434,18 @@ fn replay_determinism_includes_one_way_hazards_pickups_and_room_resets() {
         assert_eq!(left.digest(), right.digest(), "tick {tick}");
     }
 }
+
+#[test]
+fn granting_dash_mid_run_is_additive_and_starts_charged() {
+    let room = room_with_floor(Point::new(40, 138), 15);
+    let mut simulation = Simulation::with_abilities(room, AbilitySet::new(true, false));
+    assert_eq!(simulation.abilities(), AbilitySet::new(true, false));
+    assert!(!simulation.player().dash_available());
+
+    simulation.grant_abilities(AbilitySet::new(false, true));
+    assert_eq!(simulation.abilities(), AbilitySet::ALL);
+    assert!(simulation.player().dash_available());
+
+    simulation.grant_abilities(AbilitySet::NONE);
+    assert_eq!(simulation.abilities(), AbilitySet::ALL);
+}

@@ -180,6 +180,19 @@ rather than hard-coding route lengths. The retained route facts are acceptance e
 difficulty score. See the
 [`calibrated WallJump generator v2 report`](docs/validation/calibrated-wall-jump-generator-v2-2026-08-15.md).
 
+To play the first multi-room dungeon vertical slice:
+
+```sh
+cargo run -- --dungeon
+```
+
+This is intentionally a hand-assembled graph made from a deterministic seven-room generator
+palette, not yet a general dungeon generator. Boundary doors traverse between real rooms; the
+crossroads, boots vault, underpass, and wall gallery form a loop. Find the Winged Boots to unlock
+Dash for the rest of the run, cross Gale Chasm, and collect the Crown in the final sanctum. Deaths
+and restarts return to the door used to enter the current room without discarding the persistent
+boots. `V` demonstrates the next intended room-local objective; it is not a whole-dungeon route.
+
 In any human-controlled room, press `F2` to open the movement-tuning menu. It directly adjusts top
 speed in pixels/second, acceleration and braking response in milliseconds, and wall-momentum
 behavior along three axes: Wall Ascent converts a rising wall impact into additional upward speed,

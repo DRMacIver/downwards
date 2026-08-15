@@ -513,6 +513,19 @@ impl Simulation {
     pub const fn abilities(&self) -> AbilitySet {
         self.abilities
     }
+    /// Permanently add traversal abilities to the current run without moving or resetting the
+    /// player. Newly granted Dash starts charged, matching a fresh spawn with that loadout.
+    ///
+    /// This API is intentionally additive: persistent run-state code may unlock abilities, but
+    /// cannot silently revoke mechanics from an in-flight authoritative simulation.
+    pub fn grant_abilities(&mut self, abilities: AbilitySet) {
+        let gained_dash = abilities.dash && !self.abilities.dash;
+        self.abilities.wall_jump |= abilities.wall_jump;
+        self.abilities.dash |= abilities.dash;
+        if gained_dash {
+            self.state.player.dash_available = true;
+        }
+    }
     /// The door used to enter this room, or `None` for its canonical spawn.
     #[must_use]
     pub fn entry_door(&self) -> Option<&str> {

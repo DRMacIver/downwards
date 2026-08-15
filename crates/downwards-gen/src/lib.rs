@@ -9,6 +9,7 @@
 #![forbid(unsafe_code)]
 
 mod calibrated_wall_jump;
+mod dungeon_palette;
 pub mod experimental;
 pub mod v6;
 
@@ -16,6 +17,10 @@ pub use calibrated_wall_jump::{
     CALIBRATED_WALL_JUMP_ABILITIES, CALIBRATED_WALL_JUMP_GENERATION_VERSION,
     CALIBRATED_WALL_JUMP_TARGET, CalibratedWallJumpCandidate, CalibratedWallJumpCourse,
     CalibratedWallJumpKey, CalibratedWallJumpParameters,
+};
+pub use dungeon_palette::{
+    DUNGEON_PALETTE_GENERATION_VERSION, DungeonPaletteCandidate, DungeonPaletteConnection,
+    DungeonPaletteCourse, DungeonPaletteError, DungeonPaletteKey,
 };
 
 pub use v6::{

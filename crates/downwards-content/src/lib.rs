@@ -6,6 +6,7 @@ mod calibrated_generator_playtest;
 mod calibration_gallery;
 mod calibration_gallery_a;
 mod calibration_gallery_b;
+mod demo_dungeon;
 mod generated_calibration_witnesses;
 mod hard_no_dash;
 mod medium_no_dash;
@@ -23,6 +24,10 @@ pub use calibration_gallery_a::{
 pub use calibration_gallery_b::{
     CALIBRATION_GALLERY_B_ABILITIES, CALIBRATION_GALLERY_B_TARGET, CalibrationGalleryBCase,
     calibration_gallery_b_cases,
+};
+pub use demo_dungeon::{
+    DEMO_DUNGEON_BOOT_PICKUP, DEMO_DUNGEON_CROWN_PICKUP, DEMO_DUNGEON_GOAL_EXIT,
+    DEMO_DUNGEON_START_ABILITIES, DemoDungeonInventory, DemoDungeonRoom, demo_dungeon_room,
 };
 pub use hard_no_dash::{
     HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET, hard_no_dash_room, hard_no_dash_scenario,

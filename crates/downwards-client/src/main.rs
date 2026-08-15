@@ -16,10 +16,12 @@ use downwards_ai::{
 };
 use downwards_catalogue::CatalogueBand;
 use downwards_content::{
-    CalibratedGeneratorPlaytestLevel, CalibrationLevel, HARD_NO_DASH_ABILITIES,
-    HARD_NO_DASH_TARGET, MEDIUM_NO_DASH_ABILITIES, MEDIUM_NO_DASH_TARGET,
-    calibrated_generator_playtest, calibration_gallery, first_steps_room, hard_no_dash_scenario,
-    hard_no_dash_witness_actions, medium_no_dash_scenario, medium_no_dash_witness_actions,
+    CalibratedGeneratorPlaytestLevel, CalibrationLevel, DEMO_DUNGEON_BOOT_PICKUP,
+    DEMO_DUNGEON_CROWN_PICKUP, DEMO_DUNGEON_GOAL_EXIT, DemoDungeonInventory, DemoDungeonRoom,
+    HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET, MEDIUM_NO_DASH_ABILITIES, MEDIUM_NO_DASH_TARGET,
+    calibrated_generator_playtest, calibration_gallery, demo_dungeon_room, first_steps_room,
+    hard_no_dash_scenario, hard_no_dash_witness_actions, medium_no_dash_scenario,
+    medium_no_dash_witness_actions,
 };
 use downwards_core::{
     AbilitySet, Action, BoundarySide, DeathReason, HazardDirection, JUMP_BUFFER_TICKS, JumpKind,
@@ -69,6 +71,7 @@ Usage: downwards [--seed <u64>] [--tier <1|2|3|4>] [--development]
        downwards --challenge [hard|tutorial]
        downwards --gallery
        downwards --calibrated [seed]
+       downwards --dungeon
 
   (no options)   open the offline-curated v6 route catalogue
   --seed N       explicit developer mode: uncurated v6 seed
@@ -79,6 +82,7 @@ Usage: downwards [--seed <u64>] [--tier <1|2|3|4>] [--development]
   --gallery      open the authored no-Dash calibration gallery
   --calibrated [seed]
                  play the generated WallJump-only calibration batch
+  --dungeon      enter the seven-room crown-and-boots dungeon vertical slice
   --generated    return to the curated catalogue (the default)
   --corpus PATH  play the strict native-keyed corpus playtest manifest
   --history PATH append completed human attempts and input timings to PATH
@@ -577,6 +581,8 @@ enum RoomMode {
     Gallery,
     /// One replay-certified key in the generated human-calibration batch.
     CalibratedGenerated,
+    /// Persistent multi-room dungeon vertical slice. The selection seed is unused.
+    Dungeon,
     /// A fixed, hand-authored validation level. Its loadout is locked by content.
     Challenge(ChallengeKind),
 }
@@ -589,7 +595,8 @@ impl RoomMode {
             | Self::DeveloperGenerated
             | Self::Development
             | Self::Gallery
-            | Self::CalibratedGenerated => None,
+            | Self::CalibratedGenerated
+            | Self::Dungeon => None,
         }
     }
 
@@ -630,6 +637,7 @@ impl LevelMenuState {
             | RoomMode::DeveloperGenerated
             | RoomMode::Gallery
             | RoomMode::CalibratedGenerated
+            | RoomMode::Dungeon
             | RoomMode::Challenge(_) => {
                 // A raw command-line seed stays loaded behind the browser. Opening the menu
                 // focuses the nearest real catalogue row, never a fabricated seed row.
@@ -833,6 +841,9 @@ impl ScenarioSelection {
         } else if self.mode == RoomMode::CalibratedGenerated {
             self.seed %= calibrated_generator_playtest().len() as u64;
             self.tier = AbilityTier::WallJump;
+        } else if self.mode == RoomMode::Dungeon {
+            self.seed = 0;
+            self.tier = AbilityTier::WallJump;
         } else if self.mode == RoomMode::Gallery
             && let Ok(index) = usize::try_from(self.seed)
             && let Some(level) = calibration_gallery().get(index)
@@ -844,7 +855,10 @@ impl ScenarioSelection {
 
     fn select_tier(&mut self, tier: AbilityTier) {
         if self.mode.is_challenge()
-            || matches!(self.mode, RoomMode::Gallery | RoomMode::CalibratedGenerated)
+            || matches!(
+                self.mode,
+                RoomMode::Gallery | RoomMode::CalibratedGenerated | RoomMode::Dungeon
+            )
         {
             return;
         }
@@ -856,7 +870,10 @@ impl ScenarioSelection {
 
     fn select_available_tier(&mut self, tier: AbilityTier, catalogue: &PlayableCatalogue) {
         if self.mode.is_challenge()
-            || matches!(self.mode, RoomMode::Gallery | RoomMode::CalibratedGenerated)
+            || matches!(
+                self.mode,
+                RoomMode::Gallery | RoomMode::CalibratedGenerated | RoomMode::Dungeon
+            )
         {
             return;
         }
@@ -873,6 +890,7 @@ impl ScenarioSelection {
             RoomMode::Development => RoomMode::Generated,
             RoomMode::Gallery => RoomMode::Gallery,
             RoomMode::CalibratedGenerated => RoomMode::CalibratedGenerated,
+            RoomMode::Dungeon => RoomMode::Dungeon,
             RoomMode::Challenge(kind) => RoomMode::Challenge(kind),
         };
     }
@@ -885,6 +903,7 @@ impl ScenarioSelection {
             | RoomMode::DeveloperGenerated
             | RoomMode::Gallery
             | RoomMode::CalibratedGenerated
+            | RoomMode::Dungeon
             | RoomMode::Challenge(_) => 0,
         };
         Self {
@@ -920,6 +939,7 @@ where
     let mut challenge_requested = false;
     let mut gallery_requested = false;
     let mut calibrated_requested = false;
+    let mut dungeon_requested = false;
     let mut authored_mode_conflict = false;
     let mut tier_explicit = false;
 
@@ -963,6 +983,15 @@ where
                 };
                 options.selection.mode = RoomMode::CalibratedGenerated;
                 options.selection.seed = seed;
+                options.selection.tier = AbilityTier::WallJump;
+            }
+            "--dungeon" => {
+                if dungeon_requested {
+                    return Err("--dungeon may be specified only once".to_owned());
+                }
+                dungeon_requested = true;
+                options.selection.mode = RoomMode::Dungeon;
+                options.selection.seed = 0;
                 options.selection.tier = AbilityTier::WallJump;
             }
             "--development" => {
@@ -1057,20 +1086,26 @@ where
     if usize::from(challenge_requested)
         + usize::from(gallery_requested)
         + usize::from(calibrated_requested)
+        + usize::from(dungeon_requested)
         > 1
     {
-        return Err("--challenge, --gallery, and --calibrated are mutually exclusive".to_owned());
+        return Err(
+            "--challenge, --gallery, --calibrated, and --dungeon are mutually exclusive".to_owned(),
+        );
     }
-    if (challenge_requested || gallery_requested || calibrated_requested) && authored_mode_conflict
+    if (challenge_requested || gallery_requested || calibrated_requested || dungeon_requested)
+        && authored_mode_conflict
     {
         return Err(
-            "--challenge/--gallery/--calibrated cannot be combined with --seed, --development, --generated, or --corpus"
+            "--challenge/--gallery/--calibrated/--dungeon cannot be combined with --seed, --development, --generated, or --corpus"
                 .to_owned(),
         );
     }
-    if (challenge_requested || gallery_requested || calibrated_requested) && tier_explicit {
+    if (challenge_requested || gallery_requested || calibrated_requested || dungeon_requested)
+        && tier_explicit
+    {
         return Err(
-            "--challenge/--gallery/--calibrated use content-locked no-dash loadouts; omit --tier"
+            "--challenge/--gallery/--calibrated/--dungeon use content-locked loadouts; omit --tier"
                 .to_owned(),
         );
     }
@@ -1132,7 +1167,7 @@ fn selection_from_hotkeys(
     mut selection: ScenarioSelection,
     catalogue: &PlayableCatalogue,
 ) -> ScenarioSelection {
-    if selection.mode.is_challenge() {
+    if selection.mode.is_challenge() || selection.mode == RoomMode::Dungeon {
         return selection;
     }
     if selection.mode == RoomMode::CalibratedGenerated {
@@ -1189,6 +1224,7 @@ fn selection_from_hotkeys(
             RoomMode::CalibratedGenerated => {
                 unreachable!("calibrated hotkeys return above")
             }
+            RoomMode::Dungeon => unreachable!("dungeon hotkeys return above"),
             RoomMode::Challenge(_) => unreachable!("challenge hotkeys return above"),
         }
     }
@@ -1214,6 +1250,7 @@ fn selection_from_hotkeys(
             RoomMode::CalibratedGenerated => {
                 unreachable!("calibrated hotkeys return above")
             }
+            RoomMode::Dungeon => unreachable!("dungeon hotkeys return above"),
             RoomMode::Challenge(_) => unreachable!("challenge hotkeys return above"),
         }
     }
@@ -2162,6 +2199,22 @@ struct ClientState {
     level_stats: HashMap<String, LevelStats>,
     replay_mode: ReplayMode,
     replay_notice: Option<ReplayNotice>,
+    dungeon_run: Option<DungeonRunState>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct DungeonRunState {
+    room: DemoDungeonRoom,
+    inventory: DemoDungeonInventory,
+}
+
+impl Default for DungeonRunState {
+    fn default() -> Self {
+        Self {
+            room: DemoDungeonRoom::Threshold,
+            inventory: DemoDungeonInventory::default(),
+        }
+    }
 }
 
 impl ClientState {
@@ -2207,7 +2260,9 @@ impl ClientState {
         let level_menu_preview = LevelMenuPreview::load(preview_selection, &catalogue);
         let browser_mode = match selection.mode {
             RoomMode::Gallery => BrowserMode::Gallery,
-            RoomMode::Challenge(_) | RoomMode::CalibratedGenerated => BrowserMode::Closed,
+            RoomMode::Challenge(_) | RoomMode::CalibratedGenerated | RoomMode::Dungeon => {
+                BrowserMode::Closed
+            }
             RoomMode::Generated | RoomMode::DeveloperGenerated | RoomMode::Development => {
                 BrowserMode::Catalogue
             }
@@ -2231,6 +2286,7 @@ impl ClientState {
             level_stats: HashMap::new(),
             replay_mode: ReplayMode::Human,
             replay_notice: None,
+            dungeon_run: (selection.mode == RoomMode::Dungeon).then(DungeonRunState::default),
         })
     }
 
@@ -2246,6 +2302,7 @@ impl ClientState {
         self.replay_mode = ReplayMode::Human;
         self.replay_notice = None;
         self.movement_tuning_menu = None;
+        self.dungeon_run = (selection.mode == RoomMode::Dungeon).then(DungeonRunState::default);
         Ok(())
     }
 
@@ -2342,6 +2399,9 @@ impl ClientState {
     }
 
     fn next_level_selection(&self) -> Option<ScenarioSelection> {
+        if self.selection.mode == RoomMode::Dungeon {
+            return None;
+        }
         if self.selection.mode == RoomMode::Gallery {
             let index =
                 gallery_adjacent_index(self.selection.seed, calibration_gallery().len(), true)?;
@@ -2390,6 +2450,10 @@ impl ClientState {
                 || "MISSING CALIBRATED LEVEL".to_owned(),
                 |level| level.title(),
             ),
+            RoomMode::Dungeon => self.dungeon_run.map_or_else(
+                || "MISSING DUNGEON RUN".to_owned(),
+                |run| format!("DUNGEON · {}", run.room.title()),
+            ),
             RoomMode::Challenge(kind) => kind.level_identifier().to_owned(),
         }
     }
@@ -2413,6 +2477,10 @@ impl ClientState {
             RoomMode::CalibratedGenerated => format!(
                 "calibrated-wall-jump-v{}:{:016x}",
                 CALIBRATED_WALL_JUMP_GENERATION_VERSION, selection.seed
+            ),
+            RoomMode::Dungeon => self.dungeon_run.map_or_else(
+                || "dungeon:missing".to_owned(),
+                |run| format!("dungeon:{}", run.room.id()),
             ),
             RoomMode::Challenge(kind) => kind.stats_key().to_owned(),
         }
@@ -2599,6 +2667,11 @@ impl ClientState {
     }
 
     fn selected_route_complete(&self) -> bool {
+        if self.selection.mode == RoomMode::Dungeon
+            && self.dungeon_run.is_some_and(|run| run.inventory.crown)
+        {
+            return true;
+        }
         match self.selected_target_id() {
             Some(target) => self.simulation.reached_exit() == Some(target),
             None => self.simulation.reached_exit().is_some(),
@@ -2610,6 +2683,9 @@ impl ClientState {
             .map(PlayableEntry::target_door_id)
             .or_else(|| self.current_gallery_entry().map(CalibrationLevel::target))
             .or_else(|| self.selection.mode.challenge().map(ChallengeKind::target))
+            .or_else(|| {
+                (self.selection.mode == RoomMode::Dungeon).then_some(DEMO_DUNGEON_GOAL_EXIT)
+            })
     }
 
     fn wrong_door(&self) -> Option<&str> {
@@ -2809,6 +2885,10 @@ impl ClientState {
             ReplayMode::SolveRequested(request) => request.clone(),
             ReplayMode::Human | ReplayMode::Playback(_) => return,
         };
+        if self.selection.mode == RoomMode::Dungeon {
+            self.perform_dungeon_solve(request);
+            return;
+        }
         let (mut initial, generated_provenance) =
             match load_scenario(self.selection, &self.catalogue) {
                 Ok(scenario) => scenario,
@@ -2837,6 +2917,40 @@ impl ClientState {
                     self.perform_pickup_solve(initial, generated_provenance, pickup_id);
                 }
             }
+        }
+    }
+
+    fn perform_dungeon_solve(&mut self, request: SolveRequest) {
+        let Some(run) = self.dungeon_run else {
+            self.set_replay_error(
+                "DUNGEON STATE ERROR",
+                "persistent run state is missing".to_owned(),
+            );
+            return;
+        };
+        let initial = self.simulation.clone();
+        if let SolveRequest::Pickup(pickup_id) = request {
+            self.perform_pickup_solve(initial, None, pickup_id);
+            return;
+        }
+        if run.room == DemoDungeonRoom::BootsVault && !run.inventory.winged_boots {
+            self.perform_pickup_solve(initial, None, DEMO_DUNGEON_BOOT_PICKUP.to_owned());
+            return;
+        }
+        let target_door = match run.room {
+            DemoDungeonRoom::Threshold => Some("east"),
+            DemoDungeonRoom::Crossroads if run.inventory.winged_boots => Some("east"),
+            DemoDungeonRoom::Crossroads => Some("floor"),
+            DemoDungeonRoom::BootsVault => Some("east"),
+            DemoDungeonRoom::Underpass => Some("ceiling"),
+            DemoDungeonRoom::WallGallery => Some("east"),
+            DemoDungeonRoom::DashChasm => Some("east"),
+            DemoDungeonRoom::CrownSanctum => None,
+        };
+        if let Some(target) = target_door {
+            self.perform_target_door_solve(initial, None, target.to_owned(), None, 0, 0);
+        } else {
+            self.perform_exit_solve(initial, None);
         }
     }
 
@@ -3410,6 +3524,9 @@ impl ClientState {
         }
         let expected_target = self.selected_target_id().map(str::to_owned);
         let report = self.step(action);
+        if self.observe_dungeon_progress(&report) {
+            return report;
+        }
         let completed = self.human_recorder.observe_step(
             action,
             &report,
@@ -3456,6 +3573,116 @@ impl ClientState {
             });
         }
         report
+    }
+
+    /// Apply the persistent run state that sits above an individual authoritative room.
+    ///
+    /// Returns `true` when this tick crossed an attempt boundary (a room transition or the boots
+    /// unlock). The ordinary single-room recorder must not append across that digest/loadout
+    /// boundary; it is resumed against the newly authoritative state here instead.
+    fn observe_dungeon_progress(&mut self, report: &StepReport) -> bool {
+        let Some(mut run) = self.dungeon_run else {
+            return false;
+        };
+
+        let reset_needs_inventory_rebind = report
+            .events
+            .iter()
+            .any(|event| matches!(event, SimulationEvent::Reset))
+            && ((run.room == DemoDungeonRoom::BootsVault && run.inventory.winged_boots)
+                || (run.room == DemoDungeonRoom::CrownSanctum && run.inventory.crown));
+        if reset_needs_inventory_rebind {
+            let entry_door = self.simulation.entry_door().map(str::to_owned);
+            let room = demo_dungeon_room(run.room, run.inventory);
+            let mut rebound = match entry_door.as_deref() {
+                Some(door) => Simulation::enter_via_door(room, run.inventory.abilities(), door)
+                    .expect("persistent dungeon entry door remains valid"),
+                None => Simulation::with_abilities(room, run.inventory.abilities()),
+            };
+            configure_live_simulation(&mut rebound, self.movement_tuning);
+            self.simulation = rebound;
+            self.human_recorder = HumanRecorder::new(&self.simulation);
+            return true;
+        }
+
+        let collected_boots = report.events.iter().any(|event| {
+            matches!(event, SimulationEvent::PickupCollected { id } if id == DEMO_DUNGEON_BOOT_PICKUP)
+        });
+        if collected_boots && !run.inventory.winged_boots {
+            run.inventory.winged_boots = true;
+            self.dungeon_run = Some(run);
+            self.simulation
+                .grant_abilities(AbilitySet::new(false, true));
+            self.human_recorder.resume_at(&self.simulation);
+            self.replay_notice = Some(ReplayNotice {
+                title: "WINGED BOOTS ACQUIRED".to_owned(),
+                detail: "Dash unlocked: hold a direction and press X or Shift".to_owned(),
+                is_error: false,
+            });
+            return true;
+        }
+
+        if report.events.iter().any(|event| {
+            matches!(event, SimulationEvent::PickupCollected { id } if id == DEMO_DUNGEON_CROWN_PICKUP)
+        }) {
+            run.inventory.crown = true;
+            self.dungeon_run = Some(run);
+        }
+
+        let Some(exit_id) = report.events.iter().find_map(|event| match event {
+            SimulationEvent::ExitReached { id } => Some(id.as_str()),
+            _ => None,
+        }) else {
+            return false;
+        };
+        let Some(door) = self
+            .simulation
+            .room()
+            .doors()
+            .iter()
+            .find(|door| door.id == exit_id)
+            .cloned()
+        else {
+            // The crown goal is a terminal legacy Exit, not a room transition.
+            return false;
+        };
+        let Some(destination_room) = door
+            .destination_room
+            .as_deref()
+            .and_then(DemoDungeonRoom::from_id)
+        else {
+            self.replay_notice = Some(ReplayNotice {
+                title: "BROKEN DUNGEON DOOR".to_owned(),
+                detail: format!("{} has no known destination", door.id),
+                is_error: true,
+            });
+            return false;
+        };
+        let destination_door = door
+            .destination_door
+            .as_deref()
+            .expect("built-in dungeon doors always name their mate");
+        run.room = destination_room;
+        let room = demo_dungeon_room(run.room, run.inventory);
+        let mut simulation =
+            Simulation::enter_via_door(room, run.inventory.abilities(), destination_door)
+                .expect("built-in dungeon graph points at a validated destination door");
+        configure_live_simulation(&mut simulation, self.movement_tuning);
+        self.dungeon_run = Some(run);
+        self.simulation = simulation;
+        self.feedback = SimulationFeedback::default();
+        self.human_recorder = HumanRecorder::new(&self.simulation);
+        self.replay_mode = ReplayMode::Human;
+        self.replay_notice = Some(ReplayNotice {
+            title: destination_room.title().to_ascii_uppercase(),
+            detail: if run.inventory.winged_boots {
+                "Winged Boots equipped · find the Crown".to_owned()
+            } else {
+                "Find the Winged Boots, then claim the Crown".to_owned()
+            },
+            is_error: false,
+        });
+        true
     }
 }
 
@@ -3633,6 +3860,16 @@ fn load_scenario(
                     )
                 })?;
             (level.scenario(), None)
+        }
+        RoomMode::Dungeon => {
+            let run = DungeonRunState::default();
+            (
+                Simulation::with_abilities(
+                    demo_dungeon_room(run.room, run.inventory),
+                    run.inventory.abilities(),
+                ),
+                None,
+            )
         }
         RoomMode::Challenge(kind) => {
             let simulation = kind.scenario();
@@ -3887,6 +4124,7 @@ fn room_mode_label(mode: RoomMode) -> &'static str {
         RoomMode::Development => "DEVELOPMENT",
         RoomMode::Gallery => "GALLERY",
         RoomMode::CalibratedGenerated => "CALIBRATED",
+        RoomMode::Dungeon => "DUNGEON",
         RoomMode::Challenge(_) => "CHALLENGE",
     }
 }
@@ -4624,6 +4862,11 @@ fn draw_level_menu_preview(
             format!("EXACT STORED ROUTE -> {}", kind.target()),
             "KIT WALL:ON DASH:LOCKED | V PLAYS EXACT WITNESS".to_owned(),
         ),
+        RoomMode::Dungeon => (
+            "PERSISTENT SEVEN-ROOM VERTICAL SLICE".to_owned(),
+            "FIND BOOTS · CROSS GALE CHASM · CLAIM CROWN".to_owned(),
+            "ROOM EXITS TRAVERSE THE DUNGEON GRAPH".to_owned(),
+        ),
         RoomMode::Generated => client.catalogue_entry(selection).map_or_else(
             || {
                 (
@@ -4893,14 +5136,40 @@ fn draw_room_objects(viewport: &PixelViewport, simulation: &Simulation, assets: 
         if simulation.pickup_is_collected(index) == Some(true) {
             continue;
         }
-        draw_environment_sprite(
-            viewport,
-            pickup.bounds(),
-            EnvironmentSprite::Pickup,
-            assets,
-            false,
-        );
+        match pickup.id() {
+            DEMO_DUNGEON_BOOT_PICKUP => draw_winged_boots(viewport, pickup.bounds()),
+            DEMO_DUNGEON_CROWN_PICKUP => draw_crown(viewport, pickup.bounds()),
+            _ => draw_environment_sprite(
+                viewport,
+                pickup.bounds(),
+                EnvironmentSprite::Pickup,
+                assets,
+                false,
+            ),
+        }
     }
+}
+
+fn draw_winged_boots(viewport: &PixelViewport, bounds: CoreRect) {
+    let cyan = Color::new(0.45, 0.9, 1.0, 1.0);
+    let pale = Color::new(0.82, 0.98, 1.0, 1.0);
+    let sole = Color::new(0.12, 0.25, 0.38, 1.0);
+    viewport.rectangle(CoreRect::new(bounds.x + 2, bounds.y + 5, 4, 5), cyan);
+    viewport.rectangle(CoreRect::new(bounds.x + 6, bounds.y + 7, 4, 3), cyan);
+    viewport.rectangle(CoreRect::new(bounds.x + 1, bounds.y + 10, 10, 2), sole);
+    viewport.rectangle(CoreRect::new(bounds.x, bounds.y + 2, 2, 5), pale);
+    viewport.rectangle(CoreRect::new(bounds.x + 2, bounds.y + 1, 2, 4), pale);
+}
+
+fn draw_crown(viewport: &PixelViewport, bounds: CoreRect) {
+    let gold = Color::new(1.0, 0.78, 0.16, 1.0);
+    let light = Color::new(1.0, 0.95, 0.48, 1.0);
+    let jewel = Color::new(0.35, 0.88, 1.0, 1.0);
+    viewport.rectangle(CoreRect::new(bounds.x + 1, bounds.y + 5, 10, 6), gold);
+    viewport.rectangle(CoreRect::new(bounds.x + 1, bounds.y + 1, 2, 6), light);
+    viewport.rectangle(CoreRect::new(bounds.x + 5, bounds.y, 2, 7), light);
+    viewport.rectangle(CoreRect::new(bounds.x + 9, bounds.y + 1, 2, 6), light);
+    viewport.rectangle(CoreRect::new(bounds.x + 5, bounds.y + 7, 2, 2), jewel);
 }
 
 #[derive(Clone, Copy)]
@@ -5172,6 +5441,12 @@ fn draw_hud(viewport: &PixelViewport, client: &ClientState) {
             "A/D MOVE  JUMP: TAP=LOW HOLD=HIGH  [ ] LEVEL  V WITNESS  M GALLERY".to_owned()
         } else if client.selection.mode.is_challenge() {
             "A/D MOVE  JUMP: TAP=LOW HOLD=HIGH  WALL: HOLD TOWARD + JUMP  R/M".to_owned()
+        } else if client.selection.mode == RoomMode::Dungeon {
+            if client.simulation.abilities().dash {
+                "DUNGEON · BOOTS:ON · X/SHIFT DASH · FIND THE CROWN".to_owned()
+            } else {
+                "DUNGEON · FIND THE WINGED BOOTS · M OPENS LEVELS".to_owned()
+            }
         } else {
             gameplay_control_summary(client.selection.tier).to_owned()
         }
@@ -5229,13 +5504,33 @@ fn draw_hud(viewport: &PixelViewport, client: &ClientState) {
                 )
             },
         ),
+        RoomMode::Dungeon => client.dungeon_run.map_or_else(
+            || "MISSING DUNGEON RUN".to_owned(),
+            |run| {
+                format!(
+                    "{} / BOOTS:{} / CROWN:{}",
+                    run.room.title(),
+                    if run.inventory.winged_boots {
+                        "YES"
+                    } else {
+                        "NO"
+                    },
+                    if run.inventory.crown { "YES" } else { "NO" }
+                )
+            },
+        ),
         RoomMode::Challenge(kind) => kind.level_identifier().to_owned(),
+    };
+    let displayed_tier = if client.selection.mode == RoomMode::Dungeon {
+        AbilityTier::from_abilities(client.simulation.abilities())
+    } else {
+        client.selection.tier
     };
     let level_line = format!(
         "{}   T{} {}",
         room_label,
-        tier_number(client.selection.tier),
-        tier_label(client.selection.tier)
+        tier_number(displayed_tier),
+        tier_label(displayed_tier)
     );
     viewport.text(&fit_win_line(&level_line), 5, 197, 6, UI_TEXT);
 }
@@ -5323,13 +5618,23 @@ fn draw_win_feedback(viewport: &PixelViewport, client: &ClientState) {
     let panel = CoreRect::new(40, 51, 240, 80);
     viewport.rectangle(panel, WIN_PANEL);
     viewport.rectangle_outline(panel, 1, EXIT);
-    viewport.centered_text("WAY DOWN OPEN", 69, 11, EXIT);
+    viewport.centered_text(
+        if client.selection.mode == RoomMode::Dungeon {
+            "THE CROWN IS YOURS"
+        } else {
+            "WAY DOWN OPEN"
+        },
+        69,
+        11,
+        EXIT,
+    );
     let result = match client.selection.mode {
         RoomMode::Generated => client.level_name(client.selection),
         RoomMode::DeveloperGenerated => format!("DEV SEED {:X}", client.selection.seed),
         RoomMode::Development => DEVELOPMENT_LEVEL_IDENTIFIER.to_owned(),
         RoomMode::Gallery => client.level_name(client.selection),
         RoomMode::CalibratedGenerated => client.level_name(client.selection),
+        RoomMode::Dungeon => client.level_name(client.selection),
         RoomMode::Challenge(kind) => kind.level_identifier().to_owned(),
     };
     viewport.centered_text(&result, 84, 7, UI_TEXT);
@@ -6026,6 +6331,17 @@ mod tests {
         assert!(parse_launch_options(["--challenge", "--seed", "7"]).is_err());
         assert!(parse_launch_options(["--development", "--challenge"]).is_err());
         assert!(parse_launch_options(["--challenge", "--corpus=x"]).is_err());
+    }
+
+    #[test]
+    fn dungeon_launch_is_explicit_and_uses_its_persistent_content_loadout() {
+        let options = parse_launch_options(["--dungeon"]).unwrap();
+        assert_eq!(options.selection.mode, RoomMode::Dungeon);
+        assert_eq!(options.selection.seed, 0);
+        assert_eq!(options.selection.tier, AbilityTier::WallJump);
+        assert!(parse_launch_options(["--dungeon", "--tier", "dash"]).is_err());
+        assert!(parse_launch_options(["--dungeon", "--gallery"]).is_err());
+        assert!(parse_launch_options(["--dungeon", "--seed", "3"]).is_err());
     }
 
     #[test]
@@ -7700,6 +8016,76 @@ mod tests {
     fn human_tap_and_hold_produce_distinct_stable_jump_heights() {
         assert_eq!(human_input_jump_rise(None), 1_744);
         assert_eq!(human_input_jump_rise(Some(10)), 7_792);
+    }
+
+    #[test]
+    fn dungeon_transitions_persist_boots_and_follow_the_authored_loop_to_the_crown() {
+        let selection = ScenarioSelection {
+            mode: RoomMode::Dungeon,
+            seed: 0,
+            tier: AbilityTier::WallJump,
+        };
+        let mut client = ClientState::new(selection, None, false).unwrap();
+        assert_eq!(client.dungeon_run, Some(DungeonRunState::default()));
+        assert!(!client.simulation.abilities().dash);
+
+        let report = |client: &ClientState, events: Vec<SimulationEvent>| StepReport {
+            tick: client.simulation.tick(),
+            events,
+            digest: client.simulation.digest(),
+        };
+        let exit = |id: &str| SimulationEvent::ExitReached { id: id.to_owned() };
+
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::Crossroads
+        );
+        assert_eq!(client.simulation.entry_door(), Some("west"));
+
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::BootsVault
+        );
+        assert_eq!(client.simulation.entry_door(), Some("ceiling"));
+
+        assert!(client.observe_dungeon_progress(&report(
+            &client,
+            vec![SimulationEvent::PickupCollected {
+                id: DEMO_DUNGEON_BOOT_PICKUP.to_owned(),
+            }],
+        )));
+        assert!(client.dungeon_run.unwrap().inventory.winged_boots);
+        assert!(client.simulation.abilities().dash);
+        assert!(client.simulation.player().dash_available());
+        assert!(client.observe_dungeon_progress(&report(&client, vec![SimulationEvent::Reset],)));
+        assert!(client.simulation.room().pickups().is_empty());
+        assert!(client.simulation.abilities().dash);
+
+        for (door, expected_room, expected_entry) in [
+            ("east", DemoDungeonRoom::Underpass, "west"),
+            ("ceiling", DemoDungeonRoom::WallGallery, "floor"),
+            ("east", DemoDungeonRoom::DashChasm, "west"),
+            ("east", DemoDungeonRoom::CrownSanctum, "west"),
+        ] {
+            assert!(client.observe_dungeon_progress(&report(&client, vec![exit(door)])));
+            assert_eq!(client.dungeon_run.unwrap().room, expected_room);
+            assert_eq!(client.simulation.entry_door(), Some(expected_entry));
+            assert!(client.simulation.abilities().dash);
+        }
+
+        assert!(!client.observe_dungeon_progress(&report(
+            &client,
+            vec![
+                SimulationEvent::PickupCollected {
+                    id: DEMO_DUNGEON_CROWN_PICKUP.to_owned(),
+                },
+                exit(DEMO_DUNGEON_GOAL_EXIT),
+            ],
+        )));
+        assert!(client.dungeon_run.unwrap().inventory.crown);
+        assert_eq!(client.selected_target_id(), Some(DEMO_DUNGEON_GOAL_EXIT));
     }
 
     #[test]
