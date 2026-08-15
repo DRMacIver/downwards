@@ -10,7 +10,7 @@ Run it with:
 cargo run -- --dungeon
 ```
 
-The 41 room shells are deterministic `downwards-gen` palette outputs. Their graph is currently
+The 61 room shells are deterministic `downwards-gen` palette outputs. Their graph is currently
 assembled by trusted content rather than by a general topology generator:
 
 ```text
@@ -28,7 +28,7 @@ Threshold ─ Three-Way Hall ───────── Climbers' Gallery ─ G
                        │                       │
                   Rafter Mint            Needle Belfry
                                                                                                       │
-Pulse Gallery ─ Storm Split ─ Relay Chasm ─ Brake Tower ─ Dash Seal ─ Crown Gate ─ Crown          Coin Duct
+Pulse Gallery ─ Storm Split ─ Relay Chasm ─ Brake Tower ─ Dash Seal ─ Aerial Foundry (20 floors) ─ Crown Gate ─ Crown
                     │
                 Storm Cache
 ```
@@ -54,7 +54,7 @@ The Winged Boots and Crown use a dedicated nearest-neighbour 16-pixel pickup she
 the earlier debug rectangles. The Crown trigger has no generic exit frame drawn over it, so the
 item itself remains the final room's visual goal.
 
-Twenty-eight stable coin IDs are distributed across the graph. Their 128-bit collection mask persists
+Forty stable coin IDs are distributed across the graph. Their 128-bit collection mask persists
 across room reconstruction and is shown in both HUD rails. Exactly six are available before the
 Climbing Gloves. Six more are distributed through the mandatory Wall-Jump course, including both
 branches; all twelve are needed to leave it. Another six are available in the Threshold, Three-Way
@@ -62,8 +62,9 @@ Hall, Rafter Mint, Climbers' Gallery, and Needle Belfry; collecting all eighteen
 enter the lower loop. The Underpass contributes coin nineteen and opens the Treasury. Its two coins
 bring the inventory to twenty-one and unseal the Winged Vault; the vault's final pre-Dash coin makes
 twenty-two. Thus every floor is mechanically critical: removing any one floor prevents the Crown
-inventory and traversal contract from being satisfied. All six Dash-region coins
-there are then required at the Dash Seal, producing the full 28-coin Crown inventory. A rejected door
+inventory and traversal contract from being satisfied. All six Dash-region coins are then required
+at the Dash Seal, producing the 28-coin Foundry entry inventory. Twelve Foundry coins produce the
+full 40-coin Crown inventory. A rejected door
 returns the player to its validated interior arrival without resetting room-local progress. The
 Crown similarly persists and is the only terminal goal. Ordinary door exits change rooms and are
 deliberately not counted as whole-level victories.
@@ -78,11 +79,21 @@ the chasm under the same bounded search budget while the
 post-boots loadout succeeds. That miss is evidence for this vertical slice, not a proof of physical
 impossibility. The ten opening-region representative routes also retain at least one observed
 success in every applicable strength-one blind input-perturbation family under a small deterministic
-study. The mechanically generated per-floor witness artifact records exact routes and every
+study. Beyond the Dash Seal, the mandatory twenty-floor Aerial Foundry adds three coin branches and
+twelve unique coins. Its layouts deliberately mix the two unlocked methods; the Foundry Seal's
+known exact route contains accepted Wall Jumps and Dashes, while a Wall-Jump-only solve under the
+same bounded policy has no positive. All forty coins are required before leaving this act.
+
+The mechanically generated per-floor witness artifact records exact routes and every
 applicable strength-one outcome, including explicit zero-success blind-continuation families rather
 than hiding them. The final Dash Seal's exact positive uses Dash while an
 equivalent WallJump-only search has no positive. Those observations are controller diagnostics, not
 a scalar difficulty or human-robustness claim.
+
+The perturbation seed is derived from stable room identity, so inserting a floor cannot silently
+change earlier observations. The current policy uses 64 trials per curve point rather than the
+original eight. This does not turn blind continuation into adaptive play, and nonzero success is
+not a human difficulty score.
 
 This does not claim a strong dungeon generator, calibrated whole-run difficulty, or durable
 save-game persistence. It is a playable integration prototype intended to expose graph, pacing,

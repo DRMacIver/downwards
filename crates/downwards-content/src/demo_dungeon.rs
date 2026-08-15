@@ -14,7 +14,7 @@ pub const DEMO_DUNGEON_GLOVE_PICKUP: &str = "climbing-gloves";
 pub const DEMO_DUNGEON_BOOT_PICKUP: &str = "winged-boots";
 pub const DEMO_DUNGEON_CROWN_PICKUP: &str = "crown";
 pub const DEMO_DUNGEON_GOAL_EXIT: &str = "crown-goal";
-pub const DEMO_DUNGEON_TOTAL_COINS: u8 = 28;
+pub const DEMO_DUNGEON_TOTAL_COINS: u8 = 40;
 pub const DEMO_DUNGEON_GLOVE_GATE_REQUIREMENT: u8 = 6;
 pub const DEMO_DUNGEON_WALL_REGION_GATE_REQUIREMENT: u8 = 12;
 /// Opens the lower route containing the last pre-Dash coin branches.
@@ -24,7 +24,8 @@ pub const DEMO_DUNGEON_TREASURY_REQUIREMENT: u8 = 19;
 /// Opens either entrance to the Winged Vault after every other pre-Dash coin.
 pub const DEMO_DUNGEON_BOOT_GATE_REQUIREMENT: u8 = 21;
 pub const DEMO_DUNGEON_DASH_REGION_GATE_REQUIREMENT: u8 = 28;
-pub const DEMO_DUNGEON_CROWN_GATE_REQUIREMENT: u8 = 28;
+pub const DEMO_DUNGEON_FOUNDRY_GATE_REQUIREMENT: u8 = 40;
+pub const DEMO_DUNGEON_CROWN_GATE_REQUIREMENT: u8 = 40;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct DemoDungeonInventory {
@@ -143,6 +144,26 @@ pub enum DemoDungeonRoom {
     RelayChasm,
     BrakeTower,
     DashSeal,
+    AlloyThreshold,
+    Windshaft,
+    SplitFurnace,
+    EmberVault,
+    GearGallery,
+    CrosswindChimney,
+    FoundryFork,
+    CoolingDuct,
+    HammerHall,
+    LiftShaft,
+    SparkNiche,
+    RivetRun,
+    BlastGallery,
+    PressureFork,
+    AshCache,
+    VentSpire,
+    PistonPass,
+    CrucibleClimb,
+    CinderBridge,
+    FoundrySeal,
     CoinLoft,
     NeedleRoom,
     Treasury,
@@ -192,7 +213,7 @@ impl DemoDungeonRouteSpec {
 }
 
 impl DemoDungeonRoom {
-    pub const ALL: [Self; 41] = [
+    pub const ALL: [Self; 61] = [
         Self::HollowLanding,
         Self::MossWalk,
         Self::SplitRoot,
@@ -229,6 +250,26 @@ impl DemoDungeonRoom {
         Self::RelayChasm,
         Self::BrakeTower,
         Self::DashSeal,
+        Self::AlloyThreshold,
+        Self::Windshaft,
+        Self::SplitFurnace,
+        Self::EmberVault,
+        Self::GearGallery,
+        Self::CrosswindChimney,
+        Self::FoundryFork,
+        Self::CoolingDuct,
+        Self::HammerHall,
+        Self::LiftShaft,
+        Self::SparkNiche,
+        Self::RivetRun,
+        Self::BlastGallery,
+        Self::PressureFork,
+        Self::AshCache,
+        Self::VentSpire,
+        Self::PistonPass,
+        Self::CrucibleClimb,
+        Self::CinderBridge,
+        Self::FoundrySeal,
         Self::CoinLoft,
         Self::NeedleRoom,
         Self::Treasury,
@@ -275,6 +316,26 @@ impl DemoDungeonRoom {
             Self::RelayChasm => "demo-dungeon.relay-chasm",
             Self::BrakeTower => "demo-dungeon.brake-tower",
             Self::DashSeal => "demo-dungeon.dash-seal",
+            Self::AlloyThreshold => "demo-dungeon.alloy-threshold",
+            Self::Windshaft => "demo-dungeon.windshaft",
+            Self::SplitFurnace => "demo-dungeon.split-furnace",
+            Self::EmberVault => "demo-dungeon.ember-vault",
+            Self::GearGallery => "demo-dungeon.gear-gallery",
+            Self::CrosswindChimney => "demo-dungeon.crosswind-chimney",
+            Self::FoundryFork => "demo-dungeon.foundry-fork",
+            Self::CoolingDuct => "demo-dungeon.cooling-duct",
+            Self::HammerHall => "demo-dungeon.hammer-hall",
+            Self::LiftShaft => "demo-dungeon.lift-shaft",
+            Self::SparkNiche => "demo-dungeon.spark-niche",
+            Self::RivetRun => "demo-dungeon.rivet-run",
+            Self::BlastGallery => "demo-dungeon.blast-gallery",
+            Self::PressureFork => "demo-dungeon.pressure-fork",
+            Self::AshCache => "demo-dungeon.ash-cache",
+            Self::VentSpire => "demo-dungeon.vent-spire",
+            Self::PistonPass => "demo-dungeon.piston-pass",
+            Self::CrucibleClimb => "demo-dungeon.crucible-climb",
+            Self::CinderBridge => "demo-dungeon.cinder-bridge",
+            Self::FoundrySeal => "demo-dungeon.foundry-seal",
             Self::CoinLoft => "demo-dungeon.coin-loft",
             Self::NeedleRoom => "demo-dungeon.needle-room",
             Self::Treasury => "demo-dungeon.treasury",
@@ -322,6 +383,26 @@ impl DemoDungeonRoom {
             Self::RelayChasm => "Relay Chasm",
             Self::BrakeTower => "Brake Tower",
             Self::DashSeal => "The Dash Seal",
+            Self::AlloyThreshold => "Alloy Threshold",
+            Self::Windshaft => "The Windshaft",
+            Self::SplitFurnace => "The Split Furnace",
+            Self::EmberVault => "Ember Vault",
+            Self::GearGallery => "Gear Gallery",
+            Self::CrosswindChimney => "Crosswind Chimney",
+            Self::FoundryFork => "The Foundry Fork",
+            Self::CoolingDuct => "Cooling Duct",
+            Self::HammerHall => "Hammer Hall",
+            Self::LiftShaft => "The Lift Shaft",
+            Self::SparkNiche => "Spark Niche",
+            Self::RivetRun => "Rivet Run",
+            Self::BlastGallery => "Blast Gallery",
+            Self::PressureFork => "The Pressure Fork",
+            Self::AshCache => "Ash Cache",
+            Self::VentSpire => "Vent Spire",
+            Self::PistonPass => "Piston Pass",
+            Self::CrucibleClimb => "Crucible Climb",
+            Self::CinderBridge => "Cinder Bridge",
+            Self::FoundrySeal => "The Foundry Seal",
             Self::CoinLoft => "Rafter Mint",
             Self::NeedleRoom => "Needle Belfry",
             Self::Treasury => "The Deep Treasury",
@@ -377,8 +458,28 @@ impl DemoDungeonRoom {
             Self::RelayChasm => 36,
             Self::BrakeTower => 37,
             Self::DashSeal => 38,
-            Self::Gatehouse => 39,
-            Self::CrownSanctum => 40,
+            Self::AlloyThreshold => 39,
+            Self::Windshaft => 40,
+            Self::SplitFurnace => 41,
+            Self::EmberVault => 42,
+            Self::GearGallery => 43,
+            Self::CrosswindChimney => 44,
+            Self::FoundryFork => 45,
+            Self::CoolingDuct => 46,
+            Self::HammerHall => 47,
+            Self::LiftShaft => 48,
+            Self::SparkNiche => 49,
+            Self::RivetRun => 50,
+            Self::BlastGallery => 51,
+            Self::PressureFork => 52,
+            Self::AshCache => 53,
+            Self::VentSpire => 54,
+            Self::PistonPass => 55,
+            Self::CrucibleClimb => 56,
+            Self::CinderBridge => 57,
+            Self::FoundrySeal => 58,
+            Self::Gatehouse => 59,
+            Self::CrownSanctum => 60,
         })
     }
 
@@ -420,6 +521,26 @@ impl DemoDungeonRoom {
             Self::RelayChasm => DungeonPaletteCourse::RelayChasm,
             Self::BrakeTower => DungeonPaletteCourse::BrakeTower,
             Self::DashSeal => DungeonPaletteCourse::DashSeal,
+            Self::AlloyThreshold => DungeonPaletteCourse::AlloyThreshold,
+            Self::Windshaft => DungeonPaletteCourse::Windshaft,
+            Self::SplitFurnace => DungeonPaletteCourse::SplitFurnace,
+            Self::EmberVault => DungeonPaletteCourse::EmberVault,
+            Self::GearGallery => DungeonPaletteCourse::GearGallery,
+            Self::CrosswindChimney => DungeonPaletteCourse::CrosswindChimney,
+            Self::FoundryFork => DungeonPaletteCourse::FoundryFork,
+            Self::CoolingDuct => DungeonPaletteCourse::CoolingDuct,
+            Self::HammerHall => DungeonPaletteCourse::HammerHall,
+            Self::LiftShaft => DungeonPaletteCourse::LiftShaft,
+            Self::SparkNiche => DungeonPaletteCourse::SparkNiche,
+            Self::RivetRun => DungeonPaletteCourse::RivetRun,
+            Self::BlastGallery => DungeonPaletteCourse::BlastGallery,
+            Self::PressureFork => DungeonPaletteCourse::PressureFork,
+            Self::AshCache => DungeonPaletteCourse::AshCache,
+            Self::VentSpire => DungeonPaletteCourse::VentSpire,
+            Self::PistonPass => DungeonPaletteCourse::PistonPass,
+            Self::CrucibleClimb => DungeonPaletteCourse::CrucibleClimb,
+            Self::CinderBridge => DungeonPaletteCourse::CinderBridge,
+            Self::FoundrySeal => DungeonPaletteCourse::FoundrySeal,
             Self::CoinLoft => DungeonPaletteCourse::CoinLoft,
             Self::NeedleRoom => DungeonPaletteCourse::NeedleRoom,
             Self::Treasury => DungeonPaletteCourse::Treasury,
@@ -565,13 +686,85 @@ impl DemoDungeonRoom {
             ],
             Self::DashSeal => vec![
                 connection("west", Self::BrakeTower, "east"),
+                connection("east", Self::AlloyThreshold, "west"),
+            ],
+            Self::AlloyThreshold => vec![
+                connection("west", Self::DashSeal, "east"),
+                connection("east", Self::Windshaft, "west"),
+            ],
+            Self::Windshaft => vec![
+                connection("west", Self::AlloyThreshold, "east"),
+                connection("east", Self::SplitFurnace, "west"),
+            ],
+            Self::SplitFurnace => vec![
+                connection("west", Self::Windshaft, "east"),
+                connection("east", Self::GearGallery, "west"),
+                connection("floor", Self::EmberVault, "ceiling"),
+            ],
+            Self::EmberVault => vec![connection("ceiling", Self::SplitFurnace, "floor")],
+            Self::GearGallery => vec![
+                connection("west", Self::SplitFurnace, "east"),
+                connection("east", Self::CrosswindChimney, "west"),
+            ],
+            Self::CrosswindChimney => vec![
+                connection("west", Self::GearGallery, "east"),
+                connection("east", Self::FoundryFork, "west"),
+            ],
+            Self::FoundryFork => vec![
+                connection("west", Self::CrosswindChimney, "east"),
+                connection("east", Self::HammerHall, "west"),
+                connection("ceiling", Self::CoolingDuct, "floor"),
+            ],
+            Self::CoolingDuct => vec![connection("floor", Self::FoundryFork, "ceiling")],
+            Self::HammerHall => vec![
+                connection("west", Self::FoundryFork, "east"),
+                connection("east", Self::LiftShaft, "west"),
+            ],
+            Self::LiftShaft => vec![
+                connection("west", Self::HammerHall, "east"),
+                connection("east", Self::RivetRun, "west"),
+                connection("ceiling", Self::SparkNiche, "floor"),
+            ],
+            Self::SparkNiche => vec![connection("floor", Self::LiftShaft, "ceiling")],
+            Self::RivetRun => vec![
+                connection("west", Self::LiftShaft, "east"),
+                connection("east", Self::BlastGallery, "west"),
+            ],
+            Self::BlastGallery => vec![
+                connection("west", Self::RivetRun, "east"),
+                connection("east", Self::PressureFork, "west"),
+            ],
+            Self::PressureFork => vec![
+                connection("west", Self::BlastGallery, "east"),
+                connection("east", Self::VentSpire, "west"),
+                connection("floor", Self::AshCache, "ceiling"),
+            ],
+            Self::AshCache => vec![connection("ceiling", Self::PressureFork, "floor")],
+            Self::VentSpire => vec![
+                connection("west", Self::PressureFork, "east"),
+                connection("east", Self::PistonPass, "west"),
+            ],
+            Self::PistonPass => vec![
+                connection("west", Self::VentSpire, "east"),
+                connection("east", Self::CrucibleClimb, "west"),
+            ],
+            Self::CrucibleClimb => vec![
+                connection("west", Self::PistonPass, "east"),
+                connection("east", Self::CinderBridge, "west"),
+            ],
+            Self::CinderBridge => vec![
+                connection("west", Self::CrucibleClimb, "east"),
+                connection("east", Self::FoundrySeal, "west"),
+            ],
+            Self::FoundrySeal => vec![
+                connection("west", Self::CinderBridge, "east"),
                 connection("east", Self::Gatehouse, "west"),
             ],
             Self::CoinLoft => vec![connection("ceiling", Self::Crossroads, "floor")],
             Self::NeedleRoom => vec![connection("floor", Self::WallGallery, "ceiling")],
             Self::Treasury => vec![connection("west", Self::Underpass, "east")],
             Self::Gatehouse => vec![
-                connection("west", Self::DashSeal, "east"),
+                connection("west", Self::FoundrySeal, "east"),
                 connection("east", Self::CrownSanctum, "west"),
             ],
             Self::CrownSanctum => vec![connection("west", Self::Gatehouse, "east")],
@@ -584,7 +777,7 @@ impl DemoDungeonRoom {
 /// This is content metadata, not a difficulty ordering. The generated witness artifact binds an
 /// exact replay to each coordinate and tests replay it under the current movement policy.
 #[must_use]
-pub fn demo_dungeon_route_specs() -> [DemoDungeonRouteSpec; 41] {
+pub fn demo_dungeon_route_specs() -> [DemoDungeonRouteSpec; 61] {
     const EMPTY: DemoDungeonInventory = DemoDungeonInventory {
         climbing_gloves: false,
         winged_boots: false,
@@ -644,6 +837,26 @@ pub fn demo_dungeon_route_specs() -> [DemoDungeonRouteSpec; 41] {
             | DemoDungeonRoom::RelayChasm
             | DemoDungeonRoom::BrakeTower
             | DemoDungeonRoom::DashSeal
+            | DemoDungeonRoom::AlloyThreshold
+            | DemoDungeonRoom::Windshaft
+            | DemoDungeonRoom::SplitFurnace
+            | DemoDungeonRoom::EmberVault
+            | DemoDungeonRoom::GearGallery
+            | DemoDungeonRoom::CrosswindChimney
+            | DemoDungeonRoom::FoundryFork
+            | DemoDungeonRoom::CoolingDuct
+            | DemoDungeonRoom::HammerHall
+            | DemoDungeonRoom::LiftShaft
+            | DemoDungeonRoom::SparkNiche
+            | DemoDungeonRoom::RivetRun
+            | DemoDungeonRoom::BlastGallery
+            | DemoDungeonRoom::PressureFork
+            | DemoDungeonRoom::AshCache
+            | DemoDungeonRoom::VentSpire
+            | DemoDungeonRoom::PistonPass
+            | DemoDungeonRoom::CrucibleClimb
+            | DemoDungeonRoom::CinderBridge
+            | DemoDungeonRoom::FoundrySeal
             | DemoDungeonRoom::Treasury
             | DemoDungeonRoom::Gatehouse
             | DemoDungeonRoom::CrownSanctum => BOTH,
@@ -658,7 +871,10 @@ pub fn demo_dungeon_route_specs() -> [DemoDungeonRouteSpec; 41] {
             | DemoDungeonRoom::RafterShrine
             | DemoDungeonRoom::BootsVault
             | DemoDungeonRoom::NeedleRoom
-            | DemoDungeonRoom::StormCache => Some("floor"),
+            | DemoDungeonRoom::StormCache
+            | DemoDungeonRoom::CoolingDuct
+            | DemoDungeonRoom::SparkNiche => Some("floor"),
+            DemoDungeonRoom::EmberVault | DemoDungeonRoom::AshCache => Some("ceiling"),
             _ => Some("west"),
         };
         let target = match room {
@@ -673,13 +889,21 @@ pub fn demo_dungeon_route_specs() -> [DemoDungeonRouteSpec; 41] {
             | DemoDungeonRoom::DashChasm
             | DemoDungeonRoom::RelayChasm
             | DemoDungeonRoom::DashSeal
+            | DemoDungeonRoom::CrosswindChimney
+            | DemoDungeonRoom::RivetRun
+            | DemoDungeonRoom::PistonPass
+            | DemoDungeonRoom::CrucibleClimb
             | DemoDungeonRoom::Gatehouse => DemoDungeonRouteTarget::Door("east"),
             DemoDungeonRoom::SplitRoot
             | DemoDungeonRoom::BellSwitchback
-            | DemoDungeonRoom::CurrentFork => DemoDungeonRouteTarget::Door("floor"),
+            | DemoDungeonRoom::CurrentFork
+            | DemoDungeonRoom::SplitFurnace
+            | DemoDungeonRoom::PressureFork => DemoDungeonRouteTarget::Door("floor"),
             DemoDungeonRoom::LanternGallery
             | DemoDungeonRoom::SplitSpire
-            | DemoDungeonRoom::StormSplit => DemoDungeonRouteTarget::Door("ceiling"),
+            | DemoDungeonRoom::StormSplit
+            | DemoDungeonRoom::FoundryFork
+            | DemoDungeonRoom::LiftShaft => DemoDungeonRouteTarget::Door("ceiling"),
             DemoDungeonRoom::RootCellar => DemoDungeonRouteTarget::Pickup("dungeon-coin-03"),
             DemoDungeonRoom::WatchPost => DemoDungeonRouteTarget::Pickup("dungeon-coin-05"),
             DemoDungeonRoom::ClimberVault => {
@@ -701,6 +925,18 @@ pub fn demo_dungeon_route_specs() -> [DemoDungeonRouteSpec; 41] {
             DemoDungeonRoom::PulseGallery => DemoDungeonRouteTarget::Pickup("dungeon-coin-25"),
             DemoDungeonRoom::StormCache => DemoDungeonRouteTarget::Pickup("dungeon-coin-26"),
             DemoDungeonRoom::BrakeTower => DemoDungeonRouteTarget::Pickup("dungeon-coin-27"),
+            DemoDungeonRoom::AlloyThreshold => DemoDungeonRouteTarget::Pickup("dungeon-coin-28"),
+            DemoDungeonRoom::Windshaft => DemoDungeonRouteTarget::Pickup("dungeon-coin-29"),
+            DemoDungeonRoom::EmberVault => DemoDungeonRouteTarget::Pickup("dungeon-coin-30"),
+            DemoDungeonRoom::GearGallery => DemoDungeonRouteTarget::Pickup("dungeon-coin-31"),
+            DemoDungeonRoom::CoolingDuct => DemoDungeonRouteTarget::Pickup("dungeon-coin-32"),
+            DemoDungeonRoom::HammerHall => DemoDungeonRouteTarget::Pickup("dungeon-coin-33"),
+            DemoDungeonRoom::SparkNiche => DemoDungeonRouteTarget::Pickup("dungeon-coin-34"),
+            DemoDungeonRoom::BlastGallery => DemoDungeonRouteTarget::Pickup("dungeon-coin-35"),
+            DemoDungeonRoom::AshCache => DemoDungeonRouteTarget::Pickup("dungeon-coin-36"),
+            DemoDungeonRoom::VentSpire => DemoDungeonRouteTarget::Pickup("dungeon-coin-37"),
+            DemoDungeonRoom::CinderBridge => DemoDungeonRouteTarget::Pickup("dungeon-coin-38"),
+            DemoDungeonRoom::FoundrySeal => DemoDungeonRouteTarget::Pickup("dungeon-coin-39"),
             DemoDungeonRoom::CoinLoft => DemoDungeonRouteTarget::Pickup("dungeon-coin-09"),
             DemoDungeonRoom::NeedleRoom => DemoDungeonRouteTarget::Pickup("dungeon-coin-11"),
             DemoDungeonRoom::Treasury => DemoDungeonRouteTarget::Pickup("dungeon-coin-15"),
@@ -737,6 +973,7 @@ pub const fn demo_dungeon_door_requirement(
         (DemoDungeonRoom::Sluice, b"east") => DEMO_DUNGEON_GLOVE_GATE_REQUIREMENT,
         (DemoDungeonRoom::WallGate, b"east") => DEMO_DUNGEON_WALL_REGION_GATE_REQUIREMENT,
         (DemoDungeonRoom::DashSeal, b"east") => DEMO_DUNGEON_DASH_REGION_GATE_REQUIREMENT,
+        (DemoDungeonRoom::FoundrySeal, b"east") => DEMO_DUNGEON_FOUNDRY_GATE_REQUIREMENT,
         (DemoDungeonRoom::WallGallery, b"floor") => DEMO_DUNGEON_LOWER_VAULT_REQUIREMENT,
         (DemoDungeonRoom::Crossroads, b"ceiling") | (DemoDungeonRoom::Underpass, b"west") => {
             DEMO_DUNGEON_BOOT_GATE_REQUIREMENT
@@ -752,6 +989,7 @@ pub const fn demo_dungeon_door_requirement(
         (DemoDungeonRoom::WallGate, b"east") => TraversalMethods::one(TraversalMethod::WallJump),
         (DemoDungeonRoom::WallGallery, b"east") => TraversalMethods::one(TraversalMethod::Dash),
         (DemoDungeonRoom::DashSeal, b"east") => TraversalMethods::one(TraversalMethod::Dash),
+        (DemoDungeonRoom::FoundrySeal, b"east") => TraversalMethods::ALL_CURRENT,
         (DemoDungeonRoom::Gatehouse, b"east") => TraversalMethods::ALL_CURRENT,
         _ => TraversalMethods::NONE,
     };
@@ -804,7 +1042,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v7".to_owned(),
+        id: "demo-dungeon-v8".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -914,6 +1152,18 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         DemoDungeonRoom::PulseGallery => vec![(25, Rect::new(154, 114, 8, 10))],
         DemoDungeonRoom::StormCache => vec![(26, Rect::new(234, 14, 8, 10))],
         DemoDungeonRoom::BrakeTower => vec![(27, Rect::new(234, 14, 8, 10))],
+        DemoDungeonRoom::AlloyThreshold => vec![(28, Rect::new(264, 120, 8, 10))],
+        DemoDungeonRoom::Windshaft => vec![(29, Rect::new(214, 20, 8, 10))],
+        DemoDungeonRoom::EmberVault => vec![(30, Rect::new(224, 30, 8, 10))],
+        DemoDungeonRoom::GearGallery => vec![(31, Rect::new(214, 20, 8, 10))],
+        DemoDungeonRoom::CoolingDuct => vec![(32, Rect::new(224, 30, 8, 10))],
+        DemoDungeonRoom::HammerHall => vec![(33, Rect::new(264, 60, 8, 10))],
+        DemoDungeonRoom::SparkNiche => vec![(34, Rect::new(224, 30, 8, 10))],
+        DemoDungeonRoom::BlastGallery => vec![(35, Rect::new(224, 20, 8, 10))],
+        DemoDungeonRoom::AshCache => vec![(36, Rect::new(224, 30, 8, 10))],
+        DemoDungeonRoom::VentSpire => vec![(37, Rect::new(214, 20, 8, 10))],
+        DemoDungeonRoom::CinderBridge => vec![(38, Rect::new(284, 30, 8, 10))],
+        DemoDungeonRoom::FoundrySeal => vec![(39, Rect::new(214, 50, 8, 10))],
         DemoDungeonRoom::SplitRoot
         | DemoDungeonRoom::OldLift
         | DemoDungeonRoom::LanternGallery
@@ -927,6 +1177,14 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         | DemoDungeonRoom::StormSplit
         | DemoDungeonRoom::RelayChasm
         | DemoDungeonRoom::DashSeal
+        | DemoDungeonRoom::SplitFurnace
+        | DemoDungeonRoom::CrosswindChimney
+        | DemoDungeonRoom::FoundryFork
+        | DemoDungeonRoom::LiftShaft
+        | DemoDungeonRoom::RivetRun
+        | DemoDungeonRoom::PressureFork
+        | DemoDungeonRoom::PistonPass
+        | DemoDungeonRoom::CrucibleClimb
         | DemoDungeonRoom::DashChasm
         | DemoDungeonRoom::Gatehouse
         | DemoDungeonRoom::CrownSanctum => vec![],
@@ -1142,6 +1400,23 @@ mod tests {
                 ],
                 (22..28).collect::<Vec<_>>(),
             ),
+            (
+                vec![
+                    DemoDungeonRoom::AlloyThreshold,
+                    DemoDungeonRoom::Windshaft,
+                    DemoDungeonRoom::EmberVault,
+                    DemoDungeonRoom::GearGallery,
+                    DemoDungeonRoom::CoolingDuct,
+                    DemoDungeonRoom::HammerHall,
+                    DemoDungeonRoom::SparkNiche,
+                    DemoDungeonRoom::BlastGallery,
+                    DemoDungeonRoom::AshCache,
+                    DemoDungeonRoom::VentSpire,
+                    DemoDungeonRoom::CinderBridge,
+                    DemoDungeonRoom::FoundrySeal,
+                ],
+                (28..40).collect::<Vec<_>>(),
+            ),
         ] {
             let mut actual = rooms
                 .into_iter()
@@ -1178,6 +1453,10 @@ mod tests {
         assert_eq!(
             demo_dungeon_door_coin_requirement(DemoDungeonRoom::DashSeal, "east"),
             Some(DEMO_DUNGEON_DASH_REGION_GATE_REQUIREMENT)
+        );
+        assert_eq!(
+            demo_dungeon_door_coin_requirement(DemoDungeonRoom::FoundrySeal, "east"),
+            Some(DEMO_DUNGEON_FOUNDRY_GATE_REQUIREMENT)
         );
         assert_eq!(
             demo_dungeon_door_coin_requirement(DemoDungeonRoom::Gatehouse, "east"),
@@ -1948,6 +2227,116 @@ mod tests {
                 );
             }
         }
+    }
+
+    fn route_spec_target(target: DemoDungeonRouteTarget) -> SearchTarget {
+        match target {
+            DemoDungeonRouteTarget::Door(id) => SearchTarget::door(id),
+            DemoDungeonRouteTarget::Pickup(id) => SearchTarget::pickup(id),
+            DemoDungeonRouteTarget::GoalExit => SearchTarget::exit(DEMO_DUNGEON_GOAL_EXIT),
+        }
+    }
+
+    fn stable_route_seed(id: &str) -> u64 {
+        id.bytes().fold(0xcbf2_9ce4_8422_2325_u64, |hash, byte| {
+            (hash ^ u64::from(byte)).wrapping_mul(0x0000_0100_0000_01b3)
+        }) ^ 0xD06E_7000
+    }
+
+    #[test]
+    fn foundry_routes_are_exact_and_retain_observed_strength_one_successes() {
+        for spec in demo_dungeon_route_specs()
+            .into_iter()
+            .filter(|spec| (39..=58).contains(&spec.room.authored_key().0))
+        {
+            let (initial, solution) = solve_route(
+                spec.room,
+                spec.entry_door,
+                spec.inventory,
+                route_spec_target(spec.target),
+            );
+            let report = evaluate_shaky_hand(
+                &initial,
+                &solution,
+                ShakyHandConfig {
+                    seed: stable_route_seed(spec.id()),
+                    trials_per_curve_point: 64,
+                    grace_ticks: 18,
+                    correlated_boundaries: 2,
+                    convergence_confirmation_ticks: 2,
+                },
+            )
+            .unwrap();
+            assert!(report.exact_control_succeeded, "{}", spec.id());
+            for curve in report.curves.iter().filter(|curve| {
+                curve.family != NoiseFamily::Exact && curve.strength_ticks == 1 && curve.trials > 0
+            }) {
+                assert!(
+                    curve.successes > 0,
+                    "{} has no observed success for {:?} strength-one perturbations: {:?}",
+                    spec.id(),
+                    curve.family,
+                    curve.trials_detail
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn foundry_seal_known_positive_uses_both_unlocked_traversal_methods() {
+        let inventory = DemoDungeonInventory {
+            climbing_gloves: true,
+            winged_boots: true,
+            ..DemoDungeonInventory::with_coin_count_for_validation(
+                DEMO_DUNGEON_FOUNDRY_GATE_REQUIREMENT,
+            )
+        };
+        let (initial, solution) = solve_route(
+            DemoDungeonRoom::FoundrySeal,
+            Some("west"),
+            inventory,
+            SearchTarget::door("east"),
+        );
+        let mut replayed = initial;
+        let mut wall_jumps = 0;
+        let mut dashes = 0;
+        for action in solution.replay.actions() {
+            for event in replayed.step(action).events {
+                wall_jumps += usize::from(matches!(
+                    event,
+                    SimulationEvent::Jumped(JumpKind::Wall { .. })
+                ));
+                dashes += usize::from(matches!(event, SimulationEvent::Dashed { .. }));
+            }
+        }
+        assert_eq!(replayed.reached_exit(), Some("east"));
+        assert!(
+            wall_jumps > 0,
+            "the Foundry Seal route bypassed its wall ascent"
+        );
+        assert!(
+            dashes > 0,
+            "the Foundry Seal route bypassed its low Dash partition"
+        );
+
+        let wall_only = DemoDungeonInventory {
+            climbing_gloves: true,
+            winged_boots: false,
+            ..inventory
+        };
+        let room = demo_dungeon_room(DemoDungeonRoom::FoundrySeal, wall_only);
+        let mut initial = Simulation::enter_via_door(room, wall_only.abilities(), "west").unwrap();
+        initial.enable_current_player_movement();
+        let outcome = solve_target(
+            &initial,
+            SearchTarget::door("east"),
+            &SolverConfig::for_abilities(wall_only.abilities()),
+        )
+        .unwrap();
+        assert!(
+            !matches!(outcome, TargetSolveOutcome::Solved(_)),
+            "Wall-Jump-only search unexpectedly crossed the mixed Foundry Seal: {outcome:?}"
+        );
     }
 
     #[test]

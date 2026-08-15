@@ -188,7 +188,7 @@ cargo run -- --dungeon
 
 This is an expanding hand-authored dungeon built from deterministic room-palette starting points,
 not a claim that a general dungeon generator can design the finished game. It currently contains
-41 connected floors and 28 persistent coins. The opening Rootworks region begins without traversal
+61 connected floors and 40 persistent coins. The opening Rootworks region begins without traversal
 powers: both coin branches are required to enter the Climber's Reliquary, whose pickup unlocks Wall
 Jump. A mandatory ten-floor Wall-Jump region follows, with two required coin branches and a final
 physical Wall-Jump gate; its six coins are needed before the older halls can be entered. The next
@@ -196,8 +196,10 @@ six branch coins no longer open the Winged Vault directly: eighteen coins expose
 the Underpass coin opens the Treasury, and both Treasury coins are required to unseal either vault
 entrance. The vault's final pre-Dash coin and two-tile alternating hazard-band climb then award
 Dash. This makes every pre-Dash branch part of the critical path. A mandatory ten-floor Dash region
-with two required branches follows. Six regional coins open a
-physical low-posture Dash seal and then the 28-coin Crown gate. The Crown ingress explicitly
+with two required branches follows. Six regional coins open a physical low-posture Dash seal and
+the twenty-floor Aerial Foundry beyond it. The Foundry has three required coin branches, twelve new
+coins, mixed Wall-Jump/Dash rooms, and a regional seal whose known positive uses both methods. All
+forty coins are required at that seal and again at the Crown gate. The Crown ingress explicitly
 requires both unlocked traversal
 methods as well as the coins. Deaths and restarts return to the door used to enter the current room
 without discarding gloves, boots, Crown, or coins. `V` demonstrates the next intended room-local
@@ -210,9 +212,9 @@ cargo run -p downwards-content --example retune_demo_dungeon
 cargo run -p downwards-content --example retune_demo_dungeon -- --check
 ```
 
-The checked-in artifact contains one exact route and strength-one input-perturbation observations
-for every floor under the current movement and palette policies. These are tractability and
-controller-behaviour records, not difficulty scores.
+The checked-in artifact contains one exact route and 64-trial strength-one input-perturbation
+observations for every floor under the current movement and palette policies. These are
+tractability and controller-behaviour records, not difficulty scores.
 
 In any human-controlled room, press `F2` to open the movement-tuning menu. It directly adjusts top
 speed in pixels/second, acceleration and braking response in milliseconds, and wall-momentum

@@ -20,7 +20,7 @@ use downwards_gen::DUNGEON_PALETTE_GENERATION_VERSION;
 const DEFAULT_OUTPUT: &str = "crates/downwards-content/generated/demo-dungeon-witnesses-v1.txt";
 const SHAKY_CONFIG: ShakyHandConfig = ShakyHandConfig {
     seed: 0,
-    trials_per_curve_point: 8,
+    trials_per_curve_point: 64,
     grace_ticks: 18,
     correlated_boundaries: 2,
     convergence_confirmation_ticks: 2,
@@ -43,6 +43,15 @@ fn search_target(spec: DemoDungeonRouteSpec) -> SearchTarget {
         DemoDungeonRouteTarget::Pickup(id) => SearchTarget::pickup(id),
         DemoDungeonRouteTarget::GoalExit => SearchTarget::exit(spec.target.id()),
     }
+}
+
+fn shaky_seed(route_id: &str) -> u64 {
+    route_id
+        .bytes()
+        .fold(0xcbf2_9ce4_8422_2325_u64, |hash, byte| {
+            (hash ^ u64::from(byte)).wrapping_mul(0x0000_0100_0000_01b3)
+        })
+        ^ 0xD06E_7000
 }
 
 fn initial_simulation(spec: DemoDungeonRouteSpec) -> Simulation {
@@ -181,7 +190,7 @@ fn main() {
             &initial,
             &solution,
             ShakyHandConfig {
-                seed: 0xD06E_7000 + index as u64,
+                seed: shaky_seed(spec.id()),
                 ..SHAKY_CONFIG
             },
         )
