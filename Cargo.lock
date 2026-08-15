@@ -108,6 +108,7 @@ dependencies = [
  "downwards-ai",
  "downwards-core",
  "downwards-gen",
+ "serde_json",
 ]
 
 [[package]]

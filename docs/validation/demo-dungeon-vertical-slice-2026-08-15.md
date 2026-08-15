@@ -123,3 +123,17 @@ Regenerate or verify the exact route artifact with:
 cargo run -p downwards-content --example retune_demo_dungeon
 cargo run -p downwards-content --example retune_demo_dungeon -- --check
 ```
+
+For iterative playtesting, render a cheap descriptive audit without rerunning the solvers:
+
+```sh
+cargo run -p downwards-content --example audit_demo_dungeon
+```
+
+The audit consumes the frozen witness artifact and
+`playtest-history/human-attempts-v1.jsonl` (or one explicitly supplied JSONL path). For every floor
+it keeps AI action shape, strength-one shaky outcomes, human attempts, and nearest tile geometry as
+separate columns. `AI-BUSY`, `AI-REVERSING`, `HUMAN-NO-SUCCESS`, and tile-copy labels only nominate
+rooms for inspection; they are intentionally not combined into a difficulty scalar. This boundary
+exists because earlier route-complexity and blind-continuation metrics substantially overstated the
+difficulty of trivial human routes.

@@ -227,6 +227,17 @@ The checked-in artifact contains one exact route and 64-trial strength-one input
 observations for every floor under the current movement and palette policies. These are
 tractability and controller-behaviour records, not difficulty scores.
 
+Join that evidence to the persistent human-attempt history and a tile-layout similarity audit with:
+
+```sh
+cargo run -p downwards-content --example audit_demo_dungeon
+```
+
+Pass a JSONL path as the sole argument to inspect a different playtest. The report shows route
+ticks, input spans, accepted traversal events, reversals, the weakest recorded perturbation family,
+human deaths/retries/success times, and each floor's nearest tile layout side by side. Its flags are
+inspection prompts; the tool deliberately has no aggregate difficulty score or room ranking.
+
 In any human-controlled room, press `F2` to open the movement-tuning menu. It directly adjusts top
 speed in pixels/second, acceleration and braking response in milliseconds, and wall-momentum
 behavior along three axes: Wall Ascent converts a rising wall impact into additional upward speed,

@@ -11,6 +11,7 @@ downwards-gen.workspace = true
 
 [dev-dependencies]
 downwards-ai.workspace = true
+serde_json = "=1.0.151"
 
 [lib]
 path = "src/lib.rs"
