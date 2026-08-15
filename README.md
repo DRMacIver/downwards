@@ -186,12 +186,14 @@ To play the first multi-room dungeon vertical slice:
 cargo run -- --dungeon
 ```
 
-This is intentionally a hand-assembled graph made from a deterministic seven-room generator
-palette, not yet a general dungeon generator. Boundary doors traverse between real rooms; the
-crossroads, boots vault, underpass, and wall gallery form a loop. Find the Winged Boots to unlock
-Dash for the rest of the run, cross Gale Chasm, and collect the Crown in the final sanctum. Deaths
-and restarts return to the door used to enter the current room without discarding the persistent
-boots. `V` demonstrates the next intended room-local objective; it is not a whole-dungeon route.
+This is intentionally a hand-assembled graph made from a deterministic eleven-room generator
+palette, not yet a general dungeon generator. Boundary doors traverse between real rooms and the
+main loop has optional loft, belfry, and treasury branches. Ten persistent coins are spread across
+the dungeon: three open the treasury and six open the Crown route. The Winged Boots now sit behind
+a multi-jump vault switchback; collecting them unlocks Dash, including a low dash-squeeze passage,
+for the rest of the run. Cross Gale Chasm and collect the Crown in the final sanctum. Deaths and
+restarts return to the door used to enter the current room without discarding boots, Crown, or
+coins. `V` demonstrates the next intended room-local objective; it is not a whole-dungeon route.
 
 In any human-controlled room, press `F2` to open the movement-tuning menu. It directly adjusts top
 speed in pixels/second, acceleration and braking response in milliseconds, and wall-momentum

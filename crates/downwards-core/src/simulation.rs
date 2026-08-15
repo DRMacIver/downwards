@@ -9,6 +9,8 @@ pub const TICKS_PER_SECOND: u32 = 60;
 pub const SUBPIXELS_PER_PIXEL: i32 = 256;
 pub const PLAYER_WIDTH: i32 = 8;
 pub const PLAYER_HEIGHT: i32 = 12;
+/// Collision height while a player-facing horizontal Dash is squeezing through a low passage.
+pub const DASH_PLAYER_HEIGHT: i32 = 8;
 pub const COYOTE_TICKS: u8 = 5;
 pub const JUMP_BUFFER_TICKS: u8 = 5;
 pub const JUMP_HOLD_TICKS: u8 = 10;
@@ -22,7 +24,7 @@ pub const ONE_WAY_DROP_TICKS: u8 = 3;
 ///
 /// Historical corpus replays deliberately keep constructing an unconfigured `Simulation`; their
 /// digests therefore remain in the legacy policy domain until that corpus is regenerated.
-pub const PLAYER_MOVEMENT_POLICY_VERSION: u32 = 3;
+pub const PLAYER_MOVEMENT_POLICY_VERSION: u32 = 4;
 
 const RUN_SPEED: i32 = 384;
 const GROUND_ACCELERATION: i32 = 96;
@@ -282,6 +284,7 @@ pub struct PlayerState {
     dash_available: bool,
     dash_ticks: u8,
     dash_direction: Option<DashDirection>,
+    dash_compressed: bool,
     one_way_drop_ticks: u8,
 }
 
@@ -336,6 +339,11 @@ impl PlayerState {
     pub const fn dash_direction(&self) -> Option<DashDirection> {
         self.dash_direction
     }
+    /// Whether the player is using the low-profile horizontal-Dash collider.
+    #[must_use]
+    pub const fn dash_compressed(&self) -> bool {
+        self.dash_compressed
+    }
     #[must_use]
     pub const fn one_way_drop_ticks_remaining(&self) -> u8 {
         self.one_way_drop_ticks
@@ -347,7 +355,11 @@ impl PlayerState {
             self.position_subpixels.x.div_euclid(SUBPIXELS_PER_PIXEL),
             self.position_subpixels.y.div_euclid(SUBPIXELS_PER_PIXEL),
             PLAYER_WIDTH,
-            PLAYER_HEIGHT,
+            if self.dash_compressed {
+                DASH_PLAYER_HEIGHT
+            } else {
+                PLAYER_HEIGHT
+            },
         )
     }
 }
@@ -593,6 +605,38 @@ impl Simulation {
         self.state.reached_exit.as_deref()
     }
 
+    /// Reject a just-triggered boundary door and return the player to that door's safe interior
+    /// arrival point without resetting room-local pickups or the room clock.
+    ///
+    /// Higher-level dungeon state uses this for visible locked doors. It succeeds only when the
+    /// named door is the currently reached exit, so callers cannot use it as an arbitrary warp.
+    pub fn reject_reached_door(&mut self, door_id: &str) -> bool {
+        if self.state.reached_exit.as_deref() != Some(door_id) {
+            return false;
+        }
+        let Some(arrival) = self
+            .room
+            .doors
+            .iter()
+            .find(|door| door.id == door_id)
+            .map(|door| door.arrival)
+        else {
+            return false;
+        };
+        self.state.player = spawn_player(arrival, self.abilities);
+        self.state.previous_action = Action::default();
+        self.state.reached_exit = None;
+        self.recent_wall = None;
+        self.wall_grace_ticks = 0;
+        self.wall_force_direction = 0;
+        self.wall_force_ticks = 0;
+        self.wall_minimum_ascent_ticks = 0;
+        self.retained_wall_velocity_x = 0;
+        self.wall_velocity_retention_ticks = 0;
+        self.wall_ascent_carry_wall = None;
+        true
+    }
+
     #[must_use]
     pub fn timed_hazard_is_active(&self, hazard_index: usize) -> Option<bool> {
         self.room
@@ -695,6 +739,7 @@ impl Simulation {
         hash.bool(self.state.player.dash_available);
         hash.byte(self.state.player.dash_ticks);
         hash.option_dash_direction(self.state.player.dash_direction);
+        hash.bool(self.state.player.dash_compressed);
         hash.byte(self.state.player.one_way_drop_ticks);
         if self.human_wall_assists {
             hash.bytes(b"human-wall-assists-v1");
@@ -777,6 +822,8 @@ impl Simulation {
             self.tick_one_way_drop();
             return;
         }
+
+        self.try_expand_dash_posture();
 
         let wall_before_move = self.detect_wall_contact(action.move_x);
         self.state.player.wall_contact = wall_before_move;
@@ -994,6 +1041,14 @@ impl Simulation {
     }
 
     fn begin_dash(&mut self, direction: DashDirection) {
+        if self.movement_tuning.is_some()
+            && matches!(direction, DashDirection::Left | DashDirection::Right)
+            && !self.state.player.dash_compressed
+        {
+            self.state.player.position_subpixels.y +=
+                (PLAYER_HEIGHT - DASH_PLAYER_HEIGHT) * SUBPIXELS_PER_PIXEL;
+            self.state.player.dash_compressed = true;
+        }
         self.state.player.velocity_subpixels = direction.velocity();
         self.state.player.grounded = false;
         self.state.player.coyote_ticks = 0;
@@ -1035,6 +1090,7 @@ impl Simulation {
             if self.abilities.dash && grounded {
                 self.state.player.dash_available = true;
             }
+            self.try_expand_dash_posture();
         }
         self.state.player.coyote_ticks = if grounded { COYOTE_TICKS } else { 0 };
     }
@@ -1445,8 +1501,48 @@ impl Simulation {
             self.state.player.position_subpixels.x,
             self.state.player.position_subpixels.y,
             PLAYER_WIDTH * SUBPIXELS_PER_PIXEL,
-            PLAYER_HEIGHT * SUBPIXELS_PER_PIXEL,
+            if self.state.player.dash_compressed {
+                DASH_PLAYER_HEIGHT
+            } else {
+                PLAYER_HEIGHT
+            } * SUBPIXELS_PER_PIXEL,
         )
+    }
+
+    fn try_expand_dash_posture(&mut self) {
+        if !self.state.player.dash_compressed || self.state.player.dash_ticks > 0 {
+            return;
+        }
+        let added_height = (PLAYER_HEIGHT - DASH_PLAYER_HEIGHT) * SUBPIXELS_PER_PIXEL;
+        let expanded = Rect::new(
+            self.state.player.position_subpixels.x,
+            self.state.player.position_subpixels.y - added_height,
+            PLAYER_WIDTH * SUBPIXELS_PER_PIXEL,
+            PLAYER_HEIGHT * SUBPIXELS_PER_PIXEL,
+        );
+        if expanded.y < 0 || self.expansion_is_blocked(expanded) {
+            return;
+        }
+        self.state.player.position_subpixels.y -= added_height;
+        self.state.player.dash_compressed = false;
+    }
+
+    fn expansion_is_blocked(&self, expanded: Rect) -> bool {
+        let Some((first_x, last_x, first_y, last_y)) = self.tile_range(expanded) else {
+            return true;
+        };
+        (first_y..=last_y).any(|y| {
+            (first_x..=last_x).any(|x| match self.room.tile(x, y) {
+                Some(
+                    Tile::Solid
+                    | Tile::HazardUp
+                    | Tile::HazardDown
+                    | Tile::HazardLeft
+                    | Tile::HazardRight,
+                ) => scale_rect(self.room.tile_bounds(x, y)).intersects(expanded),
+                Some(Tile::Empty | Tile::OneWay) | None => false,
+            })
+        })
     }
 }
 
@@ -1467,6 +1563,7 @@ fn spawn_player(spawn: Point, abilities: AbilitySet) -> PlayerState {
         dash_available: abilities.dash,
         dash_ticks: 0,
         dash_direction: None,
+        dash_compressed: false,
         one_way_drop_ticks: 0,
     }
 }

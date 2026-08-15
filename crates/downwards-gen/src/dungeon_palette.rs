@@ -7,9 +7,11 @@
 
 use std::{error::Error, fmt};
 
-use downwards_core::{BoundarySide, Door, DoorError, Exit, Point, Rect, Room, RoomError, Tile};
+use downwards_core::{
+    BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
+};
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 1;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 2;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -23,6 +25,10 @@ pub enum DungeonPaletteCourse {
     BootsVault,
     Underpass,
     DashChasm,
+    CoinLoft,
+    NeedleRoom,
+    Treasury,
+    Gatehouse,
     CrownSanctum,
 }
 
@@ -36,6 +42,10 @@ impl DungeonPaletteCourse {
             Self::BootsVault => "boots-vault",
             Self::Underpass => "underpass",
             Self::DashChasm => "dash-chasm",
+            Self::CoinLoft => "coin-loft",
+            Self::NeedleRoom => "needle-room",
+            Self::Treasury => "treasury",
+            Self::Gatehouse => "gatehouse",
             Self::CrownSanctum => "crown-sanctum",
         }
     }
@@ -46,11 +56,13 @@ impl DungeonPaletteCourse {
             Self::Crossroads => &[
                 ("west", BoundarySide::Left),
                 ("east", BoundarySide::Right),
+                ("ceiling", BoundarySide::Ceiling),
                 ("floor", BoundarySide::Floor),
             ],
             Self::WallGallery => &[
                 ("west", BoundarySide::Left),
                 ("east", BoundarySide::Right),
+                ("ceiling", BoundarySide::Ceiling),
                 ("floor", BoundarySide::Floor),
             ],
             Self::BootsVault => &[
@@ -59,9 +71,13 @@ impl DungeonPaletteCourse {
             ],
             Self::Underpass => &[
                 ("west", BoundarySide::Left),
+                ("east", BoundarySide::Right),
                 ("ceiling", BoundarySide::Ceiling),
             ],
             Self::DashChasm => &[("west", BoundarySide::Left), ("east", BoundarySide::Right)],
+            Self::CoinLoft | Self::NeedleRoom => &[("floor", BoundarySide::Floor)],
+            Self::Treasury => &[("west", BoundarySide::Left)],
+            Self::Gatehouse => &[("west", BoundarySide::Left), ("east", BoundarySide::Right)],
             Self::CrownSanctum => &[("west", BoundarySide::Left)],
         }
     }
@@ -86,6 +102,7 @@ impl DungeonPaletteKey {
         draft.boundary();
         draft.open_doors(self.course);
         draft.course(self);
+        debug_assert!(draft.one_way_surfaces_have_player_headroom());
         DungeonPaletteCandidate { key: self, tiles }
     }
 }
@@ -222,7 +239,10 @@ fn door_geometry(side: BoundarySide) -> (Rect, Point) {
         BoundarySide::Left => (Rect::new(0, 130, 8, 40), Point::new(12, 148)),
         BoundarySide::Right => (Rect::new(312, 130, 8, 40), Point::new(300, 148)),
         BoundarySide::Ceiling => (Rect::new(140, 0, 40, 8), Point::new(150, 12)),
-        BoundarySide::Floor => (Rect::new(140, 172, 40, 8), Point::new(150, 154)),
+        // A floor entrance lands on the drop-through sill authored by `course` below. This
+        // leaves a full-height standing place beside the door instead of spawning the player
+        // into a four-tile aperture with nothing underneath them.
+        BoundarySide::Floor => (Rect::new(140, 172, 40, 8), Point::new(150, 148)),
     }
 }
 
@@ -266,6 +286,15 @@ impl PaletteDraft<'_> {
     }
 
     fn course(&mut self, key: DungeonPaletteKey) {
+        if key
+            .course
+            .door_sides()
+            .iter()
+            .any(|(_, side)| *side == BoundarySide::Floor)
+        {
+            // Drop through this sill to leave by the floor door; arrivals stand safely on top.
+            self.horizontal(16, 14, 18, Tile::OneWay);
+        }
         match key.course {
             DungeonPaletteCourse::Threshold => {
                 self.horizontal(14, 5, 11, Tile::OneWay);
@@ -281,7 +310,7 @@ impl PaletteDraft<'_> {
                 self.horizontal(16, 18, 21, Tile::Solid);
             }
             DungeonPaletteCourse::WallGallery => {
-                self.horizontal(15, 4, 9, Tile::OneWay);
+                self.horizontal(14, 4, 9, Tile::OneWay);
                 self.horizontal(12, 10, 15, Tile::OneWay);
                 self.horizontal(9, 17, 22, Tile::OneWay);
                 self.horizontal(6, 10, 15, Tile::OneWay);
@@ -290,14 +319,21 @@ impl PaletteDraft<'_> {
                 self.vertical(24, 4, 14, Tile::Solid);
             }
             DungeonPaletteCourse::BootsVault => {
-                self.horizontal(15, 3, 9, Tile::OneWay);
+                self.horizontal(14, 3, 9, Tile::OneWay);
                 self.horizontal(12, 11, 18, Tile::OneWay);
-                self.horizontal(9, 21, 28, Tile::OneWay);
                 self.horizontal(6, 12, 19, Tile::OneWay);
                 self.horizontal(3, 4, 11, Tile::OneWay);
+                self.horizontal(14, 23, 29, Tile::OneWay);
+                self.horizontal(12, 21, 23, Tile::OneWay);
+                self.horizontal(10, 23, 28, Tile::OneWay);
+                self.horizontal(8, 28, 31, Tile::OneWay);
+                // The entrance drops onto the left of this partition. Reaching the boots means
+                // descending below it, returning up its far wall, then committing to the high
+                // right ledge instead of simply drifting from the ceiling spawn.
+                self.vertical(20, 1, 13, Tile::Solid);
             }
             DungeonPaletteCourse::Underpass => {
-                self.horizontal(15, 4, 10, Tile::OneWay);
+                self.horizontal(14, 4, 10, Tile::OneWay);
                 self.horizontal(12, 12, 18, Tile::OneWay);
                 self.horizontal(9, 20, 27, Tile::OneWay);
                 self.horizontal(6, 12, 18, Tile::OneWay);
@@ -310,14 +346,69 @@ impl PaletteDraft<'_> {
                 let ceiling_start = 9 + u16::try_from(key.seed & 1).expect("bit fits u16");
                 self.horizontal(8, ceiling_start, 23, Tile::HazardDown);
             }
+            DungeonPaletteCourse::CoinLoft => {
+                self.horizontal(14, 3, 10, Tile::OneWay);
+                self.horizontal(12, 12, 19, Tile::OneWay);
+                self.horizontal(10, 21, 29, Tile::OneWay);
+                self.horizontal(7, 12, 19, Tile::OneWay);
+                self.horizontal(4, 3, 10, Tile::Solid);
+            }
+            DungeonPaletteCourse::NeedleRoom => {
+                self.vertical(8, 4, 15, Tile::HazardRight);
+                self.vertical(23, 3, 13, Tile::HazardLeft);
+                self.horizontal(14, 9, 14, Tile::OneWay);
+                self.horizontal(12, 17, 23, Tile::OneWay);
+                self.horizontal(9, 10, 16, Tile::OneWay);
+                self.horizontal(6, 17, 23, Tile::OneWay);
+                self.horizontal(2, 17, 23, Tile::Solid);
+            }
+            DungeonPaletteCourse::Treasury => {
+                self.horizontal(14, 4, 10, Tile::OneWay);
+                self.horizontal(11, 12, 19, Tile::OneWay);
+                self.horizontal(8, 21, 28, Tile::OneWay);
+                self.horizontal(5, 13, 20, Tile::OneWay);
+                self.horizontal(16, 10, 13, Tile::HazardUp);
+                self.horizontal(16, 20, 23, Tile::HazardUp);
+            }
+            DungeonPaletteCourse::Gatehouse => {
+                self.horizontal(14, 4, 10, Tile::OneWay);
+                self.horizontal(11, 12, 19, Tile::OneWay);
+                self.horizontal(8, 21, 28, Tile::OneWay);
+                self.horizontal(14, 23, 29, Tile::OneWay);
+                // The partition seals ceiling to within one tile of the floor. The standing
+                // player cannot enter the approach under row 15; a horizontal Dash adopts the
+                // low posture and carries through the ten-pixel passage.
+                self.horizontal(15, 8, 20, Tile::Solid);
+                self.vertical(20, 1, 16, Tile::Solid);
+            }
             DungeonPaletteCourse::CrownSanctum => {
                 self.horizontal(14, 4, 10, Tile::OneWay);
                 self.horizontal(11, 12, 19, Tile::OneWay);
                 self.horizontal(8, 21, 29, Tile::OneWay);
                 self.horizontal(5, 13, 20, Tile::OneWay);
-                self.horizontal(2, 23, 29, Tile::OneWay);
+                self.horizontal(3, 23, 29, Tile::OneWay);
             }
         }
+    }
+
+    fn one_way_surfaces_have_player_headroom(&self) -> bool {
+        let clearance_rows = u16::try_from((PLAYER_HEIGHT + TILE_SIZE - 1) / TILE_SIZE)
+            .expect("player clearance row count fits u16");
+        (0..HEIGHT).all(|row| {
+            (0..WIDTH).all(|column| {
+                if self.tiles[usize::from(row) * usize::from(WIDTH) + usize::from(column)]
+                    != Tile::OneWay
+                {
+                    return true;
+                }
+                row >= clearance_rows
+                    && (1..=clearance_rows).all(|offset| {
+                        self.tiles
+                            [usize::from(row - offset) * usize::from(WIDTH) + usize::from(column)]
+                            == Tile::Empty
+                    })
+            })
+        })
     }
 }
 
@@ -334,6 +425,10 @@ mod tests {
             DungeonPaletteCourse::BootsVault,
             DungeonPaletteCourse::Underpass,
             DungeonPaletteCourse::DashChasm,
+            DungeonPaletteCourse::CoinLoft,
+            DungeonPaletteCourse::NeedleRoom,
+            DungeonPaletteCourse::Treasury,
+            DungeonPaletteCourse::Gatehouse,
             DungeonPaletteCourse::CrownSanctum,
         ];
         for course in courses {
@@ -383,5 +478,30 @@ mod tests {
             (12..20)
                 .all(|column| { candidate.tiles[17 * usize::from(WIDTH) + column] == Tile::Solid })
         );
+    }
+
+    #[test]
+    fn every_authored_bridge_has_full_player_headroom() {
+        for course in [
+            DungeonPaletteCourse::Threshold,
+            DungeonPaletteCourse::Crossroads,
+            DungeonPaletteCourse::WallGallery,
+            DungeonPaletteCourse::BootsVault,
+            DungeonPaletteCourse::Underpass,
+            DungeonPaletteCourse::DashChasm,
+            DungeonPaletteCourse::CoinLoft,
+            DungeonPaletteCourse::NeedleRoom,
+            DungeonPaletteCourse::Treasury,
+            DungeonPaletteCourse::Gatehouse,
+            DungeonPaletteCourse::CrownSanctum,
+        ] {
+            let candidate = DungeonPaletteKey::new(0xD06E_0A11, course).generate();
+            let mut tiles = candidate.tiles.clone();
+            let draft = PaletteDraft { tiles: &mut tiles };
+            assert!(
+                draft.one_way_surfaces_have_player_headroom(),
+                "{course:?} contains a bridge with less than {PLAYER_HEIGHT}px headroom"
+            );
+        }
     }
 }

@@ -1,5 +1,5 @@
 schema downwards-calibration-witnesses-v2
-player-movement-policy 3
+player-movement-policy 4
 tuning 110 72 203 50 50 250
 level cal-01
 span 0 0 1 0 0 1

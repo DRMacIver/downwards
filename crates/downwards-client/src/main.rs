@@ -17,9 +17,10 @@ use downwards_ai::{
 use downwards_catalogue::CatalogueBand;
 use downwards_content::{
     CalibratedGeneratorPlaytestLevel, CalibrationLevel, DEMO_DUNGEON_BOOT_PICKUP,
-    DEMO_DUNGEON_CROWN_PICKUP, DEMO_DUNGEON_GOAL_EXIT, DemoDungeonInventory, DemoDungeonRoom,
-    HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET, MEDIUM_NO_DASH_ABILITIES, MEDIUM_NO_DASH_TARGET,
-    calibrated_generator_playtest, calibration_gallery, demo_dungeon_room, first_steps_room,
+    DEMO_DUNGEON_CROWN_PICKUP, DEMO_DUNGEON_GOAL_EXIT, DEMO_DUNGEON_TOTAL_COINS,
+    DemoDungeonInventory, DemoDungeonRoom, HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET,
+    MEDIUM_NO_DASH_ABILITIES, MEDIUM_NO_DASH_TARGET, calibrated_generator_playtest,
+    calibration_gallery, demo_dungeon_door_coin_requirement, demo_dungeon_room, first_steps_room,
     hard_no_dash_scenario, hard_no_dash_witness_actions, medium_no_dash_scenario,
     medium_no_dash_witness_actions,
 };
@@ -140,10 +141,14 @@ const ENVIRONMENT_SHEET_ROWS: u8 = 3;
 const ENVIRONMENT_CELL_PIXELS: f32 = 24.0;
 const ENVIRONMENT_SHEET_WIDTH: f32 = 96.0;
 const ENVIRONMENT_SHEET_HEIGHT: f32 = 72.0;
+const DUNGEON_PICKUP_CELL_PIXELS: f32 = 16.0;
+const DUNGEON_PICKUP_SHEET_WIDTH: f32 = 32.0;
+const DUNGEON_PICKUP_SHEET_HEIGHT: f32 = 16.0;
 
 struct VisualAssets {
     player_sprites: Texture2D,
     environment_tiles: Texture2D,
+    dungeon_pickups: Texture2D,
 }
 
 impl VisualAssets {
@@ -162,9 +167,17 @@ impl VisualAssets {
         assert_eq!(environment_tiles.width(), ENVIRONMENT_SHEET_WIDTH);
         assert_eq!(environment_tiles.height(), ENVIRONMENT_SHEET_HEIGHT);
         environment_tiles.set_filter(FilterMode::Nearest);
+        let dungeon_pickups = Texture2D::from_file_with_format(
+            include_bytes!("../assets/dungeon-pickups-v1.png"),
+            None,
+        );
+        assert_eq!(dungeon_pickups.width(), DUNGEON_PICKUP_SHEET_WIDTH);
+        assert_eq!(dungeon_pickups.height(), DUNGEON_PICKUP_SHEET_HEIGHT);
+        dungeon_pickups.set_filter(FilterMode::Nearest);
         Self {
             player_sprites,
             environment_tiles,
+            dungeon_pickups,
         }
     }
 }
@@ -2945,6 +2958,9 @@ impl ClientState {
             DemoDungeonRoom::Underpass => Some("ceiling"),
             DemoDungeonRoom::WallGallery => Some("east"),
             DemoDungeonRoom::DashChasm => Some("east"),
+            DemoDungeonRoom::CoinLoft | DemoDungeonRoom::NeedleRoom => Some("floor"),
+            DemoDungeonRoom::Treasury => Some("west"),
+            DemoDungeonRoom::Gatehouse => Some("east"),
             DemoDungeonRoom::CrownSanctum => None,
         };
         if let Some(target) = target_door {
@@ -3589,8 +3605,12 @@ impl ClientState {
             .events
             .iter()
             .any(|event| matches!(event, SimulationEvent::Reset))
-            && ((run.room == DemoDungeonRoom::BootsVault && run.inventory.winged_boots)
-                || (run.room == DemoDungeonRoom::CrownSanctum && run.inventory.crown));
+            && self
+                .simulation
+                .room()
+                .pickups()
+                .iter()
+                .any(|pickup| run.inventory.owns_persistent_pickup(pickup.id()));
         if reset_needs_inventory_rebind {
             let entry_door = self.simulation.entry_door().map(str::to_owned);
             let room = demo_dungeon_room(run.room, run.inventory);
@@ -3603,6 +3623,26 @@ impl ClientState {
             self.simulation = rebound;
             self.human_recorder = HumanRecorder::new(&self.simulation);
             return true;
+        }
+
+        let mut collected_new_coin = false;
+        for id in report.events.iter().filter_map(|event| match event {
+            SimulationEvent::PickupCollected { id } => Some(id.as_str()),
+            _ => None,
+        }) {
+            collected_new_coin |= run.inventory.collect_coin(id);
+        }
+        if collected_new_coin {
+            self.dungeon_run = Some(run);
+            self.replay_notice = Some(ReplayNotice {
+                title: format!(
+                    "COIN {}/{}",
+                    run.inventory.coin_count(),
+                    DEMO_DUNGEON_TOTAL_COINS
+                ),
+                detail: "Coins persist across rooms and open sealed doors".to_owned(),
+                is_error: false,
+            });
         }
 
         let collected_boots = report.events.iter().any(|event| {
@@ -3646,6 +3686,24 @@ impl ClientState {
             // The crown goal is a terminal legacy Exit, not a room transition.
             return false;
         };
+        if let Some(requirement) = demo_dungeon_door_coin_requirement(run.room, &door.id)
+            && run.inventory.coin_count() < requirement
+        {
+            // The production report and simulation are the same authoritative step. Keeping
+            // this tolerant also makes the run-state observer robust to synthetic diagnostics.
+            let _ = self.simulation.reject_reached_door(&door.id);
+            self.human_recorder.resume_at(&self.simulation);
+            self.replay_notice = Some(ReplayNotice {
+                title: format!("SEALED · {requirement} COINS REQUIRED"),
+                detail: format!(
+                    "you have {}/{} coins; explore another branch",
+                    run.inventory.coin_count(),
+                    DEMO_DUNGEON_TOTAL_COINS
+                ),
+                is_error: true,
+            });
+            return true;
+        }
         let Some(destination_room) = door
             .destination_room
             .as_deref()
@@ -3676,9 +3734,17 @@ impl ClientState {
         self.replay_notice = Some(ReplayNotice {
             title: destination_room.title().to_ascii_uppercase(),
             detail: if run.inventory.winged_boots {
-                "Winged Boots equipped · find the Crown".to_owned()
+                format!(
+                    "Winged Boots equipped · coins {}/{} · find the Crown",
+                    run.inventory.coin_count(),
+                    DEMO_DUNGEON_TOTAL_COINS
+                )
             } else {
-                "Find the Winged Boots, then claim the Crown".to_owned()
+                format!(
+                    "Find the Winged Boots · coins {}/{}",
+                    run.inventory.coin_count(),
+                    DEMO_DUNGEON_TOTAL_COINS
+                )
             },
             is_error: false,
         });
@@ -4354,6 +4420,15 @@ fn select_player_visual(client: &ClientState) -> PlayerVisual {
     let simulation = &client.simulation;
     let player = simulation.player();
     let facing_left = player.facing() < 0;
+    if player.dash_compressed() {
+        return PlayerVisual {
+            // The deep-skid cell is the existing clearly tucked silhouette. Keeping the feet
+            // anchored to the compressed collider makes the squeeze readable without inventing
+            // a second invisible body shape.
+            pose: PlayerPose::DeepSkid,
+            flip_x: facing_left,
+        };
+    }
     if client.feedback.wall_jump_ticks > 0 {
         // The authored wall-jump cell departs left from a right-hand wall.
         return PlayerVisual {
@@ -4442,6 +4517,7 @@ fn render(client: &ClientState, visual_assets: &VisualAssets) {
         focus,
         visual_assets,
     );
+    draw_dungeon_coin_gates(&room_viewport, client);
     draw_player_effects(
         &room_viewport,
         client.simulation.player().bounds(),
@@ -5137,8 +5213,18 @@ fn draw_room_objects(viewport: &PixelViewport, simulation: &Simulation, assets: 
             continue;
         }
         match pickup.id() {
-            DEMO_DUNGEON_BOOT_PICKUP => draw_winged_boots(viewport, pickup.bounds()),
-            DEMO_DUNGEON_CROWN_PICKUP => draw_crown(viewport, pickup.bounds()),
+            DEMO_DUNGEON_BOOT_PICKUP => draw_dungeon_pickup(
+                viewport,
+                pickup.bounds(),
+                DungeonPickupSprite::WingedBoots,
+                assets,
+            ),
+            DEMO_DUNGEON_CROWN_PICKUP => draw_dungeon_pickup(
+                viewport,
+                pickup.bounds(),
+                DungeonPickupSprite::Crown,
+                assets,
+            ),
             _ => draw_environment_sprite(
                 viewport,
                 pickup.bounds(),
@@ -5150,26 +5236,43 @@ fn draw_room_objects(viewport: &PixelViewport, simulation: &Simulation, assets: 
     }
 }
 
-fn draw_winged_boots(viewport: &PixelViewport, bounds: CoreRect) {
-    let cyan = Color::new(0.45, 0.9, 1.0, 1.0);
-    let pale = Color::new(0.82, 0.98, 1.0, 1.0);
-    let sole = Color::new(0.12, 0.25, 0.38, 1.0);
-    viewport.rectangle(CoreRect::new(bounds.x + 2, bounds.y + 5, 4, 5), cyan);
-    viewport.rectangle(CoreRect::new(bounds.x + 6, bounds.y + 7, 4, 3), cyan);
-    viewport.rectangle(CoreRect::new(bounds.x + 1, bounds.y + 10, 10, 2), sole);
-    viewport.rectangle(CoreRect::new(bounds.x, bounds.y + 2, 2, 5), pale);
-    viewport.rectangle(CoreRect::new(bounds.x + 2, bounds.y + 1, 2, 4), pale);
+#[derive(Clone, Copy)]
+enum DungeonPickupSprite {
+    WingedBoots = 0,
+    Crown = 1,
 }
 
-fn draw_crown(viewport: &PixelViewport, bounds: CoreRect) {
-    let gold = Color::new(1.0, 0.78, 0.16, 1.0);
-    let light = Color::new(1.0, 0.95, 0.48, 1.0);
-    let jewel = Color::new(0.35, 0.88, 1.0, 1.0);
-    viewport.rectangle(CoreRect::new(bounds.x + 1, bounds.y + 5, 10, 6), gold);
-    viewport.rectangle(CoreRect::new(bounds.x + 1, bounds.y + 1, 2, 6), light);
-    viewport.rectangle(CoreRect::new(bounds.x + 5, bounds.y, 2, 7), light);
-    viewport.rectangle(CoreRect::new(bounds.x + 9, bounds.y + 1, 2, 6), light);
-    viewport.rectangle(CoreRect::new(bounds.x + 5, bounds.y + 7, 2, 2), jewel);
+impl DungeonPickupSprite {
+    const fn sheet_source(self) -> Rect {
+        Rect::new(
+            (self as u8) as f32 * DUNGEON_PICKUP_CELL_PIXELS,
+            0.0,
+            DUNGEON_PICKUP_CELL_PIXELS,
+            DUNGEON_PICKUP_CELL_PIXELS,
+        )
+    }
+}
+
+fn draw_dungeon_pickup(
+    viewport: &PixelViewport,
+    bounds: CoreRect,
+    sprite: DungeonPickupSprite,
+    assets: &VisualAssets,
+) {
+    draw_texture_ex(
+        &assets.dungeon_pickups,
+        viewport.screen_x(bounds.x),
+        viewport.screen_y(bounds.y),
+        WHITE,
+        DrawTextureParams {
+            dest_size: Some(vec2(
+                bounds.width as f32 * viewport.scale,
+                bounds.height as f32 * viewport.scale,
+            )),
+            source: Some(sprite.sheet_source()),
+            ..Default::default()
+        },
+    );
 }
 
 #[derive(Clone, Copy)]
@@ -5185,6 +5288,12 @@ fn draw_exits(
     assets: &VisualAssets,
 ) {
     for exit in room.exits() {
+        if exit.id == DEMO_DUNGEON_GOAL_EXIT {
+            // The Crown is the goal's complete visual affordance. Its trigger deliberately
+            // surrounds the pickup, but drawing a generic exit frame over the sprite would make
+            // it look like another door and obscure the generated pixel art.
+            continue;
+        }
         viewport.rectangle(exit.bounds, EXIT_DARK);
         draw_environment_sprite(
             viewport,
@@ -5248,6 +5357,39 @@ fn draw_exits(
                 colour,
             ),
         }
+    }
+}
+
+fn draw_dungeon_coin_gates(viewport: &PixelViewport, client: &ClientState) {
+    let Some(run) = client.dungeon_run else {
+        return;
+    };
+    for door in client.simulation.room().doors() {
+        let Some(requirement) = demo_dungeon_door_coin_requirement(run.room, &door.id) else {
+            continue;
+        };
+        if run.inventory.coin_count() >= requirement {
+            continue;
+        }
+        let bounds = door.trigger_bounds;
+        viewport.rectangle(bounds, Color::new(0.2, 0.04, 0.08, 0.82));
+        for offset in [5, 14, 23, 32] {
+            viewport.rectangle(
+                CoreRect::new(bounds.x, bounds.y + offset, bounds.width, 3),
+                HAZARD,
+            );
+        }
+        viewport.text(
+            &format!("{requirement} COINS"),
+            if door.side == BoundarySide::Right {
+                bounds.x - 38
+            } else {
+                bounds.right() + 3
+            },
+            bounds.y - 3,
+            5,
+            PICKUP,
+        );
     }
 }
 
@@ -5442,10 +5584,13 @@ fn draw_hud(viewport: &PixelViewport, client: &ClientState) {
         } else if client.selection.mode.is_challenge() {
             "A/D MOVE  JUMP: TAP=LOW HOLD=HIGH  WALL: HOLD TOWARD + JUMP  R/M".to_owned()
         } else if client.selection.mode == RoomMode::Dungeon {
+            let coins = client
+                .dungeon_run
+                .map_or(0, |run| run.inventory.coin_count());
             if client.simulation.abilities().dash {
-                "DUNGEON · BOOTS:ON · X/SHIFT DASH · FIND THE CROWN".to_owned()
+                format!("DUNGEON · COINS {coins}/{DEMO_DUNGEON_TOTAL_COINS} · BOOTS:ON · X DASH")
             } else {
-                "DUNGEON · FIND THE WINGED BOOTS · M OPENS LEVELS".to_owned()
+                format!("DUNGEON · COINS {coins}/{DEMO_DUNGEON_TOTAL_COINS} · FIND WINGED BOOTS")
             }
         } else {
             gameplay_control_summary(client.selection.tier).to_owned()
@@ -5508,8 +5653,10 @@ fn draw_hud(viewport: &PixelViewport, client: &ClientState) {
             || "MISSING DUNGEON RUN".to_owned(),
             |run| {
                 format!(
-                    "{} / BOOTS:{} / CROWN:{}",
+                    "{} / COINS:{}/{} / BOOTS:{} / CROWN:{}",
                     run.room.title(),
+                    run.inventory.coin_count(),
+                    DEMO_DUNGEON_TOTAL_COINS,
                     if run.inventory.winged_boots {
                         "YES"
                     } else {
@@ -7155,7 +7302,10 @@ mod tests {
         let record: serde_json::Value = serde_json::from_str(lines[0]).unwrap();
         assert_eq!(record["schema"], HUMAN_HISTORY_SCHEMA);
         assert_eq!(record["human_jump_input_policy_version"], 4);
-        assert_eq!(record["player_movement_policy_version"], 3);
+        assert_eq!(
+            record["player_movement_policy_version"],
+            PLAYER_MOVEMENT_POLICY_VERSION
+        );
         assert_eq!(record["movement_profile"], "gameplay-v2");
         assert_eq!(
             record["movement_tuning"]["top_speed_pixels_per_second"],
@@ -7208,7 +7358,10 @@ mod tests {
             110
         );
         assert_eq!(records[1]["schema"], "downwards-movement-tuning-v1");
-        assert_eq!(records[1]["player_movement_policy_version"], 3);
+        assert_eq!(
+            records[1]["player_movement_policy_version"],
+            PLAYER_MOVEMENT_POLICY_VERSION
+        );
         assert_eq!(records[1]["tuning"]["top_speed_pixels_per_second"], 115);
         assert_eq!(records[1]["tuning"]["acceleration_milliseconds"], 72);
         assert_eq!(records[1]["tuning"]["braking_milliseconds"], 203);
@@ -7763,6 +7916,20 @@ mod tests {
     }
 
     #[test]
+    fn dungeon_pickup_cells_are_distinct_and_cover_the_exact_sheet() {
+        let sources = [
+            DungeonPickupSprite::WingedBoots.sheet_source(),
+            DungeonPickupSprite::Crown.sheet_source(),
+        ];
+        assert_eq!(sources[0], Rect::new(0.0, 0.0, 16.0, 16.0));
+        assert_eq!(sources[1], Rect::new(16.0, 0.0, 16.0, 16.0));
+        assert!(sources.iter().all(|source| {
+            source.right() <= DUNGEON_PICKUP_SHEET_WIDTH
+                && source.bottom() <= DUNGEON_PICKUP_SHEET_HEIGHT
+        }));
+    }
+
+    #[test]
     fn low_clearance_spikes_point_into_the_actual_route_corridors() {
         let scenario = calibration_gallery()[4].scenario();
         let room = scenario.room();
@@ -8052,11 +8219,17 @@ mod tests {
 
         assert!(client.observe_dungeon_progress(&report(
             &client,
-            vec![SimulationEvent::PickupCollected {
-                id: DEMO_DUNGEON_BOOT_PICKUP.to_owned(),
-            }],
+            vec![
+                SimulationEvent::PickupCollected {
+                    id: "dungeon-coin-06".to_owned(),
+                },
+                SimulationEvent::PickupCollected {
+                    id: DEMO_DUNGEON_BOOT_PICKUP.to_owned(),
+                },
+            ],
         )));
         assert!(client.dungeon_run.unwrap().inventory.winged_boots);
+        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 1);
         assert!(client.simulation.abilities().dash);
         assert!(client.simulation.player().dash_available());
         assert!(client.observe_dungeon_progress(&report(&client, vec![SimulationEvent::Reset],)));
@@ -8067,13 +8240,34 @@ mod tests {
             ("east", DemoDungeonRoom::Underpass, "west"),
             ("ceiling", DemoDungeonRoom::WallGallery, "floor"),
             ("east", DemoDungeonRoom::DashChasm, "west"),
-            ("east", DemoDungeonRoom::CrownSanctum, "west"),
+            ("east", DemoDungeonRoom::Gatehouse, "west"),
         ] {
             assert!(client.observe_dungeon_progress(&report(&client, vec![exit(door)])));
             assert_eq!(client.dungeon_run.unwrap().room, expected_room);
             assert_eq!(client.simulation.entry_door(), Some(expected_entry));
             assert!(client.simulation.abilities().dash);
         }
+
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Gatehouse);
+        assert_eq!(client.simulation.reached_exit(), None);
+
+        let coin_events = (0..downwards_content::DEMO_DUNGEON_CROWN_GATE_REQUIREMENT - 1)
+            .map(|index| SimulationEvent::PickupCollected {
+                id: format!("dungeon-coin-{index:02}"),
+            })
+            .collect();
+        assert!(!client.observe_dungeon_progress(&report(&client, coin_events)));
+        assert_eq!(
+            client.dungeon_run.unwrap().inventory.coin_count(),
+            downwards_content::DEMO_DUNGEON_CROWN_GATE_REQUIREMENT
+        );
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::CrownSanctum
+        );
+        assert_eq!(client.simulation.entry_door(), Some("west"));
 
         assert!(!client.observe_dungeon_progress(&report(
             &client,

@@ -26,8 +26,10 @@ pub use calibration_gallery_b::{
     calibration_gallery_b_cases,
 };
 pub use demo_dungeon::{
-    DEMO_DUNGEON_BOOT_PICKUP, DEMO_DUNGEON_CROWN_PICKUP, DEMO_DUNGEON_GOAL_EXIT,
-    DEMO_DUNGEON_START_ABILITIES, DemoDungeonInventory, DemoDungeonRoom, demo_dungeon_room,
+    DEMO_DUNGEON_BOOT_PICKUP, DEMO_DUNGEON_CROWN_GATE_REQUIREMENT, DEMO_DUNGEON_CROWN_PICKUP,
+    DEMO_DUNGEON_GOAL_EXIT, DEMO_DUNGEON_START_ABILITIES, DEMO_DUNGEON_TOTAL_COINS,
+    DEMO_DUNGEON_TREASURY_REQUIREMENT, DemoDungeonInventory, DemoDungeonRoom,
+    demo_dungeon_door_coin_requirement, demo_dungeon_room,
 };
 pub use hard_no_dash::{
     HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET, hard_no_dash_room, hard_no_dash_scenario,

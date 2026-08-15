@@ -191,6 +191,25 @@ fn door_entry_selection_is_typed_hashed_and_preserved_by_reset() {
 }
 
 #[test]
+fn a_locked_boundary_door_can_bounce_without_resetting_the_room() {
+    let room = room_with_doors(Point::new(312, 40));
+    let mut simulation = Simulation::with_abilities(room, AbilitySet::new(false, true));
+    let report = simulation.step(Action::default());
+    assert!(report.events.contains(&SimulationEvent::ExitReached {
+        id: "east".to_owned(),
+    }));
+    assert_eq!(simulation.reached_exit(), Some("east"));
+    let room_tick = simulation.room_tick();
+
+    assert!(simulation.reject_reached_door("east"));
+    assert_eq!(simulation.reached_exit(), None);
+    assert_eq!(simulation.player().bounds(), Rect::new(250, 40, 8, 12));
+    assert_eq!(simulation.room_tick(), room_tick);
+    assert!(simulation.player().dash_available());
+    assert!(!simulation.reject_reached_door("east"));
+}
+
+#[test]
 fn every_door_field_contributes_to_room_content_identity() {
     let base = Room::new(
         "door-digest",
@@ -1448,4 +1467,71 @@ fn granting_dash_mid_run_is_additive_and_starts_charged() {
 
     simulation.grant_abilities(AbilitySet::NONE);
     assert_eq!(simulation.abilities(), AbilitySet::ALL);
+}
+
+#[test]
+fn current_horizontal_dash_squeezes_through_one_tile_tunnels_and_expands_afterward() {
+    let mut tiles = vec![Tile::Empty; WIDTH * HEIGHT];
+    for x in 0..WIDTH {
+        tiles[17 * WIDTH + x] = Tile::Solid;
+    }
+    for x in 5..12 {
+        tiles[15 * WIDTH + x] = Tile::Solid;
+    }
+    let room = Room::new(
+        "dash-tunnel",
+        "Dash Tunnel",
+        WIDTH as u16,
+        HEIGHT as u16,
+        TILE_SIZE,
+        tiles,
+        Point::new(30, 158),
+        vec![],
+    )
+    .unwrap();
+
+    let mut walking = Simulation::with_abilities(room.clone(), AbilitySet::new(false, true));
+    walking.enable_current_player_movement();
+    for _ in 0..30 {
+        walking.step(Action {
+            move_x: 1,
+            ..Action::default()
+        });
+    }
+    assert!(walking.player().bounds().right() <= 50);
+    assert!(!walking.player().dash_compressed());
+
+    let mut dashing = Simulation::with_abilities(room, AbilitySet::new(false, true));
+    dashing.enable_current_player_movement();
+    dashing.step(Action {
+        move_x: 1,
+        dash: true,
+        ..Action::default()
+    });
+    assert!(dashing.player().dash_compressed());
+    for _ in 1..DASH_TICKS {
+        dashing.step(Action {
+            move_x: 1,
+            ..Action::default()
+        });
+    }
+    assert!(dashing.player().bounds().x >= 50);
+    assert!(dashing.player().dash_compressed());
+
+    for _ in 0..100 {
+        dashing.step(Action {
+            move_x: 1,
+            ..Action::default()
+        });
+        if !dashing.player().dash_compressed() {
+            break;
+        }
+    }
+    assert!(
+        dashing.player().bounds().x >= 120,
+        "player stopped at {:?}",
+        dashing.player().bounds()
+    );
+    assert!(!dashing.player().dash_compressed());
+    assert_eq!(dashing.player().bounds().height, 12);
 }
