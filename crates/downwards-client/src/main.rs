@@ -16,11 +16,12 @@ use downwards_ai::{
 };
 use downwards_catalogue::CatalogueBand;
 use downwards_content::{
-    CalibratedGeneratorPlaytestLevel, CalibrationLevel, DEMO_DUNGEON_BOOT_GATE_REQUIREMENT,
-    DEMO_DUNGEON_BOOT_PICKUP, DEMO_DUNGEON_CROWN_GATE_REQUIREMENT, DEMO_DUNGEON_CROWN_PICKUP,
-    DEMO_DUNGEON_GOAL_EXIT, DEMO_DUNGEON_TOTAL_COINS, DemoDungeonInventory, DemoDungeonRoom,
-    HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET, MEDIUM_NO_DASH_ABILITIES, MEDIUM_NO_DASH_TARGET,
-    calibrated_generator_playtest, calibration_gallery, demo_dungeon_door_coin_requirement,
+    AuthoredDoorRequirement, CalibratedGeneratorPlaytestLevel, CalibrationLevel,
+    DEMO_DUNGEON_BOOT_GATE_REQUIREMENT, DEMO_DUNGEON_BOOT_PICKUP,
+    DEMO_DUNGEON_CROWN_GATE_REQUIREMENT, DEMO_DUNGEON_CROWN_PICKUP, DEMO_DUNGEON_GOAL_EXIT,
+    DEMO_DUNGEON_TOTAL_COINS, DemoDungeonInventory, DemoDungeonRoom, HARD_NO_DASH_ABILITIES,
+    HARD_NO_DASH_TARGET, MEDIUM_NO_DASH_ABILITIES, MEDIUM_NO_DASH_TARGET, TraversalMethod,
+    calibrated_generator_playtest, calibration_gallery, demo_dungeon_door_requirement,
     demo_dungeon_room, first_steps_room, hard_no_dash_scenario, hard_no_dash_witness_actions,
     medium_no_dash_scenario, medium_no_dash_witness_actions,
 };
@@ -3720,15 +3721,17 @@ impl ClientState {
             // The crown goal is a terminal legacy Exit, not a room transition.
             return false;
         };
-        if let Some(requirement) = demo_dungeon_door_coin_requirement(run.room, &door.id)
-            && run.inventory.coin_count() < requirement
-        {
+        let requirement = demo_dungeon_door_requirement(run.room, &door.id);
+        if !requirement.is_satisfied_by(&run.inventory.authored_progression_inventory()) {
             // The production report and simulation are the same authoritative step. Keeping
             // this tolerant also makes the run-state observer robust to synthetic diagnostics.
             let _ = self.simulation.reject_reached_door(&door.id);
             self.human_recorder.resume_at(&self.simulation);
             self.replay_notice = Some(ReplayNotice {
-                title: format!("SEALED · {requirement} COINS REQUIRED"),
+                title: format!(
+                    "SEALED · {} REQUIRED",
+                    dungeon_requirement_label(requirement)
+                ),
                 detail: format!(
                     "you have {}/{} coins; explore another branch",
                     run.inventory.coin_count(),
@@ -5399,10 +5402,10 @@ fn draw_dungeon_coin_gates(viewport: &PixelViewport, client: &ClientState) {
         return;
     };
     for door in client.simulation.room().doors() {
-        let Some(requirement) = demo_dungeon_door_coin_requirement(run.room, &door.id) else {
-            continue;
-        };
-        if run.inventory.coin_count() >= requirement {
+        let requirement = demo_dungeon_door_requirement(run.room, &door.id);
+        if requirement.is_empty()
+            || requirement.is_satisfied_by(&run.inventory.authored_progression_inventory())
+        {
             continue;
         }
         let bounds = door.trigger_bounds;
@@ -5424,7 +5427,31 @@ fn draw_dungeon_coin_gates(viewport: &PixelViewport, client: &ClientState) {
             BoundarySide::Ceiling => (bounds.x + 2, bounds.bottom() + 6),
             BoundarySide::Floor => (bounds.x + 2, bounds.y - 3),
         };
-        viewport.text(&format!("{requirement} COINS"), label_x, label_y, 5, PICKUP);
+        viewport.text(
+            &dungeon_requirement_label(requirement),
+            label_x,
+            label_y,
+            5,
+            PICKUP,
+        );
+    }
+}
+
+fn dungeon_requirement_label(requirement: AuthoredDoorRequirement) -> String {
+    let needs_wall = requirement
+        .traversal_methods
+        .contains(TraversalMethod::WallJump);
+    let needs_dash = requirement
+        .traversal_methods
+        .contains(TraversalMethod::Dash);
+    match (requirement.coins, needs_wall, needs_dash) {
+        (0, true, true) => "ALL TOOLS".to_owned(),
+        (0, true, false) => "WALL JUMP".to_owned(),
+        (0, false, true) => "DASH".to_owned(),
+        (coins, true, true) => format!("{coins} COINS + TOOLS"),
+        (coins, true, false) => format!("{coins} COINS + WALL"),
+        (coins, false, true) => format!("{coins} COINS + DASH"),
+        (coins, false, false) => format!("{coins} COINS"),
     }
 }
 

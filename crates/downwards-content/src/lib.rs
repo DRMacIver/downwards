@@ -2,6 +2,7 @@
 
 #![forbid(unsafe_code)]
 
+mod authored_dungeon;
 mod calibrated_generator_playtest;
 mod calibration_gallery;
 mod calibration_gallery_a;
@@ -12,6 +13,12 @@ mod hard_no_dash;
 mod medium_no_dash;
 mod movement_obstacle_courses;
 
+pub use authored_dungeon::{
+    AUTHORED_DUNGEON_MAX_COINS, AUTHORED_DUNGEON_SCHEMA_VERSION, AuthoredConnection,
+    AuthoredDoorRequirement, AuthoredDungeonDefinition, AuthoredDungeonError,
+    AuthoredDungeonInventory, AuthoredDungeonProgressionAudit, AuthoredFloorDefinition,
+    AuthoredFloorKey, TraversalMethod, TraversalMethods,
+};
 pub use calibrated_generator_playtest::{
     CalibratedGeneratorPlaytestLevel, calibrated_generator_playtest,
 };
@@ -29,7 +36,8 @@ pub use demo_dungeon::{
     DEMO_DUNGEON_BOOT_GATE_REQUIREMENT, DEMO_DUNGEON_BOOT_PICKUP,
     DEMO_DUNGEON_CROWN_GATE_REQUIREMENT, DEMO_DUNGEON_CROWN_PICKUP, DEMO_DUNGEON_GOAL_EXIT,
     DEMO_DUNGEON_START_ABILITIES, DEMO_DUNGEON_TOTAL_COINS, DEMO_DUNGEON_TREASURY_REQUIREMENT,
-    DemoDungeonInventory, DemoDungeonRoom, demo_dungeon_door_coin_requirement, demo_dungeon_room,
+    DemoDungeonInventory, DemoDungeonRoom, demo_dungeon_definition,
+    demo_dungeon_door_coin_requirement, demo_dungeon_door_requirement, demo_dungeon_room,
 };
 pub use hard_no_dash::{
     HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET, hard_no_dash_room, hard_no_dash_scenario,

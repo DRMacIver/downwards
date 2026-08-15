@@ -3,6 +3,12 @@
 use downwards_core::{AbilitySet, Exit, Pickup, Rect, Room};
 use downwards_gen::{DungeonPaletteConnection, DungeonPaletteCourse, DungeonPaletteKey};
 
+use crate::{
+    AUTHORED_DUNGEON_SCHEMA_VERSION, AuthoredConnection, AuthoredDoorRequirement,
+    AuthoredDungeonDefinition, AuthoredDungeonInventory, AuthoredFloorDefinition, AuthoredFloorKey,
+    TraversalMethod, TraversalMethods,
+};
+
 pub const DEMO_DUNGEON_START_ABILITIES: AbilitySet = AbilitySet::new(true, false);
 pub const DEMO_DUNGEON_BOOT_PICKUP: &str = "winged-boots";
 pub const DEMO_DUNGEON_CROWN_PICKUP: &str = "crown";
@@ -64,6 +70,21 @@ impl DemoDungeonInventory {
             crown: false,
             coin_mask: (1_u16 << count) - 1,
         }
+    }
+
+    #[must_use]
+    pub fn authored_progression_inventory(self) -> AuthoredDungeonInventory {
+        let mut inventory =
+            AuthoredDungeonInventory::new(TraversalMethods::one(TraversalMethod::WallJump));
+        for index in 0..DEMO_DUNGEON_TOTAL_COINS {
+            if self.coin_mask & (1 << index) != 0 {
+                inventory.collect_coin(u16::from(index));
+            }
+        }
+        if self.winged_boots {
+            inventory.grant(TraversalMethod::Dash);
+        }
+        inventory
     }
 }
 
@@ -136,6 +157,23 @@ impl DemoDungeonRoom {
         Self::ALL.into_iter().find(|room| room.id() == id)
     }
 
+    #[must_use]
+    pub const fn authored_key(self) -> AuthoredFloorKey {
+        AuthoredFloorKey(match self {
+            Self::Threshold => 0,
+            Self::Crossroads => 1,
+            Self::CoinLoft => 2,
+            Self::WallGallery => 3,
+            Self::NeedleRoom => 4,
+            Self::BootsVault => 5,
+            Self::Underpass => 6,
+            Self::Treasury => 7,
+            Self::DashChasm => 8,
+            Self::Gatehouse => 9,
+            Self::CrownSanctum => 10,
+        })
+    }
+
     const fn course(self) -> DungeonPaletteCourse {
         match self {
             Self::Threshold => DungeonPaletteCourse::Threshold,
@@ -200,13 +238,89 @@ pub const fn demo_dungeon_door_coin_requirement(
     room: DemoDungeonRoom,
     door_id: &str,
 ) -> Option<u8> {
-    match (room, door_id.as_bytes()) {
+    let requirement = demo_dungeon_door_requirement(room, door_id).coins;
+    if requirement == 0 {
+        None
+    } else {
+        Some(requirement as u8)
+    }
+}
+
+#[must_use]
+pub const fn demo_dungeon_door_requirement(
+    room: DemoDungeonRoom,
+    door_id: &str,
+) -> AuthoredDoorRequirement {
+    let coins = match (room, door_id.as_bytes()) {
         (DemoDungeonRoom::Crossroads, b"ceiling") | (DemoDungeonRoom::WallGallery, b"floor") => {
-            Some(DEMO_DUNGEON_BOOT_GATE_REQUIREMENT)
+            DEMO_DUNGEON_BOOT_GATE_REQUIREMENT
         }
-        (DemoDungeonRoom::Underpass, b"east") => Some(DEMO_DUNGEON_TREASURY_REQUIREMENT),
-        (DemoDungeonRoom::Gatehouse, b"east") => Some(DEMO_DUNGEON_CROWN_GATE_REQUIREMENT),
-        _ => None,
+        (DemoDungeonRoom::Underpass, b"east") => DEMO_DUNGEON_TREASURY_REQUIREMENT,
+        (DemoDungeonRoom::Gatehouse, b"east") => DEMO_DUNGEON_CROWN_GATE_REQUIREMENT,
+        _ => 0,
+    };
+    let traversal_methods = match (room, door_id.as_bytes()) {
+        (DemoDungeonRoom::WallGallery, b"east") => TraversalMethods::one(TraversalMethod::Dash),
+        (DemoDungeonRoom::Gatehouse, b"east") => TraversalMethods::ALL_CURRENT,
+        _ => TraversalMethods::NONE,
+    };
+    AuthoredDoorRequirement::new(coins as u16, traversal_methods)
+}
+
+#[must_use]
+pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
+    let floors = DemoDungeonRoom::ALL
+        .into_iter()
+        .map(|room| {
+            let connections = room
+                .connections()
+                .into_iter()
+                .map(|connection| {
+                    let destination = DemoDungeonRoom::from_id(&connection.destination_room)
+                        .expect("built-in demo graph only names built-in floors");
+                    let requirement = demo_dungeon_door_requirement(room, &connection.door_id);
+                    AuthoredConnection::new(
+                        connection.door_id,
+                        destination.authored_key(),
+                        connection.destination_door,
+                        requirement,
+                    )
+                })
+                .collect();
+            AuthoredFloorDefinition {
+                key: room.authored_key(),
+                id: room.id().to_owned(),
+                title: room.title().to_owned(),
+                geometry_key: format!(
+                    "dungeon-palette-v{}:{}:{:016x}",
+                    downwards_gen::DUNGEON_PALETTE_GENERATION_VERSION,
+                    room.course().slug(),
+                    0xD06E_0A11_u64,
+                ),
+                connections,
+                coin_indices: room_coin_specs(room)
+                    .into_iter()
+                    .map(|(index, _)| u16::from(index))
+                    .collect(),
+                traversal_unlock: (room == DemoDungeonRoom::BootsVault)
+                    .then_some(TraversalMethod::Dash),
+                contains_crown: room == DemoDungeonRoom::CrownSanctum,
+            }
+        })
+        .collect();
+    AuthoredDungeonDefinition {
+        schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
+        id: "demo-dungeon-v3".to_owned(),
+        start_floor: DemoDungeonRoom::Threshold.authored_key(),
+        start_methods: TraversalMethods::one(TraversalMethod::WallJump),
+        crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
+        total_coins: u16::from(DEMO_DUNGEON_TOTAL_COINS),
+        crown_requirement: AuthoredDoorRequirement::new(
+            u16::from(DEMO_DUNGEON_CROWN_GATE_REQUIREMENT),
+            TraversalMethods::ALL_CURRENT,
+        ),
+        required_floor_count: DemoDungeonRoom::ALL.len() as u16,
+        floors,
     }
 }
 
@@ -324,6 +438,22 @@ mod tests {
                 assert!(door.geometrically_matches(return_door));
             }
         }
+    }
+
+    #[test]
+    fn vertical_slice_is_bound_to_the_scalable_authored_dungeon_contract() {
+        let definition = demo_dungeon_definition();
+        let audit = definition.validate().unwrap();
+        assert_eq!(audit.reachable_floors, DemoDungeonRoom::ALL.len());
+        assert_eq!(audit.collected_coins, u16::from(DEMO_DUNGEON_TOTAL_COINS));
+        assert_eq!(audit.traversal_methods, TraversalMethods::ALL_CURRENT);
+        assert_eq!(
+            definition
+                .floor(DemoDungeonRoom::BootsVault.authored_key())
+                .unwrap()
+                .traversal_unlock,
+            Some(TraversalMethod::Dash)
+        );
     }
 
     #[test]
