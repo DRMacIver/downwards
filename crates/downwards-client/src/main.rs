@@ -21,7 +21,7 @@ use downwards_content::{
     hard_no_dash_witness_actions, medium_no_dash_scenario, medium_no_dash_witness_actions,
 };
 use downwards_core::{
-    AbilitySet, Action, BoundarySide, DeathReason, JUMP_BUFFER_TICKS, MovementTuning,
+    AbilitySet, Action, BoundarySide, DeathReason, JUMP_BUFFER_TICKS, JumpKind, MovementTuning,
     PLAYER_MOVEMENT_POLICY_VERSION, Rect as CoreRect, Room, SUBPIXELS_PER_PIXEL, Simulation,
     SimulationEvent, StepReport, TICKS_PER_SECOND, Tile, WallSide,
 };
@@ -54,6 +54,9 @@ const DEFAULT_HUMAN_HISTORY_PATH: &str = "playtest-history/human-attempts-v1.jso
 // available only through the explicit developer command-line mode.
 const DEFAULT_SEED: u64 = 0;
 const DEATH_FEEDBACK_TICKS: u8 = 30;
+const SKID_FEEDBACK_TICKS: u8 = 6;
+const WALL_JUMP_FEEDBACK_TICKS: u8 = 8;
+const LANDING_FEEDBACK_TICKS: u8 = 5;
 const LEVEL_MENU_VISIBLE_ROWS: usize = 9;
 const GALLERY_MENU_VISIBLE_ROWS: usize = 10;
 const LEVEL_IDENTIFIER_VERSION: u32 = 2;
@@ -105,6 +108,8 @@ const PICKUP: Color = Color::new(0.98, 0.8, 0.28, 1.0);
 const PLAYER: Color = Color::new(0.96, 0.97, 0.9, 1.0);
 const PLAYER_ACCENT: Color = Color::new(0.35, 0.82, 0.95, 1.0);
 const WALL_SLIDE_CUE: Color = Color::new(1.0, 0.78, 0.2, 1.0);
+const MOVEMENT_DUST: Color = Color::new(0.46, 0.58, 0.7, 0.82);
+const MOVEMENT_SPARK: Color = Color::new(0.35, 0.9, 1.0, 0.95);
 const UI_TEXT: Color = Color::new(0.75, 0.82, 0.9, 1.0);
 const UI_DIM: Color = Color::new(0.48, 0.56, 0.67, 1.0);
 const HUD_PANEL: Color = Color::new(0.015, 0.025, 0.045, 0.88);
@@ -114,6 +119,30 @@ const WIN_PANEL: Color = Color::new(0.025, 0.08, 0.1, 0.96);
 const DEATH_PANEL: Color = Color::new(0.16, 0.025, 0.04, 0.96);
 const MENU_BACKGROUND: Color = Color::new(0.022, 0.035, 0.06, 1.0);
 const MENU_SELECTED: Color = Color::new(0.08, 0.19, 0.25, 1.0);
+
+const PLAYER_SPRITE_SHEET_COLUMNS: u8 = 4;
+const PLAYER_SPRITE_SHEET_ROWS: u8 = 3;
+const PLAYER_SPRITE_CELL_PIXELS: f32 = 16.0;
+const PLAYER_SPRITE_SHEET_WIDTH: f32 = 64.0;
+const PLAYER_SPRITE_SHEET_HEIGHT: f32 = 48.0;
+const PLAYER_SPRITE_LOGICAL_SIZE: f32 = 16.0;
+
+struct VisualAssets {
+    player_sprites: Texture2D,
+}
+
+impl VisualAssets {
+    fn load() -> Self {
+        let player_sprites = Texture2D::from_file_with_format(
+            include_bytes!("../assets/player-sprites-v1.png"),
+            None,
+        );
+        assert_eq!(player_sprites.width(), PLAYER_SPRITE_SHEET_WIDTH);
+        assert_eq!(player_sprites.height(), PLAYER_SPRITE_SHEET_HEIGHT);
+        player_sprites.set_filter(FilterMode::Nearest);
+        Self { player_sprites }
+    }
+}
 
 fn window_conf() -> Conf {
     Conf {
@@ -147,6 +176,7 @@ async fn main() {
         Some(&options.history_path),
     )
     .unwrap_or_else(|error| panic!("could not start level lab: {error}"));
+    let visual_assets = VisualAssets::load();
     eprintln!("human attempt history: {}", options.history_path.display());
     let session_clock = Instant::now();
     let mut render_frame_index = 0_u64;
@@ -246,7 +276,7 @@ async fn main() {
             jump_input.reset();
             restart_queued = false;
             replay_frame_queued = false;
-            render(&client);
+            render(&client, &visual_assets);
             next_frame().await;
             continue;
         }
@@ -257,7 +287,7 @@ async fn main() {
             jump_input.reset();
             restart_queued = false;
             replay_frame_queued = false;
-            render(&client);
+            render(&client, &visual_assets);
             next_frame().await;
             continue;
         }
@@ -286,7 +316,7 @@ async fn main() {
             jump_input.reset();
             restart_queued = false;
             replay_frame_queued = false;
-            render(&client);
+            render(&client, &visual_assets);
             next_frame().await;
             continue;
         }
@@ -316,7 +346,7 @@ async fn main() {
             jump_input.reset();
             restart_queued = false;
             replay_frame_queued = false;
-            render(&client);
+            render(&client, &visual_assets);
             next_frame().await;
             continue;
         }
@@ -390,7 +420,7 @@ async fn main() {
         }
 
         if client.level_menu_visible() {
-            render(&client);
+            render(&client, &visual_assets);
             next_frame().await;
             continue;
         }
@@ -460,7 +490,7 @@ async fn main() {
             accumulated_seconds -= FIXED_STEP_SECONDS;
         }
 
-        render(&client);
+        render(&client, &visual_assets);
         next_frame().await;
     }
 }
@@ -1844,6 +1874,11 @@ struct ReplayNotice {
 struct SimulationFeedback {
     death_ticks: u8,
     last_death_reason: &'static str,
+    skid_ticks: u8,
+    skid_direction: i8,
+    wall_jump_ticks: u8,
+    wall_jump_side: Option<WallSide>,
+    landing_ticks: u8,
 }
 
 impl Default for SimulationFeedback {
@@ -1851,6 +1886,11 @@ impl Default for SimulationFeedback {
         Self {
             death_ticks: 0,
             last_death_reason: "HAZARD",
+            skid_ticks: 0,
+            skid_direction: 0,
+            wall_jump_ticks: 0,
+            wall_jump_side: None,
+            landing_ticks: 0,
         }
     }
 }
@@ -1858,9 +1898,48 @@ impl Default for SimulationFeedback {
 impl SimulationFeedback {
     fn advance_tick(&mut self) {
         self.death_ticks = self.death_ticks.saturating_sub(1);
+        self.skid_ticks = self.skid_ticks.saturating_sub(1);
+        self.wall_jump_ticks = self.wall_jump_ticks.saturating_sub(1);
+        self.landing_ticks = self.landing_ticks.saturating_sub(1);
+        if self.wall_jump_ticks == 0 {
+            self.wall_jump_side = None;
+        }
     }
 
     fn observe(&mut self, events: &[SimulationEvent]) {
+        let reset = events
+            .iter()
+            .any(|event| matches!(event, SimulationEvent::Reset));
+        if reset {
+            self.skid_ticks = 0;
+            self.skid_direction = 0;
+            self.wall_jump_ticks = 0;
+            self.wall_jump_side = None;
+            self.landing_ticks = 0;
+        }
+        if !reset {
+            for event in events {
+                match event {
+                    SimulationEvent::Jumped(JumpKind::Wall { side }) => {
+                        self.wall_jump_ticks = WALL_JUMP_FEEDBACK_TICKS;
+                        self.wall_jump_side = Some(*side);
+                        self.skid_ticks = 0;
+                    }
+                    SimulationEvent::Jumped(_) => {
+                        self.skid_ticks = 0;
+                    }
+                    SimulationEvent::Landed => {
+                        self.landing_ticks = LANDING_FEEDBACK_TICKS;
+                    }
+                    SimulationEvent::Dashed { .. }
+                    | SimulationEvent::Died(_)
+                    | SimulationEvent::PickupCollected { .. }
+                    | SimulationEvent::Reset
+                    | SimulationEvent::ExitReached { .. } => {}
+                }
+            }
+        }
+
         // Core deliberately emits Died followed by Reset for an automatic retry. Death feedback
         // wins for the whole report; only a standalone (manual) Reset clears an old flash.
         if let Some(reason) = events.iter().find_map(|event| match event {
@@ -1874,6 +1953,26 @@ impl SimulationFeedback {
             .any(|event| matches!(event, SimulationEvent::Reset))
         {
             self.death_ticks = 0;
+        }
+    }
+
+    fn observe_motion(
+        &mut self,
+        action: Action,
+        velocity_x_before: i32,
+        grounded_before: bool,
+        grounded_after: bool,
+    ) {
+        let direction = velocity_x_before.signum() as i8;
+        let braking = action.move_x == 0 || action.move_x.signum() != direction;
+        if grounded_before
+            && grounded_after
+            && velocity_x_before.abs() >= SUBPIXELS_PER_PIXEL
+            && direction != 0
+            && braking
+        {
+            self.skid_ticks = SKID_FEEDBACK_TICKS;
+            self.skid_direction = direction;
         }
     }
 }
@@ -3116,9 +3215,17 @@ impl ClientState {
     }
 
     fn step(&mut self, action: Action) -> StepReport {
+        let velocity_x_before = self.simulation.player().velocity_subpixels().x;
+        let grounded_before = self.simulation.player().grounded();
         self.feedback.advance_tick();
         let report = self.simulation.step(action);
         self.feedback.observe(&report.events);
+        self.feedback.observe_motion(
+            action,
+            velocity_x_before,
+            grounded_before,
+            self.simulation.player().grounded(),
+        );
         report
     }
 
@@ -3749,7 +3856,108 @@ fn dash_pressed() -> bool {
         || is_key_pressed(KeyCode::RightShift)
 }
 
-fn render(client: &ClientState) {
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum PlayerPose {
+    IdleA = 0,
+    IdleB = 1,
+    RunContact = 2,
+    RunPassing = 3,
+    RunContactOpposite = 4,
+    RunPassingOpposite = 5,
+    Rising = 6,
+    Falling = 7,
+    WallCling = 8,
+    WallJump = 9,
+    Skid = 10,
+    DeepSkid = 11,
+}
+
+impl PlayerPose {
+    const fn sheet_source(self) -> Rect {
+        let index = self as u8;
+        let column = index % PLAYER_SPRITE_SHEET_COLUMNS;
+        let row = index / PLAYER_SPRITE_SHEET_COLUMNS;
+        debug_assert!(row < PLAYER_SPRITE_SHEET_ROWS);
+        Rect::new(
+            column as f32 * PLAYER_SPRITE_CELL_PIXELS,
+            row as f32 * PLAYER_SPRITE_CELL_PIXELS,
+            PLAYER_SPRITE_CELL_PIXELS,
+            PLAYER_SPRITE_CELL_PIXELS,
+        )
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct PlayerVisual {
+    pose: PlayerPose,
+    flip_x: bool,
+}
+
+fn select_player_visual(client: &ClientState) -> PlayerVisual {
+    let simulation = &client.simulation;
+    let player = simulation.player();
+    let facing_left = player.facing() < 0;
+    if client.feedback.wall_jump_ticks > 0 {
+        // The authored wall-jump cell departs left from a right-hand wall.
+        return PlayerVisual {
+            pose: PlayerPose::WallJump,
+            flip_x: client.feedback.wall_jump_side == Some(WallSide::Left),
+        };
+    }
+    if client.feedback.skid_ticks > 0 {
+        return PlayerVisual {
+            pose: if client.feedback.skid_ticks > SKID_FEEDBACK_TICKS / 2 {
+                PlayerPose::DeepSkid
+            } else {
+                PlayerPose::Skid
+            },
+            flip_x: facing_left,
+        };
+    }
+    if let Some(side) = wall_slide_cue(
+        simulation.abilities().wall_jump,
+        player.wall_sliding(),
+        player.wall_contact(),
+    ) {
+        return PlayerVisual {
+            pose: PlayerPose::WallCling,
+            flip_x: side == WallSide::Left,
+        };
+    }
+    let velocity = player.velocity_subpixels();
+    if !player.grounded() {
+        return PlayerVisual {
+            pose: if velocity.y < 0 {
+                PlayerPose::Rising
+            } else {
+                PlayerPose::Falling
+            },
+            flip_x: facing_left,
+        };
+    }
+    if velocity.x.abs() >= SUBPIXELS_PER_PIXEL / 2 {
+        let poses = [
+            PlayerPose::RunContact,
+            PlayerPose::RunPassing,
+            PlayerPose::RunContactOpposite,
+            PlayerPose::RunPassingOpposite,
+        ];
+        return PlayerVisual {
+            pose: poses[(simulation.room_tick() as usize / 3) % poses.len()],
+            flip_x: facing_left,
+        };
+    }
+    PlayerVisual {
+        pose: if (simulation.room_tick() / 30).is_multiple_of(2) {
+            PlayerPose::IdleA
+        } else {
+            PlayerPose::IdleB
+        },
+        flip_x: facing_left,
+    }
+}
+
+fn render(client: &ClientState, visual_assets: &VisualAssets) {
     clear_background(LETTERBOX);
     let viewport = PixelViewport::for_window(screen_width(), screen_height());
     viewport.fill_logical_screen(ROOM_BACKGROUND);
@@ -3772,7 +3980,7 @@ fn render(client: &ClientState) {
         target: entry.target_door_id(),
     });
     draw_exits(&room_viewport, client.simulation.room(), focus);
-    draw_player(
+    draw_player_effects(
         &room_viewport,
         client.simulation.player().bounds(),
         wall_slide_cue(
@@ -3780,6 +3988,14 @@ fn render(client: &ClientState) {
             client.simulation.player().wall_sliding(),
             client.simulation.player().wall_contact(),
         ),
+        &client.feedback,
+        client.simulation.room_tick(),
+    );
+    draw_animated_player(
+        &room_viewport,
+        client.simulation.player().bounds(),
+        select_player_visual(client),
+        visual_assets,
     );
     if client.debug_visible {
         draw_debug_outlines(&room_viewport, &client.simulation);
@@ -4389,6 +4605,127 @@ fn wall_slide_cue(
     (wall_jump_enabled && wall_sliding)
         .then_some(wall_contact)
         .flatten()
+}
+
+fn draw_animated_player(
+    viewport: &PixelViewport,
+    bounds: CoreRect,
+    visual: PlayerVisual,
+    assets: &VisualAssets,
+) {
+    let logical_x = bounds.x as f32 + bounds.width as f32 / 2.0 - PLAYER_SPRITE_LOGICAL_SIZE / 2.0;
+    // The generated cells include transparent foot padding. Extending the cell two logical
+    // pixels below the collider aligns the visible boots with the collision floor.
+    let logical_y = bounds.bottom() as f32 + 2.0 - PLAYER_SPRITE_LOGICAL_SIZE;
+    draw_texture_ex(
+        &assets.player_sprites,
+        viewport.left + logical_x * viewport.scale,
+        viewport.top + logical_y * viewport.scale,
+        WHITE,
+        DrawTextureParams {
+            dest_size: Some(vec2(
+                PLAYER_SPRITE_LOGICAL_SIZE * viewport.scale,
+                PLAYER_SPRITE_LOGICAL_SIZE * viewport.scale,
+            )),
+            source: Some(visual.pose.sheet_source()),
+            flip_x: visual.flip_x,
+            ..Default::default()
+        },
+    );
+}
+
+fn draw_player_effects(
+    viewport: &PixelViewport,
+    bounds: CoreRect,
+    wall_slide: Option<WallSide>,
+    feedback: &SimulationFeedback,
+    room_tick: u64,
+) {
+    if feedback.landing_ticks > 0 {
+        let age = i32::from(LANDING_FEEDBACK_TICKS - feedback.landing_ticks);
+        viewport.rectangle(
+            CoreRect::new(bounds.x - 2 - age, bounds.bottom() - 1, 2, 1),
+            MOVEMENT_DUST,
+        );
+        viewport.rectangle(
+            CoreRect::new(bounds.right() + age, bounds.bottom() - 1, 2, 1),
+            MOVEMENT_DUST,
+        );
+    }
+
+    if feedback.skid_ticks > 0 {
+        let age = i32::from(SKID_FEEDBACK_TICKS - feedback.skid_ticks);
+        let behind_x = if feedback.skid_direction > 0 {
+            bounds.x - 2 - age
+        } else {
+            bounds.right() + age
+        };
+        viewport.rectangle(
+            CoreRect::new(behind_x, bounds.bottom() - 2, 2, 1),
+            MOVEMENT_DUST,
+        );
+        if feedback.skid_ticks.is_multiple_of(2) {
+            viewport.rectangle(
+                CoreRect::new(
+                    behind_x - feedback.skid_direction as i32,
+                    bounds.bottom() - 4,
+                    1,
+                    1,
+                ),
+                MOVEMENT_DUST,
+            );
+        }
+    }
+
+    if feedback.wall_jump_ticks > 0 {
+        let age = i32::from(WALL_JUMP_FEEDBACK_TICKS - feedback.wall_jump_ticks);
+        let side = feedback.wall_jump_side.unwrap_or(WallSide::Right);
+        let contact_x = match side {
+            WallSide::Left => bounds.x - age / 2,
+            WallSide::Right => bounds.right() - 1 + age / 2,
+        };
+        let away = match side {
+            WallSide::Left => 1,
+            WallSide::Right => -1,
+        };
+        viewport.rectangle(
+            CoreRect::new(contact_x, bounds.y + 3 + age, 1, 2),
+            MOVEMENT_SPARK,
+        );
+        viewport.rectangle(
+            CoreRect::new(
+                contact_x + away * (2 + age / 2),
+                bounds.y + 6 + age / 2,
+                2,
+                1,
+            ),
+            WALL_SLIDE_CUE,
+        );
+        viewport.rectangle(
+            CoreRect::new(
+                contact_x + away * (1 + age / 3),
+                bounds.y + 9 - age / 2,
+                1,
+                1,
+            ),
+            PLAYER_ACCENT,
+        );
+    } else if let Some(side) = wall_slide
+        && room_tick.is_multiple_of(4)
+    {
+        let contact_x = match side {
+            WallSide::Left => bounds.x,
+            WallSide::Right => bounds.right() - 1,
+        };
+        viewport.rectangle(
+            CoreRect::new(contact_x, bounds.bottom() - 2, 1, 1),
+            WALL_SLIDE_CUE,
+        );
+        viewport.rectangle(
+            CoreRect::new(contact_x, bounds.bottom() + 1, 1, 1),
+            MOVEMENT_SPARK,
+        );
+    }
 }
 
 fn draw_player(viewport: &PixelViewport, bounds: CoreRect, wall_slide: Option<WallSide>) {
@@ -6629,6 +6966,62 @@ mod tests {
         assert_eq!(feedback.death_ticks, DEATH_FEEDBACK_TICKS - 1);
         feedback.observe(&[SimulationEvent::Reset]);
         assert_eq!(feedback.death_ticks, 0);
+    }
+
+    #[test]
+    fn player_pose_cells_cover_the_generated_sheet_without_overlap() {
+        let poses = [
+            PlayerPose::IdleA,
+            PlayerPose::IdleB,
+            PlayerPose::RunContact,
+            PlayerPose::RunPassing,
+            PlayerPose::RunContactOpposite,
+            PlayerPose::RunPassingOpposite,
+            PlayerPose::Rising,
+            PlayerPose::Falling,
+            PlayerPose::WallCling,
+            PlayerPose::WallJump,
+            PlayerPose::Skid,
+            PlayerPose::DeepSkid,
+        ];
+        let sources = poses.map(PlayerPose::sheet_source);
+        assert_eq!(sources[0], Rect::new(0.0, 0.0, 16.0, 16.0));
+        assert_eq!(sources[11], Rect::new(48.0, 32.0, 16.0, 16.0));
+        for (index, source) in sources.iter().enumerate() {
+            assert!(source.right() <= PLAYER_SPRITE_SHEET_WIDTH);
+            assert!(source.bottom() <= PLAYER_SPRITE_SHEET_HEIGHT);
+            assert!(!sources[..index].contains(source));
+        }
+    }
+
+    #[test]
+    fn movement_feedback_tracks_skids_wall_jumps_and_resets_as_presentation_only_state() {
+        let mut feedback = SimulationFeedback::default();
+        feedback.observe_motion(
+            Action {
+                move_x: -1,
+                ..Action::default()
+            },
+            SUBPIXELS_PER_PIXEL * 2,
+            true,
+            true,
+        );
+        assert_eq!(feedback.skid_ticks, SKID_FEEDBACK_TICKS);
+        assert_eq!(feedback.skid_direction, 1);
+
+        feedback.observe(&[SimulationEvent::Jumped(JumpKind::Wall {
+            side: WallSide::Right,
+        })]);
+        assert_eq!(feedback.skid_ticks, 0);
+        assert_eq!(feedback.wall_jump_ticks, WALL_JUMP_FEEDBACK_TICKS);
+        assert_eq!(feedback.wall_jump_side, Some(WallSide::Right));
+
+        feedback.advance_tick();
+        assert_eq!(feedback.wall_jump_ticks, WALL_JUMP_FEEDBACK_TICKS - 1);
+        feedback.observe(&[SimulationEvent::Reset]);
+        assert_eq!(feedback.wall_jump_ticks, 0);
+        assert_eq!(feedback.wall_jump_side, None);
+        assert_eq!(feedback.landing_ticks, 0);
     }
 
     #[test]
