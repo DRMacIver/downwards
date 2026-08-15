@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 8;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 9;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -75,6 +75,26 @@ pub enum DungeonPaletteCourse {
     CrucibleClimb,
     CinderBridge,
     FoundrySeal,
+    GlassThreshold,
+    PrismRun,
+    SplitKiln,
+    ShardVault,
+    GlassGallery,
+    RefractionShaft,
+    MirrorFork,
+    MirrorDuct,
+    TemperHall,
+    FurnaceLift,
+    LensNiche,
+    SliverRun,
+    HotGlass,
+    CulletFork,
+    CulletCache,
+    AnnealingSpire,
+    RazorPass,
+    LatticeClimb,
+    CrystalBridge,
+    GlassSeal,
     CoinLoft,
     NeedleRoom,
     Treasury,
@@ -83,7 +103,7 @@ pub enum DungeonPaletteCourse {
 }
 
 impl DungeonPaletteCourse {
-    pub const ALL: [Self; 61] = [
+    pub const ALL: [Self; 81] = [
         Self::HollowLanding,
         Self::MossWalk,
         Self::SplitRoot,
@@ -140,6 +160,26 @@ impl DungeonPaletteCourse {
         Self::CrucibleClimb,
         Self::CinderBridge,
         Self::FoundrySeal,
+        Self::GlassThreshold,
+        Self::PrismRun,
+        Self::SplitKiln,
+        Self::ShardVault,
+        Self::GlassGallery,
+        Self::RefractionShaft,
+        Self::MirrorFork,
+        Self::MirrorDuct,
+        Self::TemperHall,
+        Self::FurnaceLift,
+        Self::LensNiche,
+        Self::SliverRun,
+        Self::HotGlass,
+        Self::CulletFork,
+        Self::CulletCache,
+        Self::AnnealingSpire,
+        Self::RazorPass,
+        Self::LatticeClimb,
+        Self::CrystalBridge,
+        Self::GlassSeal,
         Self::CoinLoft,
         Self::NeedleRoom,
         Self::Treasury,
@@ -206,6 +246,26 @@ impl DungeonPaletteCourse {
             Self::CrucibleClimb => "crucible-climb",
             Self::CinderBridge => "cinder-bridge",
             Self::FoundrySeal => "foundry-seal",
+            Self::GlassThreshold => "glass-threshold",
+            Self::PrismRun => "prism-run",
+            Self::SplitKiln => "split-kiln",
+            Self::ShardVault => "shard-vault",
+            Self::GlassGallery => "glass-gallery",
+            Self::RefractionShaft => "refraction-shaft",
+            Self::MirrorFork => "mirror-fork",
+            Self::MirrorDuct => "mirror-duct",
+            Self::TemperHall => "temper-hall",
+            Self::FurnaceLift => "furnace-lift",
+            Self::LensNiche => "lens-niche",
+            Self::SliverRun => "sliver-run",
+            Self::HotGlass => "hot-glass",
+            Self::CulletFork => "cullet-fork",
+            Self::CulletCache => "cullet-cache",
+            Self::AnnealingSpire => "annealing-spire",
+            Self::RazorPass => "razor-pass",
+            Self::LatticeClimb => "lattice-climb",
+            Self::CrystalBridge => "crystal-bridge",
+            Self::GlassSeal => "glass-seal",
             Self::CoinLoft => "coin-loft",
             Self::NeedleRoom => "needle-room",
             Self::Treasury => "treasury",
@@ -246,6 +306,18 @@ impl DungeonPaletteCourse {
             | Self::CrucibleClimb
             | Self::CinderBridge
             | Self::FoundrySeal
+            | Self::GlassThreshold
+            | Self::PrismRun
+            | Self::GlassGallery
+            | Self::RefractionShaft
+            | Self::TemperHall
+            | Self::SliverRun
+            | Self::HotGlass
+            | Self::AnnealingSpire
+            | Self::RazorPass
+            | Self::LatticeClimb
+            | Self::CrystalBridge
+            | Self::GlassSeal
             | Self::Threshold => &[("west", BoundarySide::Left), ("east", BoundarySide::Right)],
             Self::SplitRoot => &[
                 ("west", BoundarySide::Left),
@@ -305,18 +377,22 @@ impl DungeonPaletteCourse {
                 ("ceiling", BoundarySide::Ceiling),
             ],
             Self::StormCache => &[("floor", BoundarySide::Floor)],
-            Self::SplitFurnace | Self::PressureFork => &[
+            Self::SplitFurnace | Self::PressureFork | Self::SplitKiln | Self::CulletFork => &[
                 ("west", BoundarySide::Left),
                 ("east", BoundarySide::Right),
                 ("floor", BoundarySide::Floor),
             ],
-            Self::EmberVault | Self::AshCache => &[("ceiling", BoundarySide::Ceiling)],
-            Self::FoundryFork | Self::LiftShaft => &[
+            Self::EmberVault | Self::AshCache | Self::ShardVault | Self::CulletCache => {
+                &[("ceiling", BoundarySide::Ceiling)]
+            }
+            Self::FoundryFork | Self::LiftShaft | Self::MirrorFork | Self::FurnaceLift => &[
                 ("west", BoundarySide::Left),
                 ("east", BoundarySide::Right),
                 ("ceiling", BoundarySide::Ceiling),
             ],
-            Self::CoolingDuct | Self::SparkNiche => &[("floor", BoundarySide::Floor)],
+            Self::CoolingDuct | Self::SparkNiche | Self::MirrorDuct | Self::LensNiche => {
+                &[("floor", BoundarySide::Floor)]
+            }
             Self::CoinLoft => &[("ceiling", BoundarySide::Ceiling)],
             Self::NeedleRoom => &[("floor", BoundarySide::Floor)],
             Self::Treasury => &[("west", BoundarySide::Left)],
@@ -1090,6 +1166,245 @@ impl PaletteDraft<'_> {
                 self.horizontal(15, 18, 25, Tile::Solid);
                 self.vertical(25, 1, 16, Tile::Solid);
                 self.horizontal(9, 18, 24, Tile::HazardDown);
+            }
+            DungeonPaletteCourse::GlassThreshold => {
+                self.horizontal(14, 3, 8, Tile::OneWay);
+                self.horizontal(11, 11, 16, Tile::OneWay);
+                self.horizontal(8, 20, 25, Tile::OneWay);
+                self.horizontal(14, 27, 30, Tile::OneWay);
+                self.horizontal(16, 8, 11, Tile::HazardUp);
+                self.horizontal(17, 8, 11, Tile::Solid);
+                self.horizontal(16, 16, 20, Tile::HazardUp);
+                self.horizontal(17, 16, 20, Tile::Solid);
+                self.horizontal(16, 25, 28, Tile::HazardUp);
+                self.horizontal(17, 25, 28, Tile::Solid);
+            }
+            DungeonPaletteCourse::PrismRun => {
+                self.horizontal(14, 3, 7, Tile::OneWay);
+                self.horizontal(11, 11, 14, Tile::OneWay);
+                self.horizontal(8, 18, 21, Tile::OneWay);
+                self.horizontal(5, 25, 28, Tile::OneWay);
+                self.horizontal(14, 28, 30, Tile::OneWay);
+                for (start, end) in [(7, 11), (14, 18), (21, 25)] {
+                    self.horizontal(16, start, end, Tile::HazardUp);
+                    self.horizontal(17, start, end, Tile::Solid);
+                }
+                self.horizontal(3, 15, 24, Tile::HazardDown);
+            }
+            DungeonPaletteCourse::SplitKiln => {
+                self.horizontal(14, 3, 8, Tile::OneWay);
+                self.horizontal(11, 11, 17, Tile::OneWay);
+                self.horizontal(8, 21, 27, Tile::OneWay);
+                self.horizontal(14, 26, 30, Tile::OneWay);
+                self.horizontal(16, 8, 14, Tile::Solid);
+                self.horizontal(16, 18, 24, Tile::Solid);
+                self.horizontal(6, 13, 18, Tile::OneWay);
+                self.horizontal(5, 18, 23, Tile::HazardDown);
+            }
+            DungeonPaletteCourse::ShardVault => {
+                self.vertical(10, 4, 16, Tile::Solid);
+                self.vertical(17, 2, 13, Tile::Solid);
+                self.horizontal(16, 10, 14, Tile::Solid);
+                self.horizontal(16, 19, 23, Tile::Solid);
+                self.horizontal(12, 18, 23, Tile::OneWay);
+                self.horizontal(8, 11, 16, Tile::OneWay);
+                self.horizontal(4, 18, 24, Tile::OneWay);
+                self.vertical(16, 8, 11, Tile::HazardLeft);
+            }
+            DungeonPaletteCourse::GlassGallery => {
+                self.vertical(12, 2, 16, Tile::Solid);
+                self.vertical(18, 5, 17, Tile::Solid);
+                self.horizontal(16, 12, 19, Tile::Solid);
+                self.horizontal(9, 19, 25, Tile::OneWay);
+                self.horizontal(6, 13, 17, Tile::OneWay);
+                self.horizontal(3, 14, 18, Tile::OneWay);
+                self.horizontal(14, 26, 30, Tile::OneWay);
+                self.horizontal(11, 19, 23, Tile::HazardDown);
+                for row in 13..16 {
+                    self.set(12, row, Tile::Empty);
+                }
+            }
+            DungeonPaletteCourse::RefractionShaft => {
+                self.vertical(10, 1, 17, Tile::Solid);
+                self.vertical(16, 4, 17, Tile::Solid);
+                self.vertical(11, 1, 4, Tile::Solid);
+                self.vertical(11, 4, 7, Tile::HazardRight);
+                self.vertical(11, 7, 10, Tile::Solid);
+                self.vertical(11, 10, 13, Tile::HazardRight);
+                self.vertical(11, 13, 16, Tile::Solid);
+                self.vertical(15, 4, 7, Tile::Solid);
+                self.vertical(15, 7, 10, Tile::HazardLeft);
+                self.vertical(15, 10, 13, Tile::Solid);
+                self.vertical(15, 13, 16, Tile::HazardLeft);
+                self.horizontal(4, 15, 24, Tile::Solid);
+                self.horizontal(14, 24, 30, Tile::OneWay);
+                for row in 13..16 {
+                    self.set(10, row, Tile::Empty);
+                    self.set(11, row, Tile::Empty);
+                }
+            }
+            DungeonPaletteCourse::MirrorFork => {
+                self.horizontal(14, 3, 8, Tile::OneWay);
+                self.horizontal(11, 11, 17, Tile::OneWay);
+                self.horizontal(8, 21, 27, Tile::OneWay);
+                self.horizontal(14, 26, 30, Tile::OneWay);
+                self.horizontal(16, 8, 14, Tile::Solid);
+                self.horizontal(16, 18, 24, Tile::Solid);
+                self.horizontal(5, 14, 19, Tile::OneWay);
+                self.horizontal(16, 14, 18, Tile::HazardUp);
+            }
+            DungeonPaletteCourse::MirrorDuct => {
+                self.vertical(9, 4, 16, Tile::Solid);
+                self.vertical(16, 2, 13, Tile::Solid);
+                self.horizontal(16, 9, 13, Tile::Solid);
+                self.horizontal(16, 18, 22, Tile::Solid);
+                self.horizontal(11, 17, 22, Tile::OneWay);
+                self.horizontal(7, 10, 15, Tile::OneWay);
+                self.horizontal(3, 17, 23, Tile::OneWay);
+                self.horizontal(16, 22, 26, Tile::HazardUp);
+            }
+            DungeonPaletteCourse::TemperHall => {
+                self.horizontal(14, 3, 8, Tile::OneWay);
+                self.horizontal(11, 12, 17, Tile::OneWay);
+                self.horizontal(14, 23, 30, Tile::OneWay);
+                self.horizontal(16, 8, 12, Tile::HazardUp);
+                self.horizontal(17, 8, 12, Tile::Solid);
+                self.horizontal(16, 17, 23, Tile::HazardUp);
+                self.horizontal(17, 17, 23, Tile::Solid);
+                self.horizontal(7, 14, 22, Tile::HazardDown);
+            }
+            DungeonPaletteCourse::FurnaceLift => {
+                self.horizontal(14, 4, 9, Tile::OneWay);
+                self.horizontal(11, 12, 18, Tile::OneWay);
+                self.horizontal(8, 21, 27, Tile::OneWay);
+                self.horizontal(6, 14, 19, Tile::OneWay);
+                self.horizontal(3, 14, 19, Tile::OneWay);
+                self.horizontal(14, 26, 30, Tile::OneWay);
+                self.horizontal(16, 9, 13, Tile::HazardUp);
+                self.horizontal(17, 9, 13, Tile::Solid);
+                self.horizontal(16, 19, 23, Tile::HazardUp);
+                self.horizontal(17, 19, 23, Tile::Solid);
+            }
+            DungeonPaletteCourse::LensNiche => {
+                self.vertical(10, 4, 16, Tile::Solid);
+                self.vertical(17, 2, 13, Tile::Solid);
+                self.horizontal(16, 10, 14, Tile::Solid);
+                self.horizontal(16, 19, 23, Tile::Solid);
+                self.horizontal(12, 18, 23, Tile::OneWay);
+                self.horizontal(8, 11, 16, Tile::OneWay);
+                self.horizontal(4, 18, 24, Tile::OneWay);
+                self.horizontal(16, 23, 27, Tile::HazardUp);
+            }
+            DungeonPaletteCourse::SliverRun => {
+                self.horizontal(14, 3, 7, Tile::OneWay);
+                self.horizontal(11, 11, 14, Tile::OneWay);
+                self.horizontal(8, 18, 21, Tile::OneWay);
+                self.horizontal(5, 25, 28, Tile::OneWay);
+                self.horizontal(14, 28, 30, Tile::OneWay);
+                for (start, end) in [(7, 11), (14, 18), (21, 25)] {
+                    self.horizontal(16, start, end, Tile::HazardUp);
+                    self.horizontal(17, start, end, Tile::Solid);
+                }
+            }
+            DungeonPaletteCourse::HotGlass => {
+                self.horizontal(14, 3, 8, Tile::OneWay);
+                self.horizontal(12, 11, 15, Tile::OneWay);
+                self.horizontal(9, 19, 23, Tile::OneWay);
+                self.horizontal(6, 12, 16, Tile::OneWay);
+                self.horizontal(3, 20, 26, Tile::OneWay);
+                self.horizontal(14, 27, 30, Tile::OneWay);
+                self.horizontal(16, 8, 12, Tile::HazardUp);
+                self.horizontal(17, 8, 12, Tile::Solid);
+                self.horizontal(16, 16, 20, Tile::HazardUp);
+                self.horizontal(17, 16, 20, Tile::Solid);
+                self.horizontal(6, 17, 22, Tile::HazardDown);
+            }
+            DungeonPaletteCourse::CulletFork => {
+                self.horizontal(14, 3, 8, Tile::OneWay);
+                self.horizontal(11, 11, 17, Tile::OneWay);
+                self.horizontal(8, 21, 27, Tile::OneWay);
+                self.horizontal(14, 26, 30, Tile::OneWay);
+                self.horizontal(16, 8, 14, Tile::Solid);
+                self.horizontal(16, 18, 24, Tile::Solid);
+                self.horizontal(6, 13, 19, Tile::OneWay);
+                self.horizontal(5, 19, 24, Tile::HazardDown);
+            }
+            DungeonPaletteCourse::CulletCache => {
+                self.vertical(10, 4, 16, Tile::Solid);
+                self.vertical(17, 2, 13, Tile::Solid);
+                self.horizontal(16, 10, 14, Tile::Solid);
+                self.horizontal(16, 19, 23, Tile::Solid);
+                self.horizontal(12, 18, 23, Tile::OneWay);
+                self.horizontal(8, 11, 16, Tile::OneWay);
+                self.horizontal(4, 18, 24, Tile::OneWay);
+                self.vertical(16, 7, 10, Tile::HazardLeft);
+            }
+            DungeonPaletteCourse::AnnealingSpire => {
+                self.vertical(12, 2, 16, Tile::Solid);
+                self.vertical(18, 5, 17, Tile::Solid);
+                self.horizontal(16, 12, 19, Tile::Solid);
+                self.horizontal(9, 19, 25, Tile::OneWay);
+                self.horizontal(6, 13, 17, Tile::OneWay);
+                self.horizontal(3, 14, 18, Tile::OneWay);
+                self.horizontal(14, 26, 30, Tile::OneWay);
+                for row in 13..16 {
+                    self.set(12, row, Tile::Empty);
+                }
+            }
+            DungeonPaletteCourse::RazorPass => {
+                self.horizontal(14, 3, 7, Tile::OneWay);
+                self.horizontal(10, 11, 14, Tile::OneWay);
+                self.horizontal(13, 18, 21, Tile::OneWay);
+                self.horizontal(8, 25, 28, Tile::OneWay);
+                self.horizontal(16, 7, 11, Tile::HazardUp);
+                self.horizontal(17, 7, 11, Tile::Solid);
+                self.horizontal(16, 14, 18, Tile::HazardUp);
+                self.horizontal(17, 14, 18, Tile::Solid);
+                self.horizontal(16, 21, 25, Tile::HazardUp);
+                self.horizontal(17, 21, 25, Tile::Solid);
+                self.horizontal(6, 12, 22, Tile::HazardDown);
+            }
+            DungeonPaletteCourse::LatticeClimb => {
+                self.vertical(11, 1, 17, Tile::Solid);
+                self.vertical(17, 4, 17, Tile::Solid);
+                self.vertical(12, 1, 4, Tile::Solid);
+                self.vertical(12, 4, 7, Tile::HazardRight);
+                self.vertical(12, 7, 10, Tile::Solid);
+                self.vertical(12, 10, 13, Tile::HazardRight);
+                self.vertical(12, 13, 16, Tile::Solid);
+                self.vertical(16, 4, 7, Tile::Solid);
+                self.vertical(16, 7, 10, Tile::HazardLeft);
+                self.vertical(16, 10, 13, Tile::Solid);
+                self.vertical(16, 13, 16, Tile::HazardLeft);
+                self.horizontal(4, 16, 25, Tile::Solid);
+                self.horizontal(14, 25, 30, Tile::OneWay);
+                for row in 13..16 {
+                    self.set(11, row, Tile::Empty);
+                    self.set(12, row, Tile::Empty);
+                }
+            }
+            DungeonPaletteCourse::CrystalBridge => {
+                self.horizontal(14, 3, 7, Tile::OneWay);
+                self.horizontal(11, 11, 14, Tile::OneWay);
+                self.horizontal(8, 18, 21, Tile::OneWay);
+                self.horizontal(5, 25, 28, Tile::OneWay);
+                self.horizontal(14, 28, 30, Tile::OneWay);
+                for (start, end) in [(7, 11), (14, 18), (21, 25)] {
+                    self.horizontal(16, start, end, Tile::HazardUp);
+                    self.horizontal(17, start, end, Tile::Solid);
+                }
+                self.horizontal(3, 16, 24, Tile::HazardDown);
+            }
+            DungeonPaletteCourse::GlassSeal => {
+                self.horizontal(14, 3, 7, Tile::OneWay);
+                self.vertical(10, 3, 14, Tile::Solid);
+                self.vertical(16, 4, 17, Tile::Solid);
+                self.horizontal(16, 10, 17, Tile::Solid);
+                self.horizontal(6, 17, 23, Tile::OneWay);
+                self.horizontal(14, 25, 30, Tile::OneWay);
+                self.horizontal(15, 18, 26, Tile::Solid);
+                self.vertical(26, 1, 16, Tile::Solid);
+                self.horizontal(9, 18, 25, Tile::HazardDown);
             }
             DungeonPaletteCourse::CoinLoft => {
                 self.horizontal(14, 3, 10, Tile::OneWay);

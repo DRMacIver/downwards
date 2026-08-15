@@ -10,7 +10,7 @@ Run it with:
 cargo run -- --dungeon
 ```
 
-The 61 room shells are deterministic `downwards-gen` palette outputs. Their graph is currently
+The 81 room shells are deterministic `downwards-gen` palette outputs. Their graph is currently
 assembled by trusted content rather than by a general topology generator:
 
 ```text
@@ -28,7 +28,7 @@ Threshold ─ Three-Way Hall ───────── Climbers' Gallery ─ G
                        │                       │
                   Rafter Mint            Needle Belfry
                                                                                                       │
-Pulse Gallery ─ Storm Split ─ Relay Chasm ─ Brake Tower ─ Dash Seal ─ Aerial Foundry (20 floors) ─ Crown Gate ─ Crown
+Pulse Gallery ─ Storm Split ─ Relay Chasm ─ Brake Tower ─ Dash Seal ─ Aerial Foundry (20 floors) ─ Glassworks (20 floors) ─ Crown Gate ─ Crown
                     │
                 Storm Cache
 ```
@@ -54,7 +54,7 @@ The Winged Boots and Crown use a dedicated nearest-neighbour 16-pixel pickup she
 the earlier debug rectangles. The Crown trigger has no generic exit frame drawn over it, so the
 item itself remains the final room's visual goal.
 
-Forty stable coin IDs are distributed across the graph. Their 128-bit collection mask persists
+Fifty-two stable coin IDs are distributed across the graph. Their 128-bit collection mask persists
 across room reconstruction and is shown in both HUD rails. Exactly six are available before the
 Climbing Gloves. Six more are distributed through the mandatory Wall-Jump course, including both
 branches; all twelve are needed to leave it. Another six are available in the Threshold, Three-Way
@@ -64,7 +64,8 @@ bring the inventory to twenty-one and unseal the Winged Vault; the vault's final
 twenty-two. Thus every floor is mechanically critical: removing any one floor prevents the Crown
 inventory and traversal contract from being satisfied. All six Dash-region coins are then required
 at the Dash Seal, producing the 28-coin Foundry entry inventory. Twelve Foundry coins produce the
-full 40-coin Crown inventory. A rejected door
+40-coin Foundry-exit inventory. The mandatory Glassworks then adds three more branches and twelve
+coins, producing the full 52-coin Crown inventory. A rejected door
 returns the player to its validated interior arrival without resetting room-local progress. The
 Crown similarly persists and is the only terminal goal. Ordinary door exits change rooms and are
 deliberately not counted as whole-level victories.
@@ -82,7 +83,11 @@ success in every applicable strength-one blind input-perturbation family under a
 study. Beyond the Dash Seal, the mandatory twenty-floor Aerial Foundry adds three coin branches and
 twelve unique coins. Its layouts deliberately mix the two unlocked methods; the Foundry Seal's
 known exact route contains accepted Wall Jumps and Dashes, while a Wall-Jump-only solve under the
-same bounded policy has no positive. All forty coins are required before leaving this act.
+same bounded policy has no positive. All forty coins are required before leaving this act. The
+following mandatory twenty-floor Glassworks repeats that contract with three distinct branches and
+twelve further coins. Its Glass Seal exact route also contains both accepted Wall Jumps and Dashes;
+the equivalent Wall-Jump-only bounded solve has no positive. All fifty-two coins are required
+before leaving the Glassworks and again at the Crown gate.
 
 The mechanically generated per-floor witness artifact records exact routes and every
 applicable strength-one outcome, including explicit zero-success blind-continuation families rather
