@@ -178,7 +178,7 @@ cargo run --release -p downwards-content --example retune_calibrated_generator
 That process performs the solver/simplifier and ability-removal checks; tests consume its output
 rather than hard-coding route lengths. The retained route facts are acceptance evidence, not a
 difficulty score. See the
-[`calibrated WallJump generator v1 report`](docs/validation/calibrated-wall-jump-generator-v1-2026-08-15.md).
+[`calibrated WallJump generator v2 report`](docs/validation/calibrated-wall-jump-generator-v2-2026-08-15.md).
 
 In any human-controlled room, press `F2` to open the movement-tuning menu. It directly adjusts top
 speed in pixels/second, acceleration and braking response in milliseconds, and wall-momentum

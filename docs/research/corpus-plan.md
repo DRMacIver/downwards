@@ -127,7 +127,7 @@ not high-end difficulty, but broadly suitable for a reasonably challenging game.
 therefore resumed only as a separate twelve-key playtest pilot. It does **not** reactivate the old
 duration/controller-demand/shaky-hand difficulty ranking and does not alter corpus source policy.
 
-The new `calibrated-wall-jump-v1` grammar is WallJump-only/no-Dash and varies five isolated shapes
+The new `calibrated-wall-jump-v2` grammar is WallJump-only/no-Dash and varies five isolated shapes
 derived from the played gallery: short staged turns, regular alternating rhythm, rhythm with one
 recovery shelf, a climb plus rising landing chain, and the same traverse with a visible jump-cut
 bank. Every playtest key must have a mechanically simplified clean replay, every jump press must be
@@ -139,10 +139,14 @@ not a scalar human-difficulty model or proof of physical impossibility.
 The initial run found and rejected two real design failures before freezing the batch: reflecting
 the low-bridge finish retained a visibly thrashy route, and reflecting the recovery shelf admitted
 a replay-certified baseline bypass which the finite direct-controller vocabulary missed. V1 keeps
-those shapes directional and varies their shaft placement instead. The twelve accepted rooms are
+those shapes directional and varies their shaft placement instead. Human inspection then found
+that v1's causeway had accidentally placed downward spikes above upward spikes, pointing both
+lethal faces into an inaccessible internal seam. V2 reverses the paired bank so its tips face the
+traversable spaces, restores the five-contact climb which that dead hazard had masked, and reruns
+all solver/simplifier and ability-removal gates. The twelve accepted rooms are
 available through `downwards --calibrated [seed]` for another human-feedback round; no room becomes
 corpus input merely by passing this pilot. See the
-[`calibrated WallJump generator v1 report`](../validation/calibrated-wall-jump-generator-v1-2026-08-15.md).
+[`calibrated WallJump generator v2 report`](../validation/calibrated-wall-jump-generator-v2-2026-08-15.md).
 
 ## First room-centric pilots (2026-08-15)
 

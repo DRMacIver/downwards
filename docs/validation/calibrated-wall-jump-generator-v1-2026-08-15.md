@@ -1,5 +1,9 @@
 # Calibrated WallJump generator v1 — 2026-08-15
 
+> Superseded by generation v2 before corpus integration. Human inspection found that the paired
+> causeway bank pointed both lethal spike faces into the inaccessible seam between its tiles. See
+> the [v2 correction report](calibrated-wall-jump-generator-v2-2026-08-15.md).
+
 ## Outcome
 
 A new, isolated generator now produces a twelve-room WallJump-only/no-Dash human-playtest batch.

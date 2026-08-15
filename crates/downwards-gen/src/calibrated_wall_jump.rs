@@ -9,7 +9,7 @@
 use downwards_core::{AbilitySet, Exit, Point, Rect, Room, Tile};
 
 /// Version of the exact seed-to-room mapping in this module.
-pub const CALIBRATED_WALL_JUMP_GENERATION_VERSION: u32 = 1;
+pub const CALIBRATED_WALL_JUMP_GENERATION_VERSION: u32 = 2;
 
 /// The locked loadout for every candidate in this family.
 pub const CALIBRATED_WALL_JUMP_ABILITIES: AbilitySet = AbilitySet::new(true, false);
@@ -54,7 +54,7 @@ impl CalibratedWallJumpCourse {
 /// Exact deterministic key for a calibrated candidate.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct CalibratedWallJumpKey {
-    /// Seed within generation version 1.
+    /// Seed within the current exact generation version.
     pub seed: u64,
 }
 
@@ -169,7 +169,12 @@ fn generate(key: CalibratedWallJumpKey) -> CalibratedWallJumpCandidate {
     } else {
         (key.seed / 10) % 3
     };
-    let shaft_column = 9 + u16::try_from(offset).expect("bounded shaft offset");
+    let base_column = if course == CalibratedWallJumpCourse::LowBridge {
+        8
+    } else {
+        9
+    };
+    let shaft_column = base_column + u16::try_from(offset).expect("bounded shaft offset");
     let (mut builder, spawn, finish, contact_bands, minimum_contact_tiles, recovery_surfaces) =
         match course {
             CalibratedWallJumpCourse::ShortTurns => short_turns(shaft_column),
@@ -277,12 +282,13 @@ fn even_tempo(left: u16, recovery: bool) -> (CourseBuilder, Point, Rect, u8, u8,
 fn traverse_finish(left: u16, low_bridge: bool) -> (CourseBuilder, Point, Rect, u8, u8, u8) {
     let mut builder = CourseBuilder::new(left);
     builder.floor(16);
-    for (left_side, first_row) in [(true, 13), (false, 10), (true, 7), (false, 4)] {
+    for (left_side, first_row) in [(true, 13), (false, 10), (true, 7), (false, 4), (true, 1)] {
         builder.safe_band(left_side, first_row, 3);
     }
 
-    // Open the right side onto a bounded three-landing traverse.
-    for row in 0..8 {
+    // Open above the final right contact. The fifth (left) contact then sends
+    // the player through this aperture without erasing the authored rhythm.
+    for row in 0..4 {
         builder.set(left + 5, row, Tile::Empty);
         builder.set(left + 6, row, Tile::Empty);
     }
@@ -291,8 +297,11 @@ fn traverse_finish(left: u16, low_bridge: bool) -> (CourseBuilder, Point, Rect, 
     builder.shelf(start + 7, 2, 6);
     builder.shelf(start + 13, 32 - (start + 13), 5);
     let hazard_start = left + 7;
-    builder.fill(hazard_start, 31, 8, Tile::HazardDown);
-    builder.fill(hazard_start, 31, 9, Tile::HazardUp);
+    // Paired banks meet at their solid bases and expose lethal tips on both
+    // traversable sides. Reversing these rows would point both faces into the
+    // inaccessible seam between the tiles.
+    builder.fill(hazard_start, 31, 8, Tile::HazardUp);
+    builder.fill(hazard_start, 31, 9, Tile::HazardDown);
 
     if low_bridge {
         // Six tiles of vertical clearance accept an ordinary short human tap
@@ -305,7 +314,7 @@ fn traverse_finish(left: u16, low_bridge: bool) -> (CourseBuilder, Point, Rect, 
         builder,
         Point::new(i32::from(left + 2) * TILE_SIZE, 148),
         Rect::new(304, 20, 16, 30),
-        4,
+        5,
         3,
         3,
     )
@@ -380,6 +389,32 @@ mod tests {
                     expected
                 );
             }
+        }
+    }
+
+    #[test]
+    fn traverse_spike_pairs_face_outward_instead_of_into_their_seam() {
+        for seed in [3, 4, 8, 9, 13, 14] {
+            let candidate = CalibratedWallJumpKey::new(seed).generate();
+            let tiles = candidate.room.tiles();
+            let width = usize::from(WIDTH);
+            let mut outward_pairs = 0;
+            let mut inward_pairs = 0;
+            for row in 0..usize::from(HEIGHT - 1) {
+                for column in 0..width {
+                    let upper = tiles[row * width + column];
+                    let lower = tiles[(row + 1) * width + column];
+                    outward_pairs +=
+                        usize::from(upper == Tile::HazardUp && lower == Tile::HazardDown);
+                    inward_pairs +=
+                        usize::from(upper == Tile::HazardDown && lower == Tile::HazardUp);
+                }
+            }
+            assert!(outward_pairs > 0, "seed {seed} has no paired spike bank");
+            assert_eq!(
+                inward_pairs, 0,
+                "seed {seed} points paired spikes into an inaccessible seam"
+            );
         }
     }
 }

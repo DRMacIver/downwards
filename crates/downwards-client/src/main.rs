@@ -27,8 +27,8 @@ use downwards_core::{
     Simulation, SimulationEvent, StepReport, TICKS_PER_SECOND, Tile, WallSide,
 };
 use downwards_gen::{
-    AbilityTier, COMPOSITIONAL_GENERATION_VERSION, experimental::GenerationStrategy,
-    generate_compositional, generate_uncurated,
+    AbilityTier, CALIBRATED_WALL_JUMP_GENERATION_VERSION, COMPOSITIONAL_GENERATION_VERSION,
+    experimental::GenerationStrategy, generate_compositional, generate_uncurated,
 };
 use macroquad::prelude::*;
 use serde::Serialize;
@@ -2410,9 +2410,10 @@ impl ClientState {
                 || format!("gallery:missing:{:016x}", selection.seed),
                 |level| format!("gallery:{}", level.id()),
             ),
-            RoomMode::CalibratedGenerated => {
-                format!("calibrated-wall-jump-v1:{:016x}", selection.seed)
-            }
+            RoomMode::CalibratedGenerated => format!(
+                "calibrated-wall-jump-v{}:{:016x}",
+                CALIBRATED_WALL_JUMP_GENERATION_VERSION, selection.seed
+            ),
             RoomMode::Challenge(kind) => kind.stats_key().to_owned(),
         }
     }
@@ -4605,7 +4606,11 @@ fn draw_level_menu_preview(
             },
             |level| {
                 (
-                    format!("GENERATED V1 / SEED {:02}", level.seed()),
+                    format!(
+                        "GENERATED V{} / SEED {:02}",
+                        CALIBRATED_WALL_JUMP_GENERATION_VERSION,
+                        level.seed()
+                    ),
                     format!("SIMPLIFIED STORED ROUTE -> {}", level.target()),
                     level.mechanic_axis().to_owned(),
                 )
@@ -5216,7 +5221,8 @@ fn draw_hud(viewport: &PixelViewport, client: &ClientState) {
             || "MISSING CALIBRATED LEVEL".to_owned(),
             |level| {
                 format!(
-                    "GEN V1 SEED {:02} / {} / {}",
+                    "GEN V{} SEED {:02} / {} / {}",
+                    CALIBRATED_WALL_JUMP_GENERATION_VERSION,
                     level.seed(),
                     level.title(),
                     level.mechanic_axis()

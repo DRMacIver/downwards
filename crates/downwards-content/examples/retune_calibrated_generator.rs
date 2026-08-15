@@ -257,12 +257,21 @@ fn main() {
         route_candidates.sort_by_key(|actions| route_key(&initial, actions));
         route_candidates.dedup();
         let actions = route_candidates
-            .into_iter()
+            .iter()
             .find(|actions| {
                 let key = route_key(&initial, actions);
                 !key.0 && key.1 <= 1
             })
-            .unwrap_or_else(|| panic!("seed {seed} has no calibrated-quality witness"));
+            .cloned()
+            .unwrap_or_else(|| {
+                panic!(
+                    "seed {seed} has no calibrated-quality witness: {:?}",
+                    route_candidates
+                        .iter()
+                        .map(|actions| observe(&initial, actions))
+                        .collect::<Vec<_>>()
+                )
+            });
         let observation = observe(&initial, &actions);
         assert!(observation.clean, "seed {seed}: {observation:?}");
         assert!(
