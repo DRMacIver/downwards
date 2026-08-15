@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 2;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 3;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -66,7 +66,7 @@ impl DungeonPaletteCourse {
                 ("floor", BoundarySide::Floor),
             ],
             Self::BootsVault => &[
-                ("ceiling", BoundarySide::Ceiling),
+                ("floor", BoundarySide::Floor),
                 ("east", BoundarySide::Right),
             ],
             Self::Underpass => &[
@@ -75,7 +75,8 @@ impl DungeonPaletteCourse {
                 ("ceiling", BoundarySide::Ceiling),
             ],
             Self::DashChasm => &[("west", BoundarySide::Left), ("east", BoundarySide::Right)],
-            Self::CoinLoft | Self::NeedleRoom => &[("floor", BoundarySide::Floor)],
+            Self::CoinLoft => &[("ceiling", BoundarySide::Ceiling)],
+            Self::NeedleRoom => &[("floor", BoundarySide::Floor)],
             Self::Treasury => &[("west", BoundarySide::Left)],
             Self::Gatehouse => &[("west", BoundarySide::Left), ("east", BoundarySide::Right)],
             Self::CrownSanctum => &[("west", BoundarySide::Left)],
@@ -102,7 +103,11 @@ impl DungeonPaletteKey {
         draft.boundary();
         draft.open_doors(self.course);
         draft.course(self);
-        debug_assert!(draft.one_way_surfaces_have_player_headroom());
+        debug_assert!(
+            draft.one_way_surfaces_have_player_headroom(),
+            "{:?} contains a one-way surface without standing headroom",
+            self.course
+        );
         DungeonPaletteCandidate { key: self, tiles }
     }
 }
@@ -305,6 +310,8 @@ impl PaletteDraft<'_> {
                 self.horizontal(14, 4, 10, Tile::OneWay);
                 self.horizontal(11, 12, 20, Tile::OneWay);
                 self.horizontal(14, 23, 29, Tile::OneWay);
+                self.vertical(13, 1, 9, Tile::Solid);
+                self.vertical(18, 1, 9, Tile::Solid);
                 // A visible safe lip around the downward branch.
                 self.horizontal(16, 11, 14, Tile::Solid);
                 self.horizontal(16, 18, 21, Tile::Solid);
@@ -319,18 +326,24 @@ impl PaletteDraft<'_> {
                 self.vertical(24, 4, 14, Tile::Solid);
             }
             DungeonPaletteCourse::BootsVault => {
-                self.horizontal(14, 3, 9, Tile::OneWay);
-                self.horizontal(12, 11, 18, Tile::OneWay);
-                self.horizontal(6, 12, 19, Tile::OneWay);
-                self.horizontal(3, 4, 11, Tile::OneWay);
-                self.horizontal(14, 23, 29, Tile::OneWay);
-                self.horizontal(12, 21, 23, Tile::OneWay);
-                self.horizontal(10, 23, 28, Tile::OneWay);
-                self.horizontal(8, 28, 31, Tile::OneWay);
-                // The entrance drops onto the left of this partition. Reaching the boots means
-                // descending below it, returning up its far wall, then committing to the high
-                // right ledge instead of simply drifting from the ceiling spawn.
-                self.vertical(20, 1, 13, Tile::Solid);
+                // This is the five-beat alternating contact pattern calibrated by the gallery's
+                // Even Tempo room. The floor door places the player inside the bottom of the
+                // shaft; hazard-faced bands prevent riding one wall and force rapid direction
+                // changes before the reward shelf.
+                self.vertical(13, 0, 16, Tile::Solid);
+                self.set(14, 0, Tile::HazardRight);
+                self.vertical(14, 1, 4, Tile::Solid);
+                self.vertical(14, 4, 7, Tile::HazardRight);
+                self.vertical(14, 7, 10, Tile::Solid);
+                self.vertical(14, 10, 13, Tile::HazardRight);
+                self.vertical(14, 13, 16, Tile::Solid);
+                self.vertical(19, 4, 16, Tile::Solid);
+                self.vertical(18, 4, 7, Tile::Solid);
+                self.vertical(18, 7, 10, Tile::HazardLeft);
+                self.vertical(18, 10, 13, Tile::Solid);
+                self.vertical(18, 13, 16, Tile::HazardLeft);
+                self.horizontal(4, 18, 26, Tile::Solid);
+                self.set(14, 16, Tile::Empty);
             }
             DungeonPaletteCourse::Underpass => {
                 self.horizontal(14, 4, 10, Tile::OneWay);
@@ -350,8 +363,14 @@ impl PaletteDraft<'_> {
                 self.horizontal(14, 3, 10, Tile::OneWay);
                 self.horizontal(12, 12, 19, Tile::OneWay);
                 self.horizontal(10, 21, 29, Tile::OneWay);
-                self.horizontal(7, 12, 19, Tile::OneWay);
+                self.horizontal(8, 17, 21, Tile::OneWay);
+                self.horizontal(6, 14, 17, Tile::OneWay);
+                self.horizontal(3, 14, 17, Tile::OneWay);
                 self.horizontal(4, 3, 10, Tile::Solid);
+                // The branch is entered from above. Its drop-through landing is also the base of
+                // a short return chimney, so collecting its coins cannot strand the player.
+                self.vertical(13, 1, 6, Tile::Solid);
+                self.vertical(17, 1, 6, Tile::Solid);
             }
             DungeonPaletteCourse::NeedleRoom => {
                 self.vertical(8, 4, 15, Tile::HazardRight);

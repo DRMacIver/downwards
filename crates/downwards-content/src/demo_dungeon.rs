@@ -8,8 +8,9 @@ pub const DEMO_DUNGEON_BOOT_PICKUP: &str = "winged-boots";
 pub const DEMO_DUNGEON_CROWN_PICKUP: &str = "crown";
 pub const DEMO_DUNGEON_GOAL_EXIT: &str = "crown-goal";
 pub const DEMO_DUNGEON_TOTAL_COINS: u8 = 10;
-pub const DEMO_DUNGEON_TREASURY_REQUIREMENT: u8 = 3;
-pub const DEMO_DUNGEON_CROWN_GATE_REQUIREMENT: u8 = 6;
+pub const DEMO_DUNGEON_BOOT_GATE_REQUIREMENT: u8 = 6;
+pub const DEMO_DUNGEON_TREASURY_REQUIREMENT: u8 = 8;
+pub const DEMO_DUNGEON_CROWN_GATE_REQUIREMENT: u8 = 10;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct DemoDungeonInventory {
@@ -124,8 +125,8 @@ impl DemoDungeonRoom {
             Self::DashChasm => "Gale Chasm",
             Self::CoinLoft => "Rafter Mint",
             Self::NeedleRoom => "Needle Belfry",
-            Self::Treasury => "The Small Treasury",
-            Self::Gatehouse => "Six-Coin Gate",
+            Self::Treasury => "Eight-Coin Treasury",
+            Self::Gatehouse => "Ten-Coin Gate",
             Self::CrownSanctum => "The Empty Throne",
         }
     }
@@ -160,8 +161,8 @@ impl DemoDungeonRoom {
             Self::Crossroads => vec![
                 connection("west", Self::Threshold, "east"),
                 connection("east", Self::WallGallery, "west"),
-                connection("ceiling", Self::CoinLoft, "floor"),
-                connection("floor", Self::BootsVault, "ceiling"),
+                connection("ceiling", Self::BootsVault, "floor"),
+                connection("floor", Self::CoinLoft, "ceiling"),
             ],
             Self::WallGallery => vec![
                 connection("west", Self::Crossroads, "east"),
@@ -170,7 +171,7 @@ impl DemoDungeonRoom {
                 connection("floor", Self::Underpass, "ceiling"),
             ],
             Self::BootsVault => vec![
-                connection("ceiling", Self::Crossroads, "floor"),
+                connection("floor", Self::Crossroads, "ceiling"),
                 connection("east", Self::Underpass, "west"),
             ],
             Self::Underpass => vec![
@@ -182,7 +183,7 @@ impl DemoDungeonRoom {
                 connection("west", Self::WallGallery, "east"),
                 connection("east", Self::Gatehouse, "west"),
             ],
-            Self::CoinLoft => vec![connection("floor", Self::Crossroads, "ceiling")],
+            Self::CoinLoft => vec![connection("ceiling", Self::Crossroads, "floor")],
             Self::NeedleRoom => vec![connection("floor", Self::WallGallery, "ceiling")],
             Self::Treasury => vec![connection("west", Self::Underpass, "east")],
             Self::Gatehouse => vec![
@@ -200,6 +201,9 @@ pub const fn demo_dungeon_door_coin_requirement(
     door_id: &str,
 ) -> Option<u8> {
     match (room, door_id.as_bytes()) {
+        (DemoDungeonRoom::Crossroads, b"ceiling") | (DemoDungeonRoom::WallGallery, b"floor") => {
+            Some(DEMO_DUNGEON_BOOT_GATE_REQUIREMENT)
+        }
         (DemoDungeonRoom::Underpass, b"east") => Some(DEMO_DUNGEON_TREASURY_REQUIREMENT),
         (DemoDungeonRoom::Gatehouse, b"east") => Some(DEMO_DUNGEON_CROWN_GATE_REQUIREMENT),
         _ => None,
@@ -245,7 +249,7 @@ pub fn demo_dungeon_room(room: DemoDungeonRoom, inventory: DemoDungeonInventory)
         .collect::<Vec<_>>();
     if room == DemoDungeonRoom::BootsVault && !inventory.winged_boots {
         pickups.push(
-            Pickup::new(DEMO_DUNGEON_BOOT_PICKUP, Rect::new(286, 64, 16, 16))
+            Pickup::new(DEMO_DUNGEON_BOOT_PICKUP, Rect::new(214, 24, 16, 16))
                 .expect("boots bounds are valid"),
         );
     }
@@ -270,7 +274,7 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         ],
         DemoDungeonRoom::WallGallery => vec![(4, Rect::new(188, 80, 8, 10))],
         DemoDungeonRoom::NeedleRoom => vec![(5, Rect::new(188, 110, 8, 10))],
-        DemoDungeonRoom::BootsVault => vec![(6, Rect::new(244, 90, 8, 10))],
+        DemoDungeonRoom::BootsVault => vec![(6, Rect::new(246, 30, 8, 10))],
         DemoDungeonRoom::Underpass => vec![(7, Rect::new(224, 80, 8, 10))],
         DemoDungeonRoom::Treasury => vec![
             (8, Rect::new(144, 100, 8, 10)),
@@ -286,7 +290,7 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
 mod tests {
     use super::*;
     use downwards_ai::{SearchTarget, SolverConfig, TargetSolveOutcome, solve_target};
-    use downwards_core::{Simulation, SimulationEvent};
+    use downwards_core::{JumpKind, Simulation, SimulationEvent};
 
     #[test]
     fn graph_connections_are_reciprocal_and_socket_matched() {
@@ -369,7 +373,7 @@ mod tests {
     }
 
     #[test]
-    fn coins_are_unique_persistent_and_gate_the_two_treasures() {
+    fn coins_are_unique_persistent_and_bind_every_progression_gate() {
         let mut inventory = DemoDungeonInventory::default();
         for index in 0..DEMO_DUNGEON_TOTAL_COINS {
             let id = coin_id(index);
@@ -393,6 +397,39 @@ mod tests {
         assert_eq!(
             placed_indices,
             (0..DEMO_DUNGEON_TOTAL_COINS).collect::<Vec<_>>()
+        );
+        for (rooms, expected_indices) in [
+            (
+                vec![
+                    DemoDungeonRoom::Threshold,
+                    DemoDungeonRoom::Crossroads,
+                    DemoDungeonRoom::CoinLoft,
+                    DemoDungeonRoom::WallGallery,
+                    DemoDungeonRoom::NeedleRoom,
+                ],
+                (0..6).collect::<Vec<_>>(),
+            ),
+            (
+                vec![DemoDungeonRoom::BootsVault, DemoDungeonRoom::Underpass],
+                (6..8).collect::<Vec<_>>(),
+            ),
+            (vec![DemoDungeonRoom::Treasury], (8..10).collect::<Vec<_>>()),
+        ] {
+            let mut actual = rooms
+                .into_iter()
+                .flat_map(room_coin_specs)
+                .map(|(index, _)| index)
+                .collect::<Vec<_>>();
+            actual.sort_unstable();
+            assert_eq!(actual, expected_indices);
+        }
+        assert_eq!(
+            demo_dungeon_door_coin_requirement(DemoDungeonRoom::Crossroads, "ceiling"),
+            Some(DEMO_DUNGEON_BOOT_GATE_REQUIREMENT)
+        );
+        assert_eq!(
+            demo_dungeon_door_coin_requirement(DemoDungeonRoom::WallGallery, "floor"),
+            Some(DEMO_DUNGEON_BOOT_GATE_REQUIREMENT)
         );
         assert_eq!(
             demo_dungeon_door_coin_requirement(DemoDungeonRoom::Underpass, "east"),
@@ -454,6 +491,24 @@ mod tests {
         );
     }
 
+    fn solve_and_advance(mut simulation: Simulation, target: SearchTarget) -> Simulation {
+        let abilities = simulation.abilities();
+        simulation.enable_current_player_movement();
+        let outcome = solve_target(
+            &simulation,
+            target.clone(),
+            &SolverConfig::for_abilities(abilities),
+        )
+        .unwrap();
+        let TargetSolveOutcome::Solved(solution) = outcome else {
+            panic!("sequential dungeon route did not reach {target:?}: {outcome:?}");
+        };
+        for action in solution.replay.actions() {
+            simulation.step(action);
+        }
+        simulation
+    }
+
     #[test]
     fn authored_critical_route_is_solver_tractable_under_each_run_loadout() {
         let empty = DemoDungeonInventory::default();
@@ -470,15 +525,48 @@ mod tests {
             SearchTarget::door("floor"),
         );
         assert_route(
-            DemoDungeonRoom::BootsVault,
+            DemoDungeonRoom::CoinLoft,
             Some("ceiling"),
             empty,
+            SearchTarget::pickup(coin_id(2)),
+        );
+        assert_route(
+            DemoDungeonRoom::Crossroads,
+            Some("west"),
+            empty,
+            SearchTarget::door("east"),
+        );
+        assert_route(
+            DemoDungeonRoom::WallGallery,
+            Some("west"),
+            empty,
+            SearchTarget::door("ceiling"),
+        );
+        assert_route(
+            DemoDungeonRoom::NeedleRoom,
+            Some("floor"),
+            empty,
+            SearchTarget::pickup(coin_id(5)),
+        );
+        let pre_boots = DemoDungeonInventory::with_coin_count_for_validation(
+            DEMO_DUNGEON_BOOT_GATE_REQUIREMENT,
+        );
+        assert_route(
+            DemoDungeonRoom::Crossroads,
+            Some("west"),
+            pre_boots,
+            SearchTarget::door("ceiling"),
+        );
+        assert_route(
+            DemoDungeonRoom::BootsVault,
+            Some("floor"),
+            pre_boots,
             SearchTarget::pickup(DEMO_DUNGEON_BOOT_PICKUP),
         );
         let boots = DemoDungeonInventory {
             winged_boots: true,
             crown: false,
-            ..DemoDungeonInventory::default()
+            ..DemoDungeonInventory::with_coin_count_for_validation(7)
         };
         assert_route(
             DemoDungeonRoom::BootsVault,
@@ -490,40 +578,71 @@ mod tests {
             DemoDungeonRoom::Underpass,
             Some("west"),
             boots,
+            SearchTarget::pickup(coin_id(7)),
+        );
+        let treasury_ready = DemoDungeonInventory {
+            winged_boots: true,
+            ..DemoDungeonInventory::with_coin_count_for_validation(
+                DEMO_DUNGEON_TREASURY_REQUIREMENT,
+            )
+        };
+        assert_route(
+            DemoDungeonRoom::Underpass,
+            Some("west"),
+            treasury_ready,
+            SearchTarget::door("east"),
+        );
+        assert_route(
+            DemoDungeonRoom::Treasury,
+            Some("west"),
+            treasury_ready,
+            SearchTarget::pickup(coin_id(9)),
+        );
+        let complete = DemoDungeonInventory {
+            winged_boots: true,
+            ..DemoDungeonInventory::with_coin_count_for_validation(
+                DEMO_DUNGEON_CROWN_GATE_REQUIREMENT,
+            )
+        };
+        assert_route(
+            DemoDungeonRoom::Underpass,
+            Some("west"),
+            complete,
             SearchTarget::door("ceiling"),
         );
         assert_route(
             DemoDungeonRoom::WallGallery,
             Some("floor"),
-            boots,
+            complete,
             SearchTarget::door("east"),
         );
         assert_route(
             DemoDungeonRoom::DashChasm,
             Some("west"),
-            boots,
+            complete,
             SearchTarget::door("east"),
         );
         assert_route(
             DemoDungeonRoom::Gatehouse,
             Some("west"),
-            boots,
+            complete,
             SearchTarget::door("east"),
         );
         assert_route(
             DemoDungeonRoom::CrownSanctum,
             Some("west"),
-            boots,
+            complete,
             SearchTarget::exit(DEMO_DUNGEON_GOAL_EXIT),
         );
     }
 
     #[test]
     fn winged_boots_require_a_real_climb_in_the_known_positive_route() {
-        let inventory = DemoDungeonInventory::default();
+        let inventory = DemoDungeonInventory::with_coin_count_for_validation(
+            DEMO_DUNGEON_BOOT_GATE_REQUIREMENT,
+        );
         let room = demo_dungeon_room(DemoDungeonRoom::BootsVault, inventory);
-        let mut initial =
-            Simulation::enter_via_door(room, inventory.abilities(), "ceiling").unwrap();
+        let mut initial = Simulation::enter_via_door(room, inventory.abilities(), "floor").unwrap();
         initial.enable_current_player_movement();
         let outcome = solve_target(
             &initial,
@@ -536,10 +655,14 @@ mod tests {
         };
         let mut replayed = initial;
         let mut accepted_jumps = 0;
+        let mut wall_sides = Vec::new();
         for action in solution.replay.actions() {
             for event in replayed.step(action).events {
-                if let SimulationEvent::Jumped(_) = event {
+                if let SimulationEvent::Jumped(kind) = event {
                     accepted_jumps += 1;
+                    if let JumpKind::Wall { side } = kind {
+                        wall_sides.push(side);
+                    }
                 }
             }
         }
@@ -549,18 +672,23 @@ mod tests {
                 .any(|pickup| pickup.id() == DEMO_DUNGEON_BOOT_PICKUP)
         );
         assert!(
-            accepted_jumps >= 3,
-            "the boots route must contain a multi-jump climb, got {accepted_jumps} accepted jumps"
+            accepted_jumps >= 5 && wall_sides.len() >= 4,
+            "the boots route must contain the alternating wall climb, got {accepted_jumps} jumps / {} wall jumps",
+            wall_sides.len()
+        );
+        assert!(
+            wall_sides.windows(2).all(|pair| pair[0] != pair[1]),
+            "the boots route must alternate wall sides instead of hopping one wall: {wall_sides:?}"
         );
     }
 
     #[test]
-    fn optional_coin_branches_are_solver_tractable() {
+    fn required_coin_branches_are_solver_tractable() {
         let empty = DemoDungeonInventory::default();
         for (room, entry, targets) in [
             (
                 DemoDungeonRoom::CoinLoft,
-                "floor",
+                "ceiling",
                 vec![
                     SearchTarget::pickup(coin_id(2)),
                     SearchTarget::pickup(coin_id(3)),
@@ -586,6 +714,46 @@ mod tests {
         ] {
             assert_route(DemoDungeonRoom::Treasury, Some("west"), boots, target);
         }
+    }
+
+    #[test]
+    fn required_coin_branches_can_return_after_their_deepest_pickup() {
+        let empty = DemoDungeonInventory::default();
+        let coin_loft = Simulation::enter_via_door(
+            demo_dungeon_room(DemoDungeonRoom::CoinLoft, empty),
+            empty.abilities(),
+            "ceiling",
+        )
+        .unwrap();
+        let coin_loft = solve_and_advance(coin_loft, SearchTarget::pickup(coin_id(3)));
+        let coin_loft = solve_and_advance(coin_loft, SearchTarget::door("ceiling"));
+        assert_eq!(coin_loft.reached_exit(), Some("ceiling"));
+
+        let needle = Simulation::enter_via_door(
+            demo_dungeon_room(DemoDungeonRoom::NeedleRoom, empty),
+            empty.abilities(),
+            "floor",
+        )
+        .unwrap();
+        let needle = solve_and_advance(needle, SearchTarget::pickup(coin_id(5)));
+        let needle = solve_and_advance(needle, SearchTarget::door("floor"));
+        assert_eq!(needle.reached_exit(), Some("floor"));
+
+        let treasury_ready = DemoDungeonInventory {
+            winged_boots: true,
+            ..DemoDungeonInventory::with_coin_count_for_validation(
+                DEMO_DUNGEON_TREASURY_REQUIREMENT,
+            )
+        };
+        let treasury = Simulation::enter_via_door(
+            demo_dungeon_room(DemoDungeonRoom::Treasury, treasury_ready),
+            treasury_ready.abilities(),
+            "west",
+        )
+        .unwrap();
+        let treasury = solve_and_advance(treasury, SearchTarget::pickup(coin_id(9)));
+        let treasury = solve_and_advance(treasury, SearchTarget::door("west"));
+        assert_eq!(treasury.reached_exit(), Some("west"));
     }
 
     #[test]

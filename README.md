@@ -188,12 +188,14 @@ cargo run -- --dungeon
 
 This is intentionally a hand-assembled graph made from a deterministic eleven-room generator
 palette, not yet a general dungeon generator. Boundary doors traverse between real rooms and the
-main loop has optional loft, belfry, and treasury branches. Ten persistent coins are spread across
-the dungeon: three open the treasury and six open the Crown route. The Winged Boots now sit behind
-a multi-jump vault switchback; collecting them unlocks Dash, including a low dash-squeeze passage,
-for the rest of the run. Cross Gale Chasm and collect the Crown in the final sanctum. Deaths and
-restarts return to the door used to enter the current room without discarding boots, Crown, or
-coins. `V` demonstrates the next intended room-local objective; it is not a whole-dungeon route.
+main loop has loft, belfry, and treasury branches woven into its progression. Ten persistent coins
+are spread across the dungeon. The first six require clearing both pre-boots branches and open the
+Winged Vault; the seventh and eighth open the treasury; its final two open the ten-coin Crown gate.
+The Winged Boots sit above an alternating hazard-band wall-jump climb modelled on the gallery's
+“Even Tempo” room. Collecting them unlocks Dash, including a low dash-squeeze passage, for the rest
+of the run. Cross Gale Chasm and collect the Crown in the final sanctum. Deaths and restarts return
+to the door used to enter the current room without discarding boots, Crown, or coins. `V`
+demonstrates the next intended room-local objective; it is not a whole-dungeon route.
 
 In any human-controlled room, press `F2` to open the movement-tuning menu. It directly adjusts top
 speed in pixels/second, acceleration and braking response in milliseconds, and wall-momentum

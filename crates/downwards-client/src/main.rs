@@ -16,13 +16,13 @@ use downwards_ai::{
 };
 use downwards_catalogue::CatalogueBand;
 use downwards_content::{
-    CalibratedGeneratorPlaytestLevel, CalibrationLevel, DEMO_DUNGEON_BOOT_PICKUP,
-    DEMO_DUNGEON_CROWN_PICKUP, DEMO_DUNGEON_GOAL_EXIT, DEMO_DUNGEON_TOTAL_COINS,
-    DemoDungeonInventory, DemoDungeonRoom, HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET,
-    MEDIUM_NO_DASH_ABILITIES, MEDIUM_NO_DASH_TARGET, calibrated_generator_playtest,
-    calibration_gallery, demo_dungeon_door_coin_requirement, demo_dungeon_room, first_steps_room,
-    hard_no_dash_scenario, hard_no_dash_witness_actions, medium_no_dash_scenario,
-    medium_no_dash_witness_actions,
+    CalibratedGeneratorPlaytestLevel, CalibrationLevel, DEMO_DUNGEON_BOOT_GATE_REQUIREMENT,
+    DEMO_DUNGEON_BOOT_PICKUP, DEMO_DUNGEON_CROWN_GATE_REQUIREMENT, DEMO_DUNGEON_CROWN_PICKUP,
+    DEMO_DUNGEON_GOAL_EXIT, DEMO_DUNGEON_TOTAL_COINS, DemoDungeonInventory, DemoDungeonRoom,
+    HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET, MEDIUM_NO_DASH_ABILITIES, MEDIUM_NO_DASH_TARGET,
+    calibrated_generator_playtest, calibration_gallery, demo_dungeon_door_coin_requirement,
+    demo_dungeon_room, first_steps_room, hard_no_dash_scenario, hard_no_dash_witness_actions,
+    medium_no_dash_scenario, medium_no_dash_witness_actions,
 };
 use downwards_core::{
     AbilitySet, Action, BoundarySide, DeathReason, HazardDirection, JUMP_BUFFER_TICKS, JumpKind,
@@ -2950,15 +2950,49 @@ impl ClientState {
             self.perform_pickup_solve(initial, None, DEMO_DUNGEON_BOOT_PICKUP.to_owned());
             return;
         }
+        if let Some(coin_id) = self
+            .simulation
+            .room()
+            .pickups()
+            .iter()
+            .enumerate()
+            .find(|(index, pickup)| {
+                pickup.id().starts_with("dungeon-coin-")
+                    && self.simulation.pickup_is_collected(*index) == Some(false)
+            })
+            .map(|(_, pickup)| pickup.id().to_owned())
+        {
+            self.perform_pickup_solve(initial, None, coin_id);
+            return;
+        }
         let target_door = match run.room {
             DemoDungeonRoom::Threshold => Some("east"),
             DemoDungeonRoom::Crossroads if run.inventory.winged_boots => Some("east"),
-            DemoDungeonRoom::Crossroads => Some("floor"),
+            DemoDungeonRoom::Crossroads if run.inventory.coin_count() < 4 => Some("floor"),
+            DemoDungeonRoom::Crossroads
+                if run.inventory.coin_count() < DEMO_DUNGEON_BOOT_GATE_REQUIREMENT =>
+            {
+                Some("east")
+            }
+            DemoDungeonRoom::Crossroads => Some("ceiling"),
             DemoDungeonRoom::BootsVault => Some("east"),
+            DemoDungeonRoom::Underpass
+                if run.inventory.coin_count() < DEMO_DUNGEON_CROWN_GATE_REQUIREMENT =>
+            {
+                Some("east")
+            }
             DemoDungeonRoom::Underpass => Some("ceiling"),
+            DemoDungeonRoom::WallGallery
+                if !run.inventory.winged_boots
+                    && run.inventory.coin_count() < DEMO_DUNGEON_BOOT_GATE_REQUIREMENT =>
+            {
+                Some("ceiling")
+            }
+            DemoDungeonRoom::WallGallery if !run.inventory.winged_boots => Some("west"),
             DemoDungeonRoom::WallGallery => Some("east"),
             DemoDungeonRoom::DashChasm => Some("east"),
-            DemoDungeonRoom::CoinLoft | DemoDungeonRoom::NeedleRoom => Some("floor"),
+            DemoDungeonRoom::CoinLoft => Some("ceiling"),
+            DemoDungeonRoom::NeedleRoom => Some("floor"),
             DemoDungeonRoom::Treasury => Some("west"),
             DemoDungeonRoom::Gatehouse => Some("east"),
             DemoDungeonRoom::CrownSanctum => None,
@@ -5374,22 +5408,23 @@ fn draw_dungeon_coin_gates(viewport: &PixelViewport, client: &ClientState) {
         let bounds = door.trigger_bounds;
         viewport.rectangle(bounds, Color::new(0.2, 0.04, 0.08, 0.82));
         for offset in [5, 14, 23, 32] {
-            viewport.rectangle(
-                CoreRect::new(bounds.x, bounds.y + offset, bounds.width, 3),
-                HAZARD,
-            );
+            let slat = match door.side {
+                BoundarySide::Left | BoundarySide::Right => {
+                    CoreRect::new(bounds.x, bounds.y + offset, bounds.width, 3)
+                }
+                BoundarySide::Ceiling | BoundarySide::Floor => {
+                    CoreRect::new(bounds.x + offset, bounds.y, 3, bounds.height)
+                }
+            };
+            viewport.rectangle(slat, HAZARD);
         }
-        viewport.text(
-            &format!("{requirement} COINS"),
-            if door.side == BoundarySide::Right {
-                bounds.x - 38
-            } else {
-                bounds.right() + 3
-            },
-            bounds.y - 3,
-            5,
-            PICKUP,
-        );
+        let (label_x, label_y) = match door.side {
+            BoundarySide::Right => (bounds.x - 38, bounds.y - 3),
+            BoundarySide::Left => (bounds.right() + 3, bounds.y - 3),
+            BoundarySide::Ceiling => (bounds.x + 2, bounds.bottom() + 6),
+            BoundarySide::Floor => (bounds.x + 2, bounds.y - 3),
+        };
+        viewport.text(&format!("{requirement} COINS"), label_x, label_y, 5, PICKUP);
     }
 }
 
@@ -8202,6 +8237,16 @@ mod tests {
             digest: client.simulation.digest(),
         };
         let exit = |id: &str| SimulationEvent::ExitReached { id: id.to_owned() };
+        let coins = |indices: &[u8]| {
+            indices
+                .iter()
+                .map(|index| SimulationEvent::PickupCollected {
+                    id: format!("dungeon-coin-{index:02}"),
+                })
+                .collect::<Vec<_>>()
+        };
+
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[0]))));
 
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
         assert_eq!(
@@ -8209,13 +8254,54 @@ mod tests {
             DemoDungeonRoom::Crossroads
         );
         assert_eq!(client.simulation.entry_door(), Some("west"));
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[1]))));
+
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::Crossroads
+        );
 
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::CoinLoft);
+        assert_eq!(client.simulation.entry_door(), Some("ceiling"));
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[2, 3]))));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::Crossroads
+        );
+        assert_eq!(client.simulation.entry_door(), Some("floor"));
+
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::WallGallery
+        );
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[4]))));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::NeedleRoom
+        );
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[5]))));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::WallGallery
+        );
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("west")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::Crossroads
+        );
+
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
         assert_eq!(
             client.dungeon_run.unwrap().room,
             DemoDungeonRoom::BootsVault
         );
-        assert_eq!(client.simulation.entry_door(), Some("ceiling"));
+        assert_eq!(client.simulation.entry_door(), Some("floor"));
 
         assert!(client.observe_dungeon_progress(&report(
             &client,
@@ -8229,39 +8315,50 @@ mod tests {
             ],
         )));
         assert!(client.dungeon_run.unwrap().inventory.winged_boots);
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 1);
+        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 7);
         assert!(client.simulation.abilities().dash);
         assert!(client.simulation.player().dash_available());
         assert!(client.observe_dungeon_progress(&report(&client, vec![SimulationEvent::Reset],)));
         assert!(client.simulation.room().pickups().is_empty());
         assert!(client.simulation.abilities().dash);
 
-        for (door, expected_room, expected_entry) in [
-            ("east", DemoDungeonRoom::Underpass, "west"),
-            ("ceiling", DemoDungeonRoom::WallGallery, "floor"),
-            ("east", DemoDungeonRoom::DashChasm, "west"),
-            ("east", DemoDungeonRoom::Gatehouse, "west"),
-        ] {
-            assert!(client.observe_dungeon_progress(&report(&client, vec![exit(door)])));
-            assert_eq!(client.dungeon_run.unwrap().room, expected_room);
-            assert_eq!(client.simulation.entry_door(), Some(expected_entry));
-            assert!(client.simulation.abilities().dash);
-        }
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Underpass);
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Underpass);
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[7]))));
 
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
+        assert_eq!(
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::WallGallery
+        );
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::DashChasm);
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
         assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Gatehouse);
-        assert_eq!(client.simulation.reached_exit(), None);
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Gatehouse);
 
-        let coin_events = (0..downwards_content::DEMO_DUNGEON_CROWN_GATE_REQUIREMENT - 1)
-            .map(|index| SimulationEvent::PickupCollected {
-                id: format!("dungeon-coin-{index:02}"),
-            })
-            .collect();
-        assert!(!client.observe_dungeon_progress(&report(&client, coin_events)));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("west")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::DashChasm);
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("west")])));
         assert_eq!(
-            client.dungeon_run.unwrap().inventory.coin_count(),
-            downwards_content::DEMO_DUNGEON_CROWN_GATE_REQUIREMENT
+            client.dungeon_run.unwrap().room,
+            DemoDungeonRoom::WallGallery
         );
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Underpass);
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Treasury);
+        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[8, 9]))));
+        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 10);
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("west")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Underpass);
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
+        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Gatehouse);
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
         assert_eq!(
             client.dungeon_run.unwrap().room,
