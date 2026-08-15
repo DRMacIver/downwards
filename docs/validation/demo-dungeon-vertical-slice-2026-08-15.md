@@ -17,7 +17,9 @@ is read back after publication. Unknown schemas, stale authored-dungeon or palet
 duplicate/out-of-range coins, invalid unlock order, and unknown room/entry-door coordinates are
 rejected rather than silently reset. The existing human-history JSONL also receives typed records
 for coins, unlocks, sealed-door attempts, room transitions, and the Crown; deaths and full input
-traces remain in its ordinary attempt records.
+traces remain in its ordinary attempt records. Progress records use
+`downwards-dungeon-progress-v2`; attempts use `downwards-human-attempt-v2`. Both bind the exact
+dungeon-definition ID and palette generation.
 
 The 101 room shells are deterministic `downwards-gen` palette outputs. Their graph is currently
 assembled by trusted content rather than by a general topology generator:
@@ -80,12 +82,17 @@ returns the player to its validated interior arrival without resetting room-loca
 Crown similarly persists and is the only terminal goal. Ordinary door exits change rooms and are
 deliberately not counted as whole-level victories.
 
-Palette generation v11 replaces the Astral Keep's former Void Pass copy with a distinct authored
+Palette generation v12 contains two evidence-driven room replacements. Persistent history recorded
+24 Gale Chasm attempts, all ending on spikes, while its old AI witness used 43 action spans and 11
+horizontal reversals. As the first post-Boots room, it now teaches the action as two readable
+sixty-pixel Dash gaps separated by a three-tile full-recovery island. Its mechanically selected
+route has nine spans, two jumps, two accepted Dashes, and no reversals; a bounded Wall-Jump-only
+solve has no positive. The Astral Keep's former Void Pass copy is now a distinct authored
 wall-rhythm course. Four alternating wall-contact bands have upward-lethal top caps: the vertical
 faces remain valid Wall-Jump contacts, while the horizontal surfaces cannot refill Dash. Its frozen
 route reaches the east door in 224 ticks with five accepted Wall Jumps and seven horizontal
-reversals. A bounded Dash-only solve under the same policy has no positive. This is a no-known-
-bypass audit, not a claim of physical impossibility.
+reversals. A bounded Dash-only solve under the same policy has no positive. These are no-known-
+bypass audits, not claims of physical impossibility.
 
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
@@ -152,4 +159,7 @@ it keeps AI action shape, strength-one shaky outcomes, human attempts, and neare
 separate columns. `AI-BUSY`, `AI-REVERSING`, `HUMAN-NO-SUCCESS`, and tile-copy labels only nominate
 rooms for inspection; they are intentionally not combined into a difficulty scalar. This boundary
 exists because earlier route-complexity and blind-continuation metrics substantially overstated the
-difficulty of trivial human routes.
+difficulty of trivial human routes. Human attempts join the current room only when both the
+movement-policy version and initial state digest match. Old geometry/policy attempts and unbound v1
+progress rows remain counted under `STALE-HUMAN`, but cannot produce current-room success or failure
+flags.

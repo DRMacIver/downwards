@@ -14,8 +14,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use downwards_content::{DemoDungeonRoom, demo_dungeon_room, demo_dungeon_route_specs};
-use downwards_core::Tile;
+use downwards_content::{
+    DemoDungeonRoom, demo_dungeon_definition, demo_dungeon_room, demo_dungeon_route_specs,
+};
+use downwards_core::{PLAYER_MOVEMENT_POLICY_VERSION, Simulation, Tile};
+use downwards_gen::DUNGEON_PALETTE_GENERATION_VERSION;
 use serde_json::Value;
 
 const DEFAULT_HISTORY: &str = "playtest-history/human-attempts-v1.jsonl";
@@ -43,11 +46,13 @@ struct ShakyEvidence {
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 struct HumanEvidence {
     attempts: u64,
+    stale_attempts: u64,
     successes: u64,
     deaths: u64,
     resets: u64,
     wrong_doors: u64,
     transition_events: u64,
+    stale_transition_events: u64,
     successful_ticks: Vec<u64>,
 }
 
@@ -190,7 +195,27 @@ fn json_string<'a>(value: &'a Value, key: &str, line: usize) -> Result<&'a str, 
         .ok_or_else(|| format!("history line {line}: missing string {key:?}"))
 }
 
-fn parse_history(input: &str) -> Result<BTreeMap<DemoDungeonRoom, HumanEvidence>, String> {
+fn current_initial_digests() -> BTreeMap<DemoDungeonRoom, String> {
+    demo_dungeon_route_specs()
+        .into_iter()
+        .map(|spec| {
+            let room = demo_dungeon_room(spec.room, spec.inventory);
+            let mut simulation = match spec.entry_door {
+                Some(door) => Simulation::enter_via_door(room, spec.inventory.abilities(), door)
+                    .expect("authored route entry is valid"),
+                None => Simulation::with_abilities(room, spec.inventory.abilities()),
+            };
+            simulation.enable_current_player_movement();
+            (spec.room, simulation.digest().to_string())
+        })
+        .collect()
+}
+
+fn parse_history(
+    input: &str,
+    initial_digests: &BTreeMap<DemoDungeonRoom, String>,
+    dungeon_definition_id: &str,
+) -> Result<BTreeMap<DemoDungeonRoom, HumanEvidence>, String> {
     let mut evidence = BTreeMap::<DemoDungeonRoom, HumanEvidence>::new();
     for (line_index, line) in input.lines().enumerate() {
         let line_number = line_index + 1;
@@ -200,12 +225,26 @@ fn parse_history(input: &str) -> Result<BTreeMap<DemoDungeonRoom, HumanEvidence>
         let value = serde_json::from_str::<Value>(line)
             .map_err(|error| format!("history line {line_number}: invalid JSON: {error}"))?;
         match value["schema"].as_str() {
-            Some("downwards-human-attempt-v1") => {
+            Some("downwards-human-attempt-v1" | "downwards-human-attempt-v2") => {
                 let room_id = json_string(&value, "room_id", line_number)?;
                 let Some(room) = DemoDungeonRoom::from_id(room_id) else {
                     continue;
                 };
                 let row = evidence.entry(room).or_default();
+                let current_policy = value["player_movement_policy_version"].as_u64()
+                    == Some(u64::from(PLAYER_MOVEMENT_POLICY_VERSION));
+                let current_content = if value["schema"] == "downwards-human-attempt-v2" {
+                    value["dungeon_definition_id"].as_str() == Some(dungeon_definition_id)
+                        && value["palette_generation_version"].as_u64()
+                            == Some(u64::from(DUNGEON_PALETTE_GENERATION_VERSION))
+                } else {
+                    value["initial_state_digest"].as_str() == Some(initial_digests[&room].as_str())
+                };
+                let is_current = current_policy && current_content;
+                if !is_current {
+                    row.stale_attempts += 1;
+                    continue;
+                }
                 row.attempts += 1;
                 let outcome = value["outcome"]["kind"]
                     .as_str()
@@ -228,13 +267,22 @@ fn parse_history(input: &str) -> Result<BTreeMap<DemoDungeonRoom, HumanEvidence>
                     }
                 }
             }
-            Some("downwards-dungeon-progress-v1") => {
+            Some("downwards-dungeon-progress-v1" | "downwards-dungeon-progress-v2") => {
                 let room_id = json_string(&value, "room_id", line_number)?;
                 let Some(room) = DemoDungeonRoom::from_id(room_id) else {
                     continue;
                 };
                 if value["event"].as_str() == Some("room transition") {
-                    evidence.entry(room).or_default().transition_events += 1;
+                    let row = evidence.entry(room).or_default();
+                    let is_current = value["schema"] == "downwards-dungeon-progress-v2"
+                        && value["dungeon_definition_id"].as_str() == Some(dungeon_definition_id)
+                        && value["palette_generation_version"].as_u64()
+                            == Some(u64::from(DUNGEON_PALETTE_GENERATION_VERSION));
+                    if is_current {
+                        row.transition_events += 1;
+                    } else {
+                        row.stale_transition_events += 1;
+                    }
                 }
             }
             Some(_) | None => {}
@@ -318,7 +366,7 @@ fn human_summary(evidence: &HumanEvidence) -> String {
     let median = median(&evidence.successful_ticks)
         .map_or_else(|| "-".to_owned(), |ticks| ticks.to_string());
     format!(
-        "{}a {}ok {}d {}r {}w med={}t trans={}",
+        "{}a {}ok {}d {}r {}w med={}t trans={} stale={}/{}",
         evidence.attempts,
         evidence.successes,
         evidence.deaths,
@@ -326,6 +374,8 @@ fn human_summary(evidence: &HumanEvidence) -> String {
         evidence.wrong_doors,
         median,
         evidence.transition_events,
+        evidence.stale_attempts,
+        evidence.stale_transition_events,
     )
 }
 
@@ -335,8 +385,13 @@ fn inspection_flags(
     nearest_distance: usize,
 ) -> String {
     let mut flags = Vec::new();
+    if human.stale_attempts > 0 || human.stale_transition_events > 0 {
+        flags.push("STALE-HUMAN");
+    }
     if human.attempts == 0 && human.transition_events == 0 {
-        flags.push("NO-HUMAN");
+        if human.stale_attempts == 0 && human.stale_transition_events == 0 {
+            flags.push("NO-HUMAN");
+        }
     } else if human.attempts > 0 && human.successes == 0 {
         flags.push("HUMAN-NO-SUCCESS");
     }
@@ -434,7 +489,11 @@ fn main() -> Result<(), String> {
     }
     let ai = parse_witness_artifact(WITNESS_ARTIFACT)?;
     let history = read_history(&history_path)?;
-    let human = parse_history(&history)?;
+    let human = parse_history(
+        &history,
+        &current_initial_digests(),
+        &demo_dungeon_definition().id,
+    )?;
     print!("{}", render_report(&ai, &human));
     Ok(())
 }
@@ -456,23 +515,73 @@ mod tests {
 
     #[test]
     fn history_joins_attempts_and_transitions_without_scalarizing_them() {
-        let input = concat!(
-            r#"{"schema":"downwards-human-attempt-v1","room_id":"demo-dungeon.hollow-landing","outcome":{"kind":"death"},"total_ticks":12}"#,
-            "\n",
-            r#"{"schema":"downwards-human-attempt-v1","room_id":"demo-dungeon.hollow-landing","outcome":{"kind":"success"},"total_ticks":42}"#,
-            "\n",
-            r#"{"schema":"downwards-dungeon-progress-v1","room_id":"demo-dungeon.hollow-landing","event":"room transition"}"#,
-            "\n",
-            r#"{"schema":"downwards-human-attempt-v1","room_id":"not-a-dungeon-room","outcome":{"kind":"success"},"total_ticks":1}"#,
-        );
-        let rows = parse_history(input).unwrap();
+        let current_attempt = |outcome: &str, ticks: u64| {
+            serde_json::json!({
+                "schema": "downwards-human-attempt-v2",
+                "dungeon_definition_id": "current-dungeon",
+                "palette_generation_version": DUNGEON_PALETTE_GENERATION_VERSION,
+                "room_id": DemoDungeonRoom::HollowLanding.id(),
+                "player_movement_policy_version": PLAYER_MOVEMENT_POLICY_VERSION,
+                "initial_state_digest": "current",
+                "outcome": { "kind": outcome },
+                "total_ticks": ticks,
+            })
+            .to_string()
+        };
+        let input = [
+            current_attempt("death", 12),
+            current_attempt("success", 42),
+            serde_json::json!({
+                "schema": "downwards-human-attempt-v1",
+                "room_id": DemoDungeonRoom::HollowLanding.id(),
+                "player_movement_policy_version": PLAYER_MOVEMENT_POLICY_VERSION - 1,
+                "initial_state_digest": "old",
+                "outcome": { "kind": "death" },
+                "total_ticks": 9,
+            })
+            .to_string(),
+            serde_json::json!({
+                "schema": "downwards-dungeon-progress-v2",
+                "dungeon_definition_id": "current-dungeon",
+                "palette_generation_version": DUNGEON_PALETTE_GENERATION_VERSION,
+                "room_id": DemoDungeonRoom::HollowLanding.id(),
+                "event": "room transition",
+            })
+            .to_string(),
+            serde_json::json!({
+                "schema": "downwards-dungeon-progress-v1",
+                "room_id": DemoDungeonRoom::HollowLanding.id(),
+                "event": "room transition",
+            })
+            .to_string(),
+            serde_json::json!({
+                "schema": "downwards-human-attempt-v2",
+                "dungeon_definition_id": "current-dungeon",
+                "palette_generation_version": DUNGEON_PALETTE_GENERATION_VERSION,
+                "room_id": "not-a-dungeon-room",
+                "player_movement_policy_version": PLAYER_MOVEMENT_POLICY_VERSION,
+                "initial_state_digest": "current",
+                "outcome": { "kind": "success" },
+                "total_ticks": 1,
+            })
+            .to_string(),
+        ]
+        .join("\n");
+        let rows = parse_history(
+            &input,
+            &BTreeMap::from([(DemoDungeonRoom::HollowLanding, "current".to_owned())]),
+            "current-dungeon",
+        )
+        .unwrap();
         assert_eq!(
             rows[&DemoDungeonRoom::HollowLanding],
             HumanEvidence {
                 attempts: 2,
+                stale_attempts: 1,
                 successes: 1,
                 deaths: 1,
                 transition_events: 1,
+                stale_transition_events: 1,
                 successful_ticks: vec![42],
                 ..HumanEvidence::default()
             }

@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 11;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 12;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -938,11 +938,18 @@ impl PaletteDraft<'_> {
                 self.horizontal(3, 4, 11, Tile::OneWay);
             }
             DungeonPaletteCourse::DashChasm => {
-                self.horizontal(16, 12, 20, Tile::HazardUp);
-                self.horizontal(17, 12, 20, Tile::Solid);
-                // Keep the gap visually framed without offering wall-jump contacts.
-                let ceiling_start = 9 + u16::try_from(key.seed & 1).expect("bit fits u16");
-                self.horizontal(8, ceiling_start, 23, Tile::HazardDown);
+                // The first post-Boots room teaches the horizontal commitment twice rather than
+                // demanding one opaque long crossing. Each sixty-pixel bank is beyond the
+                // ordinary no-Dash jump envelope; the three-tile centre island is a full recovery
+                // point from which the player can read and repeat the same action.
+                for (start, end) in [(9, 15), (18, 24)] {
+                    self.horizontal(16, start, end, Tile::HazardUp);
+                    self.horizontal(17, start, end, Tile::Solid);
+                }
+                self.horizontal(16, 15, 18, Tile::OneWay);
+                // Frame the course high enough that it cannot turn an imperfect diagonal Dash
+                // into a ceiling collision.
+                self.horizontal(6, 9, 24, Tile::HazardDown);
             }
             DungeonPaletteCourse::GaleLanding => {
                 self.horizontal(14, 3, 10, Tile::OneWay);
@@ -1870,16 +1877,35 @@ mod tests {
     }
 
     #[test]
-    fn dash_chasm_has_an_outward_facing_hazard_bank() {
+    fn dash_chasm_has_two_outward_facing_banks_with_a_recovery_between_them() {
         let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::DashChasm).generate();
+        let course_row = &candidate.tiles[16 * usize::from(WIDTH)..17 * usize::from(WIDTH)];
+        let mut hazard_runs = Vec::new();
+        let mut run_start = None;
+        for (column, &tile) in course_row
+            .iter()
+            .chain(std::iter::once(&Tile::Empty))
+            .enumerate()
+        {
+            if tile == Tile::HazardUp {
+                run_start.get_or_insert(column);
+            } else if let Some(start) = run_start.take() {
+                hazard_runs.push(start..column);
+            }
+        }
+        assert_eq!(hazard_runs.len(), 2, "Dash Chasm must have two hazard gaps");
+        assert!(hazard_runs.iter().all(|run| run.len() >= 2));
+        for run in &hazard_runs {
+            assert!(run.clone().all(|column| {
+                candidate.tiles[17 * usize::from(WIDTH) + column] == Tile::Solid
+            }));
+        }
+        let recovery = hazard_runs[0].end..hazard_runs[1].start;
+        assert!(!recovery.is_empty(), "hazard gaps need a recovery interval");
         assert!(
-            (12..20).all(|column| {
-                candidate.tiles[16 * usize::from(WIDTH) + column] == Tile::HazardUp
-            })
-        );
-        assert!(
-            (12..20)
-                .all(|column| { candidate.tiles[17 * usize::from(WIDTH) + column] == Tile::Solid })
+            recovery
+                .clone()
+                .all(|column| course_row[column] == Tile::OneWay)
         );
     }
 

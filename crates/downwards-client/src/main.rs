@@ -54,7 +54,7 @@ const HISTORICAL_CATALOGUE_WITNESS_MOVEMENT_POLICY_VERSION: u32 = 1;
 /// commits the ordinary variable-height held input. This is deliberately a UI duration, not a
 /// level-design unit.
 const HUMAN_JUMP_TAP_WINDOW_MICROS: u64 = 100_000;
-const HUMAN_HISTORY_SCHEMA: &str = "downwards-human-attempt-v1";
+const HUMAN_HISTORY_SCHEMA: &str = "downwards-human-attempt-v2";
 const DEFAULT_HUMAN_HISTORY_PATH: &str = "playtest-history/human-attempts-v1.jsonl";
 const DUNGEON_SAVE_SCHEMA: &str = "downwards-demo-dungeon-save-v1";
 const DEFAULT_DUNGEON_SAVE_PATH: &str = "playtest-history/demo-dungeon-save-v1.json";
@@ -1752,8 +1752,10 @@ impl From<MovementTuning> for PersistentMovementTuningV1 {
 }
 
 #[derive(Serialize)]
-struct PersistentAttemptV1<'a> {
+struct PersistentAttemptV2<'a> {
     schema: &'static str,
+    dungeon_definition_id: Option<&'a str>,
+    palette_generation_version: Option<u32>,
     session_id: &'a str,
     session_started_unix_ms: u64,
     recorded_at_unix_ms: u64,
@@ -1837,8 +1839,17 @@ impl PersistentHumanHistory {
         level_name: &str,
         attempt: &RecordedAttempt,
     ) -> Result<(), String> {
-        let record = PersistentAttemptV1 {
+        let dungeon_definition = level_id
+            .starts_with("dungeon:")
+            .then(demo_dungeon_definition);
+        let record = PersistentAttemptV2 {
             schema: HUMAN_HISTORY_SCHEMA,
+            dungeon_definition_id: dungeon_definition
+                .as_ref()
+                .map(|definition| definition.id.as_str()),
+            palette_generation_version: dungeon_definition
+                .as_ref()
+                .map(|_| DUNGEON_PALETTE_GENERATION_VERSION),
             session_id: &self.session_id,
             session_started_unix_ms: self.session_started_unix_ms,
             recorded_at_unix_ms: unix_time_ms(),
@@ -1942,8 +1953,10 @@ impl PersistentHumanHistory {
         movement_tuning: MovementTuning,
     ) -> Result<(), String> {
         #[derive(Serialize)]
-        struct PersistentDungeonEventV1<'a> {
+        struct PersistentDungeonEventV2<'a> {
             schema: &'static str,
+            dungeon_definition_id: &'a str,
+            palette_generation_version: u32,
             session_id: &'a str,
             recorded_at_unix_ms: u64,
             event_index: u64,
@@ -1960,8 +1973,11 @@ impl PersistentHumanHistory {
             movement_tuning: PersistentMovementTuningV1,
         }
 
-        let record = PersistentDungeonEventV1 {
-            schema: "downwards-dungeon-progress-v1",
+        let definition = demo_dungeon_definition();
+        let record = PersistentDungeonEventV2 {
+            schema: "downwards-dungeon-progress-v2",
+            dungeon_definition_id: &definition.id,
+            palette_generation_version: DUNGEON_PALETTE_GENERATION_VERSION,
             session_id: &self.session_id,
             recorded_at_unix_ms: unix_time_ms(),
             event_index: self.next_dungeon_event_index,
@@ -7355,9 +7371,17 @@ mod tests {
         let events = progress
             .lines()
             .map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap())
-            .filter(|record| record["schema"] == "downwards-dungeon-progress-v1")
+            .filter(|record| record["schema"] == "downwards-dungeon-progress-v2")
             .collect::<Vec<_>>();
         assert_eq!(events.len(), 2);
+        assert_eq!(
+            events[0]["dungeon_definition_id"],
+            demo_dungeon_definition().id
+        );
+        assert_eq!(
+            events[0]["palette_generation_version"],
+            DUNGEON_PALETTE_GENERATION_VERSION
+        );
         assert_eq!(events[0]["event"], "coin_collected");
         assert_eq!(events[0]["item_id"], "dungeon-coin-00");
         assert_eq!(events[1]["event"], "room_transition");
@@ -7405,11 +7429,19 @@ mod tests {
             .iter()
             .find(|record| record["schema"] == HUMAN_HISTORY_SCHEMA)
             .expect("room-local human attempt was persisted before transition");
+        assert_eq!(
+            attempt["dungeon_definition_id"],
+            demo_dungeon_definition().id
+        );
+        assert_eq!(
+            attempt["palette_generation_version"],
+            DUNGEON_PALETTE_GENERATION_VERSION
+        );
         assert_eq!(attempt["room_id"], DemoDungeonRoom::HollowLanding.id());
         assert_eq!(attempt["outcome"]["kind"], "success");
         assert_eq!(attempt["outcome"]["detail"], "east");
         assert!(records.iter().any(|record| {
-            record["schema"] == "downwards-dungeon-progress-v1"
+            record["schema"] == "downwards-dungeon-progress-v2"
                 && record["event"] == "room_transition"
         }));
     }

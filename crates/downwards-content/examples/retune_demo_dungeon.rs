@@ -274,24 +274,149 @@ fn compare_routes(
     key(left_observation, left).cmp(&key(right_observation, right))
 }
 
+fn right_action(jump: bool, dash: bool) -> Action {
+    Action {
+        move_x: 1,
+        move_y: 0,
+        jump,
+        dash,
+        restart: false,
+    }
+}
+
+fn clean_step(simulation: &mut Simulation, action: Action) -> bool {
+    !simulation
+        .step(action)
+        .events
+        .iter()
+        .any(|event| matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset))
+}
+
+fn approach_x(initial: &Simulation, target_x: i32) -> Option<(Simulation, Vec<Action>)> {
+    let mut simulation = initial.clone();
+    let mut actions = Vec::new();
+    while simulation.player().bounds().x < target_x && actions.len() < 120 {
+        let action = right_action(false, false);
+        if !clean_step(&mut simulation, action) || simulation.reached_exit().is_some() {
+            return None;
+        }
+        actions.push(action);
+    }
+    (simulation.player().grounded() && simulation.player().bounds().x >= target_x)
+        .then_some((simulation, actions))
+}
+
+/// Search a deliberately small, human-readable controller vocabulary for the two Dash-Chasm
+/// transfers. This is an authoring candidate, not a production solver policy: run to a visible
+/// takeoff point, hold one jump, press Dash once, then either brake on the recovery island or keep
+/// running to the exit.
+fn readable_dash_chasm_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    let island = GroundedSupportTarget::new(
+        150,
+        180,
+        160,
+        [GroundedStandingRegion::new(150, 172).expect("valid authored standing range")],
+    )
+    .expect("valid authored support waypoint");
+    let mut first_candidates = Vec::new();
+    for takeoff_x in 65..=82 {
+        let Some((takeoff, approach)) = approach_x(initial, takeoff_x) else {
+            continue;
+        };
+        for jump_hold in 1..=10 {
+            for dash_delay in 0..=8 {
+                for coast in 0..=18 {
+                    let mut simulation = takeoff.clone();
+                    let mut actions = approach.clone();
+                    let suffix = std::iter::repeat_n(right_action(true, false), jump_hold)
+                        .chain(std::iter::repeat_n(right_action(false, false), dash_delay))
+                        .chain(std::iter::once(right_action(false, true)))
+                        .chain(std::iter::repeat_n(right_action(false, false), coast))
+                        .chain(std::iter::repeat_n(Action::default(), 30));
+                    for action in suffix {
+                        if !clean_step(&mut simulation, action) {
+                            break;
+                        }
+                        actions.push(action);
+                        if island.is_reached(&simulation) {
+                            first_candidates.push((simulation, actions));
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    first_candidates
+        .sort_by(|(_, left), (_, right)| static_route_key(left).cmp(&static_route_key(right)));
+    first_candidates.dedup_by(|(_, left), (_, right)| left == right);
+
+    let mut complete = Vec::new();
+    for (island_state, first_actions) in first_candidates.into_iter().take(8) {
+        for takeoff_x in 150..=172 {
+            let Some((takeoff, approach)) = approach_x(&island_state, takeoff_x) else {
+                continue;
+            };
+            for jump_hold in 1..=10 {
+                for dash_delay in 0..=8 {
+                    let mut simulation = takeoff.clone();
+                    let mut actions = first_actions.clone();
+                    actions.extend(approach.iter().copied());
+                    let suffix = std::iter::repeat_n(right_action(true, false), jump_hold)
+                        .chain(std::iter::repeat_n(right_action(false, false), dash_delay))
+                        .chain(std::iter::once(right_action(false, true)))
+                        .chain(std::iter::repeat_n(right_action(false, false), 120));
+                    for action in suffix {
+                        if !clean_step(&mut simulation, action) {
+                            break;
+                        }
+                        actions.push(action);
+                        if simulation.reached_exit() == Some("east") {
+                            complete.push(actions);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    let actions = complete
+        .into_iter()
+        .min_by(|left, right| static_route_key(left).cmp(&static_route_key(right)))?;
+    Some(TargetSolution {
+        target: target.clone(),
+        reached: ReachedTarget::Door("east".to_owned()),
+        replay: Replay::record(initial, actions),
+        stats: SearchStats::default(),
+    })
+}
+
 fn segmented_candidate(
     initial: &Simulation,
     spec: DemoDungeonRouteSpec,
     target: &SearchTarget,
 ) -> Option<TargetSolution> {
-    let waypoint = match spec.room {
-        DemoDungeonRoom::VoidPass => GroundedSupportTarget::new(
-            170,
-            240,
-            30,
-            [GroundedStandingRegion::new(170, 232).expect("valid authored standing range")],
-        )
-        .expect("valid authored support waypoint"),
+    if spec.room == DemoDungeonRoom::DashChasm {
+        return readable_dash_chasm_candidate(initial, target);
+    }
+    let (waypoint, segment_config) = match spec.room {
+        DemoDungeonRoom::VoidPass => (
+            GroundedSupportTarget::new(
+                170,
+                240,
+                30,
+                [GroundedStandingRegion::new(170, 232).expect("valid authored standing range")],
+            )
+            .expect("valid authored support waypoint"),
+            SolverConfig::for_abilities(AbilitySet::new(true, false)),
+        ),
         _ => return None,
     };
-    let wall_only_config = SolverConfig::for_abilities(AbilitySet::new(true, false));
     let GroundedSupportSolveOutcome::Solved(first) =
-        solve_grounded_support(initial, &waypoint, &wall_only_config).ok()?
+        solve_grounded_support(initial, &waypoint, &segment_config).ok()?
     else {
         return None;
     };
@@ -303,7 +428,7 @@ fn segmented_candidate(
     let direct = audit_direct_controller_probes(
         &intermediate,
         std::slice::from_ref(target),
-        &wall_only_config,
+        &segment_config,
     )
     .ok()?;
     let second = if let Some(witness) = direct
@@ -319,7 +444,7 @@ fn segmented_candidate(
         }
     } else {
         let TargetSolveOutcome::Solved(second) =
-            solve_target(&intermediate, target.clone(), &wall_only_config).ok()?
+            solve_target(&intermediate, target.clone(), &segment_config).ok()?
         else {
             return None;
         };

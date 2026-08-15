@@ -191,8 +191,11 @@ Dungeon progress is checkpointed after every coin, unlock, Crown pickup, and roo
 without destroying the old run, use `cargo run -- --dungeon-new`: the previous save is renamed to a
 timestamped `.bak`. `--dungeon-save PATH` selects a separate checkpoint for A/B playthroughs.
 Transitions, sealed-door attempts, coins, and unlocks are also appended as typed
-`downwards-dungeon-progress-v1` records to the ordinary `--history` JSONL stream, alongside the
-per-attempt input/replay records.
+`downwards-dungeon-progress-v2` records to the ordinary `--history` JSONL stream, alongside the
+`downwards-human-attempt-v2` input/replay records. Both bind the exact dungeon-definition and
+palette versions; older v1 attempts can join only through an exact current initial-state digest and
+movement-policy match. Other older rows remain visible as stale evidence rather than being silently
+applied to changed geometry.
 
 This is an expanding hand-authored dungeon built from deterministic room-palette starting points,
 not a claim that a general dungeon generator can design the finished game. It currently contains
@@ -216,11 +219,15 @@ methods as well as the coins. Deaths and restarts return to the door used to ent
 without discarding gloves, boots, Crown, or coins. `V` demonstrates the next intended room-local
 objective; it is not a whole-dungeon route.
 
-Palette generation v11 also replaces the Astral Keep's duplicated Void Pass shell with a distinct
-late wall-rhythm room. Its four alternating contact bands use upward-lethal caps so Dash cannot
-turn them into recharge ledges. The retained route has five accepted Wall Jumps and seven
-horizontal reversals; a same-policy bounded Dash-only search has no positive. As elsewhere, that
-bounded miss is evidence for the authored gate, not a proof of impossibility.
+Palette generation v12 includes two evidence-driven replacements. The first post-Boots Gale Chasm
+was implicated by 24 recorded human deaths and an AI witness with 43 action spans and 11 reversals;
+it now presents two readable sixty-pixel Dash gaps separated by a three-tile full-recovery island.
+The mechanically selected route uses nine spans, two jumps, two Dashes, and no reversals, while a
+same-policy bounded Wall-Jump-only search has no positive. The Astral Keep's former duplicated Void
+Pass shell is now a distinct late wall-rhythm room. Its four alternating contact bands use
+upward-lethal caps so Dash cannot turn them into recharge ledges. The retained route has five
+accepted Wall Jumps and seven horizontal reversals; a bounded Dash-only search has no positive. As
+elsewhere, bounded misses are evidence for the authored gates, not proofs of impossibility.
 
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 
@@ -248,6 +255,8 @@ Pass a JSONL path as the sole argument to inspect a different playtest. The repo
 ticks, input spans, accepted traversal events, reversals, the weakest recorded perturbation family,
 human deaths/retries/success times, and each floor's nearest tile layout side by side. Its flags are
 inspection prompts; the tool deliberately has no aggregate difficulty score or room ranking.
+`STALE-HUMAN` identifies records from an older room, movement, or dungeon policy and reports them
+separately from current attempts.
 
 In any human-controlled room, press `F2` to open the movement-tuning menu. It directly adjusts top
 speed in pixels/second, acceleration and braking response in milliseconds, and wall-momentum
