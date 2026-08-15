@@ -186,16 +186,16 @@ To play the first multi-room dungeon vertical slice:
 cargo run -- --dungeon
 ```
 
-This is intentionally a hand-assembled graph made from a deterministic eleven-room generator
-palette, not yet a general dungeon generator. Boundary doors traverse between real rooms and the
-main loop has loft, belfry, and treasury branches woven into its progression. Ten persistent coins
-are spread across the dungeon. The first six require clearing both pre-boots branches and open the
-Winged Vault; the seventh and eighth open the treasury; its final two open the ten-coin Crown gate.
-The Winged Boots sit above an alternating hazard-band wall-jump climb modelled on the gallery's
-“Even Tempo” room. Collecting them unlocks Dash, including a low dash-squeeze passage, for the rest
-of the run. Cross Gale Chasm and collect the Crown in the final sanctum. Deaths and restarts return
-to the door used to enter the current room without discarding boots, Crown, or coins. `V`
-demonstrates the next intended room-local objective; it is not a whole-dungeon route.
+This is an expanding hand-authored dungeon built from deterministic room-palette starting points,
+not a claim that a general dungeon generator can design the finished game. It currently contains
+21 connected floors and 16 persistent coins. The opening Rootworks region begins without traversal
+powers: both coin branches are required to enter the Climber's Reliquary, whose pickup unlocks Wall
+Jump. The next six branch coins open the Winged Vault; its alternating hazard-band climb is modelled
+on the gallery's “Even Tempo” room and awards Dash. Two more coins open the Treasury, and its final
+two open the 16-coin Crown gate. The Crown ingress explicitly requires both unlocked traversal
+methods as well as the coins. Deaths and restarts return to the door used to enter the current room
+without discarding gloves, boots, Crown, or coins. `V` demonstrates the next intended room-local
+objective; it is not a whole-dungeon route.
 
 In any human-controlled room, press `F2` to open the movement-tuning menu. It directly adjusts top
 speed in pixels/second, acceleration and braking response in milliseconds, and wall-momentum
