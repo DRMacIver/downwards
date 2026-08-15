@@ -10,7 +10,7 @@ Run it with:
 cargo run -- --dungeon
 ```
 
-The 31 room shells are deterministic `downwards-gen` palette outputs. Their graph is currently
+The 41 room shells are deterministic `downwards-gen` palette outputs. Their graph is currently
 assembled by trusted content rather than by a general topology generator:
 
 ```text
@@ -24,9 +24,13 @@ Stone Lessons ─ Broad Chimney ─ Bell Switchback ─ Evening Measure ─ Spli
                                                                                          │
                   Winged Vault ───── Rootbound Underpass ─ The Deep Treasury
                        │                       │
-Threshold ─ Three-Way Hall ───────── Climbers' Gallery ─ Gale Chasm ─ The Crown Gate ─ Crown
+Threshold ─ Three-Way Hall ───────── Climbers' Gallery ─ Gale Chasm ─ Gale Landing ─ Low Passage ─ Forked Current
                        │                       │
                   Rafter Mint            Needle Belfry
+                                                                                                      │
+Pulse Gallery ─ Storm Split ─ Relay Chasm ─ Brake Tower ─ Dash Seal ─ Crown Gate ─ Crown          Coin Duct
+                    │
+                Storm Cache
 ```
 
 The run begins with ordinary movement and no traversal unlocks. Six coins distributed across both
@@ -40,19 +44,22 @@ Tempo” pattern: alternating safe wall bands separated by inward-facing hazard 
 boots grants Dash immediately and omits the pickup on later visits. Horizontal Dash uses a low
 posture in the current movement policy, so an eight-pixel body can traverse a ten-pixel tunnel that
 the standing twelve-pixel body cannot walk through, then expands automatically once headroom
-returns.
+returns. The post-Treasury path is now a mandatory ten-floor Dash course rather than a short route
+to the Crown. Its two side branches contribute required coins; the final Dash Seal requires all six
+regional coins and has a physical low-passage witness with an accepted Dash.
 
 The Winged Boots and Crown use a dedicated nearest-neighbour 16-pixel pickup sheet rather than
 the earlier debug rectangles. The Crown trigger has no generic exit frame drawn over it, so the
 item itself remains the final room's visual goal.
 
-Twenty-two stable coin IDs are distributed across the graph. Their 128-bit collection mask persists
+Twenty-eight stable coin IDs are distributed across the graph. Their 128-bit collection mask persists
 across room reconstruction and is shown in both HUD rails. Exactly six are available before the
 Climbing Gloves. Six more are distributed through the mandatory Wall-Jump course, including both
 branches; all twelve are needed to leave it. Another six are available in the Threshold, Three-Way
 Hall, Rafter Mint, Climbers' Gallery, and Needle Belfry; collecting all eighteen is therefore
 required to enter the Winged Vault or lower loop. The vault and Underpass contribute the nineteenth
-and twentieth, opening the Treasury. Its final two coins open the 22-coin Crown Gate. A rejected door
+and twentieth, opening the Treasury. Its two coins permit entry to the Dash region; all six coins
+there are then required at the Dash Seal, producing the full 28-coin Crown inventory. A rejected door
 returns the player to its validated interior arrival without resetting room-local progress. The
 Crown similarly persists and is the only terminal goal. Ordinary door exits change rooms and are
 deliberately not counted as whole-level victories.
@@ -66,8 +73,10 @@ wall hops. A WallJump-only search misses the chasm under the same bounded search
 post-boots loadout succeeds. That miss is evidence for this vertical slice, not a proof of physical
 impossibility. The ten opening-region representative routes also retain at least one observed
 success in every applicable strength-one blind input-perturbation family under a small deterministic
-study. Those observations are controller diagnostics, not a scalar difficulty or human-robustness
-claim.
+study. The ten Dash-region representative routes likewise retain observed successes in every
+applicable strength-one perturbation family. The final Dash Seal's exact positive uses Dash while an
+equivalent WallJump-only search has no positive. Those observations are controller diagnostics, not
+a scalar difficulty or human-robustness claim.
 
 This does not claim a strong dungeon generator, calibrated whole-run difficulty, or durable
 save-game persistence. It is a playable integration prototype intended to expose graph, pacing,

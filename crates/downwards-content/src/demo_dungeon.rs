@@ -14,12 +14,13 @@ pub const DEMO_DUNGEON_GLOVE_PICKUP: &str = "climbing-gloves";
 pub const DEMO_DUNGEON_BOOT_PICKUP: &str = "winged-boots";
 pub const DEMO_DUNGEON_CROWN_PICKUP: &str = "crown";
 pub const DEMO_DUNGEON_GOAL_EXIT: &str = "crown-goal";
-pub const DEMO_DUNGEON_TOTAL_COINS: u8 = 22;
+pub const DEMO_DUNGEON_TOTAL_COINS: u8 = 28;
 pub const DEMO_DUNGEON_GLOVE_GATE_REQUIREMENT: u8 = 6;
 pub const DEMO_DUNGEON_WALL_REGION_GATE_REQUIREMENT: u8 = 12;
 pub const DEMO_DUNGEON_BOOT_GATE_REQUIREMENT: u8 = 18;
 pub const DEMO_DUNGEON_TREASURY_REQUIREMENT: u8 = 20;
-pub const DEMO_DUNGEON_CROWN_GATE_REQUIREMENT: u8 = 22;
+pub const DEMO_DUNGEON_DASH_REGION_GATE_REQUIREMENT: u8 = 28;
+pub const DEMO_DUNGEON_CROWN_GATE_REQUIREMENT: u8 = 28;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct DemoDungeonInventory {
@@ -128,6 +129,16 @@ pub enum DemoDungeonRoom {
     BootsVault,
     Underpass,
     DashChasm,
+    GaleLanding,
+    LowPassage,
+    CurrentFork,
+    CoinDuct,
+    PulseGallery,
+    StormSplit,
+    StormCache,
+    RelayChasm,
+    BrakeTower,
+    DashSeal,
     CoinLoft,
     NeedleRoom,
     Treasury,
@@ -136,7 +147,7 @@ pub enum DemoDungeonRoom {
 }
 
 impl DemoDungeonRoom {
-    pub const ALL: [Self; 31] = [
+    pub const ALL: [Self; 41] = [
         Self::HollowLanding,
         Self::MossWalk,
         Self::SplitRoot,
@@ -163,6 +174,16 @@ impl DemoDungeonRoom {
         Self::BootsVault,
         Self::Underpass,
         Self::DashChasm,
+        Self::GaleLanding,
+        Self::LowPassage,
+        Self::CurrentFork,
+        Self::CoinDuct,
+        Self::PulseGallery,
+        Self::StormSplit,
+        Self::StormCache,
+        Self::RelayChasm,
+        Self::BrakeTower,
+        Self::DashSeal,
         Self::CoinLoft,
         Self::NeedleRoom,
         Self::Treasury,
@@ -199,6 +220,16 @@ impl DemoDungeonRoom {
             Self::BootsVault => "demo-dungeon.boots-vault",
             Self::Underpass => "demo-dungeon.underpass",
             Self::DashChasm => "demo-dungeon.dash-chasm",
+            Self::GaleLanding => "demo-dungeon.gale-landing",
+            Self::LowPassage => "demo-dungeon.low-passage",
+            Self::CurrentFork => "demo-dungeon.current-fork",
+            Self::CoinDuct => "demo-dungeon.coin-duct",
+            Self::PulseGallery => "demo-dungeon.pulse-gallery",
+            Self::StormSplit => "demo-dungeon.storm-split",
+            Self::StormCache => "demo-dungeon.storm-cache",
+            Self::RelayChasm => "demo-dungeon.relay-chasm",
+            Self::BrakeTower => "demo-dungeon.brake-tower",
+            Self::DashSeal => "demo-dungeon.dash-seal",
             Self::CoinLoft => "demo-dungeon.coin-loft",
             Self::NeedleRoom => "demo-dungeon.needle-room",
             Self::Treasury => "demo-dungeon.treasury",
@@ -236,6 +267,16 @@ impl DemoDungeonRoom {
             Self::BootsVault => "The Winged Vault",
             Self::Underpass => "Rootbound Underpass",
             Self::DashChasm => "Gale Chasm",
+            Self::GaleLanding => "Gale Landing",
+            Self::LowPassage => "The Low Passage",
+            Self::CurrentFork => "The Forked Current",
+            Self::CoinDuct => "The Coin Duct",
+            Self::PulseGallery => "Pulse Gallery",
+            Self::StormSplit => "The Storm Split",
+            Self::StormCache => "Storm Cache",
+            Self::RelayChasm => "Relay Chasm",
+            Self::BrakeTower => "Brake Tower",
+            Self::DashSeal => "The Dash Seal",
             Self::CoinLoft => "Rafter Mint",
             Self::NeedleRoom => "Needle Belfry",
             Self::Treasury => "The Deep Treasury",
@@ -281,8 +322,18 @@ impl DemoDungeonRoom {
             Self::Underpass => 26,
             Self::Treasury => 27,
             Self::DashChasm => 28,
-            Self::Gatehouse => 29,
-            Self::CrownSanctum => 30,
+            Self::GaleLanding => 29,
+            Self::LowPassage => 30,
+            Self::CurrentFork => 31,
+            Self::CoinDuct => 32,
+            Self::PulseGallery => 33,
+            Self::StormSplit => 34,
+            Self::StormCache => 35,
+            Self::RelayChasm => 36,
+            Self::BrakeTower => 37,
+            Self::DashSeal => 38,
+            Self::Gatehouse => 39,
+            Self::CrownSanctum => 40,
         })
     }
 
@@ -314,6 +365,16 @@ impl DemoDungeonRoom {
             Self::BootsVault => DungeonPaletteCourse::BootsVault,
             Self::Underpass => DungeonPaletteCourse::Underpass,
             Self::DashChasm => DungeonPaletteCourse::DashChasm,
+            Self::GaleLanding => DungeonPaletteCourse::GaleLanding,
+            Self::LowPassage => DungeonPaletteCourse::LowPassage,
+            Self::CurrentFork => DungeonPaletteCourse::CurrentFork,
+            Self::CoinDuct => DungeonPaletteCourse::CoinDuct,
+            Self::PulseGallery => DungeonPaletteCourse::PulseGallery,
+            Self::StormSplit => DungeonPaletteCourse::StormSplit,
+            Self::StormCache => DungeonPaletteCourse::StormCache,
+            Self::RelayChasm => DungeonPaletteCourse::RelayChasm,
+            Self::BrakeTower => DungeonPaletteCourse::BrakeTower,
+            Self::DashSeal => DungeonPaletteCourse::DashSeal,
             Self::CoinLoft => DungeonPaletteCourse::CoinLoft,
             Self::NeedleRoom => DungeonPaletteCourse::NeedleRoom,
             Self::Treasury => DungeonPaletteCourse::Treasury,
@@ -423,13 +484,49 @@ impl DemoDungeonRoom {
             ],
             Self::DashChasm => vec![
                 connection("west", Self::WallGallery, "east"),
+                connection("east", Self::GaleLanding, "west"),
+            ],
+            Self::GaleLanding => vec![
+                connection("west", Self::DashChasm, "east"),
+                connection("east", Self::LowPassage, "west"),
+            ],
+            Self::LowPassage => vec![
+                connection("west", Self::GaleLanding, "east"),
+                connection("east", Self::CurrentFork, "west"),
+            ],
+            Self::CurrentFork => vec![
+                connection("west", Self::LowPassage, "east"),
+                connection("east", Self::PulseGallery, "west"),
+                connection("floor", Self::CoinDuct, "ceiling"),
+            ],
+            Self::CoinDuct => vec![connection("ceiling", Self::CurrentFork, "floor")],
+            Self::PulseGallery => vec![
+                connection("west", Self::CurrentFork, "east"),
+                connection("east", Self::StormSplit, "west"),
+            ],
+            Self::StormSplit => vec![
+                connection("west", Self::PulseGallery, "east"),
+                connection("east", Self::RelayChasm, "west"),
+                connection("ceiling", Self::StormCache, "floor"),
+            ],
+            Self::StormCache => vec![connection("floor", Self::StormSplit, "ceiling")],
+            Self::RelayChasm => vec![
+                connection("west", Self::StormSplit, "east"),
+                connection("east", Self::BrakeTower, "west"),
+            ],
+            Self::BrakeTower => vec![
+                connection("west", Self::RelayChasm, "east"),
+                connection("east", Self::DashSeal, "west"),
+            ],
+            Self::DashSeal => vec![
+                connection("west", Self::BrakeTower, "east"),
                 connection("east", Self::Gatehouse, "west"),
             ],
             Self::CoinLoft => vec![connection("ceiling", Self::Crossroads, "floor")],
             Self::NeedleRoom => vec![connection("floor", Self::WallGallery, "ceiling")],
             Self::Treasury => vec![connection("west", Self::Underpass, "east")],
             Self::Gatehouse => vec![
-                connection("west", Self::DashChasm, "east"),
+                connection("west", Self::DashSeal, "east"),
                 connection("east", Self::CrownSanctum, "west"),
             ],
             Self::CrownSanctum => vec![connection("west", Self::Gatehouse, "east")],
@@ -458,6 +555,7 @@ pub const fn demo_dungeon_door_requirement(
     let coins = match (room, door_id.as_bytes()) {
         (DemoDungeonRoom::Sluice, b"east") => DEMO_DUNGEON_GLOVE_GATE_REQUIREMENT,
         (DemoDungeonRoom::WallGate, b"east") => DEMO_DUNGEON_WALL_REGION_GATE_REQUIREMENT,
+        (DemoDungeonRoom::DashSeal, b"east") => DEMO_DUNGEON_DASH_REGION_GATE_REQUIREMENT,
         (DemoDungeonRoom::Crossroads, b"ceiling") | (DemoDungeonRoom::WallGallery, b"floor") => {
             DEMO_DUNGEON_BOOT_GATE_REQUIREMENT
         }
@@ -471,6 +569,7 @@ pub const fn demo_dungeon_door_requirement(
         }
         (DemoDungeonRoom::WallGate, b"east") => TraversalMethods::one(TraversalMethod::WallJump),
         (DemoDungeonRoom::WallGallery, b"east") => TraversalMethods::one(TraversalMethod::Dash),
+        (DemoDungeonRoom::DashSeal, b"east") => TraversalMethods::one(TraversalMethod::Dash),
         (DemoDungeonRoom::Gatehouse, b"east") => TraversalMethods::ALL_CURRENT,
         _ => TraversalMethods::NONE,
     };
@@ -523,7 +622,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v5".to_owned(),
+        id: "demo-dungeon-v6".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -627,6 +726,12 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         DemoDungeonRoom::TempoHall => vec![(19, Rect::new(204, 20, 8, 10))],
         DemoDungeonRoom::RafterShrine => vec![(20, Rect::new(194, 10, 8, 10))],
         DemoDungeonRoom::NeedleTurn => vec![(21, Rect::new(204, 50, 8, 10))],
+        DemoDungeonRoom::GaleLanding => vec![(22, Rect::new(264, 120, 8, 10))],
+        DemoDungeonRoom::LowPassage => vec![(23, Rect::new(234, 94, 8, 10))],
+        DemoDungeonRoom::CoinDuct => vec![(24, Rect::new(154, 14, 8, 10))],
+        DemoDungeonRoom::PulseGallery => vec![(25, Rect::new(154, 114, 8, 10))],
+        DemoDungeonRoom::StormCache => vec![(26, Rect::new(234, 14, 8, 10))],
+        DemoDungeonRoom::BrakeTower => vec![(27, Rect::new(234, 14, 8, 10))],
         DemoDungeonRoom::SplitRoot
         | DemoDungeonRoom::OldLift
         | DemoDungeonRoom::LanternGallery
@@ -636,6 +741,10 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         | DemoDungeonRoom::SplitSpire
         | DemoDungeonRoom::LandingChain
         | DemoDungeonRoom::WallGate
+        | DemoDungeonRoom::CurrentFork
+        | DemoDungeonRoom::StormSplit
+        | DemoDungeonRoom::RelayChasm
+        | DemoDungeonRoom::DashSeal
         | DemoDungeonRoom::DashChasm
         | DemoDungeonRoom::Gatehouse
         | DemoDungeonRoom::CrownSanctum => vec![],
@@ -840,6 +949,17 @@ mod tests {
                 ],
                 (16..22).collect::<Vec<_>>(),
             ),
+            (
+                vec![
+                    DemoDungeonRoom::GaleLanding,
+                    DemoDungeonRoom::LowPassage,
+                    DemoDungeonRoom::CoinDuct,
+                    DemoDungeonRoom::PulseGallery,
+                    DemoDungeonRoom::StormCache,
+                    DemoDungeonRoom::BrakeTower,
+                ],
+                (22..28).collect::<Vec<_>>(),
+            ),
         ] {
             let mut actual = rooms
                 .into_iter()
@@ -868,6 +988,10 @@ mod tests {
         assert_eq!(
             demo_dungeon_door_coin_requirement(DemoDungeonRoom::Underpass, "east"),
             Some(DEMO_DUNGEON_TREASURY_REQUIREMENT)
+        );
+        assert_eq!(
+            demo_dungeon_door_coin_requirement(DemoDungeonRoom::DashSeal, "east"),
+            Some(DEMO_DUNGEON_DASH_REGION_GATE_REQUIREMENT)
         );
         assert_eq!(
             demo_dungeon_door_coin_requirement(DemoDungeonRoom::Gatehouse, "east"),
@@ -1256,6 +1380,103 @@ mod tests {
             complete,
             SearchTarget::door("east"),
         );
+        let dash_ready = inventory_with_coin_indices(0..22, true, true);
+        assert_route(
+            DemoDungeonRoom::GaleLanding,
+            Some("west"),
+            dash_ready,
+            SearchTarget::pickup(coin_id(22)),
+        );
+        assert_route(
+            DemoDungeonRoom::GaleLanding,
+            Some("west"),
+            dash_ready,
+            SearchTarget::door("east"),
+        );
+        assert_route(
+            DemoDungeonRoom::LowPassage,
+            Some("west"),
+            dash_ready,
+            SearchTarget::pickup(coin_id(23)),
+        );
+        assert_route(
+            DemoDungeonRoom::LowPassage,
+            Some("west"),
+            dash_ready,
+            SearchTarget::door("east"),
+        );
+        assert_route(
+            DemoDungeonRoom::CurrentFork,
+            Some("west"),
+            dash_ready,
+            SearchTarget::door("floor"),
+        );
+        assert_route(
+            DemoDungeonRoom::CoinDuct,
+            Some("ceiling"),
+            dash_ready,
+            SearchTarget::pickup(coin_id(24)),
+        );
+        assert_route(
+            DemoDungeonRoom::CurrentFork,
+            Some("west"),
+            dash_ready,
+            SearchTarget::door("east"),
+        );
+        assert_route(
+            DemoDungeonRoom::PulseGallery,
+            Some("west"),
+            dash_ready,
+            SearchTarget::pickup(coin_id(25)),
+        );
+        assert_route(
+            DemoDungeonRoom::PulseGallery,
+            Some("west"),
+            dash_ready,
+            SearchTarget::door("east"),
+        );
+        assert_route(
+            DemoDungeonRoom::StormSplit,
+            Some("west"),
+            dash_ready,
+            SearchTarget::door("ceiling"),
+        );
+        assert_route(
+            DemoDungeonRoom::StormCache,
+            Some("floor"),
+            dash_ready,
+            SearchTarget::pickup(coin_id(26)),
+        );
+        assert_route(
+            DemoDungeonRoom::StormSplit,
+            Some("west"),
+            dash_ready,
+            SearchTarget::door("east"),
+        );
+        assert_route(
+            DemoDungeonRoom::RelayChasm,
+            Some("west"),
+            dash_ready,
+            SearchTarget::door("east"),
+        );
+        assert_route(
+            DemoDungeonRoom::BrakeTower,
+            Some("west"),
+            dash_ready,
+            SearchTarget::pickup(coin_id(27)),
+        );
+        assert_route(
+            DemoDungeonRoom::BrakeTower,
+            Some("west"),
+            dash_ready,
+            SearchTarget::door("east"),
+        );
+        assert_route(
+            DemoDungeonRoom::DashSeal,
+            Some("west"),
+            complete,
+            SearchTarget::door("east"),
+        );
         assert_route(
             DemoDungeonRoom::Gatehouse,
             Some("west"),
@@ -1332,6 +1553,89 @@ mod tests {
                 &solution,
                 ShakyHandConfig {
                     seed: 0xD06E_5000 + index as u64,
+                    trials_per_curve_point: 8,
+                    grace_ticks: 18,
+                    correlated_boundaries: 2,
+                    convergence_confirmation_ticks: 2,
+                },
+            )
+            .unwrap();
+            assert!(report.exact_control_succeeded);
+            for curve in report.curves.iter().filter(|curve| {
+                curve.family != NoiseFamily::Exact && curve.strength_ticks == 1 && curve.trials > 0
+            }) {
+                assert!(
+                    curve.successes > 0,
+                    "{room:?} has no observed success for {:?} strength-1 perturbations; outcomes={:?}",
+                    curve.family,
+                    curve.trials_detail
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn dash_region_routes_retain_observed_successes_under_small_input_perturbations() {
+        let dash_ready = inventory_with_coin_indices(0..22, true, true);
+        let routes = [
+            (
+                DemoDungeonRoom::GaleLanding,
+                "west",
+                SearchTarget::pickup(coin_id(22)),
+            ),
+            (
+                DemoDungeonRoom::LowPassage,
+                "west",
+                SearchTarget::door("east"),
+            ),
+            (
+                DemoDungeonRoom::CurrentFork,
+                "west",
+                SearchTarget::door("floor"),
+            ),
+            (
+                DemoDungeonRoom::CoinDuct,
+                "ceiling",
+                SearchTarget::pickup(coin_id(24)),
+            ),
+            (
+                DemoDungeonRoom::PulseGallery,
+                "west",
+                SearchTarget::door("east"),
+            ),
+            (
+                DemoDungeonRoom::StormSplit,
+                "west",
+                SearchTarget::door("ceiling"),
+            ),
+            (
+                DemoDungeonRoom::StormCache,
+                "floor",
+                SearchTarget::pickup(coin_id(26)),
+            ),
+            (
+                DemoDungeonRoom::RelayChasm,
+                "west",
+                SearchTarget::door("east"),
+            ),
+            (
+                DemoDungeonRoom::BrakeTower,
+                "west",
+                SearchTarget::pickup(coin_id(27)),
+            ),
+            (
+                DemoDungeonRoom::DashSeal,
+                "west",
+                SearchTarget::door("east"),
+            ),
+        ];
+        for (index, (room, entry, target)) in routes.into_iter().enumerate() {
+            let (initial, solution) = solve_route(room, Some(entry), dash_ready, target);
+            let report = evaluate_shaky_hand(
+                &initial,
+                &solution,
+                ShakyHandConfig {
+                    seed: 0xD06E_DA50 + index as u64,
                     trials_per_curve_point: 8,
                     grace_ticks: 18,
                     correlated_boundaries: 2,
@@ -1477,6 +1781,18 @@ mod tests {
         ] {
             assert_route(DemoDungeonRoom::Treasury, Some("west"), boots, target);
         }
+        assert_route(
+            DemoDungeonRoom::CoinDuct,
+            Some("ceiling"),
+            boots,
+            SearchTarget::pickup(coin_id(24)),
+        );
+        assert_route(
+            DemoDungeonRoom::StormCache,
+            Some("floor"),
+            boots,
+            SearchTarget::pickup(coin_id(26)),
+        );
     }
 
     #[test]
@@ -1556,6 +1872,27 @@ mod tests {
         let treasury = solve_and_advance(treasury, SearchTarget::pickup(coin_id(15)));
         let treasury = solve_and_advance(treasury, SearchTarget::door("west"));
         assert_eq!(treasury.reached_exit(), Some("west"));
+
+        let dash_ready = inventory_with_coin_indices(0..22, true, true);
+        let coin_duct = Simulation::enter_via_door(
+            demo_dungeon_room(DemoDungeonRoom::CoinDuct, dash_ready),
+            dash_ready.abilities(),
+            "ceiling",
+        )
+        .unwrap();
+        let coin_duct = solve_and_advance(coin_duct, SearchTarget::pickup(coin_id(24)));
+        let coin_duct = solve_and_advance(coin_duct, SearchTarget::door("ceiling"));
+        assert_eq!(coin_duct.reached_exit(), Some("ceiling"));
+
+        let storm_cache = Simulation::enter_via_door(
+            demo_dungeon_room(DemoDungeonRoom::StormCache, dash_ready),
+            dash_ready.abilities(),
+            "floor",
+        )
+        .unwrap();
+        let storm_cache = solve_and_advance(storm_cache, SearchTarget::pickup(coin_id(26)));
+        let storm_cache = solve_and_advance(storm_cache, SearchTarget::door("floor"));
+        assert_eq!(storm_cache.reached_exit(), Some("floor"));
     }
 
     #[test]
@@ -1628,6 +1965,60 @@ mod tests {
         assert!(
             matches!(outcome, TargetSolveOutcome::Inconclusive { .. }),
             "baseline search unexpectedly crossed the mandatory Wall Jump gate: {outcome:?}"
+        );
+    }
+
+    #[test]
+    fn dash_region_seal_has_an_observed_dash_and_no_wall_jump_only_positive() {
+        let inventory = DemoDungeonInventory {
+            climbing_gloves: true,
+            winged_boots: true,
+            ..DemoDungeonInventory::default()
+        };
+        let room = demo_dungeon_room(DemoDungeonRoom::DashSeal, inventory);
+        let mut initial = Simulation::enter_via_door(room, inventory.abilities(), "west").unwrap();
+        initial.enable_current_player_movement();
+        let outcome = solve_target(
+            &initial,
+            SearchTarget::door("east"),
+            &SolverConfig::for_abilities(inventory.abilities()),
+        )
+        .unwrap();
+        let TargetSolveOutcome::Solved(solution) = outcome else {
+            panic!("Dash-region seal lost its known positive: {outcome:?}");
+        };
+        let mut replayed = initial;
+        let mut accepted_dashes = 0;
+        for action in solution.replay.actions() {
+            let report = replayed.step(action);
+            accepted_dashes += report
+                .events
+                .iter()
+                .filter(|event| matches!(event, SimulationEvent::Dashed { .. }))
+                .count();
+        }
+        assert_eq!(replayed.reached_exit(), Some("east"));
+        assert!(
+            accepted_dashes >= 1,
+            "the mandatory Dash seal route must actually use Dash"
+        );
+
+        let reduced = DemoDungeonInventory {
+            climbing_gloves: true,
+            ..DemoDungeonInventory::default()
+        };
+        let room = demo_dungeon_room(DemoDungeonRoom::DashSeal, reduced);
+        let mut initial = Simulation::enter_via_door(room, reduced.abilities(), "west").unwrap();
+        initial.enable_current_player_movement();
+        let outcome = solve_target(
+            &initial,
+            SearchTarget::door("east"),
+            &SolverConfig::for_abilities(reduced.abilities()),
+        )
+        .unwrap();
+        assert!(
+            matches!(outcome, TargetSolveOutcome::Inconclusive { .. }),
+            "WallJump-only search unexpectedly crossed the mandatory Dash seal: {outcome:?}"
         );
     }
 

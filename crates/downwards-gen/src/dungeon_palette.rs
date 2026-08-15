@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 5;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 6;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -45,6 +45,16 @@ pub enum DungeonPaletteCourse {
     BootsVault,
     Underpass,
     DashChasm,
+    GaleLanding,
+    LowPassage,
+    CurrentFork,
+    CoinDuct,
+    PulseGallery,
+    StormSplit,
+    StormCache,
+    RelayChasm,
+    BrakeTower,
+    DashSeal,
     CoinLoft,
     NeedleRoom,
     Treasury,
@@ -53,7 +63,7 @@ pub enum DungeonPaletteCourse {
 }
 
 impl DungeonPaletteCourse {
-    pub const ALL: [Self; 31] = [
+    pub const ALL: [Self; 41] = [
         Self::HollowLanding,
         Self::MossWalk,
         Self::SplitRoot,
@@ -80,6 +90,16 @@ impl DungeonPaletteCourse {
         Self::BootsVault,
         Self::Underpass,
         Self::DashChasm,
+        Self::GaleLanding,
+        Self::LowPassage,
+        Self::CurrentFork,
+        Self::CoinDuct,
+        Self::PulseGallery,
+        Self::StormSplit,
+        Self::StormCache,
+        Self::RelayChasm,
+        Self::BrakeTower,
+        Self::DashSeal,
         Self::CoinLoft,
         Self::NeedleRoom,
         Self::Treasury,
@@ -116,6 +136,16 @@ impl DungeonPaletteCourse {
             Self::BootsVault => "boots-vault",
             Self::Underpass => "underpass",
             Self::DashChasm => "dash-chasm",
+            Self::GaleLanding => "gale-landing",
+            Self::LowPassage => "low-passage",
+            Self::CurrentFork => "current-fork",
+            Self::CoinDuct => "coin-duct",
+            Self::PulseGallery => "pulse-gallery",
+            Self::StormSplit => "storm-split",
+            Self::StormCache => "storm-cache",
+            Self::RelayChasm => "relay-chasm",
+            Self::BrakeTower => "brake-tower",
+            Self::DashSeal => "dash-seal",
             Self::CoinLoft => "coin-loft",
             Self::NeedleRoom => "needle-room",
             Self::Treasury => "treasury",
@@ -138,6 +168,12 @@ impl DungeonPaletteCourse {
             | Self::LandingChain
             | Self::NeedleTurn
             | Self::WallGate
+            | Self::GaleLanding
+            | Self::LowPassage
+            | Self::PulseGallery
+            | Self::RelayChasm
+            | Self::BrakeTower
+            | Self::DashSeal
             | Self::Threshold => &[("west", BoundarySide::Left), ("east", BoundarySide::Right)],
             Self::SplitRoot => &[
                 ("west", BoundarySide::Left),
@@ -185,6 +221,18 @@ impl DungeonPaletteCourse {
                 ("ceiling", BoundarySide::Ceiling),
             ],
             Self::DashChasm => &[("west", BoundarySide::Left), ("east", BoundarySide::Right)],
+            Self::CurrentFork => &[
+                ("west", BoundarySide::Left),
+                ("east", BoundarySide::Right),
+                ("floor", BoundarySide::Floor),
+            ],
+            Self::CoinDuct => &[("ceiling", BoundarySide::Ceiling)],
+            Self::StormSplit => &[
+                ("west", BoundarySide::Left),
+                ("east", BoundarySide::Right),
+                ("ceiling", BoundarySide::Ceiling),
+            ],
+            Self::StormCache => &[("floor", BoundarySide::Floor)],
             Self::CoinLoft => &[("ceiling", BoundarySide::Ceiling)],
             Self::NeedleRoom => &[("floor", BoundarySide::Floor)],
             Self::Treasury => &[("west", BoundarySide::Left)],
@@ -646,6 +694,94 @@ impl PaletteDraft<'_> {
                 // Keep the gap visually framed without offering wall-jump contacts.
                 let ceiling_start = 9 + u16::try_from(key.seed & 1).expect("bit fits u16");
                 self.horizontal(8, ceiling_start, 23, Tile::HazardDown);
+            }
+            DungeonPaletteCourse::GaleLanding => {
+                self.horizontal(14, 3, 10, Tile::OneWay);
+                self.horizontal(11, 13, 18, Tile::OneWay);
+                self.horizontal(14, 23, 30, Tile::OneWay);
+                self.horizontal(16, 10, 23, Tile::HazardUp);
+                self.horizontal(17, 10, 23, Tile::Solid);
+            }
+            DungeonPaletteCourse::LowPassage => {
+                self.horizontal(14, 3, 9, Tile::OneWay);
+                self.horizontal(11, 21, 27, Tile::OneWay);
+                self.horizontal(14, 24, 30, Tile::OneWay);
+                // A standing body cannot enter this ten-pixel passage. Horizontal Dash uses the
+                // low posture and is the only advertised traversal through the partition.
+                self.horizontal(15, 7, 20, Tile::Solid);
+                self.vertical(20, 1, 16, Tile::Solid);
+            }
+            DungeonPaletteCourse::CurrentFork => {
+                self.horizontal(14, 3, 10, Tile::OneWay);
+                self.horizontal(11, 12, 19, Tile::OneWay);
+                self.horizontal(14, 23, 30, Tile::OneWay);
+                self.horizontal(16, 10, 14, Tile::Solid);
+                self.horizontal(16, 18, 22, Tile::Solid);
+                self.horizontal(7, 20, 27, Tile::OneWay);
+            }
+            DungeonPaletteCourse::CoinDuct => {
+                self.horizontal(14, 3, 9, Tile::OneWay);
+                self.horizontal(12, 11, 16, Tile::OneWay);
+                self.horizontal(9, 19, 24, Tile::OneWay);
+                self.horizontal(6, 11, 16, Tile::OneWay);
+                self.horizontal(3, 14, 18, Tile::OneWay);
+                self.horizontal(16, 17, 21, Tile::HazardUp);
+                self.horizontal(17, 17, 21, Tile::Solid);
+            }
+            DungeonPaletteCourse::PulseGallery => {
+                self.horizontal(14, 3, 9, Tile::OneWay);
+                self.horizontal(13, 14, 18, Tile::OneWay);
+                self.horizontal(14, 23, 30, Tile::OneWay);
+                self.horizontal(16, 9, 14, Tile::HazardUp);
+                self.horizontal(17, 9, 14, Tile::Solid);
+                self.horizontal(16, 18, 23, Tile::HazardUp);
+                self.horizontal(17, 18, 23, Tile::Solid);
+                self.horizontal(8, 11, 21, Tile::HazardDown);
+            }
+            DungeonPaletteCourse::StormSplit => {
+                self.horizontal(14, 3, 9, Tile::OneWay);
+                self.horizontal(12, 11, 17, Tile::OneWay);
+                self.horizontal(9, 20, 27, Tile::OneWay);
+                self.horizontal(6, 13, 19, Tile::OneWay);
+                self.horizontal(3, 14, 18, Tile::OneWay);
+                self.horizontal(14, 25, 30, Tile::OneWay);
+                self.horizontal(16, 17, 21, Tile::HazardUp);
+                self.horizontal(17, 17, 21, Tile::Solid);
+            }
+            DungeonPaletteCourse::StormCache => {
+                self.horizontal(14, 3, 9, Tile::OneWay);
+                self.horizontal(11, 11, 16, Tile::OneWay);
+                self.horizontal(8, 20, 26, Tile::OneWay);
+                self.horizontal(5, 12, 18, Tile::OneWay);
+                self.horizontal(3, 21, 27, Tile::OneWay);
+                self.horizontal(16, 10, 14, Tile::Solid);
+                self.horizontal(16, 18, 22, Tile::Solid);
+            }
+            DungeonPaletteCourse::RelayChasm => {
+                self.horizontal(14, 3, 10, Tile::OneWay);
+                self.horizontal(14, 16, 20, Tile::OneWay);
+                self.horizontal(14, 26, 30, Tile::OneWay);
+                self.horizontal(16, 10, 16, Tile::HazardUp);
+                self.horizontal(17, 10, 16, Tile::Solid);
+                self.horizontal(16, 20, 26, Tile::HazardUp);
+                self.horizontal(17, 20, 26, Tile::Solid);
+            }
+            DungeonPaletteCourse::BrakeTower => {
+                self.horizontal(14, 3, 9, Tile::OneWay);
+                self.horizontal(12, 12, 16, Tile::OneWay);
+                self.horizontal(9, 20, 24, Tile::OneWay);
+                self.horizontal(6, 12, 16, Tile::OneWay);
+                self.horizontal(3, 21, 27, Tile::OneWay);
+                self.horizontal(14, 25, 30, Tile::OneWay);
+                self.vertical(18, 10, 17, Tile::Solid);
+            }
+            DungeonPaletteCourse::DashSeal => {
+                self.horizontal(14, 3, 9, Tile::OneWay);
+                self.horizontal(11, 22, 28, Tile::OneWay);
+                self.horizontal(14, 24, 30, Tile::OneWay);
+                self.horizontal(15, 7, 21, Tile::Solid);
+                self.vertical(21, 1, 16, Tile::Solid);
+                self.horizontal(8, 11, 18, Tile::HazardDown);
             }
             DungeonPaletteCourse::CoinLoft => {
                 self.horizontal(14, 3, 10, Tile::OneWay);
