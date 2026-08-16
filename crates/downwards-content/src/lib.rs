@@ -9,6 +9,7 @@ mod calibration_gallery_a;
 mod calibration_gallery_b;
 mod demo_dungeon;
 mod generated_calibration_witnesses;
+mod generated_demo_dungeon_witnesses;
 mod hard_no_dash;
 mod medium_no_dash;
 mod movement_obstacle_courses;
@@ -44,6 +45,7 @@ pub use demo_dungeon::{
     demo_dungeon_door_coin_requirement, demo_dungeon_door_requirement, demo_dungeon_room,
     demo_dungeon_route_specs,
 };
+pub use generated_demo_dungeon_witnesses::demo_dungeon_witness_actions;
 pub use hard_no_dash::{
     HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET, hard_no_dash_room, hard_no_dash_scenario,
     hard_no_dash_witness_actions,

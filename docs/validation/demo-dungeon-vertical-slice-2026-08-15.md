@@ -21,6 +21,19 @@ traces remain in its ordinary attempt records. Progress records use
 `downwards-dungeon-progress-v2`; attempts use `downwards-human-attempt-v2`. Both bind the exact
 dungeon-definition ID and palette generation.
 
+Individual floors can be calibrated without mutating that checkpoint:
+
+```sh
+cargo run -- --dungeon-floor 26
+cargo run -- --dungeon-floor gale-chasm
+cargo run -- --dungeon-floor demo-dungeon.void-pass
+```
+
+This floor lab is explicitly non-persistent. It reconstructs the selected route coordinate with
+its exact authored entry, inventory, abilities, and target; `V` consumes the policy- and
+palette-bound checked witness artifact. Human attempt rows retain current dungeon provenance, but
+no room transition, coin, unlock, or Crown state is saved.
+
 The 101 room shells are deterministic `downwards-gen` palette outputs. Their graph is currently
 assembled by trusted content rather than by a general topology generator:
 

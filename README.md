@@ -197,6 +197,21 @@ palette versions; older v1 attempts can join only through an exact current initi
 movement-policy match. Other older rows remain visible as stale evidence rather than being silently
 applied to changed geometry.
 
+For focused feedback on a late floor without replaying the whole run, launch its non-persistent
+floor lab by one-based number, stable ID, or displayed title:
+
+```sh
+cargo run -- --dungeon-floor 26
+cargo run -- --dungeon-floor gale-chasm
+cargo run -- --dungeon-floor demo-dungeon.void-pass
+```
+
+The lab uses that floor's authored entry door, inventory, loadout, and checked route objective. It
+does not read or write the dungeon save, cannot advance Crown progress, and labels its UI
+`NON-PERSISTENT`. `V` plays the exact checked floor witness. Death/reset/door attempt history is
+still appended with current dungeon-definition and palette provenance, so it can be used by the
+audit and retuning tools.
+
 This is an expanding hand-authored dungeon built from deterministic room-palette starting points,
 not a claim that a general dungeon generator can design the finished game. It currently contains
 101 connected floors and 64 persistent coins. The opening Rootworks region begins without traversal

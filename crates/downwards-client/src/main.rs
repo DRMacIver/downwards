@@ -19,11 +19,13 @@ use downwards_content::{
     AuthoredDoorRequirement, CalibratedGeneratorPlaytestLevel, CalibrationLevel,
     DEMO_DUNGEON_BOOT_GATE_REQUIREMENT, DEMO_DUNGEON_BOOT_PICKUP, DEMO_DUNGEON_CROWN_PICKUP,
     DEMO_DUNGEON_GLOVE_GATE_REQUIREMENT, DEMO_DUNGEON_GLOVE_PICKUP, DEMO_DUNGEON_GOAL_EXIT,
-    DEMO_DUNGEON_TOTAL_COINS, DemoDungeonInventory, DemoDungeonRoom, HARD_NO_DASH_ABILITIES,
-    HARD_NO_DASH_TARGET, MEDIUM_NO_DASH_ABILITIES, MEDIUM_NO_DASH_TARGET, TraversalMethod,
-    calibrated_generator_playtest, calibration_gallery, demo_dungeon_definition,
-    demo_dungeon_door_requirement, demo_dungeon_room, first_steps_room, hard_no_dash_scenario,
-    hard_no_dash_witness_actions, medium_no_dash_scenario, medium_no_dash_witness_actions,
+    DEMO_DUNGEON_TOTAL_COINS, DemoDungeonInventory, DemoDungeonRoom, DemoDungeonRouteSpec,
+    DemoDungeonRouteTarget, HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET, MEDIUM_NO_DASH_ABILITIES,
+    MEDIUM_NO_DASH_TARGET, TraversalMethod, calibrated_generator_playtest, calibration_gallery,
+    demo_dungeon_definition, demo_dungeon_door_requirement, demo_dungeon_room,
+    demo_dungeon_route_specs, demo_dungeon_witness_actions, first_steps_room,
+    hard_no_dash_scenario, hard_no_dash_witness_actions, medium_no_dash_scenario,
+    medium_no_dash_witness_actions,
 };
 use downwards_core::{
     AbilitySet, Action, BoundarySide, DeathReason, HazardDirection, JUMP_BUFFER_TICKS, JumpKind,
@@ -78,6 +80,7 @@ Usage: downwards [--seed <u64>] [--tier <1|2|3|4>] [--development]
        downwards --calibrated [seed]
        downwards --dungeon [--dungeon-save <path>]
        downwards --dungeon-new [--dungeon-save <path>]
+       downwards --dungeon-floor <number|id>
 
   (no options)   open the offline-curated v6 route catalogue
   --seed N       explicit developer mode: uncurated v6 seed
@@ -90,6 +93,8 @@ Usage: downwards [--seed <u64>] [--tier <1|2|3|4>] [--development]
                  play the generated WallJump-only calibration batch
   --dungeon      resume the 101-floor dungeon (or begin it if no save exists)
   --dungeon-new  archive the current save and begin a fresh dungeon run
+  --dungeon-floor FLOOR
+                 non-persistent lab play of one authored floor (1..101 or room id)
   --dungeon-save PATH
                  use PATH for durable dungeon progress
   --generated    return to the curated catalogue (the default)
@@ -551,34 +556,47 @@ async fn main() {
 enum ChallengeKind {
     Hard,
     Medium,
+    DungeonFloor(DemoDungeonRoom),
 }
 
 impl ChallengeKind {
-    const fn level_identifier(self) -> &'static str {
+    fn level_identifier(self) -> &'static str {
         match self {
             Self::Hard => HARD_NO_DASH_LEVEL_IDENTIFIER,
             Self::Medium => MEDIUM_NO_DASH_LEVEL_IDENTIFIER,
+            Self::DungeonFloor(room) => room.title(),
         }
     }
 
-    const fn target(self) -> &'static str {
+    fn target(self) -> &'static str {
         match self {
             Self::Hard => HARD_NO_DASH_TARGET,
             Self::Medium => MEDIUM_NO_DASH_TARGET,
+            Self::DungeonFloor(room) => dungeon_floor_route_spec(room).target.id(),
         }
     }
 
-    const fn stats_key(self) -> &'static str {
+    fn stats_key(self) -> String {
         match self {
-            Self::Hard => "challenge:hard-no-dash:v1",
-            Self::Medium => "challenge:medium-no-dash:v1",
+            Self::Hard => "challenge:hard-no-dash:v1".to_owned(),
+            Self::Medium => "challenge:medium-no-dash:v1".to_owned(),
+            Self::DungeonFloor(room) => format!("dungeon-playtest:{}", room.id()),
         }
     }
 
-    const fn difficulty_label(self) -> &'static str {
+    fn difficulty_label(self) -> &'static str {
         match self {
             Self::Hard => "HIGH-END",
             Self::Medium => "TUTORIAL",
+            Self::DungeonFloor(_) => "FLOOR LAB · NON-PERSISTENT",
+        }
+    }
+
+    fn abilities(self) -> AbilitySet {
+        match self {
+            Self::Hard => HARD_NO_DASH_ABILITIES,
+            Self::Medium => MEDIUM_NO_DASH_ABILITIES,
+            Self::DungeonFloor(room) => dungeon_floor_route_spec(room).inventory.abilities(),
         }
     }
 
@@ -586,6 +604,19 @@ impl ChallengeKind {
         match self {
             Self::Hard => hard_no_dash_scenario(),
             Self::Medium => medium_no_dash_scenario(),
+            Self::DungeonFloor(room) => {
+                let spec = dungeon_floor_route_spec(room);
+                let room = demo_dungeon_room(room, spec.inventory);
+                match spec.entry_door {
+                    Some(door) => {
+                        Simulation::enter_via_door(room, spec.inventory.abilities(), door)
+                            .unwrap_or_else(|error| {
+                                panic!("{} playtest entry {door:?} is invalid: {error}", spec.id())
+                            })
+                    }
+                    None => Simulation::with_abilities(room, spec.inventory.abilities()),
+                }
+            }
         }
     }
 
@@ -593,8 +624,29 @@ impl ChallengeKind {
         match self {
             Self::Hard => hard_no_dash_witness_actions(),
             Self::Medium => medium_no_dash_witness_actions(),
+            Self::DungeonFloor(room) => demo_dungeon_witness_actions(room),
         }
     }
+
+    fn objective(self) -> ReplayObjective {
+        match self {
+            Self::Hard | Self::Medium => ReplayObjective::Exit(self.target().to_owned()),
+            Self::DungeonFloor(room) => match dungeon_floor_route_spec(room).target {
+                DemoDungeonRouteTarget::Door(id) => ReplayObjective::Door(id.to_owned()),
+                DemoDungeonRouteTarget::Pickup(id) => ReplayObjective::Pickup(id.to_owned()),
+                DemoDungeonRouteTarget::GoalExit => {
+                    ReplayObjective::Exit(DEMO_DUNGEON_GOAL_EXIT.to_owned())
+                }
+            },
+        }
+    }
+}
+
+fn dungeon_floor_route_spec(room: DemoDungeonRoom) -> DemoDungeonRouteSpec {
+    demo_dungeon_route_specs()
+        .into_iter()
+        .find(|spec| spec.room == room)
+        .unwrap_or_else(|| panic!("dungeon route metadata is missing {room:?}"))
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -862,9 +914,9 @@ impl Default for ScenarioSelection {
 
 impl ScenarioSelection {
     fn canonicalized(mut self) -> Self {
-        if self.mode.is_challenge() {
+        if let Some(kind) = self.mode.challenge() {
             self.seed = 0;
-            self.tier = AbilityTier::WallJump;
+            self.tier = tier_for_abilities(kind.abilities());
         } else if self.mode == RoomMode::CalibratedGenerated {
             self.seed %= calibrated_generator_playtest().len() as u64;
             self.tier = AbilityTier::WallJump;
@@ -971,6 +1023,7 @@ where
     let mut gallery_requested = false;
     let mut calibrated_requested = false;
     let mut dungeon_requested = false;
+    let mut dungeon_floor_requested = false;
     let mut dungeon_save_explicit = false;
     let mut authored_mode_conflict = false;
     let mut tier_explicit = false;
@@ -1035,6 +1088,20 @@ where
                 options.selection.mode = RoomMode::Dungeon;
                 options.selection.seed = 0;
                 options.selection.tier = AbilityTier::Baseline;
+            }
+            "--dungeon-floor" => {
+                if dungeon_floor_requested {
+                    return Err("--dungeon-floor may be specified only once".to_owned());
+                }
+                dungeon_floor_requested = true;
+                let value = arguments
+                    .next()
+                    .ok_or_else(|| "--dungeon-floor needs a floor number or id".to_owned())?;
+                let room = parse_dungeon_floor(&value)?;
+                options.selection.mode = RoomMode::Challenge(ChallengeKind::DungeonFloor(room));
+                options.selection.seed = 0;
+                options.selection.tier =
+                    tier_for_abilities(dungeon_floor_route_spec(room).inventory.abilities());
             }
             "--dungeon-save" => {
                 dungeon_save_explicit = true;
@@ -1139,6 +1206,17 @@ where
                 options.selection.seed = parse_seed(&argument[13..])?;
                 options.selection.tier = AbilityTier::WallJump;
             }
+            _ if argument.starts_with("--dungeon-floor=") => {
+                if dungeon_floor_requested {
+                    return Err("--dungeon-floor may be specified only once".to_owned());
+                }
+                dungeon_floor_requested = true;
+                let room = parse_dungeon_floor(&argument[16..])?;
+                options.selection.mode = RoomMode::Challenge(ChallengeKind::DungeonFloor(room));
+                options.selection.seed = 0;
+                options.selection.tier =
+                    tier_for_abilities(dungeon_floor_route_spec(room).inventory.abilities());
+            }
             _ => return Err(format!("unknown argument {argument:?}")),
         }
     }
@@ -1147,25 +1225,34 @@ where
         + usize::from(gallery_requested)
         + usize::from(calibrated_requested)
         + usize::from(dungeon_requested)
+        + usize::from(dungeon_floor_requested)
         > 1
     {
         return Err(
-            "--challenge, --gallery, --calibrated, and --dungeon are mutually exclusive".to_owned(),
+            "--challenge, --gallery, --calibrated, --dungeon, and --dungeon-floor are mutually exclusive".to_owned(),
         );
     }
-    if (challenge_requested || gallery_requested || calibrated_requested || dungeon_requested)
+    if (challenge_requested
+        || gallery_requested
+        || calibrated_requested
+        || dungeon_requested
+        || dungeon_floor_requested)
         && authored_mode_conflict
     {
         return Err(
-            "--challenge/--gallery/--calibrated/--dungeon cannot be combined with --seed, --development, --generated, or --corpus"
+            "--challenge/--gallery/--calibrated/--dungeon/--dungeon-floor cannot be combined with --seed, --development, --generated, or --corpus"
                 .to_owned(),
         );
     }
-    if (challenge_requested || gallery_requested || calibrated_requested || dungeon_requested)
+    if (challenge_requested
+        || gallery_requested
+        || calibrated_requested
+        || dungeon_requested
+        || dungeon_floor_requested)
         && tier_explicit
     {
         return Err(
-            "--challenge/--gallery/--calibrated/--dungeon use content-locked loadouts; omit --tier"
+            "--challenge/--gallery/--calibrated/--dungeon/--dungeon-floor use content-locked loadouts; omit --tier"
                 .to_owned(),
         );
     }
@@ -1199,6 +1286,35 @@ fn parse_challenge_kind(value: &str) -> Result<ChallengeKind, String> {
             "invalid challenge {value:?}; expected hard or tutorial (medium remains an alias)"
         )),
     }
+}
+
+fn parse_dungeon_floor(value: &str) -> Result<DemoDungeonRoom, String> {
+    if let Ok(number) = value.parse::<usize>() {
+        return number
+            .checked_sub(1)
+            .and_then(|index| DemoDungeonRoom::ALL.get(index).copied())
+            .ok_or_else(|| {
+                format!(
+                    "invalid dungeon floor {value:?}; expected a number from 1 to {}",
+                    DemoDungeonRoom::ALL.len()
+                )
+            });
+    }
+    let slug = value.trim().to_ascii_lowercase().replace(['_', ' '], "-");
+    let short_slug = slug.strip_prefix("demo-dungeon.").unwrap_or(&slug);
+    DemoDungeonRoom::ALL
+        .into_iter()
+        .find(|room| {
+            room.id() == slug
+                || room.id().strip_prefix("demo-dungeon.") == Some(short_slug)
+                || room.title().to_ascii_lowercase().replace(' ', "-") == short_slug
+        })
+        .ok_or_else(|| {
+            format!(
+                "invalid dungeon floor {value:?}; use 1..={} or an id such as gale-chasm",
+                DemoDungeonRoom::ALL.len()
+            )
+        })
 }
 
 fn parse_seed(value: &str) -> Result<u64, String> {
@@ -1839,9 +1955,9 @@ impl PersistentHumanHistory {
         level_name: &str,
         attempt: &RecordedAttempt,
     ) -> Result<(), String> {
-        let dungeon_definition = level_id
-            .starts_with("dungeon:")
-            .then(demo_dungeon_definition);
+        let dungeon_definition = (level_id.starts_with("dungeon:")
+            || level_id.starts_with("dungeon-playtest:"))
+        .then(demo_dungeon_definition);
         let record = PersistentAttemptV2 {
             schema: HUMAN_HISTORY_SCHEMA,
             dungeon_definition_id: dungeon_definition
@@ -2107,6 +2223,19 @@ impl ReplayObjective {
             Self::Exit(id) => format!("-> {id}"),
             Self::Door(id) => format!("DOOR {id}"),
             Self::Pickup(id) => format!("COIN {id}"),
+        }
+    }
+
+    fn is_satisfied_by_verification(
+        &self,
+        verification: &downwards_ai::ReplayVerification,
+    ) -> bool {
+        match self {
+            Self::Exit(id) | Self::Door(id) => verification.reached_exit.as_deref() == Some(id),
+            Self::Pickup(id) => verification
+                .collected_pickup_ids
+                .iter()
+                .any(|collected| collected == id),
         }
     }
 }
@@ -2880,7 +3009,7 @@ impl ClientState {
                 || "dungeon:missing".to_owned(),
                 |run| format!("dungeon:{}", run.room.id()),
             ),
-            RoomMode::Challenge(kind) => kind.stats_key().to_owned(),
+            RoomMode::Challenge(kind) => kind.stats_key(),
         }
     }
 
@@ -3069,6 +3198,9 @@ impl ClientState {
             && self.dungeon_run.is_some_and(|run| run.inventory.crown)
         {
             return true;
+        }
+        if let Some(kind) = self.selection.mode.challenge() {
+            return kind.objective().is_satisfied_by(&self.simulation);
         }
         match self.selected_target_id() {
             Some(target) => self.simulation.reached_exit() == Some(target),
@@ -3533,7 +3665,7 @@ impl ClientState {
         initial: Simulation,
         generated_provenance: Option<GeneratedProvenance>,
     ) {
-        let target = kind.target();
+        let objective = kind.objective();
         let replay = Replay::record(&initial, kind.witness_actions());
         let verification = match replay.verify(&initial) {
             Ok(verification) => verification,
@@ -3542,12 +3674,12 @@ impl ClientState {
                 return;
             }
         };
-        if verification.reached_exit.as_deref() != Some(target) {
+        if !objective.is_satisfied_by_verification(&verification) {
             self.set_replay_error(
                 "CHALLENGE VERIFY ERROR",
                 format!(
-                    "stored route expected exit {target:?}, reached {:?}",
-                    verification.reached_exit
+                    "stored route expected {}, but its final state did not satisfy it",
+                    objective.status_label()
                 ),
             );
             return;
@@ -3556,7 +3688,7 @@ impl ClientState {
             initial,
             generated_provenance,
             replay,
-            ReplayObjective::Exit(target.to_owned()),
+            objective,
             ReplayOrigin::Challenge(kind),
         );
     }
@@ -4634,10 +4766,7 @@ fn load_scenario(
         }
         RoomMode::Challenge(kind) => {
             let simulation = kind.scenario();
-            let expected_abilities = match kind {
-                ChallengeKind::Hard => HARD_NO_DASH_ABILITIES,
-                ChallengeKind::Medium => MEDIUM_NO_DASH_ABILITIES,
-            };
+            let expected_abilities = kind.abilities();
             debug_assert_eq!(simulation.abilities(), expected_abilities);
             (simulation, None)
         }
@@ -4886,7 +5015,8 @@ fn room_mode_label(mode: RoomMode) -> &'static str {
         RoomMode::Gallery => "GALLERY",
         RoomMode::CalibratedGenerated => "CALIBRATED",
         RoomMode::Dungeon => "DUNGEON",
-        RoomMode::Challenge(_) => "CHALLENGE",
+        RoomMode::Challenge(ChallengeKind::DungeonFloor(_)) => "DUNGEON FLOOR LAB",
+        RoomMode::Challenge(ChallengeKind::Hard | ChallengeKind::Medium) => "CHALLENGE",
     }
 }
 
@@ -7248,6 +7378,43 @@ mod tests {
     }
 
     #[test]
+    fn dungeon_floor_lab_accepts_numbers_ids_and_titles_without_persistence() {
+        let first = parse_launch_options(["--dungeon-floor", "1"]).unwrap();
+        assert_eq!(
+            first.selection.mode,
+            RoomMode::Challenge(ChallengeKind::DungeonFloor(DemoDungeonRoom::HollowLanding))
+        );
+        assert_eq!(first.selection.tier, AbilityTier::Baseline);
+        assert!(!first.fresh_dungeon);
+
+        for value in ["gale-chasm", "demo-dungeon.gale-chasm", "Gale Chasm"] {
+            assert_eq!(
+                parse_launch_options(["--dungeon-floor", value])
+                    .unwrap()
+                    .selection
+                    .mode,
+                RoomMode::Challenge(ChallengeKind::DungeonFloor(DemoDungeonRoom::DashChasm))
+            );
+        }
+        let last = parse_launch_options(["--dungeon-floor=101"]).unwrap();
+        assert_eq!(
+            last.selection.mode,
+            RoomMode::Challenge(ChallengeKind::DungeonFloor(DemoDungeonRoom::CrownSanctum))
+        );
+        assert_eq!(last.selection.tier, AbilityTier::WallJumpAndDash);
+
+        assert!(parse_launch_options(["--dungeon-floor", "0"]).is_err());
+        assert!(parse_launch_options(["--dungeon-floor", "102"]).is_err());
+        assert!(parse_launch_options(["--dungeon-floor", "missing"]).is_err());
+        assert!(parse_launch_options(["--dungeon-floor"]).is_err());
+        assert!(parse_launch_options(["--dungeon-floor", "1", "--dungeon"]).is_err());
+        assert!(parse_launch_options(["--dungeon-floor", "1", "--tier", "dash"]).is_err());
+        assert!(
+            parse_launch_options(["--dungeon-floor", "1", "--dungeon-save", "save.json"]).is_err()
+        );
+    }
+
+    #[test]
     fn dungeon_save_roundtrips_exact_progress_and_rejects_corruption() {
         let path = temporary_test_path("dungeon-save-roundtrip", "save.json");
         let (persistence, loaded) = DungeonPersistence::open(&path, false).unwrap();
@@ -7444,6 +7611,52 @@ mod tests {
             record["schema"] == "downwards-dungeon-progress-v2"
                 && record["event"] == "room_transition"
         }));
+    }
+
+    #[test]
+    fn dungeon_floor_lab_attempts_keep_provenance_without_progress_events() {
+        let history_path = temporary_test_path("dungeon-floor-attempt", "history.jsonl");
+        let room = DemoDungeonRoom::DashChasm;
+        let selection = ScenarioSelection {
+            mode: RoomMode::Challenge(ChallengeKind::DungeonFloor(room)),
+            seed: 0,
+            tier: AbilityTier::Baseline,
+        };
+        let mut client =
+            ClientState::new_with_persistence(selection, None, false, Some(&history_path), None)
+                .unwrap();
+        client.step_human(Action {
+            restart: true,
+            ..Action::default()
+        });
+        drop(client);
+
+        let records = fs::read_to_string(&history_path)
+            .unwrap()
+            .lines()
+            .map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap())
+            .collect::<Vec<_>>();
+        assert_eq!(records.len(), 1);
+        let attempt = &records[0];
+        assert_eq!(attempt["schema"], HUMAN_HISTORY_SCHEMA);
+        assert_eq!(
+            attempt["dungeon_definition_id"],
+            demo_dungeon_definition().id
+        );
+        assert_eq!(
+            attempt["palette_generation_version"],
+            DUNGEON_PALETTE_GENERATION_VERSION
+        );
+        assert_eq!(
+            attempt["level_id"],
+            format!("dungeon-playtest:{}", room.id())
+        );
+        assert_eq!(attempt["room_id"], room.id());
+        assert!(
+            records
+                .iter()
+                .all(|record| { record["schema"] != "downwards-dungeon-progress-v2" })
+        );
     }
 
     #[test]
@@ -8624,6 +8837,57 @@ mod tests {
                 client.advance_replay(false);
             }
             assert_eq!(client.simulation.reached_exit(), Some(kind.target()));
+            assert!(client.replay_complete());
+        }
+    }
+
+    #[test]
+    fn dungeon_floor_lab_uses_exact_entry_inventory_objective_and_witness() {
+        for room in [
+            DemoDungeonRoom::HollowLanding,
+            DemoDungeonRoom::ClimberVault,
+            DemoDungeonRoom::DashChasm,
+            DemoDungeonRoom::CrownSanctum,
+        ] {
+            let spec = dungeon_floor_route_spec(room);
+            let kind = ChallengeKind::DungeonFloor(room);
+            let selection = ScenarioSelection {
+                mode: RoomMode::Challenge(kind),
+                seed: 0,
+                tier: AbilityTier::Baseline,
+            };
+            let mut client = ClientState::new(selection, None, false).unwrap();
+            assert!(client.dungeon_run.is_none());
+            assert!(client.dungeon_persistence.is_none());
+            assert_eq!(client.simulation.room().id(), room.id());
+            assert_eq!(client.simulation.entry_door(), spec.entry_door);
+            assert_eq!(client.simulation.abilities(), spec.inventory.abilities());
+            assert_eq!(
+                client.selection.tier,
+                tier_for_abilities(spec.inventory.abilities())
+            );
+            assert_eq!(
+                client.stats_key(client.selection),
+                format!("dungeon-playtest:{}", room.id())
+            );
+
+            client.request_solve();
+            client.perform_requested_solve();
+            let ReplayMode::Playback(playback) = &client.replay_mode else {
+                panic!(
+                    "{} should install its checked floor witness: {:?}",
+                    room.id(),
+                    client.replay_notice.as_ref().map(|notice| &notice.detail)
+                );
+            };
+            assert_eq!(playback.expected_objective, Some(kind.objective()));
+            assert!(matches!(playback.origin, ReplayOrigin::Challenge(actual) if actual == kind));
+            let frame_count = playback.transport.total_frames;
+            assert!(frame_count > 0);
+            for _ in 0..frame_count {
+                client.advance_replay(false);
+            }
+            assert!(kind.objective().is_satisfied_by(&client.simulation));
             assert!(client.replay_complete());
         }
     }
