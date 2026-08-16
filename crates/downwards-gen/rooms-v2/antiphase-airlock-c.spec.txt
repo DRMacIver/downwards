@@ -1,0 +1,51 @@
+# antiphase-airlock-c -- HARD variant of "Antiphase Airlock".
+#
+# THE TRAVELLING WAVE. Four partitions (cols 6, 12, 18, 24) cut the room into
+# five chambers, each with unbroken standing floor -- every chamber is a bank
+# point. The shutters do NOT strictly alternate: their phases march DOWN the
+# room (72 / 48 / 24 / 0 west to east), so the safe window rolls eastward one
+# gate every 24 ticks. An eastbound player who launches on the beat can ride a
+# single wave through all four gates in one continuous sprint; a westbound
+# player runs into the wave head-on and must bank a full cycle in every
+# chamber. Advance and retreat are both possible, but they are different
+# rhythms, and that asymmetry is the hard expression of the class rather than
+# "more gates, faster".
+#
+# ACTIVE EXCEEDS HALF THE PERIOD: 66 lethal of 120, so each gate is shut more
+# often than it is open (54-tick window). There is not one spike in the room
+# and not one gap wider than a walk -- the floor at row 17 is unbroken and
+# every gate is a flat 20px-high run-through. Danger is purely temporal.
+#
+# THE AIRLOCK ITSELF (col 18, the middle partition). This gate has TWO valves
+# in strict antiphase with each other: an UPPER valve at rows 12-13 over a
+# solid slab at row 14, and a LOWER valve at rows 15-16 at floor level. Phases
+# 24 and 84 are exactly half a period apart, so the two valves are NEVER open
+# together and there is a 6-tick beat where both are shut. Passing the middle
+# of the room means choosing a lane on the beat, and the lanes are 30px apart
+# vertically: a step block (col 16 / col 20, row 16) and a ledge (col 17 /
+# col 19, row 14) are the only way between them, two 20px hops. Guess the lane
+# wrong and you pay a full cycle re-climbing. That is the room's thesis: a real
+# airlock, where the inner door is only open when the outer one is not.
+door west
+door east
+
+# Coin 0 -- EASY. Chamber B floor, one gate in from the west door. A single
+# clean timed run-through with a whole chamber to stand in and read two cycles.
+coin 90 160
+# Coin 1 -- HARD BONUS. Sitting on the airlock slab, inside the UPPER valve's
+# own footprint. To bank it you must be standing in the shutter that is about
+# to close, and the only way out of the upper lane is back down the ledge --
+# grab-and-retreat, on the beat, in the tightest three tiles in the room.
+coin 180 130
+# Coin 2 -- MEDIUM. Chamber E, past all four gates: the payoff for having read
+# the whole wave rather than one shutter.
+coin 270 160
+
+# The wave: period 120, active 66, phases marching 72/48/24/0 west to east so
+# the opening rolls east one chamber every 24 ticks.
+hazard 60 150 10 20 120 66 72
+hazard 120 150 10 20 120 66 48
+hazard 240 150 10 20 120 66 0
+# The airlock's two valves, half a period apart: never open together.
+hazard 180 120 10 20 120 66 24
+hazard 180 150 10 20 120 66 84

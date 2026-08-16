@@ -1,0 +1,57 @@
+# two-clock-fork-c -- HARD variant of "Two-Clock Fork (one crossing, two honest routes)".
+#
+# ONE crossing (west <-> east) served by TWO complete lanes that branch out of
+# the west stair and rejoin in the east stair. Neither lane is a bonus branch.
+#
+#   LOW LANE (rows 15-16, the floor run) -- no ability at all. Short, flat,
+#     fast, and taxed by two shutters slammed into the pillar gates at
+#     cols 12-13 and cols 20-21. Period 70, active 18, phases 0 and 35: the
+#     gates are only jointly open for a ~17-tick slot per cycle, so the low
+#     lane is a sprint you must start on the right beat, not a walk.
+#   HIGH LANE (rows 5-7, the rock-top tunnel) -- pinched to a SINGLE tile
+#     (10px) at cols 12-13 and cols 20-21, which only the 8px dashing profile
+#     fits through. That is a PROFILE gate, not a distance gate: no jump
+#     height, no run-up and no other loadout gets through, so the gating is
+#     visible from the entry bay. Its clock is one long window
+#     (period 157, active 80) in the lit middle span between the pinches.
+#
+# THE TWIST, and why this is the hard expression of the class: the two pinches
+# and the two shutters ARE THE SAME TWO PILLARS, seen from above and below.
+# The pillars run from row 5 down to row 14, so a player dithering in the west
+# bay watching the floor shutters is staring at the exact columns that will
+# pinch them in the tunnel. And 70 and 157 are coprime, so the fork's answer
+# is different on every arrival: the honest read is "which pillar am I early
+# for", not "which lane is better". Per the class's hard brief the high
+# window is short enough that a dasher who hesitates at the first pinch has
+# already lost the second and must re-run the tunnel.
+#
+# No dead space: the rock mass (cols 8-25, rows 9-11) is the divider that
+# creates both lanes; the two staggered one-way stairs (west cols 3-7, east
+# cols 22-29) are the fork's stem and its reconvergence bay; the tunnel widens
+# to 3 tiles in the run-up bays either side of each pinch so the dash has
+# somewhere to be aimed from; and the pillars are load-bearing in both lanes
+# at once.
+door west
+door east
+# --- coins ---
+# EASY: the low lane's middle chamber, the pocket of standing room between
+# the two anti-phased shutters. No ability needed; worst shaky 25/32.
+coin 155 160
+# HARD (dash-only): the lit middle span of the tunnel, past a pinch from
+# whichever side you come. Inconclusive at none and at wall from both doors;
+# solved only once boots are held.
+coin 140 70
+# RECONVERGENCE: mid-air over the east stair's row-12 rung, where the tunnel
+# drops in from above and the floor run climbs in from below -- banked on
+# equal terms by either lane.
+coin 272 105
+# --- the two clocks ---
+# Floor gate at cols 12-13: the shutter seals col 13, leaving col 12 as a
+# resync pocket tucked under the pillar.
+hazard 130 150 10 20 70 18 0
+# Floor gate at cols 20-21: seals col 20, pocket at col 21. Phase 35 = the
+# perfect anti-beat, so the two gates are never leisurely open together.
+hazard 200 150 10 20 70 18 35
+# Tunnel clock: one long unmistakable window over the lit middle span, on a
+# period coprime to the floor's so the fork never settles into one answer.
+hazard 150 60 40 20 157 80 0

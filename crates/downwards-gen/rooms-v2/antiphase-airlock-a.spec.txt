@@ -1,0 +1,75 @@
+# antiphase-airlock-a -- easy variant of "Antiphase Airlock".
+#
+# Three tall chambers (cols 1-9, 11-20, 22-30) separated by two full-height
+# partitions (cols 10 and 21). Each partition is pierced ONLY at floor level,
+# rows 14-16, and that 3-tile mouth is filled by a shutter: a narrow
+# TimedHazard column. Every chamber has an unbroken floor at row 17, so every
+# chamber is a bank point. Progress is "be standing in a chamber, read the
+# beat, walk through". No jump, no dash, no spike: the hazard is temporal, not
+# spatial, which is exactly what keeps this off the spike-hop-corridor pile.
+#
+# THE ANTIPHASE. Period 180, shut for 60. Gate 1 shuts at phase 120, gate 2 at
+# phase 30 -- half a cycle apart, so the two gates are never shut together and
+# never open-and-shut together either. From chamber 2 the player can always see
+# one gate closing while the other opens. There are two 30-tick windows per
+# cycle where both gates stand open: that is the "ride the wave" line, a single
+# uninterrupted sprint west-to-east. Miss it and you simply bank in chamber 2
+# and take the next beat. Retreat is symmetric -- the same windows run
+# backwards -- so a player bounced off a locked door ahead is never trapped.
+#
+# The two phases are offset so that BOTH entrances get a free first gate: a
+# player walking in from either door reaches the near shutter inside its open
+# window without having to stop. The room introduces itself by letting you
+# through, and only asks for the beat on the second gate. That is what makes
+# it the easy variant in feel and not just in numbers -- measured worst-case
+# jitter robustness on the no-ability route is 94-100% on both coins from both
+# doors, i.e. the timing is legible, not twitchy.
+door west
+door east
+
+# WHY THIS IS THE EASY VARIANT, and not a shrunken hard one.
+# Axes chosen at the soft end: three chambers instead of five; wide chambers
+# (9-10 tiles) so banking never means stopping on a knife edge next to a gate;
+# 120 of every 180 ticks open, so the gates are mostly open and the room reads
+# as breathing rather than as a lock; gates at floor level so passage is a walk.
+# The door-to-door route needs NO abilities at all.
+# But it is not just "the same room, slower": the easy expression puts its own
+# twist on the board rather than dropping difficulty knobs. Two things:
+#   (1) one coin sits INSIDE a gate mouth, which converts that gate from a
+#       thing you pass into a thing you enter and back out of;
+#   (2) the overhead bypass is here, and it is dash-gated by 1-tile vents, so
+#       the beginner route and the expert route share the room instead of the
+#       expert route being deleted for being too hard.
+
+# COIN 0 -- chamber 2, dead centre of the middle hall, on the floor. The
+# "one gate deep" coin: cheap, but you cannot have it without having read the
+# beat once. Placed mid-chamber, far from either mouth, so the geometry that
+# earns it is the shutter and not a reach.
+coin 152 158
+
+# COIN 1 -- THE TWIST, sitting in the mouth of gate 2 (col 21, bottom of the
+# doorway), fully inside the shutter's footprint. You cannot bank on it and you
+# cannot loiter for it: you step into the gate on its open beat and either
+# carry on east or back out west, and the antiphase means whichever way you
+# leave, the other gate's state has already changed. It turns the room's one
+# purely passive object -- a doorway -- into the thing you have to time.
+coin 212 158
+
+# COIN 2 -- BONUS, on the overhead express lane above chamber 2, which is the
+# one stretch of lane sealed off from the halls below. The lane (solid floor at
+# row 5) crosses both partitions through 1-tile vents at row 4: 10px of
+# clearance against a 12px player, so it is a dash-crawl, and 40px of jump
+# cannot open it. Reaching the lane at all is a three-rung one-way ladder in
+# chamber 1 or 3 -- climbable with no abilities, so nobody gets stranded up
+# there -- but crossing it needs dash. That makes the lane an untimed express
+# route past both shutters, paid for in ability rather than in rhythm, and
+# because it has no way down into chamber 2 it cannot bank: the class's
+# "overhead route cannot rest" rule, enforced by the wall rather than by
+# spikes.
+coin 152 38
+
+# GATE 1 -- col 10, rows 14-16.
+hazard 100 140 10 30 180 60 120
+# GATE 2 -- col 21, rows 14-16. Phase 30: exact antiphase, half a period from
+# gate 1 (120 - 90 = 30).
+hazard 210 140 10 30 180 60 30

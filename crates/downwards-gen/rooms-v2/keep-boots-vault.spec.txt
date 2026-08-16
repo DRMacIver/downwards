@@ -1,0 +1,4 @@
+# kept room boots-vault (BootsVault) with its existing door set
+door floor
+door east
+coin 246 30

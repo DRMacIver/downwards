@@ -1,0 +1,41 @@
+# Switchback Spine (a) - the easy expression of the class.
+#
+# The room folds one corridor into three stacked runs joined at alternating
+# ends, so the player crosses the same horizontal ground three times with a
+# different rule each time:
+#   bottom run (rows 13-16)  a plain walk east from the west door
+#   middle run (rows 10-11)  a 20px-high channel walked back west, no jumping
+#   top run    (row 9)       hops between shelves, east again, then the ledge
+#                            chain at cols 9-14 up to the ceiling door
+#
+# Easy-variant choices (not a scaled-down hard room):
+#  - the middle run is a walkable low channel instead of a dash crawl, so the
+#    whole spine needs no abilities at all;
+#  - every fold is a 20-30px step, never a wall-jump chimney;
+#  - one coin per run, so the room asks to be run cleanly once rather than
+#    sloppily three times - this is the "a coin on every floor" variant axis.
+#
+# The twist stays visible: the right third of the room (cols 17-30) has no
+# middle floor under it at all. The top run's one-way shelves hang over a
+# two-storey void, so a missed hop out there does not kill - it demotes you
+# to the bottom run and you walk the whole spine again. The hole at cols 9-10
+# in the mandatory part is the gentle version of the same idea: it drops you
+# only one floor, into the middle channel, and it is the light well you walked
+# under a moment earlier.
+door west
+door ceiling
+
+# bottom run: out in the drop zone, a detour east past the fold stair, and
+# also the consolation prize you can scoop up after a fall from the top run.
+coin 250 140
+# middle run: deep in the low channel, taken while ducking west.
+coin 80 102
+# top run: the far shelf, three one-way hops out over the void. Hard bonus -
+# missing any hop costs the entire spine.
+coin 292 78
+
+# One fast shutter in the low channel (on 12 ticks in every 40): the middle
+# run is a timing walk, so a demotion from the top run costs cadence as well
+# as distance. It sits mid-channel, where the player is already committed and
+# cannot jump out of the 20px ceiling.
+hazard 120 100 10 20 40 12 0

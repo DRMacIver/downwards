@@ -1,0 +1,64 @@
+# Tide Shaft, hard variant: "the tide that breathes".
+#
+# Five solid shelves (rows 4, 7, 10, 13, 16) cut the shaft into standing
+# levels, and there is nowhere else in the room a player can be still. Each
+# shelf carries a full-width sheet of tide exactly one player tall
+# (y = 10*row - 12, height 12), so every band owns exactly one shelf: you are
+# only ever caught while STANDING on a flooded shelf, never in mid-air.
+#
+# The hard twist is PARITY instead of the class's marching wave. The even
+# shelves (4, 10, 16) flood together, then the odd shelves (7, 13) flood
+# together, and between the two floods the whole shaft goes dark for 21 ticks.
+# Period 90: odd shelves lit t = 0..24, even shelves lit t = 45..69, dark
+# breaths at 24..45 and 69..90. So the water ping-pongs up and down the shaft
+# rather than sweeping one way, and every 45 ticks the player has to have
+# changed parity - the shaft never offers a shelf you can simply stand on and
+# wait out a whole cycle. Descent is not a plummet you time once; it is four
+# forced departures on the beat.
+#
+# Odd shelves (7 and 13): lit t = 0..24.
+hazard 0 58 320 12 90 24 0
+hazard 0 118 320 12 90 24 0
+# Even shelves (4, 10, 16): lit t = 45..69. They start dry so a player
+# stepping in through the ceiling has somewhere to land, and is immediately
+# on the clock.
+hazard 0 28 320 12 90 24 45
+hazard 0 88 320 12 90 24 45
+# Shelf 16 in two rects. The gap between them (x 140..180) is the floor door
+# mouth, where the tide drains out, and the far west corner (cols 0-3) is left
+# above the tide line - the one dry shore in the room, and the only place you
+# can stop and breathe before leaving.
+hazard 40 148 100 12 90 24 45
+hazard 180 148 140 12 90 24 45
+#
+# Both door mouths sit clear of every band: the ceiling bay at rows 0-1 and
+# the floor chute below shelf 16. They are the two places to read the cadence
+# before committing.
+door ceiling
+door floor
+#
+# Routing. The shelf drains are staggered so that each level's walk is 4-6
+# tiles - about one flood-to-flood count - and they alternate outward and
+# inward, so the forced descent sweeps the full width of the room and back:
+#   shelf 4  drains at cols 9-11 / 20-22   (you land at col 15 and pick a side)
+#   shelf 7  drains at the far ends, cols 3-5 / 26-28
+#   shelf 10 drains back at cols 9-11 / 20-22
+#   shelf 13 drains through twin slots either side of a centre pillar
+#   shelf 16 drains through the floor door itself
+# The room is mirror-symmetric, so the player chooses a side rather than
+# following a corridor, and the arms are the route, not scenery. Spikes across
+# the outer half of shelf 16 punish an overcommitted final drop.
+#
+# Climbing back out is the gated direction: shelf to shelf is a 30px lift
+# through a 3-tile slot with no run-up, which the solver cannot do bare but
+# can do with wall jumps off the slot shoulders. Descending needs nothing.
+#
+# Coins sit on the three dead-ended arms the route never has to use: both ends
+# of shelf 4 and the east end of shelf 13. Each is a 7-tile detour past that
+# shelf's drain, which is longer than one dry count, so banking a coin means
+# eating an extra full tide cycle standing on a shelf you have already watched
+# flood. Coin 1 (shelf 4 east) and coin 2 (shelf 13 east) are the reliable
+# ones; coin 0 (shelf 4 west) is the hard bonus.
+coin 20 30
+coin 290 30
+coin 280 120

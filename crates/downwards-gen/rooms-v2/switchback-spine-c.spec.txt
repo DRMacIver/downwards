@@ -1,0 +1,26 @@
+# Switchback Spine (hard variant "c")
+# Three stacked runs folded at alternating ends. Enter west on the bottom
+# walk, fold right up the corner stair into the middle crawl, fold left up
+# the wall chimney into the top hop, exit through the ceiling mid-run.
+# Twist: two drop holes of different depth, both capped by a lintel at row 5
+# so they are strictly one-way - you can fall in, never climb out. Hole A
+# (cols 9-11) demotes one floor, into the middle run LEFT of the crawl, so it
+# only costs the chimney. Chute B (cols 21-22) punches through rows 7-14 and
+# drops two floors to the bottom walk: the full re-run, crawl and chimney and
+# hop again. Reading which hole you are about to miss is the room's puzzle.
+# Gating: the 1-tile channel at row 12 cols 15-18 is a dash-only crawl; the
+# left chimney (cols 1-3, 90px between col 0 and the col 4 pillar) is taller
+# than a dash-jump chain, so it is wall-only. Room minimum is wall+dash.
+door west
+door ceiling
+# --- coins, one per run ---
+# Run 2 (crawl): inside the 1-tile dash channel, past the shutter.
+coin 150 120
+# Run 3 (hop): hovering over hole A, only banked by committing to the jump.
+coin 100 36
+# Run 3 far end: the shelf beyond one-way chute B, an overshoot past the exit.
+coin 285 46
+# --- hazards ---
+# Shutter spike in the crawl channel: the demotion becomes a timing loss,
+# because a fall from the top run means queueing for this window again.
+hazard 170 120 10 10 150 55 0

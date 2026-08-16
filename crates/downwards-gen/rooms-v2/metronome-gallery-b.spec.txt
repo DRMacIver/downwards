@@ -1,0 +1,55 @@
+# metronome-gallery-b -- medium variant of "Metronome Gallery".
+#
+# Class: a flat horizontal corridor cut into alcoves by floor-to-ceiling timed
+# curtains whose phases march along the room, so the safe opening travels like a
+# wave. Spacing is trivial; *when* is the whole challenge.
+#
+# Medium twist (variant axes used: retrograde march + syncopated phase spacing +
+# ceiling perch alternate line):
+#
+#   1. THE STUTTER (west half). Curtains A (col 6) and B (col 11) share phase 0.
+#      The wave does not advance across them -- it holds. The bay at cols 7-10 is
+#      therefore a safe pause that costs a FULL period: you cross A on a beat and
+#      then have to sit out an entire cycle before B opens again. The player who
+#      has learned "each curtain opens a moment after the last" is punished here,
+#      which is the lesson the room is built to teach.
+#
+#   2. THE CHASE (east half). C/D/E (cols 16, 21, 26) march RETROGRADE: phases
+#      95 / 70 / 45, i.e. each curtain further east lights 25 ticks EARLIER in the
+#      cycle. The wave travels west while the player travels east, so the opening
+#      is closing towards her. Bays 17-20 and 22-25 cannot be treated as rests on
+#      the fast line -- once committed at C, the run to E is a chase.
+#
+#   3. THE GALLERY (cols 12-20, rows 9-11). A mezzanine above the corridor ceiling
+#      reached by one-way rungs at row 14 (cols 13-14 and 18-19). It bypasses
+#      curtain C entirely and is completely hazard-free -- the slow line. It costs
+#      a 30px hop onto the rung plus a 20px hop through the ceiling slot each way,
+#      so it is time paid for safety, and it is where the bonus coin lives.
+#
+# Minimum loadout is none in both directions: the corridor floor is flat and every
+# alcove crossing is a walk, so no pair is ability-gated. This room gates on the
+# clock only.
+door west
+door east
+# Coin 0 -- the learning bay. West of curtain A, out of every hazard, on the
+# walking line: this is where the player stands still and watches two full cycles
+# before committing. Easy by construction.
+coin 30 158
+# Coin 1 -- BONUS, up in the gallery. Hard: it needs the rung hop and the ceiling
+# slot, and it is the only reason to take the slow line.
+coin 156 108
+# Coin 2 -- the greed coin, planted at the FAR end of bay 22-25, tucked right
+# against curtain E on the fastest-marching stretch. It sits past the point where
+# you would normally launch for E, so taking it drops you off the wave and costs a
+# full re-sync. Reachable on a good beat (worst shaky 53%), painful otherwise.
+coin 245 158
+# --- the curtains: 10px wide, rows 13-16 (floor to corridor ceiling), period 130,
+# active 55, so each alcove is dark for 75 ticks -- enough for a 5-tile walk with
+# margin, not enough to dawdle.
+# A and B share phase: the stutter.
+hazard 60 130 10 40 130 55 0
+hazard 110 130 10 40 130 55 0
+# C, D, E: retrograde march, -25 ticks per curtain eastward.
+hazard 160 130 10 40 130 55 95
+hazard 210 130 10 40 130 55 70
+hazard 260 130 10 40 130 55 45

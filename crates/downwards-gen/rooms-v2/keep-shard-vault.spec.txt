@@ -1,0 +1,3 @@
+# kept room shard-vault (ShardVault) with its existing door set
+door ceiling
+coin 224 30

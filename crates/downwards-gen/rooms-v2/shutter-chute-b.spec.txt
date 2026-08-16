@@ -1,0 +1,57 @@
+# Shutter Chute (variant b, medium) -- "the offset chute"
+#
+# CONCEPT. A ceiling-to-floor descent shaft crossed by three full-width
+# TimedHazard bands (tile rows 4, 8, 12). Period 90, active 30, phases
+# 0 / 30 / 60: exactly one band is lit at any instant, so the shaft is never
+# closed but is never fully open either. A one-way perch at row 3 under the
+# ceiling mouth lets the player land, watch a whole cycle, and release on the
+# beat -- observe, then commit.
+#
+# THE MEDIUM TWIST (not "the easy variant with more bands"). The chute is
+# OFFSET, so the fall has to be steered as well as timed:
+#   * Shelf A (row 7, cols 11-15) plugs the LEFT half of the door column, so
+#     the drop must begin down cols 16-17.
+#   * Shelf B (row 11, cols 16-21) plugs the RIGHT half, so the same drop
+#     must be walked 2 tiles LEFT to cols 14-15 before it reaches row 11.
+# The expert line is one unbroken fall with a mid-air lateral between band 8
+# and band 12. The cautious line lands on shelf A or shelf B and re-times each
+# band from a standing start. Timing and steering multiply instead of
+# stacking.
+#
+# NO BYPASS. The bands span cols 1-30, so every column of the room -- chute,
+# left service ladder (rungs cols 1-3 / 5-7 at rows 3-15) and right ladder
+# (cols 23-25 / 27-29 at rows 9-15) -- passes through all three shutters. The
+# retreat climb is therefore itself a timed ascent: rungs at rows 5, 9 and 13
+# sit inside a band's kill box, so the climber steps up on the off-beat exactly
+# as the faller drops on it.
+#
+# LOADOUT. Descent (ceiling -> floor) and both self-pairs are clean with no
+# abilities. The upward pair (floor -> ceiling) needs one ability -- wall or
+# dash -- to make the 15-row climb inside the shutter windows. A player bounced
+# off a locked door can always retreat out of the door they came in.
+#
+# Spikes at row 15 cols 19-20 punish drifting right past the exit mouth on the
+# last beat; undershooting merely costs a re-climb.
+
+door ceiling
+door floor
+
+# Three shutter bands, cols 1-30. One lit at a time; 67% duty cycle dead.
+hazard 10 40 300 10 90 30 0
+hazard 10 80 300 10 90 30 30
+hazard 10 120 300 10 90 30 60
+
+# EASY coin -- banked standing on shelf A, the first staging post, reached by
+# drifting left out of the drop lane while band 4 is dark.
+coin 120 60
+
+# BONUS coin -- hangs in the open left lane directly beneath band 12; taken
+# either in passing on a straight fall or by hopping up from the floor between
+# beats. Worst shaky family ~14/32, so it is a deliberate risk, not a gimme.
+coin 100 130
+
+# BONUS coin -- sits INSIDE band 4's row, above the right ledge (row 7,
+# cols 22-26). Requires abandoning the chute early, riding drift right, then
+# jumping up into the shutter's own row on its off-beat, and dropping back
+# left onto shelf B to rejoin the descent.
+coin 240 40

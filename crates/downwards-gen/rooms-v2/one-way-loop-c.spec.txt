@@ -1,0 +1,66 @@
+# one-way-loop-c -- HARD variant of "One-Way Loop (asymmetric circuit)".
+#
+# THE RING. A solid island (cols 8-23, rows 5-13) with corridor all the way
+# round it: top run rows 1-4, bottom run rows 14-16, ascent shaft cols 4-7,
+# descent shaft cols 24-27. Three doors hang off the ring -- ceiling onto the
+# top run, west and floor onto the bottom run. Every way DOWN is free. Every
+# way UP is either gloves or blood. That asymmetry is the whole room; the
+# player learns it as a map, not as a sequence of jumps.
+#
+# HARD EXPRESSION -- three of the class's variant axes stacked, not a scale-up:
+#
+#  1. THE ISLAND IS HOLLOW, so the ring is a figure-eight. Two one-way tiles in
+#     the island's floor (row 13, cols 14-15 and 18-19) let you jump UP into
+#     the vault from the bottom run and then stand on them. The right-hand pair
+#     sits under a chimney (cols 18-19) that runs clean through the island to
+#     the top run: from above it is a free drop into the vault, from below it
+#     is a gloves-only wall-jump between the pillar at col 17 and the face at
+#     col 22. So the inside of the loop is a third route that CROSSES the ring
+#     instead of circling it, and it too runs one way for free and the other
+#     way only with gloves.
+#
+#  2. THE DESCENT SIDE IS A CONTROLLED FALL WITH CONSEQUENCES. The right shaft
+#     has two one-way catches (rows 7 and 12) five tiles apart -- comfortable
+#     to fall through, 50px to climb, out of jump range. Each catch carries a
+#     ^ spike on the OPPOSITE edge (col 24 on the upper, col 27 on the lower),
+#     so the fall has to zig-zag, and a shutter fires in the gap between them:
+#     the drop has to be entered on a beat. Boots can force this shaft back
+#     upwards -- deliberately, since jump+up-dash clears 50px -- but they pay
+#     the spikes and the shutter for it. That is the class's "a blind re-climb
+#     costs blood", and it is why the room is hard rather than merely gated.
+#
+#  3. THE ASCENT SIDE IS BARE AND HONEST. The left shaft is twelve tiles of
+#     rock, two faces four tiles apart, no platforms, no hazards, no spikes:
+#     gloves or nothing, and falling down it is completely free. The room reads
+#     as a shortcut on the way down and a wall on the way back up.
+#
+# The whole outer wall of the descent shaft (col 28, rows 6-12) is a column of
+# ^ spikes: its flank blocks movement but gives no wall surface, so the descent
+# shaft cannot be wall-jumped even though it is four tiles wide. The gating is
+# geometric and visible from either end.
+#
+# No dead space: both top-run pockets (cols 1-3, cols 28-30) are ledges across
+# a shaft mouth that you can miss, the bottom run is the safe closing arc that
+# makes the loop a loop, the block at cols 18-21 row 16 is the launcher into
+# the chimney, and the island interior is the vault.
+door west
+door ceiling
+door floor
+# --- coins ---
+# EASY. Inside the island, in the pocket left of the chimney -- you have to
+# leave the ring and enter the vault to get it, but no ability is needed:
+# jump up through the floor one-way at cols 14-15 and walk in.
+coin 140 110
+# BONUS. The far ledge across the descent shaft's mouth on the top run: a
+# four-tile leap where missing drops you into the shaft you were avoiding,
+# which is the room's joke -- the punishment for greed is a free ride down.
+coin 290 40
+# HARD. Mid-air near the top of the left ascent shaft. A gloves player on the
+# wall-jump chain takes it in passing; anyone else has to fling themselves off
+# the top run's lip and hope, with a twelve-tile fall as the cost of missing.
+coin 50 25
+# --- hazards ---
+# Shutter in the gap between the two descent catches (cols 24-27, rows 9-10).
+# Long period, short window: a read-and-commit, not a reaction test. Deaths
+# here are always the result of dropping in on the wrong beat.
+hazard 240 90 40 20 150 40 0

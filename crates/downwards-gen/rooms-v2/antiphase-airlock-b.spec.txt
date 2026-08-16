@@ -1,0 +1,70 @@
+# antiphase-airlock-b -- medium variant of the level class "Antiphase Airlock".
+#
+# THE CLASS: a chain of small chambers separated by full-height partitions, each
+# pierced by one doorway carrying a narrow TimedHazard shutter. The shutters run
+# out of phase, so the gate ahead and the gate behind are never both open. Every
+# chamber has a floor you can stand on, so every chamber is a bank point: you
+# either step one chamber per beat, or ride a wave through several gates at once.
+#
+# THE MEDIUM TWIST -- two variant axes taken together:
+#
+#   (1) PHASE PATTERN = TRAVELLING WAVE, not strict alternation. The three gates
+#       open in sequence west -> east with a 40-tick lag, which is almost exactly
+#       one chamber-crossing. Going EAST you can sprint: the wave opens in front
+#       of you and a continuous run clears all three gates in one cycle. Going
+#       WEST you are running against the wave, and every gate you reach has just
+#       shut, so retreat is a chamber-at-a-time hold-and-bank crawl. The room is
+#       therefore fully breathable in both directions but feels completely
+#       different each way -- the same geometry as a sprint and as a shuffle.
+#
+#   (2) GATE PLACEMENT IS MIXED, not three identical run-throughs. Each shutter
+#       teaches a different body position, so "step through a gate" is never the
+#       same act twice:
+#         GATE A (col 8, rows 14-16) -- a full 3-tile run-through at floor level.
+#           The honest one, and the one you meet first.
+#         GATE B (col 15, rows 15-16) -- a 2-tile squeeze, exactly player height.
+#           You have to be walking, flat, on the floor line; no arriving mid-hop.
+#         GATE C (col 22, rows 13-14) -- an ELEVATED doorway. The floor is sealed
+#           beneath it and the passage is a raised causeway (blocks at cols 20-21
+#           and 23-24, tops at row 15), so crossing means a 20px step up on both
+#           sides. You commit to the gate two tiles before you reach it.
+#
+# CHAMBERS: C1 cols 1-7, C2 cols 9-14, C3 cols 16-21, C4 cols 23-30. All four
+# have a clear floor at row 16 -- ample standing room to hold and read the beat.
+#
+# THE OVERHEAD BYPASS (class axis: "presence and hazard-freedom of the overhead
+# lane") is present but DELIBERATELY INCOMPLETE. A 2-tile-high tunnel at rows 5-6
+# runs over the tops of partitions 8 and 22, reached in every chamber by a short
+# staggered one-way ladder (rows 13 / 11 / 9 up to the row-7 ledges). It skips
+# gate A and gate C entirely and it is untimed -- but partition 15 runs solid to
+# the ceiling, so the tunnel is TWO separate galleries (C1<->C2 and C3<->C4) and
+# gate B, the tightest shutter, can never be bypassed. The bypass buys you the
+# ends of the room for free and charges you for the middle, which keeps the beat
+# mandatory while giving the upper half of the room a real job.
+#
+# MINIMUM LOADOUT: none. Every gate is a walk or a 20px step, every ladder rung
+# is a 20px rise. This room is pure timing, no execution tax, per the concept.
+door west
+door east
+# --- coins ---
+# COIN 1 (easy) -- C2 floor, one chamber deep. The teaching coin: you take it
+# while standing in the first chamber that has a gate on both sides of it, which
+# is where you first have to actually read the antiphase.
+coin 100 160
+# COIN 2 (medium) -- sits INSIDE the gate B squeeze itself (class axis: "coin in
+# the doorway hazard footprint, forcing a grab-and-retreat"). It is the coin you
+# cannot bank while collecting, because the tile it rests on is the one tile in
+# the room that periodically kills you. Grab it on the pass, or duck in and out.
+coin 150 160
+# COIN 3 (hard bonus) -- the east tower, top of C4's ladder on the row-7 stub at
+# cols 29-30. It is the deepest point in the room: past all three gates on the
+# low route, and the upper gallery cannot reach it from the west because gate B
+# blocks the tunnel. Riding the whole wave east is the only cheap way there.
+coin 290 60
+# --- the shutters: period 120, 48 ticks closed, 72 open, +40 phase per gate ---
+# GATE A: closed ticks 0-47.
+hazard 80 140 10 30 120 48 0
+# GATE B: closed ticks 40-87. Opens as you arrive from A.
+hazard 150 150 10 20 120 48 40
+# GATE C: closed ticks 80-119. Last link of the wave.
+hazard 220 130 10 20 120 48 80

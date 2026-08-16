@@ -1,0 +1,4 @@
+# kept room skybridge (Skybridge) with its existing door set
+door west
+door east
+coin 264 110

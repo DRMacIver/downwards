@@ -1,0 +1,4 @@
+# kept room observatory (Observatory) with its existing door set
+door west
+door east
+coin 14 10

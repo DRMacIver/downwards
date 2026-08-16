@@ -1,0 +1,51 @@
+# Low-Ceiling Arena "b" (medium): the two-storey car park.
+# Variant axes taken: "a second lid layer to make a two-storey car park
+# connected by wells" plus "exit is a ceiling door forcing a well climb".
+# Two 3-tile bands are stacked - ground deck rows 13-15 over floor row 16,
+# upper deck rows 9-11 over floor row 12 - and each carries a solid lid with
+# down-spikes hung beneath it, so a full 40px jump impales you on either
+# storey. All vertical movement is funnelled into three punched holes: the
+# west well (cols 10-11, one-way rung at row 13), the east well (cols 27-28,
+# rung-free), and the exit shaft (cols 15-17, rows 3-8) that climbs to the
+# attic crawl and the ceiling door.
+#
+# The twist, made visible: the 1-tile pinch at cols 18-19 cuts the GROUND
+# deck in half. It is a dash-only crawl, so without dash the east half of the
+# ground floor is not adjacent to the west half at all - you reach it by
+# lapping the building: west well up, run the upper deck east under its spike
+# lid, drop the east well, collect, then lap all the way back. With dash the
+# same gap is one ground dash. The room is short or long depending on what
+# you are carrying, and the geometry that decides it is a single tile of
+# headroom.
+door west
+door ceiling
+
+# Minimum loadout door-to-door is WALL. The exit shaft is a 30px-wide slot
+# whose base rung sits at row 9 and whose lip is the attic floor at row 3:
+# a 60px rise with no footholds, well past a 40px jump, so it reads as an
+# obvious wall gate. Everything below it needs nothing: the west well's rung
+# turns surfacing from the ground deck into a 30px hop.
+
+# Coin 0 (easy, but the long way round): hovering in the mouth of the east
+# well, on the far side of the pinch. You either snag it on the way down the
+# well at the end of the lap, or micro-hop for it from the ground deck below.
+# Dash-less players earn it with the full lap; that is the point of the room.
+coin 281 140
+
+# Coin 1 (easy): far west end of the upper deck, a short detour left off the
+# well before you turn back east to the shaft - it makes the second storey's
+# west arm live geometry rather than scenery.
+coin 21 110
+
+# Coin 2 (hard bonus): the attic's west dead end, past a shutter. Only
+# reachable after the wall-jump climb, and it lies in the opposite direction
+# from the ceiling door, so it is a deliberate turn away from the exit.
+coin 91 20
+
+# Attic shutter, guarding the bonus dead end only.
+hazard 125 10 10 20 150 45 0
+# Two out-of-phase drips on the east lap: one hanging into the ground deck
+# between the eastern spike runs, one on the upper deck at the approach to
+# the east well. They price the lap without touching the mandatory corridor.
+hazard 225 140 10 20 130 40 0
+hazard 245 100 10 20 130 40 65

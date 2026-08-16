@@ -1,0 +1,21 @@
+# Low-Ceiling Arena "a" (easy): geometry under a lid.
+# Solid bedrock fills rows 0-13; the only play space is the 3-tile band
+# (rows 14-16) plus two wells punched up through the lid.
+# Doors are both at floor level, so the room is a lateral car-park crawl.
+door west
+door east
+
+# Coin 1 (easy, no abilities): top rung of the west well. The well is the
+# only place in the room with headroom, so it reads as "surface to jump".
+coin 30 100
+
+# Coin 2 (easy, dash): reward for clearing the 1-tile pinch at cols 14-15.
+coin 170 160
+
+# Coin 3 (hard bonus, wall): top ledge of the east well, a 100px wall-jump
+# chain with a one-way rung at row 10 as the resync point.
+coin 285 50
+
+# Ceiling drip in the east bay, between the two hung spike runs. Generous
+# duty cycle (40 of 150 ticks) - it sets cadence rather than gating.
+hazard 230 140 10 20 150 40 0

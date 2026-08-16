@@ -1,0 +1,55 @@
+# metronome-gallery-c -- HARD variant of "Metronome Gallery".
+#
+# THE FOLDED WAVE. Six floor-to-ceiling curtains (cols 5, 9, 14, 18, 22, 27)
+# cut the corridor into seven bays. The phase march is a palindrome:
+# 0 / 20 / 40 / 40 / 20 / 0. The safe opening rolls EAST out of the west door,
+# hits the mirror at the middle of the room, and rolls back WEST. So whichever
+# door you enter by, you ride the wave for the first half of the gallery and
+# then run flat out against it for the second half -- the hard expression of
+# the class is not "more curtains, faster", it is that the cadence reverses
+# under you at the pivot and everything you learned about launching on the beat
+# inverts mid-room. Same room, two tempos, one trip.
+#
+# ACTIVE WINDOW EXCEEDS HALF THE PERIOD: 48 lit of 90. Every curtain is lethal
+# more often than it is safe, which is the class's stated hard end. There is
+# still not one spike in the room and not one gap wider than a walk: the floor
+# is unbroken solid at row 17 and every bay crossing is a 30-50px flat run.
+# Danger is 100% temporal.
+#
+# THE SHARED PHASE. Curtains 3 and 4 (cols 14 and 18) hold the SAME phase, so
+# the pivot bay (cols 15-17, three tiles) opens and shuts as a single door.
+# It cannot be used as a rest bay: you must enter and clear it inside one
+# window, arriving already committed. That is the two-alcoves-in-one-window
+# axis, and it sits exactly on the fold so the pivot is also where the march
+# reverses -- the room's hardest beat and its thesis in the same three tiles.
+#
+# THE SHALLOW STEP. Bay cols 19-21 is a raised one-tile step (row 16). It is
+# the only bay east of the fold narrow enough to be a perch rather than a rest,
+# and it is where the reversed wave first bites.
+door west
+door east
+
+# Coin 0 -- EASY. Bay 2 (cols 6-8), one curtain in from the west door: a single
+# clean timed crossing and a safe bay to stand in and read two full cycles
+# before committing to the rest of the gallery. This is the classroom, and it
+# is deliberately NOT at the door mouth -- you pay one beat for it.
+coin 65 158
+# Coin 1 -- HARD BONUS. On the one-way perch over the PIVOT bay, the bay that
+# opens and shuts as a single shared-phase door. Greed here costs a full
+# re-sync: you must climb 30px onto the perch inside the shared window, and the
+# window shuts under you while you are up there, so you spend a whole cycle on
+# a rung watching the fold before you can drop and continue.
+coin 163 128
+# Coin 2 -- HARD BONUS. On the eastern perch (cols 23-25), out in the stretch
+# where the march runs against an eastbound player. Taking it means giving up
+# the momentum the reversed wave demands.
+coin 238 128
+
+# The metronome. Period 90, active 48 (lit more than half the time), phases
+# folded 0/20/40/40/20/0 west to east.
+hazard 50 110 10 60 90 48 0
+hazard 90 110 10 60 90 48 20
+hazard 140 110 10 60 90 48 40
+hazard 180 110 10 60 90 48 40
+hazard 220 110 10 60 90 48 20
+hazard 270 110 10 60 90 48 0

@@ -1,0 +1,3 @@
+# kept room wall-gate (WallGate) with its existing door set
+door west
+door east

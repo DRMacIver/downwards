@@ -1,0 +1,87 @@
+# Tide Shaft (variant b, medium) -- "the converging tide"
+#
+# CONCEPT. A ceiling-to-floor shaft crossed by five full-width hazard bands on
+# tile rows 2, 5, 8, 11 and 14, with a stack of one-way shelves hanging exactly
+# one row beneath each band (rows 3, 6, 9, 12, 15). A shelf is therefore only
+# standable while its own band is dark -- the tide does not merely block the
+# lanes, it decides which shelf you are allowed to be alive on. Falling is the
+# free part of this room; standing still is the expensive part.
+#
+# THE MEDIUM TWIST -- DOUBLE TIDE. The class sketch marches one band downward.
+# This variant takes the "two bands travelling in opposite directions that
+# cross mid-room once per cycle" axis instead: two fronts run at once, one
+# stepping DOWN from row 2 and one stepping UP from row 14, sharing period 180
+# and one row per 36 ticks. They meet on row 8 -- the middle of the shaft --
+# once per cycle. Written out, the shaft breathes:
+#     t   0- 30   rows  2 and 14 lit   (the outer shelves burn)
+#     t  36- 66   rows  5 and 11 lit
+#     t  72-102   row   8 lit          (THE MEETING -- only the middle burns)
+#     t 108-138   rows  5 and 11 lit   (the fronts separate again)
+#     t 144-174   rows  2 and 14 lit
+# with a 6-tick slack-water gap between every step. So the safe pocket does
+# not travel in one direction: it collapses inward and then blows back out.
+# A descender cannot simply ride ahead of the water. They drop into the
+# closing half of the cycle, stop, let a front pass over them, drop again --
+# and the direction they have to out-wait REVERSES halfway down the shaft.
+#
+# GEOMETRY, and why nothing here is a spike corridor.
+#  * THE MEETING STONE: solid slab, rows 8-9, cols 12-19. It occupies row 8 --
+#    the one row both fronts share -- so the tide's collision point is walled
+#    off, and its top surface (y=80) sits one row ABOVE the row-8 band. It is
+#    the only mid-shaft place that is safe in every phase: the refuge you aim
+#    for when you have mistimed a beat, and the landmark that makes the whole
+#    clock readable. It also plugs the free plummet from ceiling mouth to
+#    floor mouth, so the shaft must be taken shelf by shelf.
+#  * DOOR-MOUTH NOTCHES: the outer bands (rows 2 and 14) are cut away over
+#    cols 14-17. The top notch turns the row-3 centre perch under the ceiling
+#    into an always-safe observation deck -- land, watch one full cycle, then
+#    commit -- and the bottom notch keeps the last 40px of the drop into the
+#    floor sill out of the tide. Observe, commit, land.
+#  * The side shelves are staggered left/right so each 3-row drop is also a
+#    lateral steer, and the three coins are all out on shelf tips, i.e. inside
+#    their band's own row. Every coin is a bank-on-beat.
+#
+# Spikes at row 16 cols 11-12 and 19-20 flank the floor sill: overshooting the
+# final drop is fatal, undershooting only costs a re-climb, per the playbook.
+#
+# LOADOUT. None. Every ordered door pair, including both self-pairs, solves
+# with no abilities; the room is pure clock-reading and steering. Wall and
+# dash only shorten the coin detours.
+
+door ceiling
+door floor
+
+# --- Down-tide: the front steps 2 -> 5 -> 8 -> 11 -> 14, one row per 36 ticks.
+# Rows 2 and 14 are split around the cols 14-17 door notches.
+hazard 10 20 130 10 180 30 0
+hazard 180 20 130 10 180 30 0
+hazard 10 50 300 10 180 30 36
+hazard 10 80 300 10 180 30 72
+hazard 10 110 300 10 180 30 108
+hazard 40 140 100 10 180 30 144
+hazard 180 140 130 10 180 30 144
+# --- Up-tide: the mirror front, 14 -> 11 -> 8 -> 5 -> 2. Row 8 is shared by
+# both fronts, so it is written once above; the two tides converge on the
+# meeting stone and then separate again.
+hazard 40 140 100 10 180 30 0
+hazard 180 140 130 10 180 30 0
+hazard 10 110 300 10 180 30 36
+hazard 10 50 300 10 180 30 108
+hazard 10 20 130 10 180 30 144
+hazard 180 20 130 10 180 30 144
+
+# MAIN coin -- left tip of the row-6 shelf, sitting in row 5's own band. It is
+# on the natural descent line but two tiles past where the drop leaves the
+# shelf, so collecting it costs one held beat under a live band.
+# Worst shaky family from the ceiling entry: 32/52 (62%).
+coin 40 50
+
+# BONUS coin -- far left tip of the row-3 top shelf, inside the row-2 band and
+# behind the player at the moment they first commit to the descent. Taking it
+# means going backwards and paying a whole outer-tide beat before dropping.
+coin 20 20
+
+# BONUS coin -- far right tip of the row-12 shelf, inside the row-11 band, on
+# the wrong side of the shaft for a left-hand descent: it is reached on the
+# outward swing, after the fronts have passed the meeting stone.
+coin 260 110

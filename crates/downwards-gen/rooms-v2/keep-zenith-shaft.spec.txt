@@ -1,0 +1,3 @@
+# kept room zenith-shaft (ZenithShaft) with its existing door set
+door west
+door east

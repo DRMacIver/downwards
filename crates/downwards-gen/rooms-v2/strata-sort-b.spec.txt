@@ -1,0 +1,19 @@
+# Strata Sort (b / medium): four braided one-way strata over a sorting floor.
+# Ceiling entry drops the player onto stratum row 3; each stratum is holed in
+# two places that do NOT line up with the holes above, so every layer is a
+# fresh left/right landing-zone choice.
+door ceiling
+door floor
+door east
+
+# Left/centre lane: holes 8-9 -> 5-6 -> 11-12 -> 16-17 lands straight on the
+# floor-door drop platform. Right lane: 20-21 -> 24-25 -> 27-28 -> 29-30 lands
+# in the east-door pocket. Both lanes reach an exit: the choice is routing.
+
+# Easy coin: pedestal in the right-hand sorting floor, on the retreat step that
+# also lets an east-door entrant climb back up the strata.
+coin 226 140
+
+# Bonus coin: the dead-end pocket behind the row 13-14 overhang. The only way
+# in is the 1-tile crawl along row 15, which needs a horizontal dash.
+coin 50 150

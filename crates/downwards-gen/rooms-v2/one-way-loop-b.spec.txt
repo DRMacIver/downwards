@@ -1,0 +1,63 @@
+# one-way-loop-b -- medium variant of the level class "One-Way Loop".
+#
+# THE CLASS: a closed ring of corridor around a solid central island, entered
+# at one point and left at another, traversable in both directions but a
+# DIFFERENT PROBLEM each way. Clockwise is a descent anyone can take;
+# counter-clockwise is an ascent of the very same ledges that needs an ability.
+# The room reads as a shortcut on the way down and a wall on the way back up,
+# and is learned as a map rather than as a sequence of jumps.
+#
+# THE MEDIUM TWIST -- two variant axes, combined:
+#  (1) WHICH DIRECTION IS GATED, and how. The gate is boots, and it is enforced
+#      by geometry rather than by height alone: the island's west flank
+#      (col 5, rows 6-12) is a stack of upward spikes. Their flanks block you
+#      like an obstacle but offer NO wall surface, so the west shaft has only
+#      one real wall (col 0) and a single wall cannot be climbed. Its first
+#      lift, floor y=170 up to the ledge at y=110, is 60px -- half again the
+#      40px jump. The west arc is therefore dash-only upward and free downward.
+#  (2) DOORS ON THREE POINTS OF THE RING, so the room serves three different
+#      traversals depending on approach. Nothing about the circuit is a
+#      corridor you run once.
+#
+# THE RING, arc by arc:
+#   TOP RUN (rows 1-4, walking the island roof at row 5). The ceiling door
+#     drops onto it at cols 14-17. The only arc that is the same both ways.
+#   EAST SHAFT (cols 27-30) -- THE DESCENT, and the room's signature. Two
+#     one-way rungs, rows 7 and 12, 50px apart, each with a spike planted on
+#     the OPPOSITE end (col 30 above, col 27 below). Stepping off the roof you
+#     weave: land left, drop through, land right, out the east door at the
+#     bottom. It is a controlled fall with consequences. Rising back is 50px a
+#     rung, outside jump range: the one-way you sailed up through in the fall
+#     is not a ladder on the way home. Wall or dash buys it back; nothing does.
+#   BOTTOM RUN (rows 15-16, a flat 2-tile corridor under the island) -- the
+#     arc that closes the loop, with the floor door's landing bay punched up
+#     into it at cols 14-17 and a one-way sill at row 16 so you can arrive on
+#     it from below and choose to drop back out.
+#   WEST SHAFT (cols 1-4) -- THE ASCENT. Staggered ledges at rows 11, 9, 6
+#     zig-zag up to the roof (20 / 30 / 10 px, gentle), but only above the
+#     60px boots gate at the bottom. One ability, once, and then the room lets
+#     you finish the lap.
+#
+# ASYMMETRY, CONCRETELY (auditor, no abilities): ceiling -> east solves; the
+# whole descent is free. east -> ceiling and floor -> ceiling do not. Every
+# door reaches itself and at least one neighbour with NO abilities, so a
+# player bounced off a locked door can always retreat. With boots every
+# ordered pair solves and the ring is a true circuit.
+door ceiling
+door east
+door floor
+# THE SHUTTER: closes the bottom run at cols 18-21 for 60 of every 150 ticks.
+# The closing arc is the one that has a clock on it, so the lap must be
+# entered and left on a beat -- and where you dropped out of the east shaft
+# sets what beat you arrive on.
+hazard 180 150 40 20 150 60 0
+# COIN 0 (the lap coin): far west end of the island roof, the point of the
+# ring furthest from every door along walkable ground. From the ceiling door
+# it is a stroll (the descent-side player's freebie); from the floor or east
+# doors it costs the entire gated counter-clockwise lap.
+coin 60 40
+# COIN 1 (the beat coin): sits inside the shutter's footprint on the bottom
+# run, three steps east of the floor door. It can only be taken while the
+# shutter is open, which turns the safe arc into the one place in the room
+# where greed is timed rather than gated.
+coin 200 152

@@ -1,0 +1,49 @@
+# two-clock-fork-b -- medium variant of "Two-Clock Fork (one crossing, two honest routes)".
+#
+# One crossing (west <-> east), two visibly different lanes that both work, each
+# governed by its own clock. The lanes never share a hazard, so which lane is
+# cheaper depends entirely on when you arrive at the entry bay.
+#
+#   LOW LANE (no ability, short, fast clock): the open floor row 16 from the
+#     entry bay straight to the reconvergence bay. Two pistons at cols 11-13 and
+#     cols 20-22 share period 70 / active 24 but sit half a period apart (phase 0
+#     and 35), so they beat one-two-one-two and the lane must be threaded at a
+#     run with a beat of rest in the pocket between them.
+#
+#   HIGH LANE (dash-gated, long, slow clock): the row-10 ledge, cols 4-25. It is
+#     reached by the west chimney (one-way rungs at rows 15/13/11) onto the pad at
+#     col 4, and then through a ONE-TILE slot at row 9, cols 5-6 -- 10px of
+#     headroom against a 12px player, so it is a dash-crawl and nothing else. The
+#     ledge sits 70px above the low floor with no opposing walls beneath it, well
+#     past a 40px jump, so there is no second way up. Its single hazard is one
+#     wide 60px curtain, period 200 / active 70: one long, unmistakable window.
+#
+# The medium twist (variant axes "route length vs window generosity" x "one route
+# coin-rich, the other fast"): the fork is NOT symmetric in payoff. The low lane
+# is the fast crossing and carries one easy coin; the high lane is the slow,
+# ability-taxed one and carries two thirds of the room's gold, including the
+# bonus, so the choice is speed-vs-greed and not merely execution-vs-patience.
+# 70 and 200 never line up inside a crossing, so the two clocks are read
+# separately -- a player who waits at the entry bay is choosing, not stalling.
+#
+# The chimney/pad is deliberately visitable without dash: a bootless player can
+# climb up, look through the slot at the high lane, and come back down. The gate
+# is seen, not guessed.
+door west
+door east
+# EASY coin -- the low lane's signature moment: the safe pocket between the two
+# pistons (x 140-200). Standing here is the reward for reading the one-two beat.
+coin 165 158
+# HIGH-lane coin -- on the ledge west of the curtain, banked as soon as you clear
+# the dash slot. Unreachable from the floor: 70px up.
+coin 122 88
+# BONUS coin -- airborne over the middle of the curtain span. You must be inside
+# the lit 60px zone AND jumping, i.e. committed, during the slow clock's window.
+coin 176 74
+# LOW-lane clock: piston A, cols 11-13, a full curtain from the high ledge down to the floor -- no jumping over it.
+hazard 110 110 30 60 70 24 0
+# LOW-lane clock: piston B, cols 20-22, half a period out of phase with A.
+hazard 200 110 30 60 70 24 35
+# HIGH-lane clock: the wide slow curtain over the ledge, cols 15-20. One long
+# window (130 ticks clear out of 200) -- generous, but 60px of exposure.
+hazard 150 80 60 30 200 70 0

@@ -1,0 +1,59 @@
+# keyhole-vault-b -- medium variant of
+# "Keyhole Vault (one-way-in, earn-your-way-out)".
+#
+# You fall into the treasure chamber for free through a spike-lined keyhole that
+# geometry alone makes irreversible, then you pay for the exit. Two prices are
+# on offer, and -- this is the medium variant's axis, "the safe exit leads
+# somewhere different from the fast one" -- THEY LEAVE BY DIFFERENT DOORS, so
+# the choice re-routes the dungeon instead of merely costing seconds.
+#
+# THE KEYHOLE (rows 3-8, cols 15-17). The ceiling mouth opens into a funnel bowl
+# at rows 1-2 that necks down into a 30px chute lined on BOTH faces with `>` and
+# `<` spikes for six unbroken rows. Falling through is free if you keep the drop
+# straight; the 22px safe band is the whole descent skill. Coming back up is not
+# a matter of difficulty, it is a matter of arithmetic: the chute has no
+# wall-jumpable surface anywhere in its length (spike flanks give none), its
+# mouth at row 9 hangs 68px over the vault floor with nothing under it, and the
+# nearest wall face (col 12, rows 11-13) tops out 60px below the mouth. A jump
+# plus an up-dash buys 80px of contact-free ascent; the keyhole asks for 130.
+# The solver agrees: west->ceiling and east->ceiling are inconclusive at every
+# loadout including `both`, while every other intended pair solves.
+#
+# THE VAULT (cols 13-20, floor row 17). Coin 0 sits dead centre directly under
+# the chute: the reward is free, the exit is the price. That is the class's joke
+# and the reason the room decides something.
+#
+#   SAFE STAIR -> EAST (no ability, ~110 ticks). Four 20px steps rising east off
+#   the vault floor (tops at rows 16/14/12/10, cols 21-28), then a step east into
+#   the cols 29-30 chute and a 70px plunge to the east door. Long, plain, and
+#   completely ungated: the greedy bootless player who dropped in for the coin is
+#   slowed, never trapped.
+#
+#   FAST CHIMNEY -> WEST (wall or dash, ~90-140 ticks). The vault floor runs west
+#   under col 12 onto a plinth at cols 8-11 row 16, and from there a 40px-wide,
+#   60px-tall chimney between the col 7 and col 12 faces tops out onto the attic
+#   slab (cols 5-7, row 9). Cross the slab, drop the 80px west well, walk out the
+#   west door. Three moves against thirty -- and it is the only way to leave on
+#   the west side, so gloves or boots literally buy a different destination.
+#
+# Gating is loud: the chimney is 60px of smooth facing rock and the west well is
+# 80px, both far past the 40px jump, so at `none` every route out is the east
+# stair and west<->east crossings are inconclusive by design.
+door ceiling
+door west
+door east
+# Coin 0 -- the bait, on the vault floor under the keyhole. Free the instant you
+# commit to the drop; it exists to make entering a decision rather than a route.
+coin 160 158
+# Coin 1 -- the fast route's bonus, in the attic mouth just past the chimney lip.
+# Only reachable by the glove chain or the dash chain, i.e. only by the player who
+# bought the west exit. Hard bonus.
+coin 88 72
+# Coin 2 -- the patient route's reward, on the top step of the safe stair, so the
+# long way is paid for too and neither exit reads as the punishment branch.
+coin 272 88
+# No timed hazard. The room's lethality is the keyhole itself: six rows of static
+# spikes that punish a drifting descent and forbid the climb back. Adding a
+# shutter over the chimney was tried and rejected -- it made the fast lane's
+# through-traffic (west<->east) unsolvable at the very loadouts it was meant to
+# tax, which would have stranded glove-only players on the west side.

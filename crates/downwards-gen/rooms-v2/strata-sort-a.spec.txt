@@ -1,0 +1,26 @@
+# strata-sort-a -- easy variant of "Strata Sort (one-way stack with landing-zone choice)".
+# Four one-way strata (rows 4, 7, 10, 13) 3 tiles apart, each holed twice.
+# You fall in through the ceiling, land on the top stratum between the two
+# holes, and pick a lane. Both lanes reach both exits, so the easy variant makes
+# the choice pure risk/reward rather than a routing puzzle:
+#   LEFT / fast lane   -- holes at cols 8-10, 7-9, 6-8, 4-5 drift left, so a
+#     near-freefall dumps you into the bottom-left chamber; spike studs sit on
+#     the solid fringes right of the left holes (rows 6 and 9) to punish
+#     overshoot, not undershoot. Coin 3 is down here.
+# SLOW lane -- holes at 20-22, 24-26, 21-23 braid, so each stratum costs a walk;
+#     it is spike-free and carries the two easy coins, and it lands on the
+#     bottom stratum where you can still choose the floor drop or the east ledge.
+# 3-tile spacing is under the 40px jump, so every stratum can be re-entered from
+# below through its own holes: retreat upward (floor->ceiling, east->ceiling) is
+# the class's "re-ascend through one-way" verb, with the row-16 stub
+# stratum over the floor mouth (cols 14-17) and the rows 15-16 blocks at cols
+# 18-19 and 28-29 as the first steps off the floor -- a player bounced back in
+# through a locked floor door lands on the stub instead of falling straight out.
+door ceiling
+door floor
+door east
+# easy coins, both on the slow lane's stratum tops, several tiles off the holes
+coin 181 60
+coin 271 90
+# detour coin in the bottom-left chamber, only reached by committing to the fast lane drop
+coin 21 160

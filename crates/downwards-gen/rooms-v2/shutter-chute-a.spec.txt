@@ -1,0 +1,33 @@
+# Shutter Chute - "a" (easy) variant: a staged zigzag descent.
+#
+# The class twist made structural: each hazard band is a full-width solid slab
+# pierced by exactly one four-tile aperture, and the TimedHazard rect sits in
+# that aperture. So the shutter is literally the only way down, and the slab
+# either side of it is the ledge you stand on to read the beat. Nothing here
+# is a chimney - there is no vertical corridor, only two slabs and the
+# staggered holes through them.
+#
+# The apertures are offset (cols 8-11 then cols 13-16) so the descent zigzags:
+# enter from the ceiling, land on the upper slab under the door, walk left,
+# drop through shutter A, cross the middle bay right, drop through shutter B
+# straight into the floor door. Catch-ledges (row 8 shelf, row 13 nub) sit
+# under the right-hand half of each aperture, so a nervous player is caught
+# and re-times while a committed player who releases down the free column
+# (col 8, then col 15) falls the whole way in one unbroken drop.
+door ceiling
+door floor
+# Shutter A fills aperture cols 8-11 on row 5. Duty cycle 1/3 - two thirds of
+# every beat is open, which is what makes this the easy variant.
+hazard 80 50 40 10 90 30 0
+# Shutter B fills aperture cols 13-16 on row 11, half a beat out of phase, so
+# the two never blink together: the room always shows you one open door and
+# asks which one you are standing over.
+hazard 130 110 40 10 90 30 45
+# Coin 0: the middle bay between the two shutters - banked standing still,
+# between commitments.
+coin 100 100
+# Coin 1: the upper-left alcove perch, across the mouth of shutter A - the
+# detour you take while shutter A is shut anyway.
+coin 22 20
+# Coin 2: hangs in shutter B's throat; only grabbed mid-drop on an off beat.
+coin 150 120

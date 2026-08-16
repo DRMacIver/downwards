@@ -1,0 +1,2 @@
+# kept room crown-sanctum (CrownSanctum) with its existing door set
+door west

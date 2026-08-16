@@ -1,0 +1,58 @@
+# braided-crossing-c -- HARD variant of "Braided Crossing (two-lane room)".
+#
+# One west<->east crossing split by a six-tile-thick solid spine (rows 5-10,
+# cols 3-28) into two complete lanes. Both start on the west stair-stub, both
+# end on the east stair-stub, and neither is a bonus branch.
+#
+# The hard variant takes the class's "asymmetric ability gates" axis and makes
+# the gate a PROFILE gate instead of a distance gate, so it cannot be misread
+# and cannot be brute-forced:
+#
+#   HIGH LANE -- the tunnel on top of the spine (walking surface row 4, rock
+#     ceiling row 3). Two tiles of headroom means you have no jump arc to
+#     spend. Two stretches are pinched to a single tile by v-spike ceilings at
+#     cols 12-13 and 19-20: 10px of clearance, which only the 8px dashing
+#     profile fits through, and the ^ bollard at col 27 is a third pinch on
+#     the last beat before the east stub. Between them the spine is cut clean
+#     through at cols 8-10, 15-17 and 22-24 -- 30px flat jumps with the gutter
+#     six tiles below. This lane is the fast one and it is dash-only.
+#
+#   LOW LANE -- the gutter, rows 11-16. No ability at all, only patience: a
+#     five-tile two-tall squeeze under the hanging block at cols 5-9, a timed
+#     shutter on its mouth, two single floor spikes at cols 13 and 23 that are
+#     ordinary hops, and a second shutter, deliberately out of phase, on the
+#     east run-in. Slow, safe, and a complete solution to the same crossing.
+#
+# THE TWIST -- the choice is made twice. The middle cut-through (cols 15-17)
+# is also a shared crossing slot: a one-way ladder (rows 15, 12, 9, and the
+# half-rung at row 6) climbs its full height, so the gutter can trade UP
+# mid-room and the tunnel can trade DOWN through the same shaft. Because the
+# row-6 rung sits one tile below the tunnel floor, an ability-less player who
+# climbs the ladder CAN dip across the middle gap and walk a stretch of the
+# fast lane -- and is then stopped dead by the next v-spike pinch and has to
+# climb all the way back down. The braid is genuinely re-enterable, and a
+# wrong call at the midpoint costs a full re-descent rather than a death.
+#
+# Falling is never the punishment: every miss on the tunnel drops you into the
+# gutter, i.e. into the lane you were choosing against. That is the room.
+door west
+door east
+# --- coins: one per lane, so the completionist crosses twice, once each way ---
+# EASY (low lane): inside the squeeze under the hanging block. Pure gutter
+# route, no ability needed, 32/32 on the worst shaky family from both doors.
+coin 70 160
+# HARD (crossing slot): mid-shaft on the shared ladder, above the second rung.
+# Rewards committing to the swap instead of to either lane. Reachable with no
+# abilities, but the 30px rung spacing makes it a real climb.
+coin 160 110
+# HARD (high lane): floating in the third cut-through at cols 22-24. Only a
+# dashing player in the tunnel can be at that height with that momentum, so
+# this is the coin that costs you the dash.
+coin 230 40
+# --- hazards ---
+# Shutter on the squeeze mouth (cols 10-11, floor rows): the gutter's toll.
+# Long period, short window -- a wait-or-commit read, not reaction precision.
+hazard 100 150 20 20 150 45 0
+# Shutter on the east run-in (cols 26-27), out of phase with the first, so a
+# player who sprinted the first one arrives at the second on the wrong beat.
+hazard 260 150 20 20 170 50 85

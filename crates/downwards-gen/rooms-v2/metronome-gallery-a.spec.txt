@@ -1,0 +1,47 @@
+# metronome-gallery-a -- easy variant of "Metronome Gallery".
+#
+# A flat west<->east corridor cut into five bays by four floor-to-ceiling
+# TimedHazard curtains hanging under the lintels at cols 7, 13, 19 and 25.
+# There is not a single spike in the room: the geometry is walk-and-hop trivial
+# (every bay crossing is a 50-60px flat run, no gap, no rise beyond 20px), so
+# the entire difficulty is WHEN, never WHERE. That inversion is the class.
+#
+# EASY EXPRESSION -- three deliberate choices, none of them a scale-down:
+#  1. Long period, short window: 40 active of 150, so a curtain is off 73% of
+#     the time. A player who simply looks before stepping is never in danger;
+#     the room teaches cadence rather than punishing reflex.
+#  2. The march runs WITH the player (phases 0/35/70/105 west to east), so the
+#     safe opening travels east ahead of them. Walk out of bay 1 on the beat
+#     and the wave carries you; the room rewards riding, not sprinting. The
+#     mirror trip (east->west) runs against the wave and is the harder line the
+#     completionist takes on the way back -- same room, two tempos.
+#  3. Bay 1 (cols 1-6, west of the first curtain) is the classroom: flat, safe,
+#     with the first coin in it, so the player banks a reward while standing
+#     still and watching two full cycles of curtain 1 before committing.
+#
+# THE VISIBLE TWIST -- the ceiling perches. The one-way rungs at row 14 over
+# bays 2 and 3 sit 20px above the floor and are the class's "slower alternate
+# line": a perch is a place to spend a whole extra cycle mid-corridor rather
+# than a shortcut, and bay 4 is a raised one-tile-step floor (cols 20-24, row
+# 16) -- the shallow bay you arrive at already committed to the next hop.
+door west
+door east
+
+# Coin 0 -- the classroom fee, in bay 1. Free, and the point: it makes the
+# player stop in the one place stopping is safe, which is where the cadence is
+# learned. Rock-solid on shaky (32/32) from either door.
+coin 30 158
+# Coin 1 -- above the bay-3 perch. Costs one extra cycle: you must climb, take
+# it, and re-read curtain 3 from the perch instead of from the floor.
+coin 165 130
+# Coin 2 -- on the raised step of bay 4, the shallowest bay, so the greedy
+# player lands, grabs and must leave inside the same window.
+coin 218 150
+
+# The metronome. Same period and window for all four curtains, phase marching
+# +35 ticks eastward -- a comfortable one-bay travel time, so the openings read
+# as one wave rolling down the gallery rather than four independent shutters.
+hazard 70 110 10 60 150 40 0
+hazard 130 110 10 60 150 40 35
+hazard 190 110 10 60 150 40 70
+hazard 250 110 10 60 150 40 105

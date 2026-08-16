@@ -1,0 +1,73 @@
+# one-way-loop-a -- easy variant of "One-Way Loop (asymmetric circuit)".
+#
+# A ring of corridor around a solid island (cols 9-24, rows 5-13). The ring has
+# four arcs: the top run (rows 1-4), the bottom run (rows 14-16), the LEFT arc
+# (cols 1-8) and the RIGHT arc (cols 25-30). The two vertical arcs are the whole
+# point, because they are different problems:
+#
+#   LEFT ARC -- a zigzag staircase of one-way rungs at rows 15, 13, 11, 9, 7,
+#   alternating between the col 1-4 and col 5-8 bands. Every step is a 20px rise
+#   with a landing you can stand still on, and the top rung sits flush against the
+#   island's left face, so the stair hands you straight onto the top run. Anyone
+#   can climb it with no abilities at all; pressing down walks it back the other
+#   way. This is the ring's slow, safe, reversible side.
+#
+#   RIGHT ARC -- a 6-tile-wide shaft with exactly ONE landing: a one-way slab at
+#   row 10 spanning the shaft's full width. Coming down, you step off the island's
+#   right edge, fall 50px onto the slab, walk it, and drop through for a 70px fall
+#   to the bottom run. Coming up, both of those drops are far past a 40px jump,
+#   and the shaft is 60px wide so there is no facing wall to chain off. The right
+#   arc is a genuine one-way street at EVERY loadout, gloves and boots included.
+#
+# THE TWIST, made easy: the class gates the ascent behind wall-jump or dash. This
+# variant gates it behind GEOMETRY instead. Nothing here needs wall or dash -- the
+# entire lap is walkable at loadout NONE -- and yet the lap still only runs one
+# way round, because the fast side is a chute and the slow side is a stair. The
+# player learns the room as a map ("down the right, up the left") rather than as a
+# sequence of jumps, which is the class's real verb, without ever being asked for
+# a hard input. That is what makes this the "a" variant: the asymmetry is fully
+# legible and completely free, so the room teaches the shape before a later
+# variant charges for it.
+
+door west
+door ceiling
+
+# The two doors sit at opposite ends of the ring: the west mouth (rows 13-16)
+# opens at the foot of the left stair, the ceiling mouth (cols 14-17) drops onto
+# the row-3 rung floating over the island. Every ordered pair closes at NONE:
+#   west -> ceiling : up the left stair, east across the island, hop the row-3
+#                     rung, out through the roof.
+#   ceiling -> west : east across the island, off the edge into the chute, then
+#                     west along the bottom run.
+# The self-pairs close in a few ticks each, so a player bounced off a sealed door
+# can always retreat. Note that the return trip is not the outbound trip reversed
+# -- that asymmetry is the entire class, and here it costs nothing to use.
+
+# COIN 1 -- the lap-closer, on the bottom run under the middle of the island. The
+# bottom arc is the flat safe segment that guarantees the loop always closes, and
+# this coin makes it a place you visit rather than a gutter.
+coin 180 160
+
+# COIN 2 -- the twist coin, and the reason this room is a loop rather than a
+# corridor. It rests on the row-10 slab inside the right shaft. You can see it
+# from the bottom run and you cannot reach it from there: 70px of blank shaft with
+# no wall on either side. The only approach is to fall onto the slab from the
+# island above. A player entering by the WEST door, fifteen tiles away in a
+# straight line, must climb the whole left stair, cross the island and commit to
+# the chute -- one full lap -- to take it. That is the "shortcut down, wall coming
+# back up" reading of the room turned into a single visible object.
+coin 270 90
+
+# COIN 3 -- the stair's own reward, sitting on the top rung of the left arc where
+# the staircase meets the island. Cheap from either door; it marks the handoff
+# point and gives the climb a destination before the top run begins.
+coin 60 60
+
+# THE BEAT -- a shutter across the full width of the right shaft, two rows below
+# the slab. 180-tick period, 60 ticks closed. It gives the chute a cadence: land
+# on the slab, take coin 2, then wait for the window before dropping through. This
+# is the class's "timed hazard occupying one arc so the loop must be entered on a
+# beat" axis, kept gentle (two thirds of the cycle is open, and the slab is a
+# stand-still landing you can wait on indefinitely). It only ever punishes
+# commitment -- dropping early -- never a jump that falls short.
+hazard 250 120 60 20 180 60 0

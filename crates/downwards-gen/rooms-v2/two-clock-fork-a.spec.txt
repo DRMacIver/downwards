@@ -1,0 +1,43 @@
+# two-clock-fork-a -- easy variant of "Two-Clock Fork (one crossing, two honest routes)".
+#
+# ONE crossing, west door to east door, served by two lanes that both work and
+# both need NO abilities. The easy expression of the class is not "same room,
+# bigger windows": it drops the class's boots gate entirely, so the fork stops
+# being a loadout check and becomes purely a reading of two clocks.
+#
+#   LOW LANE (rows 14-16, cols 1-30) -- the short one. Straight run along the
+#     floor, but the tunnel is only 3 tiles tall under the slab, so the two
+#     shutters at cols 11 and 19 cannot be jumped: they are threaded. They share
+#     a 90-tick period on opposite phases (0 and 45), a fast one-two that reads
+#     as "go now, and keep going".
+#
+#   HIGH LANE (row 10 surface, cols 7-25) -- the long one. Three one-way rungs
+#     up the entry shaft (cols 3-4 r14, cols 1-2 r12, cols 3-4 r10), a 20px
+#     level hop onto the slab, the walk, then the mirrored ladder down the east
+#     shaft. Its single beam is 200 ticks long and open for 130 of them -- one
+#     unmistakable window, which is the whole trade: four times the travel for a
+#     hazard you can simply wait out.
+#
+# THE TWO CLOCKS: 90 and 200 do not line up, so which lane is cheaper depends on
+# when you arrive at the entry bay. Standing in the shaft watching both cadences
+# is playing, not stalling.
+#
+# RECONVERGENCE: the east shaft (cols 26-30) is where both lanes land, and the
+# rungs in it double as the retreat ladder for a player bounced off a sealed
+# door -- every self-pair is walkable.
+door west
+door east
+
+# HIGH-LANE coin, just east of the beam on the slab: the long lane's payoff, and
+# it forces the commit rather than sitting safely before the window.
+coin 180 88
+
+# RECONVERGENCE coin on the east shaft floor: both lanes bank it on equal terms.
+coin 265 158
+
+# Fast clock: alternating floor shutters, full tunnel height, 8 tiles apart.
+hazard 110 150 10 20 90 25 0
+hazard 190 150 10 20 90 25 45
+
+# Slow clock: one wide beam across the slab walk, long generous opening.
+hazard 150 80 30 20 200 70 0

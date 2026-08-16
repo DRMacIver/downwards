@@ -1,0 +1,67 @@
+# greed-loop-a -- the easy variant of "Greed Loop".
+#
+# The room is a donut and the whole room is one lap. A solid mass fills the
+# middle (the west buttress at cols 1-6, the island cap at cols 11-22 rows 5-12,
+# the low ceiling at cols 13-22 rows 1-2), so the only standable ground is the
+# ring around it. The ring runs one way at loadout NONE:
+#
+#   BANK PIT (cols 0-4, floor row 17, one step from the west door)
+#     -> east along the bottom gutter, over the two spikes and across the bridge
+#     -> up the RIGHT SHAFT on a staggered one-way ladder (rows 14/12/10/8/6),
+#        five 20px rungs, easy up and awkward down
+#     -> west along the TOP RUN (rows 3-4, floor row 5)
+#     -> a hop off the west end onto the POCKET SHELF (row 6, cols 7-8)
+#     -> step off the shelf into the RETURN CHUTE (cols 7-11), a straight 100px
+#        free-fall that dumps you on the gutter two steps from the bank pit.
+#
+# THE BANK RULE, MADE LITERAL. The floor door at cols 14-17 is not at the end of
+# the room -- it is a hole in the middle of the lap, bridged by a one-way
+# platform. Every lap crosses the treasury. Standing on that bridge and pressing
+# DOWN is banking; walking across it is choosing to go round again. That makes
+# "return to the bank tile" a real, repeated, one-button decision instead of
+# fiction laid over a corridor, and an aborted lap becomes a fall you take on
+# purpose. It also puts the exit next to the entrance as the class asks: the west
+# door and the floor door share the bottom-left of the gutter, four tiles apart.
+door west
+door floor
+
+# WHY THIS IS THE EASY VARIANT AND NOT A SCALED-DOWN HARD ONE.
+# Axes chosen: three coins (low end of the class's 2-5), a short lap, the bank
+# tile AT the entrance rather than diametrically opposite, no timed hazard on the
+# top run, and -- the one that does the most work -- a ring that is strictly
+# one-directional at loadout NONE but becomes BIDIRECTIONAL once you own wall
+# jump or dash, because the 50px return chute can then be climbed. So the easy
+# expression is not "the same lap, gentler": ability-holders get to run the ring
+# backwards and take the deepest coin first for almost nothing, which is exactly
+# the class's "bidirectional rings let the player pick the cheap side" axis. For
+# a bare-handed player the ring stays a committed one-way lap.
+#
+# The whole lap is walkable with no abilities. The only hazards are two single
+# floor spikes at cols 12 and 19 -- ordinary 20px hops with flat ground either
+# side -- and they are placed one on each side of the treasury bridge, so the
+# last two steps before banking are the only place on the ring where a full lap's
+# haul can still be lost. Hazard cadence is therefore: nothing at all for the
+# whole long half, two cheap hops right at the moment of cashing out.
+
+# COIN 1 -- lap depth ~1/8. Four steps east of the bank pit, before the first
+# spike. The free coin, and its job is to teach that coins live ON the ring, so
+# the player reads the gutter as the start of a lap and not as a corridor.
+coin 82 150
+
+# COIN 2 -- lap depth ~1/2. Hanging over the fourth rung of the ladder, grabbed
+# mid-climb. The ladder is one-way platforms: stopping for this coin has already
+# committed you to going over the top, because picking your way back down through
+# the rungs costs more than finishing the lap. This is the room's hinge.
+coin 282 110
+
+# COIN 3 -- lap depth ~7/8, and the only coin that is also the way home. It sits
+# on the shelf at the mouth of the return chute, taken by hopping west off the
+# end of the top run; you then step off the shelf and the same chute falls you
+# back to the bank. Greed and the return trip are the same input. Crucially,
+# MISSING the shelf is not a death -- you drop past it into the chute and land at
+# the bank anyway, having only lost the coin. Overshoot costs the prize, never
+# the run, which is what keeps the deepest coin honest at easy difficulty.
+coin 72 50
+
+# No timed hazard: the class is defined by the topology plus the bank rule, and
+# the difficulty range reserves a shutter over the top run for the hard variants.

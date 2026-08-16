@@ -1,0 +1,36 @@
+# Shutter Chute, hard variant: a serpentine descent chute.
+#
+# Three fall lanes alternate right / left / right down the shaft. Each lane is
+# crossed by a shutter band that spans the WHOLE lane, so there is no way round
+# one - only a way through it in time. The only staging posts are two-tile nubs
+# hung just above each band, so a player who breaks the descent into stages
+# still has to cross that band on the very next beat; there is no ledge where
+# the clock stops. The bands run as a downward-travelling wave (phases 0/22/44
+# of a 90-tick period), so the expert line is one unbroken release from the
+# ceiling that threads all three, while the cautious line stages nub to nub and
+# pays a beat at each.
+#
+# The twist is the last beat. Instead of a fourth band across the fall, the
+# room ends in a standing-height shutter curtain 8 tiles wide (cols 17-24) with
+# a 40-tick clear window across the only run-in to the exit door. Walking 80px
+# does not fit 40 ticks; a dash does. So the chute is dash-gated at its floor,
+# and the final commitment happens on the ground, in full view, after three
+# committed falls - the room's tightest beat is also its most readable one.
+door ceiling
+door floor
+# lane 1 shutter - spans the whole right lane (cols 22-27); staging nub at row 5
+hazard 220 60 60 10 90 32 0
+# lane 2 shutter - spans the whole left lane (cols 6-12); staging nub at row 9
+hazard 60 100 70 10 90 32 22
+# lane 3 shutter - right lane again; the nub at row 13 hangs over it, and the
+# lane bottoms out on the raised step at cols 25-27
+hazard 220 140 60 10 90 32 44
+# the last beat: an 8-tile standing-height curtain (cols 17-24) over the final
+# run-in. 40-tick clear window - too wide to walk, exactly a dash wide.
+hazard 170 150 80 20 90 50 66
+# easy bank coin in the west pocket, the one place recessed from every rect
+coin 60 150
+# hard coin parked inside lane 1's shutter: grabbable only on the off-beat
+coin 250 60
+# hard coin inside lane 2's shutter, between the two wall spikes
+coin 80 100

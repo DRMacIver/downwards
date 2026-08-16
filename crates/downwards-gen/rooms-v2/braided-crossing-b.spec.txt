@@ -1,0 +1,53 @@
+# braided-crossing-b -- medium variant of "Braided Crossing (two-lane room)".
+#
+# The class: one west<->east crossing split by a solid spine into two lanes that
+# both start at the entry door and both end at the exit door, so the player picks
+# a lane rather than following a sequence.
+#
+# The medium twist (variant axis: "lanes that swap heights at midpoint via a
+# shared crossing slot" crossed with "asymmetric ability gates"): the spine is
+# BROKEN at cols 15-17 into a full-height crossing slot, and the two halves of
+# the room disagree about which lane is the fast one.
+#
+#   WEST HALF -- the HIGH lane is fast: an exposed run along the spine top
+#     (row 12) with a 3-tile (30px) pit at cols 7-9. A missed jump is not death,
+#     it drops you into the slow lane, which is exactly the choice being undone.
+#     The WEST LOW lane is the gutter: one floor spike at col 5 (comfortable
+#     20px hop) and a 2-tile squeeze under the hanging band at cols 11-13.
+#     Both are no-ability; the high one is quick and committal, the low one slow.
+#
+#   CROSSING SLOT (cols 15-17) -- the only place the lanes touch. A one-way rung
+#     at row 14 lets a gutter player climb out onto the spine, and a high player
+#     drop through. This is where the second choice is made, and it is the reason
+#     the room is a braid and not two corridors.
+#
+#   EAST HALF -- the lanes swap roles. The HIGH lane becomes a slow, safe crawl
+#     tunnel (rows 10-11, ceiling at row 9) pinched to a single tile at cols
+#     20-22 and 25-26, so it is dash-only. The EAST LOW lane -- the open gutter --
+#     is now the fast one, and carries the crusher, so the no-ability player must
+#     take it and time it.
+#
+# Net effect: the fastest crossing is a diagonal (west-high -> slot -> east-low),
+# i.e. the lanes literally cross over in the middle. Minimum loadout is none:
+# gutter all the way west-to-east works with patience. Dash buys the east crawl
+# tunnel, which is the only hazard-free crossing and the only way to the bonus.
+door west
+door east
+# One coin per lane, per the class: the completionist crosses twice.
+# HIGH-lane coin: hangs in the air over the west spine pit (cols 7-9), collected
+# mid-leap on the fast lane. Unreachable from the gutter: 50px+ up from the floor.
+coin 80 108
+# LOW-lane coin: inside the 2-tile gutter squeeze at cols 11-13, the slow lane's
+# signature moment, on the walking line.
+coin 118 158
+# BONUS coin: deep inside the east crawl tunnel past the first 1-tile pinch.
+# Dash-only, and it is the reward for the lane that ducks the crusher entirely.
+coin 255 112
+# Toll 1 -- shutter across the crossing slot at spine height. It taxes anyone
+# using the slot VERTICALLY or leaping it on the high lane; the row 15-16 gutter
+# passes underneath untouched, which is what keeps the no-ability route open.
+hazard 150 110 30 10 140 50 0
+# Toll 2 -- crusher in the east gutter at cols 23-24. Antiphase with toll 1, so
+# the two halves of the braid beat against each other and a straight sprint gets
+# caught by one of them.
+hazard 230 140 20 30 100 28 50

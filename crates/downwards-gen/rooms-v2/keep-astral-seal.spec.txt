@@ -1,0 +1,4 @@
+# kept room astral-seal (AstralSeal) with its existing door set
+door west
+door east
+coin 245 50

@@ -1,0 +1,37 @@
+# Low-Ceiling Arena "c" (hard): a two-storey car park under two lids.
+#
+# The class at its late-difficulty extreme: instead of one wider arena, the
+# lid is doubled. Ground storey is the 3-tile band rows 14-16 under the lid at
+# row 13; hung spike runs at row 14 cut it to 2 tiles (walk only, never jump),
+# two solid pinches at cols 12-13 and 22-23 seal rows 14-15 completely so the
+# only way through is a dash-crawl along row 16, and a floor-spike pit at
+# cols 16-17 sits between them so the middle chamber squeezes from below too.
+# Upper storey (rows 5-7 under the lid at row 4) is the same idea one floor up,
+# with its own hung runs and its own floor spikes, and its floor is punched
+# open above both wells so a careless run drops you back to the ground band.
+#
+# The two wells (cols 5-6 and 25-26) are 80px of opposing wall with no ledges:
+# far past a 40px jump and a 40px dash, so the upper storey is a hard wall gate.
+# The exit is the ceiling door, reachable only from the middle of the upper
+# storey via a second 80px shaft - you must cross both lidded floors, not one.
+door west
+door east
+door ceiling
+
+# Coin 1 (dash tier): ground band, past the first dash-crawl pinch and over
+# the floor-spike pit, in the middle chamber. Worst shaky 19/32 from west and
+# 31/43 from ceiling at its intended dash loadout - the crawl is the test.
+coin 192 160
+
+# Coin 2 (wall+dash): upper storey, east of the exit shaft and short of the
+# hung run at cols 20-22, so it is only banked by walking the upper lid.
+# Worst shaky 21/32 from ceiling, 19/32 from west at both.
+coin 180 70
+
+# Coin 3 (hard bonus, wall+dash): the resync rung inside the exit shaft, the
+# last thing you touch before the ceiling door.
+coin 152 20
+
+# Ceiling drip in the middle ground chamber, right where the dash-crawl spits
+# you out: 45 active of 150 ticks, so the pinch has a cadence to read.
+hazard 140 140 10 30 150 45 0

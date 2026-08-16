@@ -1,0 +1,42 @@
+# Keyhole Vault, hard variant: "the lid with three keyholes".
+#
+# Row 3 is the vault's lid: a solid gallery floor pierced by exactly three
+# holes, and every one of them is a different price.
+#   * cols 15-16  THE KEYHOLE - the ceiling door's own 20px slot. You fall
+#     through it and you cannot come back up it: 60px below hangs a landing
+#     pad (row 10, cols 15-17) inside a chute walled at cols 11 and 20, and
+#     from that pad the lid is a full jump-and-a-half out of reach. Entering
+#     is a decision; the room you have to leave is not the room you entered.
+#   * cols 1-3    THE CHIMNEY - 100px of bare facing walls 30px apart with no
+#     ledge anywhere in it. Boots-and-gloves only; a bootless player can fall
+#     down it but never climb it. Two counter-phased shutters band it at rows
+#     6 and 10, so the shortcut is also a timed commitment - there is nowhere
+#     in the chimney to stop and wait for the beat.
+#   * cols 21-24  THE STAIRWELL - the long, free way home: four hanging
+#     shelves (rows 13, 10, 7, 4) spiralling up the vault's east side from a
+#     step at cols 21-24, landing you on the lid four tiles from the keyhole.
+#     No ability needed, but it is the whole east wall of the room.
+#
+# The twist you see on the way in: the landing pad is a pedestal over spikes.
+# Row 16 cols 15-17 is a spike bed directly under it, so you cannot simply
+# drop off the pad - you must step off LEFT (into the west half, toward the
+# chimney) or RIGHT (into the east half, toward the step and the stairwell).
+# The pad is the survey point, and stepping off it is where you choose your
+# exit. The free coin sits on the pedestal itself, so the reward costs
+# nothing and the choice costs everything.
+door ceiling
+door east
+# chimney shutters: rows 10 and 6, counter-phased, so the wall-jump chain has
+# to be started on the beat and finished on the next one
+hazard 10 100 30 10 120 45 0
+hazard 10 60 30 10 120 45 60
+# lid curtain at cols 18-20: the stairwell route's last beat, on the short run
+# from the stairwell mouth across to the keyhole lip
+hazard 180 10 30 20 120 35 30
+# free coin: on the pedestal, collected by the fall itself
+coin 154 88
+# hard coin: the west end of the vault floor at the chimney mouth, past the
+# west spike bar - the payoff for stepping off the pad to the left
+coin 44 160
+# hard coin: the top of the chimney, between the upper shutter and the lid
+coin 14 40

@@ -1,0 +1,7 @@
+# kept room meteor-run (MeteorRun) with its existing door set
+door west
+door east
+# kept room meteor-run shutters
+hazard 52 0 52 170 96 70 45
+hazard 134 0 52 170 96 70 13
+hazard 216 0 52 170 96 70 77

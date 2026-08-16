@@ -1,0 +1,44 @@
+# Keyhole Vault - "a" (easy) variant: fall in for free, walk the circuit out.
+#
+# ENTRY IS ONE-WAY, BY GEOMETRY. The ceiling funnel narrows to a two-tile
+# throat whose walls at rows 3-4 are side-facing spikes ('>' at col 14, '<' at
+# col 17). Dropping straight through is perfectly safe; a wall-jump chain back
+# up puts the 8px body onto a flank spike. No shutter, no key - the entrance
+# simply cannot be reversed. That is why every "-> ceiling" pair audits as
+# inconclusive at every loadout: it is the class, not a fault. Nobody is
+# trapped - both side doors are reachable from the ceiling with NO abilities.
+#
+# THE VAULT HAS A LID. The row-10 slab roofs the chamber from col 9 to col 22
+# with one three-tile keyhole at cols 14-16, sitting exactly under the throat.
+# You fall through the throat, through the keyhole, and land on the coin. The
+# lid is also the gallery you walk at rows 8-9, so the room's silhouette is a
+# funnel over a sealed box with a slot in it.
+#
+# TWO PRICES OUT, as the class demands:
+#  - Safe stair, no abilities: from the vault floor walk right to the steps at
+#    (21,15) and (23,13), up onto the col-25 wall top, and down the east bay
+#    (29,15)/(28,13)/(27,11)) to the east door. Cheap - if east is where you
+#    wanted to go.
+#  - The same stair to the WEST door is the full circuit: up the stair, up onto
+#    the lid, ~20 tiles back left along the gallery hopping the mouth of the
+#    keyhole you fell through, then down the left bay.
+#  - Fast shaft, wall or dash: cols 6-8 between the bare faces of col 5 and
+#    col 9, entered through the 2-tile gap at the foot of col 9 and topped by a
+#    hole in the lid. Three moves and you are out on the left, beside the west
+#    door. 60px of bare wall, so it is not a jump.
+# Easy variant: the shortcut is never a gate. Bootless players are slowed, not
+# stuck - which is exactly the deal the class describes.
+door ceiling
+door west
+door east
+# Coin 0: dead centre of the vault floor, straight under the keyhole. Free on
+# the way in; the exit is the whole cost.
+coin 152 156
+# Coin 1: hangs in the gallery over the mouth of the keyhole, collected
+# mid-hop by anyone walking the long circuit west.
+coin 150 85
+# Coin 2: in the throat of the fast shaft - grabbed on the wall-jump climb, or
+# on the way down by a player who came the long way round to drop in.
+coin 65 108
+# No timed hazards: in the easy variant the spikes of the funnel are the only
+# lethal geometry, and they only bite the player who tries to un-commit.

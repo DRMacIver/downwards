@@ -1,0 +1,39 @@
+# Strata Sort -- hard variant "c"
+#
+# The hard expression of the class inverts its softest assumption: the strata
+# here are SOLID (rows 3, 7, 11), not one-way, so a slot cannot be undone by
+# pressing down and there is no free drop-through anywhere in the stack. The
+# bands between strata are walled into sealed cells (col 14 in rows 4-6,
+# cols 8 and 21 in rows 8-10), so each hole feeds exactly one cell and each
+# cell offers exactly one or two onward holes. Picking a slot IS picking a
+# route; the room is a literal sorting machine.
+#
+#   row 3  slots 6-7 (left lane) and 15-16 (right lane, straight under the
+#          ceiling mouth -- fall in without thinking and you are sorted right)
+#   row 7  left cell offers 3-4 (dead-end vault) or 11-12 (middle);
+#          right cell offers 17-18 (middle) or 26-27 (east).
+#          The two lanes braid through the shared middle cell.
+#   row 11 middle -> express slot 15-16 straight onto the floor door;
+#          left -> slot 6-7 into the vault; right -> slot 29-30 to the east
+#          door.
+#
+# One-way platforms are used only underneath, as the recovery ladders, so the
+# stack reads solid and the '-' rungs read as "this is the way back up".
+# Row-6 and row-10 step blocks make every hole re-ascendable: a mis-sort is
+# recoverable, but it costs a whole layer of climbing.
+door ceiling
+door floor
+door east
+# far left of the sorting deck: only worth walking to if you are taking the
+# left lane anyway, so the deck walk is a route commitment, not a detour
+coin 21 20
+# right cell, pinned in the two-tile pocket between the wrong-way spikes
+# (cols 22-23) and the step block (cols 26-27)
+coin 241 100
+# dead-end vault, reachable only by committing to row-7 slot 3-4; getting out
+# again means climbing the rung at cols 5-7 and re-sorting from the top
+coin 11 160
+# the express slot pulses: the fastest line to the floor door is the timed one
+hazard 150 90 20 20 120 45 0
+# sweep across the vault pocket, so the greedy player has to wait on the ledge
+hazard 20 160 20 10 140 45 20

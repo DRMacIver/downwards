@@ -1,0 +1,48 @@
+# braided-crossing-a -- easy variant of "Braided Crossing (two-lane room)".
+#
+# One west<->east crossing split by a solid spine (rows 11-12, cols 4-27) into
+# two lanes that both start in the west alcove and both end in the east alcove.
+# Neither is a bonus branch: each is a complete solution, and both are clearable
+# with NO abilities, so the easy variant makes the choice a matter of temperament
+# rather than of loadout.
+#
+#   HIGH LANE -- the run along the spine top (feet row 10, 4 tiles of headroom).
+#     Fast and exposed, broken by two full-depth slots at cols 11-12 and 20-21:
+#     20px gaps, comfortable jumps, but a miss is not a death -- you fall
+#     straight through into the gutter and finish the crossing the slow way.
+#     That demotion is the braid: the lanes are the same room, not two corridors.
+#
+#   LOW LANE -- the gutter (rows 13-16). Slow, sightless, and safe-ish: the
+#     hanging band at cols 14-17 squeezes it to 2 tiles for a walk-through
+#     squeeze, and two single floor spikes at cols 8 and 23 are ordinary 20px
+#     hops with the spine as a ceiling overhead.
+#
+# THE TWIST (variant axis "a timed hazard on the fast lane"): the right-hand
+# slot carries a full-height shutter. The fast lane is not harder to execute
+# than the gutter, it is harder to COMMIT to -- the read is "wait or risk"
+# rather than "do you have boots", which is what keeps the easy variant from
+# being a mechanical scale-down of the class.
+#
+# RE-CROSSING: the one-way rung at row 13, cols 11-12 sits inside the left slot,
+# so a gutter player can trade up to the high lane mid-room (a full 40px jump --
+# deliberately the hardest optional beat here) and a high-lane player who balks
+# at the shutter can drop through the same slot. The lane-change rungs at the
+# alcoves (row 15 col 3 / row 13 cols 1-2 west, mirrored east) are the two
+# official on-ramps, and they double as the retreat ladder for a player bounced
+# off a locked door.
+door west
+door east
+
+# One coin per lane, so the completionist crosses twice, once each way.
+# HIGH-LANE coin: in the vault above the spine, entered through the row-6 mouth
+# at cols 15-16 off the row-8 rung. Only the high lane can see it, and it sits
+# west of the shutter so the vault trip and the shutter commit are separate
+# decisions rather than one compound gamble.
+coin 131 50
+# LOW-LANE coin: inside the 2-tile squeeze, the gutter's signature moment and
+# the reason the slow lane is worth running at all.
+coin 151 150
+
+# The fast lane's toll: a full-height shutter across the right-hand slot.
+# Long period, short active window -- a wait-or-commit read, not a reaction test.
+hazard 200 70 20 40 170 55 0

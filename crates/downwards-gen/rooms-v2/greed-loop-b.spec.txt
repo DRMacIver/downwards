@@ -1,0 +1,55 @@
+# greed-loop-b -- medium variant of the level class "Greed Loop".
+#
+# THE CLASS: a closed circuit. The exit sits right next to the entrance, the
+# whole room is one lap, coins sit at increasing lap-depth, and nothing is
+# banked until the lap closes back onto the bank tile.
+#
+# THE MEDIUM TWIST (variant axes: bank position + back-loaded hazard density):
+# the bank is not a floor tile you stand on -- it is the FLOOR DOOR ITSELF, a
+# 4-tile hole in the bottom of the room at cols 14-17. Banking means dropping
+# out of the room. It sits in plain sight a short walk east of the west door,
+# under the first thing the player steps on, so the treasury is visible from the
+# moment they arrive and an abort is always one button away. Every coin, by
+# contrast, is out on the ring, and nothing counts until you come back to it.
+#
+# THE RING (one-directional in practice, run counter-clockwise):
+#   1. Bottom run, eastward, rows 13-16 -- the cheap opening. The bank platform
+#      is the one-way slab at row 16 cols 14-17, a raised tile directly over the
+#      treasury hole: stand on it and press down and everything you carry is
+#      banked. You cross it outbound with nothing and re-cross it inbound with a
+#      full purse, which is the entire decision of the room in one tile.
+#   2. Spike pair at cols 19-20 row 16 -- the toll to leave the shallow end.
+#   3. Right-side chimney, cols 22-30, climbed on staggered one-way rungs at
+#      rows 15 / 13 / 11 / 9 / 7 (alternating column bands 22-25 and 27-30),
+#      every rise a comfortable 20px. Easy up, awkward down: the ladder is what
+#      makes the circuit a loop and not a there-and-back.
+#   4. Top run, westward, rows 1-4 on the row-5 ledge (cols 5-21) -- the long
+#      return leg, and the only stretch with no floor below it to fall back to.
+#   5. Return drop through the row-5 gap at cols 2-4, straight down the left
+#      shaft onto the clean landing at cols 1-9, then walk right to the hole.
+# The solid island at cols 10-21 rows 6-12 is the donut hole; there is no way
+# through it, so the lap is genuinely a lap.
+#
+# HAZARDS ARE BACK-LOADED (the axis choice): the shallow half costs one spike
+# hop; the deep half is where the room bites. That is what makes the second half
+# of the lap the tense half and turns "one more coin" into a real decision.
+door west
+door floor
+# --- coins, at increasing lap-depth ---
+# COIN 1 (shallow, ~1/4 lap): past the spikes at the foot of the chimney -- the
+# cautious player's entire lap, out and back over the bank platform.
+coin 271 160
+# COIN 2 (mid, ~1/2 lap): hangs in the chimney between the row-11 and row-9
+# rungs, so it is taken mid-ascent. Committing to it means committing to the
+# top run as well, because the ladder is far nastier to descend than to climb.
+coin 231 100
+# COIN 3 (deep, ~3/4 lap, HARD BONUS): floats at row 2 directly above the
+# shutter on the return leg. It is grabbed at the apex of the leap OVER the
+# closing gate, i.e. the single riskiest act in the room is also the last coin
+# and it happens while you are already carrying everything else.
+coin 61 20
+# THE SHUTTER: fills rows 3-4 at cols 6-7, the full width of the top corridor's
+# lower half, leaving a 20px slot at rows 1-2. Closed, it is a wall you must
+# leap; open, you stroll. It stands between the deep coin and the return drop,
+# so it taxes the bank, not the pickup -- an aborted lap is what it punishes.
+hazard 60 30 20 20 150 48 0

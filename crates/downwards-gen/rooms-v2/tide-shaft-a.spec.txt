@@ -1,0 +1,43 @@
+# tide-shaft-a -- easy variant of "Tide Shaft (rising/falling hazard tide)".
+#
+# A ceiling-to-floor shaft crossed by three FULL-WIDTH hazard bands that light
+# in sequence from top to bottom, so the lit band visibly marches down the
+# room like a falling tide. There is no shutter to squeeze through and no
+# wall to climb: every band spans all 32 columns, so the only question the
+# room ever asks is WHEN, never where.
+#
+# The easy expression of the class is not "fewer/wider ledges" -- it is that
+# the safe pockets are made structural. Each band's row also carries the
+# landing ledge for that tier, so the tiles you stand on are the LIP of the
+# tide: standing on a ledge is always survivable, and the tide only ever
+# threatens you in mid-transit. That turns the room into a read-the-cadence
+# drill with generous forgiveness, instead of a reaction test. A player who
+# simply waits on each ledge for the band below to go dark, then drops, walks
+# the whole shaft without ever touching a hazard.
+#
+# The ledges zigzag left/right/left with 20-30px rises and horizontal overlaps
+# at every seam, so the same staircase is walkable in both directions. Ascent
+# is the same clock read backwards -- you chase the tide up instead of riding
+# it down -- which is the class's "tide direction" axis expressed inside one
+# room rather than across variants.
+door ceiling
+door floor
+# The tide. Three bands, one period, phases spaced a third apart so exactly
+# one band is lit at a time and the lit band steps downward every 60 ticks
+# (one second). 55/180 duty = the shaft is clear two thirds of the time.
+# Rects are inset 1px inside their tile row so the ledge lips at that row are
+# the waterline: you can stand on the lip, you cannot swim through the band.
+hazard 0 31 320 8 180 55 0
+hazard 0 81 320 8 180 55 60
+hazard 0 131 320 8 180 55 120
+# Coin 0 -- easy. Far right end of the row-6 ledge, the widest detour off the
+# descent line: a full sway to the right wall while the tide is below you.
+coin 262 50
+# Coin 1 -- the class's signature. The upper-left nub at row 5 sits INSIDE the
+# top band's kill height, so this is the one perch in the room that is only
+# safe during a window. Banking it means standing still on a beat you chose.
+coin 12 40
+# Coin 2 -- same trick over the left drain: the row-10 nub pokes into the
+# middle band. Miss the hop up from the row-13 ledge and the spiked drain
+# below takes the retry, so it is the room's hard bonus.
+coin 20 90

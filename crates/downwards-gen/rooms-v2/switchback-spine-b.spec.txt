@@ -1,0 +1,48 @@
+# Switchback Spine (b / medium)
+#
+# One corridor folded three times. The west door opens into a low 2-tile
+# tunnel (rows 15-16) that runs the full width east; at the right wall a
+# two-step stair (row 15 shelf cols 27-30, row 13 shelf cols 29-30) folds up
+# into the middle floor (row 11). The middle run doubles back west under a
+# 20px ceiling, opening out only where it has to jump the two floor gaps;
+# at the left wall a second fold (row 9 ledge cols 1-2, row 7 shelf cols
+# 3-7) lifts onto the top run. The top run hops east over one-way platforms
+# at cols 11-13 and two open holes, and the ceiling shaft at cols 14-17
+# carries the player out.
+#
+# The two holes, cols 8-10 and cols 20-22, are cut clean through rows 6-14.
+# Miss a hop on the top run and you do not die - you drop two floors into
+# the bottom tunnel and walk the whole spine again. That soft, positional
+# failure is the class identity.
+#
+# Medium twist, two parts:
+#  1. One coin per run. The spine has to be run cleanly once instead of
+#     sloppily three times, because a fall re-costs every coin still unbanked.
+#  2. The chutes are two-way. Bottom floor to middle floor is 60px and middle
+#     floor to top floor is 50px - both past a 40px jump, so they are gates,
+#     not stairs. With dash (or a wall-jump chain) a player can climb a chute
+#     straight up and skip the folds entirely; without abilities the folds
+#     are the only way up and the room reads as its full three-run length.
+door west
+door ceiling
+
+# Bottom run, easy. On the first stair shelf at the far east end of the
+# tunnel - the end of the bottom walk and the mouth of the right-hand fold.
+coin 280 140
+
+# Middle run, easy. Hovers in the 30px floor gap at cols 20-22, taken at the
+# apex of the jump across it. The ceiling is cut back to row 8 over cols
+# 19-23 precisely so this jump has headroom; miss it and you drop two floors.
+coin 210 90
+
+# Top run, hard bonus. Far east of the top run, past the ceiling shaft. The
+# player must clear the cols 20-22 hole, overshoot the exit, bank the coin,
+# and come back west across the same hole to leave.
+coin 294 34
+
+# Shutter in the low crawl (cols 14-18, 20px clearance - walkable, but with
+# no headroom to jump it). Fires at col 15 across the full crawl height,
+# 90-tick cadence, 15 ticks hot: enough time to walk the 50px tunnel,
+# punishing if you enter late. This is what turns the middle run's demotion
+# from a free retry into a timing loss.
+hazard 150 90 10 20 90 15 0

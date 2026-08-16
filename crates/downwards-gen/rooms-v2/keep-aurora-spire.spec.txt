@@ -1,0 +1,4 @@
+# kept room aurora-spire (AuroraSpire) with its existing door set
+door west
+door east
+coin 294 50
