@@ -234,7 +234,7 @@ methods as well as the coins. Deaths and restarts return to the door used to ent
 without discarding gloves, boots, Crown, or coins. `V` demonstrates the next intended room-local
 objective; it is not a whole-dungeon route.
 
-Palette generation v18 includes eight evidence-driven replacements. The first post-Boots Gale Chasm
+Palette generation v19 includes nine evidence-driven replacements. The first post-Boots Gale Chasm
 was implicated by 24 recorded human deaths and an AI witness with 43 action spans and 11 reversals;
 it now presents two readable sixty-pixel Dash gaps separated by a three-tile full-recovery island.
 The mechanically selected route uses nine spans, two jumps, two Dashes, and no reversals, while a
@@ -292,6 +292,15 @@ Jumps, collects the coin cleanly, and can continue to the east door. Same-budget
 either method removed have no positive, and all strength-one perturbation families retain at least
 28/64 successes. These are explicit behavior and no-known-bypass checks, not a scalar human-
 difficulty rating.
+
+Nova Niche is the ninth replacement. Its old required branch was a 48-tick shortcut with three
+Dashes and one incidental Wall Jump. The v19 room enters inside a cap-safe wall core, rises to a
+full-recovery launch shelf, then crosses a sixty-pixel corona above lethal floor to the coin. The
+retained composed route uses four Wall Jumps before one Dash and can return to the floor door;
+every strength-one perturbation family retains at least 35/64 successes. Separate exact searches
+also retain harder Wall-Jump-only and Dash/wall-ascent-carry solutions. Nova is therefore a
+late-game movement laboratory with a readable preferred route, deliberately not misrepresented as
+a two-method gate.
 
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 

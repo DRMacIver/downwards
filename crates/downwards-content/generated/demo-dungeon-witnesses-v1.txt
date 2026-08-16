@@ -1,5 +1,5 @@
 schema downwards-demo-dungeon-witnesses-v1
-palette-generation 18
+palette-generation 19
 player-movement-policy 4
 tuning 110 72 203 50 50 250
 shaky-policy 64 18 2 2
@@ -2390,22 +2390,31 @@ room demo-dungeon.nova-niche
 entry floor
 target pickup dungeon-coin-58
 abilities 1 1
-ticks 48
-observation 10 2 2 1 3 1
-shaky BoundaryTiming 37 64 0
-shaky CorrelatedTiming 32 64 0
-shaky HoldRelease 50 64 0
-shaky DropRepeatFrame 53 64 0
-span 0 0 0 1 0 1
-span 1 0 0 0 0 8
+ticks 102
+observation 19 7 6 4 1 5
+shaky BoundaryTiming 35 64 28
+shaky CorrelatedTiming 40 64 16
+shaky HoldRelease 49 64 22
+shaky DropRepeatFrame 42 64 1
+span -1 0 1 0 0 6
+span 1 1 0 0 0 3
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
 span 0 0 1 0 0 4
-span 0 -1 0 1 0 1
-span 0 -1 0 0 0 6
+span -1 0 0 0 0 3
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
+span 0 0 0 0 0 4
+span -1 0 1 0 0 1
+span -1 0 0 0 0 6
+span -1 0 1 0 0 8
+span 1 0 1 0 0 3
+span 1 0 0 0 0 5
 span -1 0 0 0 0 4
-span -1 -1 0 1 0 1
-span -1 -1 0 0 0 9
-span -1 0 1 0 0 4
-span 0 -1 0 0 0 10
+span 1 0 0 0 0 19
+span 1 0 1 0 0 2
+span 0 0 0 1 0 1
+span 1 0 0 0 0 17
 end
 route demo-dungeon.meteor-run
 room demo-dungeon.meteor-run

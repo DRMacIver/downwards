@@ -494,13 +494,28 @@ fn segmented_candidate(
             SolverConfig::for_abilities(AbilitySet::new(true, false)),
             SolverConfig::for_abilities(AbilitySet::new(true, true)),
         ),
+        DemoDungeonRoom::NovaNiche => (
+            GroundedSupportTarget::new(
+                180,
+                220,
+                30,
+                [GroundedStandingRegion::new(180, 212).expect("valid authored standing range")],
+            )
+            .expect("valid authored support waypoint"),
+            SolverConfig::for_abilities(AbilitySet::new(true, false)),
+            SolverConfig::for_abilities(AbilitySet::new(false, true)),
+        ),
         _ => return None,
     };
     let first_outcome = solve_grounded_support(initial, &waypoint, &first_config).ok()?;
     let GroundedSupportSolveOutcome::Solved(first) = first_outcome else {
-        if spec.room == DemoDungeonRoom::VacuumGallery {
+        if matches!(
+            spec.room,
+            DemoDungeonRoom::VacuumGallery | DemoDungeonRoom::NovaNiche
+        ) {
             eprintln!(
-                "  segmented Vacuum Gallery climb did not reach its authored shelf: {first_outcome:?}"
+                "  segmented {} missed its authored shelf: {first_outcome:?}",
+                spec.id()
             );
         }
         return None;
@@ -510,31 +525,39 @@ fn segmented_candidate(
     for &action in &actions {
         intermediate.step(action);
     }
-    let direct =
-        audit_direct_controller_probes(&intermediate, std::slice::from_ref(target), &second_config)
-            .ok()?;
-    let second = if let Some(witness) = direct
-        .witnesses
-        .into_iter()
-        .min_by_key(|witness| witness.replay.frames.len())
-    {
-        TargetSolution {
-            target: witness.target,
-            reached: witness.reached,
-            replay: witness.replay,
-            stats: witness.stats_at_first_discovery,
-        }
+    let second = if spec.room == DemoDungeonRoom::NovaNiche {
+        readable_nova_niche_suffix(&intermediate, target)?
     } else {
-        let second_outcome = solve_target(&intermediate, target.clone(), &second_config).ok()?;
-        let TargetSolveOutcome::Solved(second) = second_outcome else {
-            if spec.room == DemoDungeonRoom::VacuumGallery {
-                eprintln!(
-                    "  segmented Vacuum Gallery suffix did not reach its coin: {second_outcome:?}"
-                );
+        let direct = audit_direct_controller_probes(
+            &intermediate,
+            std::slice::from_ref(target),
+            &second_config,
+        )
+        .ok()?;
+        if let Some(witness) = direct
+            .witnesses
+            .into_iter()
+            .min_by_key(|witness| witness.replay.frames.len())
+        {
+            TargetSolution {
+                target: witness.target,
+                reached: witness.reached,
+                replay: witness.replay,
+                stats: witness.stats_at_first_discovery,
             }
-            return None;
-        };
-        second
+        } else {
+            let second_outcome =
+                solve_target(&intermediate, target.clone(), &second_config).ok()?;
+            let TargetSolveOutcome::Solved(second) = second_outcome else {
+                if spec.room == DemoDungeonRoom::VacuumGallery {
+                    eprintln!(
+                        "  segmented Vacuum Gallery suffix missed its target: {second_outcome:?}"
+                    );
+                }
+                return None;
+            };
+            second
+        }
     };
     actions.extend(second.replay.actions());
     Some(TargetSolution {
@@ -542,6 +565,50 @@ fn segmented_candidate(
         reached: second.reached,
         replay: Replay::record(initial, actions),
         stats: second.stats,
+    })
+}
+
+fn readable_nova_niche_suffix(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    let mut complete = Vec::new();
+    for takeoff_x in 182..=212 {
+        let Some((takeoff, approach)) = approach_x(initial, takeoff_x) else {
+            continue;
+        };
+        for jump_hold in 1..=10 {
+            for dash_delay in 0..=8 {
+                let mut simulation = takeoff.clone();
+                let mut actions = approach.clone();
+                let suffix = std::iter::repeat_n(right_action(true, false), jump_hold)
+                    .chain(std::iter::repeat_n(right_action(false, false), dash_delay))
+                    .chain(std::iter::once(right_action(false, true)))
+                    .chain(std::iter::repeat_n(right_action(false, false), 80));
+                for action in suffix {
+                    if !clean_step(&mut simulation, action) {
+                        break;
+                    }
+                    actions.push(action);
+                    if simulation
+                        .collected_pickups()
+                        .any(|pickup| pickup.id() == "dungeon-coin-58")
+                    {
+                        complete.push(actions);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    let actions = complete
+        .into_iter()
+        .min_by(|left, right| static_route_key(left).cmp(&static_route_key(right)))?;
+    Some(TargetSolution {
+        target: target.clone(),
+        reached: ReachedTarget::Pickup("dungeon-coin-58".to_owned()),
+        replay: Replay::record(initial, actions),
+        stats: SearchStats::default(),
     })
 }
 

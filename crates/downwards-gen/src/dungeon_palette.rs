@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 18;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 19;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1655,14 +1655,33 @@ impl PaletteDraft<'_> {
                 self.horizontal(17, 19, 23, Tile::Solid);
             }
             DungeonPaletteCourse::NovaNiche => {
-                self.vertical(9, 4, 16, Tile::Solid);
-                self.vertical(17, 2, 13, Tile::Solid);
-                self.horizontal(16, 9, 13, Tile::Solid);
-                self.horizontal(16, 19, 23, Tile::Solid);
-                self.horizontal(11, 18, 23, Tile::OneWay);
-                self.horizontal(7, 10, 15, Tile::OneWay);
-                self.horizontal(3, 18, 24, Tile::OneWay);
-                self.vertical(16, 7, 10, Tile::HazardLeft);
+                // A compact late-game branch with two visible acts. The floor door lands inside
+                // a cap-safe alternating Wall-Jump core. Its upper recovery shelf faces a
+                // sixty-pixel gap above lethal floor; the coin shelf and only return route are on
+                // the far side, making Dash the readable aerial commitment rather than incidental
+                // speed. Current wall-ascent carry also permits a harder Dash-only climb; this
+                // room intentionally explores that interaction instead of claiming a method gate.
+                self.vertical(12, 1, 17, Tile::Solid);
+                self.vertical(13, 1, 4, Tile::HazardRight);
+                self.set(13, 4, Tile::HazardUp);
+                self.vertical(13, 5, 7, Tile::Solid);
+                self.vertical(13, 7, 10, Tile::HazardRight);
+                self.set(13, 10, Tile::HazardUp);
+                self.vertical(13, 11, 13, Tile::Solid);
+                self.vertical(13, 13, 16, Tile::HazardRight);
+
+                self.vertical(19, 3, 17, Tile::Solid);
+                self.vertical(18, 3, 5, Tile::Solid);
+                self.vertical(18, 5, 7, Tile::HazardLeft);
+                self.set(18, 7, Tile::HazardUp);
+                self.vertical(18, 8, 10, Tile::Solid);
+                self.vertical(18, 10, 13, Tile::HazardLeft);
+                self.set(18, 13, Tile::HazardUp);
+                self.vertical(18, 14, 17, Tile::Solid);
+
+                self.horizontal(3, 18, 22, Tile::Solid);
+                self.horizontal(3, 28, 31, Tile::Solid);
+                self.horizontal(16, 20, 31, Tile::HazardUp);
             }
             DungeonPaletteCourse::MeteorRun => {
                 // The collision layer is intentionally a clear runway: Meteor Run's obstacle
@@ -2074,6 +2093,47 @@ mod tests {
             Tile::Empty,
             "reward shelf blocks the safe descent"
         );
+    }
+
+    #[test]
+    fn nova_niche_serializes_a_cap_safe_core_and_corona_gap() {
+        let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::NovaNiche).generate();
+        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
+
+        for row in 1..17 {
+            assert_eq!(tile(12, row), Tile::Solid, "Nova core backing is open");
+        }
+        for row in [4, 10] {
+            assert_eq!(tile(13, row), Tile::HazardUp);
+        }
+        for row in [7, 13] {
+            assert_eq!(tile(18, row), Tile::HazardUp);
+        }
+        for (column, rows) in [(13, [5..7, 11..13]), (18, [8..10, 14..17])] {
+            for row in rows.into_iter().flatten() {
+                assert_eq!(tile(column, row), Tile::Solid);
+            }
+        }
+        for column in 18..22 {
+            assert_eq!(
+                tile(column, 3),
+                Tile::Solid,
+                "Nova launch shelf is incomplete"
+            );
+        }
+        for column in 22..28 {
+            assert_eq!(tile(column, 3), Tile::Empty, "Nova corona gap is bridged");
+        }
+        for column in 28..31 {
+            assert_eq!(
+                tile(column, 3),
+                Tile::Solid,
+                "Nova coin shelf is incomplete"
+            );
+        }
+        for column in 20..31 {
+            assert_eq!(tile(column, 16), Tile::HazardUp, "Nova fall is non-lethal");
+        }
     }
 
     #[test]

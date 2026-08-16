@@ -1521,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v18".to_owned(),
+        id: "demo-dungeon-v19".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -1679,7 +1679,7 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         DemoDungeonRoom::ConstellationHall => vec![(55, Rect::new(284, 30, 8, 10))],
         DemoDungeonRoom::ShadowDuct => vec![(56, Rect::new(224, 30, 8, 10))],
         DemoDungeonRoom::Observatory => vec![(57, Rect::new(214, 20, 8, 10))],
-        DemoDungeonRoom::NovaNiche => vec![(58, Rect::new(224, 30, 8, 10))],
+        DemoDungeonRoom::NovaNiche => vec![(58, Rect::new(284, 20, 8, 10))],
         DemoDungeonRoom::VacuumGallery => vec![(59, Rect::new(294, 150, 8, 10))],
         DemoDungeonRoom::LunarCache => vec![(60, Rect::new(294, 20, 8, 10))],
         DemoDungeonRoom::AuroraSpire => vec![(61, Rect::new(214, 20, 8, 10))],
@@ -3505,6 +3505,119 @@ mod tests {
                 "{label} search unexpectedly reached the Star Threshold coin: {outcome:?}"
             );
         }
+    }
+
+    #[test]
+    fn nova_niche_demonstrates_wall_core_then_dash_and_can_return() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::NovaNiche)
+            .expect("Nova Niche has route metadata");
+        let room = demo_dungeon_room(spec.room, spec.inventory);
+        let mut replayed = Simulation::enter_via_door(
+            room,
+            spec.inventory.abilities(),
+            spec.entry_door.expect("Nova Niche has a floor entry"),
+        )
+        .unwrap();
+        replayed.enable_current_player_movement();
+        let mut wall_jumps = 0;
+        let mut dashes = 0;
+        let mut first_dash_tick = None;
+        let mut last_wall_jump_tick = None;
+        for (tick, action) in crate::demo_dungeon_witness_actions(spec.room)
+            .into_iter()
+            .enumerate()
+        {
+            for event in replayed.step(action).events {
+                assert!(
+                    !matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset),
+                    "the checked Nova demonstration must remain clean: {event:?}"
+                );
+                if matches!(event, SimulationEvent::Jumped(JumpKind::Wall { .. })) {
+                    wall_jumps += 1;
+                    last_wall_jump_tick = Some(tick);
+                }
+                if matches!(event, SimulationEvent::Dashed { .. }) {
+                    dashes += 1;
+                    first_dash_tick.get_or_insert(tick);
+                }
+            }
+        }
+        assert!(
+            replayed
+                .collected_pickups()
+                .any(|pickup| pickup.id() == spec.target.id())
+        );
+        assert!(wall_jumps >= 4, "Nova demonstration bypassed its wall core");
+        assert_eq!(dashes, 1, "Nova demonstration should cross the corona once");
+        assert!(
+            last_wall_jump_tick.expect("wall core is represented")
+                < first_dash_tick.expect("corona Dash is represented"),
+            "Nova demonstration no longer climbs before its Dash"
+        );
+
+        let return_outcome = solve_target(
+            &replayed,
+            SearchTarget::door("floor"),
+            &SolverConfig::for_abilities(spec.inventory.abilities()),
+        )
+        .unwrap();
+        let TargetSolveOutcome::Solved(return_solution) = return_outcome else {
+            panic!("Nova Niche cannot return after its coin: {return_outcome:?}");
+        };
+        for action in return_solution.replay.actions() {
+            replayed.step(action);
+        }
+        assert_eq!(replayed.reached_exit(), Some("floor"));
+
+        let dash_only = DemoDungeonInventory {
+            climbing_gloves: false,
+            winged_boots: true,
+            ..spec.inventory
+        };
+        let room = demo_dungeon_room(spec.room, dash_only);
+        let mut initial = Simulation::enter_via_door(
+            room,
+            dash_only.abilities(),
+            spec.entry_door.expect("Nova Niche has a floor entry"),
+        )
+        .unwrap();
+        initial.enable_current_player_movement();
+        let outcome = solve_target(
+            &initial,
+            route_spec_target(spec.target),
+            &SolverConfig::for_abilities(dash_only.abilities()),
+        )
+        .unwrap();
+        assert!(
+            matches!(outcome, TargetSolveOutcome::Solved(_)),
+            "Nova's Dash-only wall-ascent-carry route should remain honestly recorded: {outcome:?}"
+        );
+
+        let wall_only = DemoDungeonInventory {
+            climbing_gloves: true,
+            winged_boots: false,
+            ..spec.inventory
+        };
+        let room = demo_dungeon_room(spec.room, wall_only);
+        let mut initial = Simulation::enter_via_door(
+            room,
+            wall_only.abilities(),
+            spec.entry_door.expect("Nova Niche has a floor entry"),
+        )
+        .unwrap();
+        initial.enable_current_player_movement();
+        let outcome = solve_target(
+            &initial,
+            route_spec_target(spec.target),
+            &SolverConfig::for_abilities(wall_only.abilities()),
+        )
+        .unwrap();
+        assert!(
+            matches!(outcome, TargetSolveOutcome::Solved(_)),
+            "Nova's difficult Wall-Jump-only corona route should remain honestly recorded: {outcome:?}"
+        );
     }
 
     #[test]

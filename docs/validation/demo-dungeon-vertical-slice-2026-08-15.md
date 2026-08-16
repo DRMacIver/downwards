@@ -95,7 +95,7 @@ returns the player to its validated interior arrival without resetting room-loca
 Crown similarly persists and is the only terminal goal. Ordinary door exits change rooms and are
 deliberately not counted as whole-level victories.
 
-Palette generation v18 contains eight evidence-driven room replacements. Persistent history recorded
+Palette generation v19 contains nine evidence-driven room replacements. Persistent history recorded
 24 Gale Chasm attempts, all ending on spikes, while its old AI witness used 43 action spans and 11
 horizontal reversals. As the first post-Boots room, it now teaches the action as two readable
 sixty-pixel Dash gaps separated by a three-tile full-recovery island. Its mechanically selected
@@ -170,6 +170,17 @@ separate exact solve reaches the east door afterward, and every strength-one per
 retains at least 28/64 successes. Same-budget Wall-Jump-only and Dash-only searches have no positive.
 Those bounded misses certify no known bypass in the current vocabulary; they do not prove physical
 impossibility or human difficulty.
+
+Nova Niche is the ninth replacement in v19. Its old required branch reached the coin in 48 ticks
+with three Dashes and one incidental Wall Jump. The replacement starts at the floor-door sill
+inside a cap-safe alternating core, exposes a broad upper launch shelf, and places the coin across
+a sixty-pixel corona gap above lethal floor. The authoring tool composes an exact Wall-Jump-only
+support solve with a deliberately small jump-and-Dash transfer vocabulary; the selected 102-tick
+route has 19 spans, four accepted Wall Jumps, one Dash after the climb, and five reversals. It
+returns to the floor door after collection and retains at least 35/64 successes in every
+strength-one perturbation family. Current movement semantics also admit a noisier Wall-Jump-only
+corona leap and a Dash-only ascent using wall-momentum carry. Both are exact retained evidence:
+this room explores the interaction between methods and does not falsely claim to gate either one.
 
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
