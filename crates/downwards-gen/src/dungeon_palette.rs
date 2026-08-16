@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 37;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 38;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -574,7 +574,9 @@ impl DungeonPaletteKey {
         // compiled-in grids; never set the variable for persisted evidence.
         let disk_source = std::env::var("DOWNWARDS_ROOM_GRID_DIR")
             .ok()
-            .and_then(|dir| std::fs::read_to_string(format!("{dir}/{}.txt", self.course.slug())).ok());
+            .and_then(|dir| {
+                std::fs::read_to_string(format!("{dir}/{}.txt", self.course.slug())).ok()
+            });
         let source = disk_source.as_deref().unwrap_or_else(|| {
             crate::room_grids::ROOM_GRIDS
                 .iter()
@@ -1530,48 +1532,26 @@ mod tests {
     }
 
     #[test]
-    fn gatehouse_serializes_a_wall_climb_and_low_dash_keyhole() {
+    fn gatehouse_serializes_a_ceremonial_stepped_approach() {
+        // The Gatehouse is a ceremony before the Crown: a stepped, spike-free
+        // procession the base kit can walk, with the authored 64-coin
+        // requirement as the actual gate.
         let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::Gatehouse).generate();
-        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
-
-        for column in 1..8 {
-            assert_eq!(tile(column, 16), Tile::Solid, "west sill is incomplete");
+        assert!(
+            !candidate.tiles().iter().any(|tile| tile.is_hazard()),
+            "the ceremony must be hazard-free"
+        );
+        let tile = |column: usize, row: usize| candidate.tiles()[row * usize::from(WIDTH) + column];
+        // The stepped platform blocks rise from the west floor toward the
+        // east door: broad steps at rows 15, 13, and 11.
+        for column in 5..29 {
+            assert_eq!(tile(column, 15), Tile::Solid, "lower step is incomplete");
         }
-        for row in 6..14 {
-            assert_eq!(tile(7, row), Tile::Solid, "west climb face is open");
+        for column in 10..26 {
+            assert_eq!(tile(column, 13), Tile::Solid, "middle step is incomplete");
         }
-        for row in 14..16 {
-            assert_eq!(tile(7, row), Tile::Empty, "shaft entrance is obstructed");
-        }
-        for row in 6..17 {
-            assert_eq!(tile(12, row), Tile::Solid, "east climb face is open");
-        }
-        for column in 12..24 {
-            assert_eq!(tile(column, 6), Tile::Solid, "keyhole floor is open");
-        }
-        for column in 14..24 {
-            for row in 1..5 {
-                assert_eq!(tile(column, row), Tile::Solid, "keyhole lintel is open");
-            }
-            assert_eq!(
-                tile(column, 5),
-                Tile::Empty,
-                "keyhole passage is obstructed"
-            );
-        }
-        for column in 24..31 {
-            assert_eq!(
-                tile(column, 16),
-                Tile::Solid,
-                "east landing bay is incomplete"
-            );
-        }
-        for column in 1..31 {
-            assert_eq!(
-                tile(column, 17),
-                Tile::Solid,
-                "gatehouse lacks floor backing"
-            );
+        for column in 14..22 {
+            assert_eq!(tile(column, 11), Tile::Solid, "upper step is incomplete");
         }
     }
 
