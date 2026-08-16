@@ -3827,22 +3827,40 @@ mod tests {
             .expect("Lunar Cache has route metadata");
         assert!(spec.inventory.climbing_gloves);
         assert!(spec.inventory.winged_boots);
-        let (initial, solution) = solve_route(
-            spec.room,
-            spec.entry_door,
-            spec.inventory,
-            route_spec_target(spec.target),
-        );
-        let mut replayed = initial;
+        let room = demo_dungeon_room(spec.room, spec.inventory);
+        let mut replayed = Simulation::enter_via_door(
+            room,
+            spec.inventory.abilities(),
+            spec.entry_door.expect("Lunar Cache has a ceiling entry"),
+        )
+        .unwrap();
+        replayed.enable_current_player_movement();
+        let mut descent_landings = Vec::new();
         let mut wall_jumps = 0;
+        let mut wall_sides = Vec::new();
+        let mut first_wall_jump_tick = None;
         let mut dashes = 0;
-        for action in solution.replay.actions() {
+        let mut last_dash_tick = None;
+        for (tick, action) in crate::demo_dungeon_witness_actions(spec.room)
+            .into_iter()
+            .enumerate()
+        {
             for event in replayed.step(action).events {
-                wall_jumps += usize::from(matches!(
-                    event,
-                    SimulationEvent::Jumped(JumpKind::Wall { .. })
-                ));
-                dashes += usize::from(matches!(event, SimulationEvent::Dashed { .. }));
+                match event {
+                    SimulationEvent::Landed if dashes == 0 => {
+                        descent_landings.push(replayed.player().bounds().y);
+                    }
+                    SimulationEvent::Jumped(JumpKind::Wall { side }) => {
+                        wall_jumps += 1;
+                        wall_sides.push(side);
+                        first_wall_jump_tick.get_or_insert(tick);
+                    }
+                    SimulationEvent::Dashed { .. } => {
+                        dashes += 1;
+                        last_dash_tick = Some(tick);
+                    }
+                    _ => {}
+                }
             }
         }
         assert!(
@@ -3850,8 +3868,17 @@ mod tests {
                 .collected_pickups()
                 .any(|pickup| pickup.id() == spec.target.id())
         );
-        assert!(wall_jumps >= 3, "Lunar Cache bypassed its wall shaft");
-        assert!(dashes > 0, "Lunar Cache bypassed its low tunnel");
+        assert_eq!(descent_landings, [38, 98, 158]);
+        assert_eq!(dashes, 3, "Lunar Cache changed its tunnel rhythm");
+        assert_eq!(wall_jumps, 4, "Lunar Cache changed its wall rhythm");
+        assert!(
+            wall_sides.windows(2).all(|pair| pair[0] != pair[1]),
+            "Lunar Cache repeats a wall instead of alternating: {wall_sides:?}"
+        );
+        assert!(
+            last_dash_tick < first_wall_jump_tick,
+            "Lunar Cache did not finish its tunnel before entering the shaft"
+        );
 
         let return_outcome = solve_target(
             &replayed,

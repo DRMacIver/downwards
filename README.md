@@ -255,11 +255,11 @@ and every recorded strength-one shaky-hand family retains successes.
 The fourth replacement is its required Lunar Cache branch. The former witness meandered through a
 generic cache shell with two incidental Wall Jumps and no Dash. The new ceiling-entry room exposes a
 non-lethal three-landing descent, then seals the coin chamber behind a standing-height barrier: the
-selected route makes three readable horizontal Dashes through the low passage before a five-Wall-Jump
-cap-safe ascent. Equivalent Wall-Jump-only and Dash-only searches have no positive, an independent
-exact solve returns from the collected coin to the ceiling door, and all strength-one perturbation
-families retain successes. The authoring tool stages fall, tunnel, and climb separately so it selects
-this legible route instead of the faster candidate that spends a diagonal Dash at spawn.
+selected route makes exactly three readable horizontal Dashes through the low passage before four
+strictly alternating Wall Jumps up the cap-safe ascent. Its three stages are now authored with small
+explicit controller vocabularies rather than generic searches. Equivalent Wall-Jump-only and
+Dash-only searches have no positive, an independent exact solve returns from the collected coin to
+the ceiling door, and all strength-one perturbation families retain successes.
 
 Comet Run is the fifth replacement. The former mandatory Astral coin was reached by a broad,
 monotone staircase whose two Dashes were not physically required. The v15 route now follows a

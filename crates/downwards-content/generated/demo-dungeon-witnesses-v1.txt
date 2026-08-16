@@ -2488,36 +2488,33 @@ room demo-dungeon.lunar-cache
 entry ceiling
 target pickup dungeon-coin-60
 abilities 1 1
-ticks 146
-observation 24 8 6 5 3 4
-shaky BoundaryTiming 36 64 13
-shaky CorrelatedTiming 37 64 14
-shaky HoldRelease 47 64 10
-shaky DropRepeatFrame 32 64 0
+ticks 155
+observation 21 7 5 4 3 4
+shaky BoundaryTiming 28 64 13
+shaky CorrelatedTiming 39 64 11
+shaky HoldRelease 38 64 16
+shaky DropRepeatFrame 63 64 1
 span 0 1 0 0 0 12
 span 0 1 1 0 0 1
 span 0 1 0 0 0 17
 span 0 1 1 0 0 1
 span 0 1 0 0 0 17
-span 0 0 0 1 0 1
+span 1 0 0 1 0 1
 span 1 0 0 0 0 9
-span 0 0 0 1 0 1
+span 1 0 0 1 0 1
 span 1 0 0 0 0 9
-span 0 0 0 1 0 1
+span 1 0 0 1 0 1
 span 1 0 0 0 0 9
-span 1 0 1 0 0 2
-span 0 0 0 0 0 1
-span 1 0 1 0 0 9
-span -1 0 0 0 0 2
+span 1 0 1 0 0 3
+span 1 0 0 0 0 3
 span -1 0 1 0 0 1
-span 1 0 1 0 0 11
-span 0 0 0 0 0 1
-span 1 0 1 0 0 11
-span -1 0 0 0 0 2
-span 1 0 1 0 0 8
-span 0 0 0 0 0 1
-span 0 0 1 0 0 1
-span 1 0 0 0 0 18
+span -1 0 0 0 0 11
+span 1 0 1 0 0 1
+span 1 0 0 0 0 14
+span -1 0 1 0 0 1
+span -1 0 0 0 0 16
+span 1 0 1 0 0 1
+span 1 0 0 0 0 26
 end
 route demo-dungeon.aurora-spire
 room demo-dungeon.aurora-spire

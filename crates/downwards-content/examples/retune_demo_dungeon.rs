@@ -2309,7 +2309,9 @@ fn segmented_lunar_cache_candidate(
             dash: false,
             restart: false,
         };
-        intermediate.step(drop_action);
+        if !clean_step(&mut intermediate, drop_action) {
+            return None;
+        }
         actions.push(drop_action);
     }
     if !intermediate.player().grounded() || intermediate.player().bounds().y < 158 {
@@ -2317,45 +2319,74 @@ fn segmented_lunar_cache_candidate(
         return None;
     }
 
-    let shaft_floor = GroundedSupportTarget::new(
-        230,
-        280,
-        170,
-        [GroundedStandingRegion::new(230, 272).expect("valid shaft standing range")],
-    )
-    .expect("valid shaft floor waypoint");
-    let second_outcome = solve_grounded_support(
-        &intermediate,
-        &shaft_floor,
-        &SolverConfig::for_abilities(AbilitySet::new(false, true)),
-    )
-    .ok()?;
-    let GroundedSupportSolveOutcome::Solved(second) = second_outcome else {
-        eprintln!("  segmented Lunar Cache Dash did not cross the low tunnel: {second_outcome:?}");
-        return None;
-    };
-    let second_actions = second.replay.actions().collect::<Vec<_>>();
-    for &action in &second_actions {
-        intermediate.step(action);
+    let mut accepted_dashes = 0;
+    for _ in 0..3 {
+        for action in std::iter::once(right_action(false, true))
+            .chain(std::iter::repeat_n(right_action(false, false), 9))
+        {
+            let report = intermediate.step(action);
+            if report
+                .events
+                .iter()
+                .any(|event| matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset))
+            {
+                eprintln!("  segmented Lunar Cache Dash tunnel was not clean");
+                return None;
+            }
+            accepted_dashes += report
+                .events
+                .iter()
+                .filter(|event| matches!(event, SimulationEvent::Dashed { .. }))
+                .count();
+            actions.push(action);
+        }
     }
-    actions.extend(second_actions);
+    if accepted_dashes != 3 || !intermediate.player().grounded() {
+        eprintln!(
+            "  segmented Lunar Cache tunnel ended with {accepted_dashes} Dashes at {:?}",
+            intermediate.player().bounds()
+        );
+        return None;
+    }
 
-    let third_outcome = solve_target(
+    let Some((mut summit, climb)) = readable_alternating_climb(
         &intermediate,
-        target.clone(),
-        &SolverConfig::for_abilities(AbilitySet::new(true, false)),
-    )
-    .ok()?;
-    let TargetSolveOutcome::Solved(third) = third_outcome else {
-        eprintln!("  segmented Lunar Cache climb did not reach its coin: {third_outcome:?}");
+        248,
+        266,
+        18,
+        270,
+        302,
+        AlternatingClimbPolicy::strict(3),
+    ) else {
+        eprintln!("  segmented Lunar Cache strict climb did not reach its summit");
         return None;
     };
-    actions.extend(third.replay.actions());
+    actions.extend(climb);
+    for _ in 0..30 {
+        if summit
+            .collected_pickups()
+            .any(|pickup| pickup.id() == "dungeon-coin-60")
+        {
+            break;
+        }
+        let action = right_action(false, false);
+        if !clean_step(&mut summit, action) {
+            return None;
+        }
+        actions.push(action);
+    }
+    if !summit
+        .collected_pickups()
+        .any(|pickup| pickup.id() == "dungeon-coin-60")
+    {
+        eprintln!("  segmented Lunar Cache summit did not reach its coin");
+        return None;
+    }
     Some(TargetSolution {
-        target: third.target,
-        reached: third.reached,
+        target: target.clone(),
+        reached: ReachedTarget::Pickup("dungeon-coin-60".to_owned()),
         replay: Replay::record(initial, actions),
-        stats: third.stats,
+        stats: SearchStats::default(),
     })
 }
 
@@ -2519,6 +2550,7 @@ fn main() {
                         spec.room,
                         DemoDungeonRoom::AstralSeal
                             | DemoDungeonRoom::EclipseFork
+                            | DemoDungeonRoom::LunarCache
                             | DemoDungeonRoom::VacuumGallery
                             | DemoDungeonRoom::ZenithShaft
                     ),

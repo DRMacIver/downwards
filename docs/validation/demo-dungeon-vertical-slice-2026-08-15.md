@@ -120,13 +120,13 @@ inspected as behavior rather than inferred from a scalar score.
 Lunar Cache is the fourth replacement in v14. Its prior coin route contained two incidental Wall
 Jumps, no Dash, and a buffered-jump-heavy controller trace. The replacement preserves the ceiling
 branch socket but separates three visible acts: a three-landing non-lethal descent, three horizontal
-Dashes through a ten-pixel passage, and a cap-safe shaft ascent with five accepted Wall Jumps. The
-route tool evaluates both its staged candidate and the unconstrained faster solve, then retains the
-staged route because it does not spend a diagonal Dash before the descent and uses fewer Dashes and
-reversals in the climb. Same-budget Wall-Jump-only and Dash-only searches have no positive. A
-separate exact solve returns from the collected coin to the ceiling exit, and all four strength-one
-perturbation families retain observed successes. These bounded misses and noisy-controller results
-remain descriptive evidence, not impossibility or human-difficulty claims.
+Dashes through a ten-pixel passage, and a cap-safe shaft ascent with four strictly alternating Wall
+Jumps. The selected 21-span route uses small explicit vocabularies for all three stages and rejects
+the unconstrained candidate that spends a diagonal Dash before the descent. Same-budget
+Wall-Jump-only and Dash-only searches have no positive. A separate exact solve returns from the
+collected coin to the ceiling exit, and all four strength-one perturbation families retain observed
+successes. These bounded misses and noisy-controller results remain descriptive evidence, not
+impossibility or human-difficulty claims.
 
 Comet Run is the fifth replacement in v15. The old mandatory coin route was a monotone broad-shelf
 staircase with four ordinary jumps and two incidental Dashes. The replacement exposes an
