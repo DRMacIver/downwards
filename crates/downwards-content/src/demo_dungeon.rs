@@ -2424,6 +2424,15 @@ mod tests {
             gloves,
             SearchTarget::door("east"),
         );
+        // Regression: Climber's Gate east is coin-sealed and its only other
+        // door leads back through Needle Turn, so an under-coined player must
+        // always be able to retreat east-to-west or the run soft-locks.
+        assert_route(
+            DemoDungeonRoom::NeedleTurn,
+            Some("east"),
+            gloves,
+            SearchTarget::door("west"),
+        );
         let wall_region_complete = inventory_with_coin_indices((0..6).chain(16..22), true, false);
         assert_route(
             DemoDungeonRoom::WallGate,
