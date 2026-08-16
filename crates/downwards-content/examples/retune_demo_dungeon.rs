@@ -53,6 +53,22 @@ fn search_target(spec: DemoDungeonRouteSpec) -> SearchTarget {
     }
 }
 
+/// Routes whose worst strength-one noise family survives less often than this
+/// are treated as fragile during candidate selection.
+const FRAGILE_SURVIVAL_THRESHOLD: f64 = 0.75;
+
+/// Lowest strength-one success rate across non-exact noise families.
+fn worst_strength_one_survival(shaky: &downwards_ai::ShakyHandReport) -> f64 {
+    shaky
+        .curves
+        .iter()
+        .filter(|curve| {
+            curve.family != NoiseFamily::Exact && curve.strength_ticks == 1 && curve.trials > 0
+        })
+        .map(|curve| curve.successes as f64 / curve.trials as f64)
+        .fold(1.0, f64::min)
+}
+
 fn shaky_seed(route_id: &str) -> u64 {
     route_id
         .bytes()
@@ -2666,12 +2682,8 @@ fn main() {
                 },
             )
             .unwrap_or_else(|error| panic!("{} shaky-hand audit failed: {error}", spec.id()));
-            let fragile = shaky.curves.iter().any(|curve| {
-                curve.family != NoiseFamily::Exact
-                    && curve.strength_ticks == 1
-                    && curve.trials > 0
-                    && curve.successes == 0
-            });
+            let survival = worst_strength_one_survival(&shaky);
+            let fragile = survival < FRAGILE_SURVIVAL_THRESHOLD;
             if selected_route.is_some() {
                 eprintln!(
                     "  candidate {:>2}: {:>3}t {:>2}sp {:>2}j {:>2}wj {:>2}d ({:>2} pre-WJ) {:>2}rev{}",
@@ -2686,18 +2698,21 @@ fn main() {
                     if fragile { " FRAGILE" } else { "" },
                 );
                 if fragile {
-                    let zero_families = shaky
+                    let weak_families = shaky
                         .curves
                         .iter()
                         .filter(|curve| {
                             curve.family != NoiseFamily::Exact
                                 && curve.strength_ticks == 1
                                 && curve.trials > 0
-                                && curve.successes == 0
+                                && (curve.successes as f64)
+                                    < FRAGILE_SURVIVAL_THRESHOLD * curve.trials as f64
                         })
                         .map(|curve| {
                             (
                                 curve.family,
+                                curve.successes,
+                                curve.trials,
                                 curve.trials_with_death,
                                 curve.timeouts,
                                 curve.wrong_target_outcomes,
@@ -2705,28 +2720,32 @@ fn main() {
                         })
                         .collect::<Vec<_>>();
                     eprintln!(
-                        "    zero-success strength-one families (family, deaths, timeouts, wrong): {zero_families:?}"
+                        "    weak strength-one families (family, successes, trials, deaths, timeouts, wrong): {weak_families:?}"
                     );
-                    for curve in shaky.curves.iter().filter(|curve| {
-                        curve.family != NoiseFamily::Exact
-                            && curve.strength_ticks == 1
-                            && curve.trials > 0
-                            && curve.successes == 0
-                    }) {
-                        eprintln!("    first failure: {:?}", curve.first_failure);
-                    }
                     print_behavior_trace(&initial, spec, &actions);
                 }
             }
-            assessed.push((fragile, solution, actions, shaky));
+            assessed.push((survival, solution, actions, shaky));
             if !fragile && selected_route.is_none() {
                 break;
             }
         }
+        // Prefer the first candidate (in compare_routes order) that clears the
+        // survival threshold; otherwise fall back to the most jitter-tolerant
+        // candidate found.
         let selected_index = assessed
             .iter()
-            .position(|(fragile, _, _, _)| !fragile)
-            .unwrap_or(0);
+            .position(|(survival, _, _, _)| *survival >= FRAGILE_SURVIVAL_THRESHOLD)
+            .unwrap_or_else(|| {
+                assessed
+                    .iter()
+                    .enumerate()
+                    .max_by(|(_, (left, _, _, _)), (_, (right, _, _, _))| {
+                        left.total_cmp(right)
+                    })
+                    .map(|(index, _)| index)
+                    .unwrap_or(0)
+            });
         let (_, _solution, actions, shaky) = assessed.remove(selected_index);
         let observation = observe(&initial, spec, &actions);
         if selected_route.is_some() {
@@ -2742,7 +2761,9 @@ fn main() {
             .collect::<Vec<_>>();
         let fragile_families = strength_one
             .iter()
-            .filter(|curve| curve.successes == 0)
+            .filter(|curve| {
+                (curve.successes as f64) < FRAGILE_SURVIVAL_THRESHOLD * curve.trials as f64
+            })
             .map(|curve| curve.family)
             .collect::<Vec<_>>();
 
