@@ -1,5 +1,5 @@
 schema downwards-demo-dungeon-witnesses-v1
-palette-generation 40
+palette-generation 39
 player-movement-policy 7
 tuning 110 72 203 50 50 250
 shaky-policy 64 18 2 2
@@ -910,15 +910,11 @@ room demo-dungeon.coin-duct
 entry ceiling
 target pickup dungeon-coin-24
 abilities 1 1
-ticks 159
-observation 3 0 0 0 0 2
-shaky BoundaryTiming 38 64 26
-shaky CorrelatedTiming 43 64 21
-shaky HoldRelease 64 64 0
-shaky DropRepeatFrame 61 64 3
-span 1 0 0 0 0 40
-span -1 0 0 0 0 50
-span 1 0 0 0 0 69
+ticks 1
+observation 1 0 0 0 0 0
+shaky BoundaryTiming 64 64 0
+shaky DropRepeatFrame 64 64 0
+span 0 -1 0 0 0 1
 end
 route demo-dungeon.pulse-gallery
 room demo-dungeon.pulse-gallery
@@ -2905,31 +2901,18 @@ room demo-dungeon.needle-room
 entry floor
 target pickup dungeon-coin-11
 abilities 1 0
-ticks 73
-observation 19 4 4 3 0 4
-shaky BoundaryTiming 34 64 20
-shaky CorrelatedTiming 36 64 26
-shaky HoldRelease 40 64 18
-shaky DropRepeatFrame 43 64 21
-span 1 0 0 0 0 4
-span 0 0 0 0 0 3
-span -1 0 0 0 0 8
-span 0 0 0 0 0 4
-span -1 0 0 0 0 4
-span 0 0 0 0 0 2
-span 1 0 1 0 0 4
-span -1 0 1 0 0 4
-span 0 0 1 0 0 1
-span 0 1 0 0 0 2
+ticks 43
+observation 6 2 2 1 0 1
+shaky BoundaryTiming 34 64 18
+shaky CorrelatedTiming 48 64 16
+shaky HoldRelease 51 64 0
+shaky DropRepeatFrame 59 64 5
+span 1 0 0 0 0 3
+span -1 0 0 0 0 2
+span -1 0 1 0 0 7
+span -1 0 0 0 0 12
 span -1 0 1 0 0 1
-span -1 0 0 0 0 7
-span 0 0 0 0 0 4
-span -1 0 1 0 0 1
-span -1 0 0 0 0 7
-span -1 0 1 0 0 1
-span -1 0 0 0 0 7
-span 1 0 0 0 0 7
-span 0 0 0 0 0 2
+span -1 0 0 0 0 18
 end
 route demo-dungeon.treasury
 room demo-dungeon.treasury

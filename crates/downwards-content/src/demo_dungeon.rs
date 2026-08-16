@@ -1633,7 +1633,7 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
             (9, Rect::new(110, 50, 8, 10)),
         ],
         DemoDungeonRoom::WallGallery => vec![(10, Rect::new(188, 80, 8, 10))],
-        DemoDungeonRoom::NeedleRoom => vec![(11, Rect::new(188, 110, 8, 10))],
+        DemoDungeonRoom::NeedleRoom => vec![(11, Rect::new(156, 20, 8, 10))],
         DemoDungeonRoom::BootsVault => vec![(12, Rect::new(246, 30, 8, 10))],
         DemoDungeonRoom::Underpass => vec![(13, Rect::new(224, 80, 8, 10))],
         DemoDungeonRoom::Treasury => vec![
@@ -1648,7 +1648,7 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         DemoDungeonRoom::NeedleTurn => vec![(21, Rect::new(204, 50, 8, 10))],
         DemoDungeonRoom::GaleLanding => vec![(22, Rect::new(264, 120, 8, 10))],
         DemoDungeonRoom::LowPassage => vec![(23, Rect::new(234, 94, 8, 10))],
-        DemoDungeonRoom::CoinDuct => vec![(24, Rect::new(154, 14, 8, 10))],
+        DemoDungeonRoom::CoinDuct => vec![(24, Rect::new(290, 160, 10, 10))],
         DemoDungeonRoom::PulseGallery => vec![(25, Rect::new(154, 114, 8, 10))],
         DemoDungeonRoom::StormCache => vec![(26, Rect::new(234, 14, 8, 10))],
         DemoDungeonRoom::BrakeTower => vec![(27, Rect::new(234, 14, 8, 10))],
