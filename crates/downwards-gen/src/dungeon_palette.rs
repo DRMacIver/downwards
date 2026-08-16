@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 29;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 30;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1902,23 +1902,24 @@ impl PaletteDraft<'_> {
                 self.horizontal(14, 25, 30, Tile::OneWay);
             }
             DungeonPaletteCourse::StarwellClimb => {
-                self.vertical(10, 1, 17, Tile::Solid);
-                self.vertical(17, 4, 17, Tile::Solid);
-                self.vertical(11, 1, 4, Tile::Solid);
-                self.vertical(11, 4, 7, Tile::HazardRight);
-                self.vertical(11, 7, 10, Tile::Solid);
-                self.vertical(11, 10, 13, Tile::HazardRight);
-                self.vertical(11, 13, 16, Tile::Solid);
-                self.vertical(16, 4, 7, Tile::Solid);
-                self.vertical(16, 7, 10, Tile::HazardLeft);
-                self.vertical(16, 10, 13, Tile::Solid);
-                self.vertical(16, 13, 16, Tile::HazardLeft);
-                self.horizontal(4, 16, 25, Tile::Solid);
-                self.horizontal(14, 25, 30, Tile::OneWay);
-                for row in 13..16 {
-                    self.set(10, row, Tile::Empty);
-                    self.set(11, row, Tile::Empty);
-                }
+                // A late two-method relay rather than another generic wall shell. The west bay
+                // opens beneath a broad paired-wall climb. Its roof is a full recovery and launch
+                // shelf; the east door is reachable only after committing across the backed
+                // starwell to a separate catch platform, then dropping through the safe east bay.
+                self.horizontal(16, 1, 13, Tile::Solid);
+                self.horizontal(16, 13, 28, Tile::HazardUp);
+                self.horizontal(16, 28, 31, Tile::Solid);
+                self.horizontal(17, 1, 31, Tile::Solid);
+
+                self.vertical(7, 1, 14, Tile::Solid);
+                self.vertical(12, 4, 14, Tile::Solid);
+                self.horizontal(4, 12, 18, Tile::Solid);
+
+                // The catch doubles as the roof of a return shaft. Its two-tile bottom opening
+                // makes the mainline reversible without providing another west-to-east route.
+                self.vertical(25, 9, 17, Tile::Solid);
+                self.vertical(30, 9, 14, Tile::Solid);
+                self.horizontal(9, 25, 28, Tile::Solid);
             }
             DungeonPaletteCourse::Skybridge => {
                 // The broken bridge first goes over a floor-anchored mast, then beneath a
@@ -2600,6 +2601,74 @@ mod tests {
                 tile(column, 17),
                 Tile::Solid,
                 "starwell lacks floor backing"
+            );
+        }
+    }
+
+    #[test]
+    fn starwell_climb_serializes_a_backed_ascent_and_separate_catch() {
+        let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::StarwellClimb).generate();
+        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
+
+        for column in 1..13 {
+            assert_eq!(
+                tile(column, 16),
+                Tile::Solid,
+                "west launch floor is incomplete"
+            );
+        }
+        for column in 13..28 {
+            let expected = if column == 25 {
+                Tile::Solid
+            } else {
+                Tile::HazardUp
+            };
+            assert_eq!(tile(column, 16), expected, "starwell has a floor bypass");
+        }
+        for column in 28..31 {
+            assert_eq!(
+                tile(column, 16),
+                Tile::Solid,
+                "east arrival floor is incomplete"
+            );
+        }
+        for column in 1..31 {
+            assert_eq!(tile(column, 17), Tile::Solid, "starwell lacks backing");
+        }
+        for row in 1..14 {
+            assert_eq!(
+                tile(7, row),
+                Tile::Solid,
+                "ceiling-backed west wall is open"
+            );
+        }
+        for row in 4..14 {
+            assert_eq!(tile(12, row), Tile::Solid, "east climb face is open");
+        }
+        for row in 14..16 {
+            assert_eq!(tile(7, row), Tile::Empty, "shaft entrance is obstructed");
+            assert_eq!(tile(12, row), Tile::Empty, "shaft entrance is obstructed");
+        }
+        for column in 12..18 {
+            assert_eq!(tile(column, 4), Tile::Solid, "launch shelf is incomplete");
+        }
+        for column in 18..25 {
+            assert_eq!(tile(column, 9), Tile::Empty, "starwell relay is obstructed");
+        }
+        for column in 25..28 {
+            assert_eq!(tile(column, 9), Tile::Solid, "catch platform is incomplete");
+        }
+        for row in 9..17 {
+            assert_eq!(tile(25, row), Tile::Solid, "return shaft backing is open");
+        }
+        for row in 9..14 {
+            assert_eq!(tile(30, row), Tile::Solid, "return shaft face is open");
+        }
+        for row in 14..16 {
+            assert_eq!(
+                tile(30, row),
+                Tile::Empty,
+                "return shaft entrance is obstructed"
             );
         }
     }

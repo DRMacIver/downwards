@@ -297,6 +297,20 @@ families retain 27, 42, 40, and 58 successes out of 64 with no deaths. Wall-Jump
 searches both have no ceiling positive, while an explicit no-ability run crosses west to east. A
 higher prototype balcony failed the Wall-Jump-only refusal search and was lowered before promotion.
 
+Starwell Climb is the twentieth replacement in v30. Its previous mainline route took 215 ticks and
+22 spans, accepted only six of seven jump presses, made a Right–Left–Left wall sequence after two
+ordinary floor jumps, never used Dash, and ended in a long undirected run and fall. The replacement
+backs the lethal well, connects its west wall to the ceiling so the ascent cannot be taken around
+the outside, and separates a broad four-contact climb from a three-tile east catch. The retained
+route exact-replays in 245 ticks and 13 spans with all five jump presses accepted, four strictly
+alternating Wall Jumps, one post-climb Dash from the full roof recovery, and four reversals. It
+lands on the authored catch before dropping to the east door. Strength-one Boundary, Correlated,
+Hold/Release, and Drop/Repeat perturbations retain 23, 32, 45, and 32 successes out of 64; unlike
+the former forgiving shell, their failures include lethal contact with the backed starwell.
+Same-budget Wall-Jump-only and Dash-only searches both have no east-door positive. A separate
+full-loadout solve enters from the east, climbs the catch's return shaft, and reaches the west door
+cleanly, so the mandatory mainline remains physically reversible.
+
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
 persistent item omission, additive mid-run Wall Jump and Dash state, gate rejection without room reset, client

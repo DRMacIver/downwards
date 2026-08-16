@@ -312,6 +312,7 @@ fn compare_routes(
                     | DemoDungeonRoom::Observatory
                     | DemoDungeonRoom::AuroraSpire
                     | DemoDungeonRoom::EclipseFork
+                    | DemoDungeonRoom::StarwellClimb
                     | DemoDungeonRoom::AstralSeal
                     | DemoDungeonRoom::Gatehouse
                     | DemoDungeonRoom::CrownSanctum
@@ -496,6 +497,9 @@ fn segmented_candidate(
     }
     if spec.room == DemoDungeonRoom::EclipseFork {
         return segmented_eclipse_fork_candidate(initial, target);
+    }
+    if spec.room == DemoDungeonRoom::StarwellClimb {
+        return segmented_starwell_climb_candidate(initial, target);
     }
     if spec.room == DemoDungeonRoom::AstralSeal {
         return segmented_astral_seal_candidate(initial, target);
@@ -1492,6 +1496,71 @@ fn segmented_eclipse_fork_candidate(
     Some(TargetSolution {
         target: target.clone(),
         reached: ReachedTarget::Door("ceiling".to_owned()),
+        replay: Replay::record(initial, actions),
+        stats: SearchStats::default(),
+    })
+}
+
+fn segmented_starwell_climb_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    let Some((intermediate, climb)) = readable_alternating_climb(initial, 82, 102, 28, 120, 172, 3)
+    else {
+        eprintln!("  segmented Starwell climb failed");
+        return None;
+    };
+    let mut candidates = Vec::new();
+    for takeoff_x in 120..=172 {
+        let Some((takeoff, approach)) = approach_x(&intermediate, takeoff_x) else {
+            continue;
+        };
+        for jump_hold in 1..=10 {
+            for dash_delay in 0..=14 {
+                for (dash_x, dash_y) in [(1, 0), (1, 1)] {
+                    let mut simulation = takeoff.clone();
+                    let mut suffix = approach.clone();
+                    let mut caught_star = false;
+                    let relay = std::iter::repeat_n(right_action(true, false), jump_hold)
+                        .chain(std::iter::repeat_n(right_action(false, false), dash_delay))
+                        .chain(std::iter::once(Action {
+                            move_x: dash_x,
+                            move_y: dash_y,
+                            jump: false,
+                            dash: true,
+                            restart: false,
+                        }))
+                        .chain(std::iter::repeat_n(right_action(false, false), 160));
+                    for action in relay {
+                        if !clean_step(&mut simulation, action) {
+                            break;
+                        }
+                        suffix.push(action);
+                        let player = simulation.player();
+                        let bounds = player.bounds();
+                        caught_star |=
+                            player.grounded() && bounds.y == 78 && (242..=272).contains(&bounds.x);
+                        if caught_star && simulation.reached_exit() == Some("east") {
+                            let mut full_actions = climb.clone();
+                            full_actions.extend(suffix);
+                            candidates.push(full_actions);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    let Some(actions) = candidates
+        .into_iter()
+        .min_by(|left, right| static_route_key(left).cmp(&static_route_key(right)))
+    else {
+        eprintln!("  segmented Starwell relay failed");
+        return None;
+    };
+    Some(TargetSolution {
+        target: target.clone(),
+        reached: ReachedTarget::Door("east".to_owned()),
         replay: Replay::record(initial, actions),
         stats: SearchStats::default(),
     })

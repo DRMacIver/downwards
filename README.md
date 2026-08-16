@@ -402,6 +402,17 @@ perturbations retain 27–58/64 successes without deaths. Wall-Jump-only and Das
 have no ceiling positive; an earlier, higher balcony that admitted a Wall-Jump-only ascent was
 rejected during authoring rather than encoded as the intended solution.
 
+Starwell Climb is the twentieth replacement. Its old mainline route accepted two ordinary floor
+jumps and then produced a Right–Left–Left wall sequence, never used Dash, and spent a long final
+span simply running and falling to the door. The v30 room exposes one late-game relay instead: a
+ceiling-backed broad shaft requires four alternating Wall Jumps, its roof provides a deliberate
+recovery, and a single post-climb Dash crosses the backed lethal well to a separate three-tile
+catch before the east-door drop. The exact route takes 245 ticks and 13 spans, accepts all five jump
+presses, and has four reversals. Strength-one perturbations retain 23–45/64 successes and now fail
+through hazardous execution rather than merely timing out on forgiving shelves. Wall-Jump-only
+and Dash-only bounded searches both have no east-door positive; the full loadout also has a clean
+reverse route through the catch's dedicated return shaft.
+
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 
 ```sh
