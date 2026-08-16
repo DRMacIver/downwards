@@ -1521,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v16".to_owned(),
+        id: "demo-dungeon-v17".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -1675,7 +1675,7 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         DemoDungeonRoom::GlassSeal => vec![(51, Rect::new(214, 50, 8, 10))],
         DemoDungeonRoom::StarThreshold => vec![(52, Rect::new(264, 120, 8, 10))],
         DemoDungeonRoom::CometRun => vec![(53, Rect::new(294, 60, 8, 10))],
-        DemoDungeonRoom::MoonVault => vec![(54, Rect::new(224, 30, 8, 10))],
+        DemoDungeonRoom::MoonVault => vec![(54, Rect::new(274, 40, 8, 10))],
         DemoDungeonRoom::ConstellationHall => vec![(55, Rect::new(284, 30, 8, 10))],
         DemoDungeonRoom::ShadowDuct => vec![(56, Rect::new(224, 30, 8, 10))],
         DemoDungeonRoom::Observatory => vec![(57, Rect::new(214, 20, 8, 10))],
@@ -3474,6 +3474,105 @@ mod tests {
         assert!(
             !matches!(outcome, TargetSolveOutcome::Solved(_)),
             "no-Dash search unexpectedly crossed the Meteor shutters: {outcome:?}"
+        );
+    }
+
+    #[test]
+    fn moon_vault_checked_route_follows_its_orbit_and_can_return() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::MoonVault)
+            .expect("Moon Vault has route metadata");
+        let room = demo_dungeon_room(spec.room, spec.inventory);
+        let mut replayed = Simulation::enter_via_door(
+            room,
+            spec.inventory.abilities(),
+            spec.entry_door.expect("Moon Vault has a ceiling entry"),
+        )
+        .unwrap();
+        replayed.enable_current_player_movement();
+        let mut dashes = 0;
+        let mut wall_jumps = 0;
+        let mut landed = Vec::new();
+        let mut previous_nonzero_x = 0;
+        let mut reversals = 0;
+        for action in crate::demo_dungeon_witness_actions(spec.room) {
+            if action.move_x != 0 {
+                reversals +=
+                    usize::from(previous_nonzero_x != 0 && previous_nonzero_x != action.move_x);
+                previous_nonzero_x = action.move_x;
+            }
+            for event in replayed.step(action).events {
+                assert!(
+                    !matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset),
+                    "the checked Moon orbit must remain clean: {event:?}"
+                );
+                dashes += usize::from(matches!(event, SimulationEvent::Dashed { .. }));
+                wall_jumps += usize::from(matches!(
+                    event,
+                    SimulationEvent::Jumped(JumpKind::Wall { .. })
+                ));
+                if matches!(event, SimulationEvent::Landed) {
+                    landed.push((replayed.player().bounds().x, replayed.player().bounds().y));
+                }
+            }
+        }
+        assert!(
+            replayed
+                .collected_pickups()
+                .any(|pickup| pickup.id() == spec.target.id())
+        );
+        assert_eq!(dashes, 3, "Moon orbit should use one Dash per transfer");
+        assert_eq!(
+            wall_jumps, 1,
+            "Moon orbit should finish with one visible boundary kick"
+        );
+        assert_eq!(
+            reversals, 0,
+            "Moon orbit should not contain controller thrash"
+        );
+        assert!(
+            landed.iter().any(|&(_, y)| y == 128)
+                && landed.iter().any(|&(x, y)| x >= 215 && y == 88),
+            "Moon orbit lost its low and rising recovery landings: {landed:?}"
+        );
+
+        let return_outcome = solve_target(
+            &replayed,
+            SearchTarget::door("ceiling"),
+            &SolverConfig::for_abilities(spec.inventory.abilities()),
+        )
+        .unwrap();
+        let TargetSolveOutcome::Solved(return_solution) = return_outcome else {
+            panic!("Moon Vault cannot return after collecting its coin: {return_outcome:?}");
+        };
+        for action in return_solution.replay.actions() {
+            replayed.step(action);
+        }
+        assert_eq!(replayed.reached_exit(), Some("ceiling"));
+
+        let no_dash = DemoDungeonInventory {
+            climbing_gloves: true,
+            winged_boots: false,
+            ..spec.inventory
+        };
+        let room = demo_dungeon_room(spec.room, no_dash);
+        let mut initial = Simulation::enter_via_door(
+            room,
+            no_dash.abilities(),
+            spec.entry_door.expect("Moon Vault has a ceiling entry"),
+        )
+        .unwrap();
+        initial.enable_current_player_movement();
+        let outcome = solve_target(
+            &initial,
+            route_spec_target(spec.target),
+            &SolverConfig::for_abilities(no_dash.abilities()),
+        )
+        .unwrap();
+        assert!(
+            !matches!(outcome, TargetSolveOutcome::Solved(_)),
+            "Wall-Jump-only search unexpectedly bypassed the Moon orbit: {outcome:?}"
         );
     }
 

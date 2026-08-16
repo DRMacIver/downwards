@@ -1,5 +1,5 @@
 schema downwards-demo-dungeon-witnesses-v1
-palette-generation 16
+palette-generation 17
 player-movement-policy 4
 tuning 110 72 203 50 50 250
 shaky-policy 64 18 2 2
@@ -2167,42 +2167,29 @@ room demo-dungeon.moon-vault
 entry ceiling
 target pickup dungeon-coin-54
 abilities 1 1
-ticks 178
-observation 30 6 4 1 5 9
-shaky BoundaryTiming 21 64 2
-shaky CorrelatedTiming 15 64 0
-shaky HoldRelease 41 64 1
-shaky DropRepeatFrame 3 64 0
-span 1 0 1 0 0 6
-span 0 0 0 0 0 3
-span -1 0 0 0 0 4
-span 1 0 0 0 0 4
-span 0 -1 0 1 0 1
-span 0 -1 0 0 0 5
-span 0 0 0 0 0 9
-span -1 0 1 0 0 3
-span 0 -1 0 0 0 19
-span 1 -1 0 0 0 1
-span 0 0 0 0 0 4
+ticks 111
+observation 17 4 3 1 3 0
+shaky BoundaryTiming 40 64 16
+shaky CorrelatedTiming 55 64 12
+shaky HoldRelease 45 64 13
+shaky DropRepeatFrame 63 64 0
+span 0 0 0 0 0 14
 span 0 1 1 0 0 1
-span 1 0 0 0 0 4
-span -1 0 0 0 0 7
-span 1 -1 0 0 0 9
-span 0 0 0 0 0 1
-span 1 0 1 0 0 5
-span 1 0 0 0 0 14
+span 0 0 0 0 0 13
+span 1 0 0 0 0 8
+span 0 0 1 0 0 1
+span 1 1 0 0 0 3
 span 0 0 0 1 0 1
-span 0 0 0 0 0 10
-span 1 -1 0 0 0 10
-span -1 1 0 1 0 1
-span -1 1 0 0 0 5
-span 0 0 0 0 0 4
-span 1 0 1 0 0 8
-span 1 -1 0 1 0 1
-span 0 -1 0 0 0 17
-span -1 0 1 0 0 11
+span 1 0 0 0 0 9
+span 1 -1 0 0 0 7
+span 0 1 0 0 0 4
 span 0 -1 0 1 0 1
 span 0 -1 0 0 0 9
+span 1 0 1 0 0 9
+span 1 0 0 0 0 5
+span 0 0 0 1 0 1
+span 1 0 0 0 0 17
+span 1 0 1 0 0 8
 end
 route demo-dungeon.constellation-hall
 room demo-dungeon.constellation-hall

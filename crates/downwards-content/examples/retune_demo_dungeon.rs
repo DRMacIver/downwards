@@ -457,6 +457,9 @@ fn segmented_candidate(
     if spec.room == DemoDungeonRoom::LunarCache {
         return segmented_lunar_cache_candidate(initial, target);
     }
+    if spec.room == DemoDungeonRoom::MoonVault {
+        return segmented_moon_vault_candidate(initial, target);
+    }
     if spec.room == DemoDungeonRoom::MeteorRun {
         return readable_meteor_run_candidate(initial, target);
     }
@@ -673,6 +676,101 @@ fn segmented_comet_run_candidate(
     let outcome = solve_target(&intermediate, target.clone(), &config).ok()?;
     let TargetSolveOutcome::Solved(solution) = outcome else {
         eprintln!("  segmented Comet Run final leg failed: {outcome:?}");
+        return None;
+    };
+    actions.extend(solution.replay.actions());
+    Some(TargetSolution {
+        target: solution.target,
+        reached: solution.reached,
+        replay: Replay::record(initial, actions),
+        stats: solution.stats,
+    })
+}
+
+fn segmented_moon_vault_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    // Enter the orbit with one explicit one-way drop, then solve its visible recovery platforms as
+    // independent legs. Dash-only configurations retain normal jumps but prevent the local solver
+    // from substituting boundary-wall retries for the under-wall crossing and rising transfers.
+    let mut intermediate = initial.clone();
+    let mut actions = Vec::new();
+    for _ in 0..40 {
+        if intermediate.player().grounded() {
+            break;
+        }
+        let action = Action::default();
+        if !clean_step(&mut intermediate, action) {
+            return None;
+        }
+        actions.push(action);
+    }
+    if !intermediate.player().grounded() || intermediate.player().bounds().y > 50 {
+        eprintln!("  segmented Moon Vault did not settle on its entrance shelf");
+        return None;
+    }
+    let drop = Action {
+        move_x: 0,
+        move_y: 1,
+        jump: true,
+        dash: false,
+        restart: false,
+    };
+    if !clean_step(&mut intermediate, drop) {
+        return None;
+    }
+    actions.push(drop);
+    for _ in 0..80 {
+        if intermediate.player().grounded() && intermediate.player().bounds().y >= 128 {
+            break;
+        }
+        let action = Action::default();
+        if !clean_step(&mut intermediate, action) {
+            return None;
+        }
+        actions.push(action);
+    }
+    if !intermediate.player().grounded() || intermediate.player().bounds().y < 128 {
+        eprintln!("  segmented Moon Vault drop missed its low recovery platform");
+        return None;
+    }
+
+    let waypoints = [
+        GroundedSupportTarget::new(
+            220,
+            250,
+            140,
+            [GroundedStandingRegion::new(220, 242).expect("valid Moon lower-right platform")],
+        )
+        .expect("valid Moon lower-right waypoint"),
+        GroundedSupportTarget::new(
+            220,
+            250,
+            100,
+            [GroundedStandingRegion::new(220, 242).expect("valid Moon right platform")],
+        )
+        .expect("valid Moon right waypoint"),
+    ];
+    let config = SolverConfig::for_abilities(AbilitySet::new(false, true));
+    for (index, waypoint) in waypoints.iter().enumerate() {
+        let outcome = solve_grounded_support(&intermediate, waypoint, &config).ok()?;
+        let GroundedSupportSolveOutcome::Solved(solution) = outcome else {
+            eprintln!(
+                "  segmented Moon Vault leg {} failed: {outcome:?}",
+                index + 1
+            );
+            return None;
+        };
+        let leg = solution.replay.actions().collect::<Vec<_>>();
+        for &action in &leg {
+            intermediate.step(action);
+        }
+        actions.extend(leg);
+    }
+    let outcome = solve_target(&intermediate, target.clone(), &config).ok()?;
+    let TargetSolveOutcome::Solved(solution) = outcome else {
+        eprintln!("  segmented Moon Vault final leg failed: {outcome:?}");
         return None;
     };
     actions.extend(solution.replay.actions());

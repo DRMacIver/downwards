@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 16;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 17;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1536,14 +1536,20 @@ impl PaletteDraft<'_> {
                 self.horizontal(4, 19, 24, Tile::HazardDown);
             }
             DungeonPaletteCourse::MoonVault => {
-                self.vertical(9, 5, 16, Tile::Solid);
-                self.vertical(17, 2, 13, Tile::Solid);
-                self.horizontal(16, 9, 13, Tile::Solid);
-                self.horizontal(16, 19, 23, Tile::Solid);
-                self.horizontal(12, 18, 24, Tile::OneWay);
-                self.horizontal(8, 10, 16, Tile::OneWay);
-                self.horizontal(4, 18, 25, Tile::OneWay);
-                self.vertical(16, 8, 11, Tile::HazardLeft);
+                // A readable clockwise orbit beneath the ceiling entrance: settle on the broad
+                // central shelf, descend left and inward, then climb through the right-hand
+                // recovery shelves to the coin. The ceiling bank prevents a single horizontal
+                // Dash from skipping directly from the entrance shelf to the prize.
+                self.horizontal(6, 13, 18, Tile::OneWay);
+                self.horizontal(10, 5, 8, Tile::OneWay);
+                self.horizontal(14, 13, 16, Tile::OneWay);
+                self.horizontal(10, 22, 25, Tile::OneWay);
+                self.horizontal(14, 22, 25, Tile::OneWay);
+                self.horizontal(6, 26, 30, Tile::OneWay);
+                self.vertical(20, 4, 12, Tile::Solid);
+                self.horizontal(16, 1, 31, Tile::HazardUp);
+                self.horizontal(3, 18, 26, Tile::HazardUp);
+                self.horizontal(4, 18, 26, Tile::HazardDown);
             }
             DungeonPaletteCourse::ConstellationHall => {
                 self.horizontal(14, 3, 7, Tile::OneWay);
@@ -2035,6 +2041,36 @@ mod tests {
         }
         for column in 27..31 {
             assert_eq!(tile(column, 3), Tile::Solid, "coin shelf is incomplete");
+        }
+    }
+
+    #[test]
+    fn moon_vault_has_a_blocked_shortcut_and_broad_orbit_recoveries() {
+        let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::MoonVault).generate();
+        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
+
+        for row in 5..12 {
+            assert_eq!(
+                tile(20, row),
+                Tile::Solid,
+                "Moon shortcut separator has a high bypass"
+            );
+        }
+        for column in 18..26 {
+            assert_eq!(tile(column, 3), Tile::HazardUp);
+            assert_eq!(tile(column, 4), Tile::HazardDown);
+        }
+        for (row, range) in [(6, 13..18), (14, 13..16), (14, 22..25), (10, 22..25)] {
+            for column in range {
+                assert_eq!(
+                    tile(column, row),
+                    Tile::OneWay,
+                    "Moon orbit recovery is incomplete"
+                );
+            }
+        }
+        for column in 1..31 {
+            assert_eq!(tile(column, 16), Tile::HazardUp);
         }
     }
 

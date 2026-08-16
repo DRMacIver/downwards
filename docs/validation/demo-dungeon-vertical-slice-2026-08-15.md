@@ -95,7 +95,7 @@ returns the player to its validated interior arrival without resetting room-loca
 Crown similarly persists and is the only terminal goal. Ordinary door exits change rooms and are
 deliberately not counted as whole-level victories.
 
-Palette generation v16 contains six evidence-driven room replacements. Persistent history recorded
+Palette generation v17 contains seven evidence-driven room replacements. Persistent history recorded
 24 Gale Chasm attempts, all ending on spikes, while its old AI witness used 43 action spans and 11
 horizontal reversals. As the first post-Boots room, it now teaches the action as two readable
 sixty-pixel Dash gaps separated by a three-tile full-recovery island. Its mechanically selected
@@ -147,6 +147,17 @@ window, with no jumps and only two braking reversals. The unconstrained solver's
 is rejected as behaviorally noisy. A same-budget no-Dash search has no positive, and all four
 strength-one perturbation families retain at least 39/64 observed successes. This is robustness
 evidence for the timing controller, not a claim that the room is difficult for a human.
+
+Moon Vault is the seventh replacement in v17. The old mandatory coin branch retained a
+178-tick/30-span trace with five scattered Dashes, nine reversals, rejected jump presses, and only
+3/64 successes in its weakest perturbation family. The replacement is a visible clockwise orbit
+beneath the ceiling entry: drop through the entrance shelf, recover low in the centre, Dash beneath
+a solid separator, rise through two broad right-hand supports, and kick once from the boundary back
+to the coin. A paired up/down ceiling hazard closes the safe-backed-spike shortcut exposed during
+authoring. The staged route exact-replays in 111 ticks with 17 spans, three accepted Dashes, one
+final Wall Jump, no horizontal reversals, and at least 40/64 successes in every strength-one family.
+A same-budget no-Dash search has no positive; Dash-only remains possible and is not misrepresented
+as a two-method gate. A separate exact solve returns from the collected coin to the ceiling door.
 
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,

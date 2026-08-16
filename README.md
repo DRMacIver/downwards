@@ -234,7 +234,7 @@ methods as well as the coins. Deaths and restarts return to the door used to ent
 without discarding gloves, boots, Crown, or coins. `V` demonstrates the next intended room-local
 objective; it is not a whole-dungeon route.
 
-Palette generation v16 includes six evidence-driven replacements. The first post-Boots Gale Chasm
+Palette generation v17 includes seven evidence-driven replacements. The first post-Boots Gale Chasm
 was implicated by 24 recorded human deaths and an AI witness with 43 action spans and 11 reversals;
 it now presents two readable sixty-pixel Dash gaps separated by a three-tile full-recovery island.
 The mechanically selected route uses nine spans, two jumps, two Dashes, and no reversals, while a
@@ -274,6 +274,15 @@ with visible safe bays between them. The retained demonstration brakes in each b
 horizontal Dash per shutter: three Dashes, no jumps, and two reversals. The unconstrained solver's
 eleven-Dash trace is kept only as a rejected comparison. A same-budget no-Dash search has no
 positive, while each strength-one perturbation family retains at least 39 of 64 successes.
+
+Moon Vault is the seventh replacement. Its old required branch witness wandered for 178 ticks with
+30 spans, nine reversals, rejected jump presses, and only 3/64 successes in its weakest perturbation
+family. The v17 room is a visible clockwise orbit: drop to the low centre, Dash beneath a separator,
+recover twice up the right side, then kick once from the boundary back to the coin shelf. Opposing
+ceiling spikes close the former walk-over shortcut. The retained route has 17 spans, three useful
+Dashes, one final Wall Jump, no reversals, and at least 40/64 successes in every strength-one
+family. A same-budget no-Dash search has no positive, and an independent exact solve returns from
+the coin to the ceiling branch door.
 
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 
