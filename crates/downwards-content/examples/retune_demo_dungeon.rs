@@ -2740,9 +2740,7 @@ fn main() {
                 assessed
                     .iter()
                     .enumerate()
-                    .max_by(|(_, (left, _, _, _)), (_, (right, _, _, _))| {
-                        left.total_cmp(right)
-                    })
+                    .max_by(|(_, (left, _, _, _)), (_, (right, _, _, _))| left.total_cmp(right))
                     .map(|(index, _)| index)
                     .unwrap_or(0)
             });

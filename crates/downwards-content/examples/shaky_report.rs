@@ -82,7 +82,10 @@ fn main() {
     routes.sort_by_key(RouteRobustness::worst_percent);
 
     println!("strength-one shaky survival by route (worst family first):");
-    println!("{:>3} {:<40} {:>5} {:>5}  families", "#", "route", "worst", "mean");
+    println!(
+        "{:>3} {:<40} {:>5} {:>5}  families",
+        "#", "route", "worst", "mean"
+    );
     for (index, route) in routes.iter().enumerate() {
         let families = route
             .families
@@ -110,7 +113,10 @@ fn main() {
     for route in &routes {
         histogram[route.worst_percent() / 10] += 1;
     }
-    println!("\ndistribution of worst-family survival ({} routes):", routes.len());
+    println!(
+        "\ndistribution of worst-family survival ({} routes):",
+        routes.len()
+    );
     for (bucket, count) in histogram.iter().enumerate() {
         let label = if bucket == 10 {
             "  100%".to_owned()
