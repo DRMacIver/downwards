@@ -15,19 +15,22 @@ pub const DEMO_DUNGEON_BOOT_PICKUP: &str = "winged-boots";
 pub const DEMO_DUNGEON_CROWN_PICKUP: &str = "crown";
 pub const DEMO_DUNGEON_GOAL_EXIT: &str = "crown-goal";
 pub const DEMO_DUNGEON_TOTAL_COINS: u8 = 64;
-pub const DEMO_DUNGEON_GLOVE_GATE_REQUIREMENT: u8 = 6;
-pub const DEMO_DUNGEON_WALL_REGION_GATE_REQUIREMENT: u8 = 12;
+// Gate requirements deliberately sit below the number of coins available
+// before each gate: coins are graded from freebies to bonus challenges, and
+// the hardest few are never mandatory for progression.
+pub const DEMO_DUNGEON_GLOVE_GATE_REQUIREMENT: u8 = 5;
+pub const DEMO_DUNGEON_WALL_REGION_GATE_REQUIREMENT: u8 = 10;
 /// Opens the lower route containing the last pre-Dash coin branches.
-pub const DEMO_DUNGEON_LOWER_VAULT_REQUIREMENT: u8 = 18;
+pub const DEMO_DUNGEON_LOWER_VAULT_REQUIREMENT: u8 = 15;
 /// Opens the Treasury only after the Underpass coin has been collected.
-pub const DEMO_DUNGEON_TREASURY_REQUIREMENT: u8 = 19;
+pub const DEMO_DUNGEON_TREASURY_REQUIREMENT: u8 = 16;
 /// Opens either entrance to the Winged Vault after every other pre-Dash coin.
-pub const DEMO_DUNGEON_BOOT_GATE_REQUIREMENT: u8 = 21;
-pub const DEMO_DUNGEON_DASH_REGION_GATE_REQUIREMENT: u8 = 28;
-pub const DEMO_DUNGEON_FOUNDRY_GATE_REQUIREMENT: u8 = 40;
-pub const DEMO_DUNGEON_GLASSWORKS_GATE_REQUIREMENT: u8 = 52;
-pub const DEMO_DUNGEON_ASTRAL_GATE_REQUIREMENT: u8 = 64;
-pub const DEMO_DUNGEON_CROWN_GATE_REQUIREMENT: u8 = 64;
+pub const DEMO_DUNGEON_BOOT_GATE_REQUIREMENT: u8 = 18;
+pub const DEMO_DUNGEON_DASH_REGION_GATE_REQUIREMENT: u8 = 24;
+pub const DEMO_DUNGEON_FOUNDRY_GATE_REQUIREMENT: u8 = 34;
+pub const DEMO_DUNGEON_GLASSWORKS_GATE_REQUIREMENT: u8 = 44;
+pub const DEMO_DUNGEON_ASTRAL_GATE_REQUIREMENT: u8 = 55;
+pub const DEMO_DUNGEON_CROWN_GATE_REQUIREMENT: u8 = 58;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct DemoDungeonInventory {

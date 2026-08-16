@@ -2639,7 +2639,8 @@ impl DungeonSaveV1 {
         }
         if self.crown
             && (!self.winged_boots
-                || self.collected_coins.len() != usize::from(DEMO_DUNGEON_TOTAL_COINS))
+                || self.collected_coins.len()
+                    < usize::from(downwards_content::DEMO_DUNGEON_CROWN_GATE_REQUIREMENT))
         {
             return Err("dungeon save grants the Crown without full progression".to_owned());
         }
@@ -9997,7 +9998,8 @@ mod tests {
             client.dungeon_run.unwrap().room,
             DemoDungeonRoom::BrokenAqueduct
         );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[4]))));
+        // Coin 4 is deliberately skipped: gate tolerance means progression
+        // never needs every coin, and the Sluice gate below still seals at 4.
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
         assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::OldLift);
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
@@ -10097,20 +10099,14 @@ mod tests {
         );
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
         assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::WallGate);
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 11);
+        // With coins 4 and 21 skipped the run sits exactly at the wall gate's
+        // tolerant requirement, so the seal opens without a completionist
+        // backtrack.
+        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 10);
         assert_eq!(
             downwards_content::DEMO_DUNGEON_WALL_REGION_GATE_REQUIREMENT,
-            12
+            10
         );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::WallGate);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("west")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::NeedleTurn
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[21]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
         assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Threshold);
         assert!(!client.observe_dungeon_progress(&report(&client, coins(&[6]))));
@@ -10177,13 +10173,13 @@ mod tests {
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
         assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Underpass);
         assert!(!client.observe_dungeon_progress(&report(&client, coins(&[13]))));
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 19);
+        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 17);
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("west")])));
         assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Underpass);
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
         assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Treasury);
         assert!(!client.observe_dungeon_progress(&report(&client, coins(&[14, 15]))));
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 21);
+        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 19);
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("west")])));
         assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Underpass);
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("west")])));
@@ -10205,7 +10201,7 @@ mod tests {
             ],
         )));
         assert!(client.dungeon_run.unwrap().inventory.winged_boots);
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 22);
+        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 20);
         assert!(client.simulation.abilities().dash);
         assert!(client.simulation.player().dash_available());
         assert!(client.observe_dungeon_progress(&report(&client, vec![SimulationEvent::Reset],)));
@@ -10293,18 +10289,9 @@ mod tests {
         );
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
         assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::DashSeal);
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 27);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::DashSeal);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("west")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::BrakeTower
-        );
+        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 25);
         assert!(!client.observe_dungeon_progress(&report(&client, coins(&[27]))));
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 28);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::DashSeal);
+        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 26);
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
         assert_eq!(
             client.dungeon_run.unwrap().room,
@@ -10405,14 +10392,9 @@ mod tests {
             client.dungeon_run.unwrap().room,
             DemoDungeonRoom::FoundrySeal
         );
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 39);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::FoundrySeal
-        );
+        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 37);
         assert!(!client.observe_dungeon_progress(&report(&client, coins(&[39]))));
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 40);
+        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 38);
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
         assert_eq!(
             client.dungeon_run.unwrap().room,
@@ -10507,11 +10489,9 @@ mod tests {
         assert!(!client.observe_dungeon_progress(&report(&client, coins(&[50]))));
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
         assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::GlassSeal);
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 51);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::GlassSeal);
+        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 49);
         assert!(!client.observe_dungeon_progress(&report(&client, coins(&[51]))));
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 52);
+        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 50);
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
         assert_eq!(
             client.dungeon_run.unwrap().room,
@@ -10603,14 +10583,11 @@ mod tests {
             client.dungeon_run.unwrap().room,
             DemoDungeonRoom::AstralSeal
         );
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 63);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::AstralSeal
-        );
+        // Two coins were skipped along the run; the tolerant astral and crown
+        // gates open regardless, and its own coin is not required to leave.
+        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 61);
         assert!(!client.observe_dungeon_progress(&report(&client, coins(&[63]))));
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 64);
+        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 62);
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
         assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Gatehouse);
         assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
