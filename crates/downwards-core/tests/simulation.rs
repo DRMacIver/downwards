@@ -1725,3 +1725,61 @@ fn current_horizontal_dash_squeezes_through_one_tile_tunnels_and_expands_afterwa
     assert!(!dashing.player().dash_compressed());
     assert_eq!(dashing.player().bounds().height, 12);
 }
+
+#[test]
+fn a_low_crawl_keeps_sliding_until_the_player_can_stand() {
+    let (w, h) = (WIDTH, HEIGHT);
+    let mut tiles = vec![Tile::Empty; w * h];
+    for x in 0..w {
+        tiles[16 * w + x] = Tile::Solid;
+    }
+    for x in 10..24 {
+        tiles[14 * w + x] = Tile::Solid; // 10px crawl gap under this ceiling
+    }
+    let room = Room::new(
+        "crawl",
+        "Crawl",
+        w as u16,
+        h as u16,
+        TILE_SIZE,
+        tiles,
+        Point::new(20, 148),
+        vec![],
+    )
+    .unwrap();
+    let mut simulation = Simulation::with_abilities(room, AbilitySet::new(false, true));
+    simulation.enable_current_player_movement();
+    // Run right and dash into the passage mouth, then release ALL input.
+    for _ in 0..120 {
+        let near = simulation.player().bounds().x >= 80;
+        simulation.step(Action {
+            move_x: if near { 1 } else { 1 },
+            dash: near,
+            ..Action::default()
+        });
+        if simulation.player().dash_compressed() && simulation.player().velocity_subpixels().x == 0
+        {
+            break;
+        }
+        if simulation.player().bounds().x >= 120 {
+            break;
+        }
+    }
+    assert!(
+        simulation.player().dash_compressed(),
+        "probe should be crawling"
+    );
+    // With no input at all, the slide must carry the player out the far side.
+    for _ in 0..300 {
+        simulation.step(Action::default());
+        if !simulation.player().dash_compressed() {
+            break;
+        }
+    }
+    assert!(
+        !simulation.player().dash_compressed(),
+        "the crawl slide must continue until the player can stand (stuck at x={})",
+        simulation.player().bounds().x
+    );
+    assert!(simulation.player().bounds().x >= 240);
+}

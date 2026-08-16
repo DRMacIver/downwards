@@ -24,7 +24,7 @@ pub const ONE_WAY_DROP_TICKS: u8 = 3;
 ///
 /// Historical corpus replays deliberately keep constructing an unconfigured `Simulation`; their
 /// digests therefore remain in the legacy policy domain until that corpus is regenerated.
-pub const PLAYER_MOVEMENT_POLICY_VERSION: u32 = 6;
+pub const PLAYER_MOVEMENT_POLICY_VERSION: u32 = 7;
 
 const RUN_SPEED: i32 = 384;
 const GROUND_ACCELERATION: i32 = 96;
@@ -920,6 +920,23 @@ impl Simulation {
             self.state.player.jump_hold_ticks -= 1;
         }
 
+        // A crawl slide cannot stop: while compressed under a ceiling too low
+        // to stand, the slide keeps carrying the player toward their facing
+        // (input may reverse the facing, but never park them mid-passage).
+        if self.state.player.dash_compressed
+            && self.state.player.dash_ticks == 0
+            && !self.can_stand_here()
+        {
+            let slide = i32::from(self.state.player.facing) * tuning.maximum_speed;
+            if slide > 0 {
+                self.state.player.velocity_subpixels.x =
+                    self.state.player.velocity_subpixels.x.max(slide);
+            } else if slide < 0 {
+                self.state.player.velocity_subpixels.x =
+                    self.state.player.velocity_subpixels.x.min(slide);
+            }
+        }
+
         self.move_horizontal();
         self.state.player.wall_contact = self.detect_wall_contact(effective_move_x);
         if self.state.player.wall_contact.is_none() {
@@ -1529,6 +1546,18 @@ impl Simulation {
                 PLAYER_HEIGHT
             } * SUBPIXELS_PER_PIXEL,
         )
+    }
+
+    /// Whether the compressed player has room to stand up in place.
+    fn can_stand_here(&self) -> bool {
+        let added_height = (PLAYER_HEIGHT - DASH_PLAYER_HEIGHT) * SUBPIXELS_PER_PIXEL;
+        let expanded = Rect::new(
+            self.state.player.position_subpixels.x,
+            self.state.player.position_subpixels.y - added_height,
+            PLAYER_WIDTH * SUBPIXELS_PER_PIXEL,
+            PLAYER_HEIGHT * SUBPIXELS_PER_PIXEL,
+        );
+        expanded.y >= 0 && !self.expansion_is_blocked(expanded)
     }
 
     fn try_expand_dash_posture(&mut self) {

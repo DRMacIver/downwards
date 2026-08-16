@@ -2878,7 +2878,7 @@ mod tests {
             .into_iter()
             .filter(|spec| (39..=58).contains(&spec.room.authored_key().0))
         {
-            let (initial, solution) = solve_route(
+            let (initial, solution) = retained_or_solved_route(
                 spec.room,
                 spec.entry_door,
                 spec.inventory,
@@ -2974,7 +2974,7 @@ mod tests {
             .into_iter()
             .filter(|spec| (59..=78).contains(&spec.room.authored_key().0))
         {
-            let (initial, solution) = solve_route(
+            let (initial, solution) = retained_or_solved_route(
                 spec.room,
                 spec.entry_door,
                 spec.inventory,
@@ -3070,7 +3070,7 @@ mod tests {
             .into_iter()
             .filter(|spec| (79..=98).contains(&spec.room.authored_key().0))
         {
-            let (initial, solution) = solve_route(
+            let (initial, solution) = retained_or_solved_route(
                 spec.room,
                 spec.entry_door,
                 spec.inventory,

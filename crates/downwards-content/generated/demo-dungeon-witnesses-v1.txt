@@ -1,6 +1,6 @@
 schema downwards-demo-dungeon-witnesses-v1
 palette-generation 38
-player-movement-policy 6
+player-movement-policy 7
 tuning 110 72 203 50 50 250
 shaky-policy 64 18 2 2
 route demo-dungeon.hollow-landing
@@ -2115,39 +2115,39 @@ room demo-dungeon.lattice-climb
 entry west
 target door east
 abilities 1 1
-ticks 150
-observation 29 7 6 4 5 4
-shaky BoundaryTiming 42 64 17
-shaky CorrelatedTiming 43 64 19
-shaky HoldRelease 51 64 9
-shaky DropRepeatFrame 64 64 0
+ticks 176
+observation 29 5 5 4 5 8
+shaky BoundaryTiming 45 64 17
+shaky CorrelatedTiming 46 64 18
+shaky HoldRelease 54 64 7
+shaky DropRepeatFrame 54 64 10
 span 0 0 0 1 0 1
-span 1 0 0 0 0 5
-span -1 0 0 0 0 4
-span 1 0 1 0 0 2
-span 0 -1 0 0 0 2
-span 0 0 0 0 0 4
-span 1 0 1 0 0 4
-span 0 0 0 1 0 1
-span 1 0 0 0 0 11
-span 0 -1 0 0 0 2
-span 0 0 1 0 0 4
+span 1 0 0 0 0 9
+span 1 -1 0 0 0 10
 span 1 -1 0 1 0 1
 span 1 -1 0 0 0 9
-span -1 0 1 0 0 1
-span -1 0 0 0 0 8
-span -1 0 1 0 0 1
-span 0 -1 0 0 0 8
-span -1 0 1 0 0 1
-span -1 0 0 0 0 7
-span -1 0 1 0 0 4
+span 1 0 0 0 0 4
+span -1 0 0 0 0 4
+span 1 0 1 0 0 4
 span 1 -1 0 0 0 10
+span 0 0 0 0 0 4
+span 1 0 0 0 0 4
+span 0 -1 0 1 0 1
+span 0 -1 0 0 0 7
+span 1 0 0 0 0 4
+span -1 0 1 0 0 3
+span 1 -1 0 0 0 10
+span -1 0 1 0 0 3
+span 0 -1 0 0 0 8
+span -1 0 1 0 0 2
+span 1 -1 0 0 0 6
+span -1 0 1 0 0 2
+span 1 -1 0 0 0 20
 span 0 0 0 1 0 1
 span 1 0 0 0 0 9
 span 0 0 0 1 0 1
-span 1 0 0 0 0 19
-span 0 -1 0 0 0 11
-span 1 -1 0 0 0 9
+span 1 0 0 0 0 9
+span 1 -1 0 0 0 20
 span 0 0 0 0 0 4
 span 1 -1 0 0 0 6
 end
@@ -2431,14 +2431,15 @@ entry floor
 target pickup dungeon-coin-56
 abilities 1 1
 ticks 136
-observation 16 5 5 3 3 5
-shaky BoundaryTiming 40 64 42
-shaky CorrelatedTiming 48 64 0
+observation 17 5 5 3 3 5
+shaky BoundaryTiming 40 64 48
+shaky CorrelatedTiming 40 64 36
 shaky HoldRelease 54 64 17
 shaky DropRepeatFrame 46 64 0
+span 0 0 0 0 0 1
 span -1 0 0 0 0 17
 span -1 0 0 1 0 1
-span 0 0 0 0 0 9
+span 0 0 0 0 0 8
 span 1 0 1 0 0 8
 span -1 -1 0 1 0 1
 span -1 -1 0 0 0 9
