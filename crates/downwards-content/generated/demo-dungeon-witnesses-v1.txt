@@ -1,5 +1,5 @@
 schema downwards-demo-dungeon-witnesses-v1
-palette-generation 22
+palette-generation 23
 player-movement-policy 4
 tuning 110 72 203 50 50 250
 shaky-policy 64 18 2 2
@@ -2378,26 +2378,30 @@ room demo-dungeon.gravity-lift
 entry west
 target door ceiling
 abilities 1 1
-ticks 77
-observation 14 2 2 0 5 2
-shaky BoundaryTiming 27 64 8
-shaky CorrelatedTiming 28 64 0
-shaky HoldRelease 39 64 12
+ticks 525
+observation 18 4 4 2 3 3
+shaky BoundaryTiming 25 64 0
+shaky CorrelatedTiming 20 64 0
+shaky HoldRelease 48 64 0
 shaky DropRepeatFrame 32 64 0
+span 1 0 0 0 0 143
+span 0 0 0 0 0 3
+span 1 0 1 0 0 3
+span -1 -1 0 1 0 1
+span -1 -1 0 0 0 9
+span -1 0 0 0 0 138
+span -1 -1 0 1 0 1
+span -1 -1 0 0 0 8
+span -1 0 1 0 0 1
+span -1 1 0 0 0 9
+span 1 0 0 0 0 132
 span 1 -1 0 1 0 1
-span 1 -1 0 0 0 17
-span 1 1 0 1 0 1
-span 1 1 0 0 0 8
-span 0 0 1 0 0 8
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 9
-span 1 0 0 0 0 4
-span -1 0 0 0 0 4
-span 0 -1 0 1 0 1
-span 0 -1 0 0 0 9
-span -1 0 1 0 0 4
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 9
+span 1 -1 0 0 0 5
+span -1 0 1 0 0 1
+span 0 -1 0 0 0 11
+span -1 0 0 0 0 46
+span -1 0 1 0 0 10
+span -1 0 0 0 0 3
 end
 route demo-dungeon.nova-niche
 room demo-dungeon.nova-niche

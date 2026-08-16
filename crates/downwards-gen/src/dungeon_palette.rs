@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 22;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 23;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1708,16 +1708,20 @@ impl PaletteDraft<'_> {
                 self.horizontal(3, 1, 5, Tile::Solid);
             }
             DungeonPaletteCourse::GravityLift => {
-                self.horizontal(14, 4, 9, Tile::OneWay);
-                self.horizontal(10, 12, 18, Tile::OneWay);
-                self.horizontal(7, 21, 27, Tile::OneWay);
-                self.horizontal(6, 14, 19, Tile::OneWay);
-                self.horizontal(3, 14, 19, Tile::OneWay);
-                self.horizontal(14, 26, 30, Tile::OneWay);
-                self.horizontal(16, 9, 13, Tile::HazardUp);
-                self.horizontal(17, 9, 13, Tile::Solid);
-                self.horizontal(16, 19, 23, Tile::HazardUp);
-                self.horizontal(17, 19, 23, Tile::Solid);
+                // A non-lethal vertical switchback. Three thick lift baffles alternate their
+                // opening from right to left to right, so holding an upward diagonal cannot reach
+                // the ceiling branch. Each narrow end bay gives a wall to kick from and each
+                // baffle is a full recovery floor; a miss costs height rather than a life.
+                self.horizontal(16, 1, 31, Tile::Solid);
+
+                self.horizontal(13, 1, 28, Tile::Solid);
+                self.vertical(27, 12, 14, Tile::Solid);
+
+                self.horizontal(9, 4, 31, Tile::Solid);
+                self.vertical(4, 8, 10, Tile::Solid);
+
+                self.horizontal(5, 1, 28, Tile::Solid);
+                self.vertical(27, 4, 6, Tile::Solid);
             }
             DungeonPaletteCourse::NovaNiche => {
                 // A compact late-game branch with two visible acts. The floor door lands inside
@@ -2352,6 +2356,44 @@ mod tests {
         }
         for column in 5..10 {
             assert_eq!(tile(column, 3), Tile::Empty, "second roof gap is bridged");
+        }
+    }
+
+    #[test]
+    fn gravity_lift_serializes_three_alternating_nonlethal_baffles() {
+        let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::GravityLift).generate();
+        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
+
+        for column in 1..31 {
+            assert_eq!(tile(column, 16), Tile::Solid, "Gravity Lift floor is open");
+        }
+        for column in 1..28 {
+            assert_eq!(tile(column, 13), Tile::Solid, "lower lift floor is open");
+            assert_eq!(tile(column, 5), Tile::Solid, "upper lift floor is open");
+        }
+        for column in 4..31 {
+            assert_eq!(tile(column, 9), Tile::Solid, "middle lift floor is open");
+        }
+        assert_eq!(tile(27, 12), Tile::Solid, "lower right turn lacks a wall");
+        assert_eq!(tile(4, 8), Tile::Solid, "middle left turn lacks a wall");
+        assert_eq!(tile(27, 4), Tile::Solid, "upper right turn lacks a wall");
+        for row in [5, 9, 13] {
+            for column in 1..31 {
+                assert_ne!(
+                    tile(column, row),
+                    Tile::HazardUp,
+                    "Gravity Lift recovery floor became lethal"
+                );
+            }
+        }
+        for (row, columns) in [(13, 28..31), (9, 1..4), (5, 28..31)] {
+            for column in columns {
+                assert_eq!(
+                    tile(column, row),
+                    Tile::Empty,
+                    "Gravity Lift switchback opening is obstructed"
+                );
+            }
         }
     }
 

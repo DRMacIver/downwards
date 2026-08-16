@@ -332,6 +332,15 @@ and retains 32–50 of 64 successes in every strength-one perturbation family. S
 with either Wall Jump or Dash removed have no positive; those are explicit bounded no-known-bypass
 results rather than a claim of physical impossibility.
 
+Gravity Lift is the thirteenth replacement. Its former ceiling route was a compact diagonal
+staircase that finished in 77 ticks by spending five Dashes and never Wall Jumping. The v23 room
+is a non-lethal vertical switchback: three solid baffles alternate their openings right, left,
+right, with a full recovery floor after every rise. The retained demonstration traverses the whole
+silhouette with three Dashes, two wall kicks, and three deliberate changes of direction. It is long
+but has only 18 input spans, retains at least 20/64 successes in every strength-one perturbation
+family, and an independent ceiling-entry solve descends to the east corridor. A baseline search
+has no positive; failure in this room costs height rather than a death.
+
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 
 ```sh

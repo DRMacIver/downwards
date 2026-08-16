@@ -479,6 +479,9 @@ fn segmented_candidate(
     if spec.room == DemoDungeonRoom::Observatory {
         return segmented_observatory_candidate(initial, target);
     }
+    if spec.room == DemoDungeonRoom::GravityLift {
+        return segmented_gravity_lift_candidate(initial, target);
+    }
     let (waypoint, first_config, second_config) = match spec.room {
         DemoDungeonRoom::VoidPass => (
             GroundedSupportTarget::new(
@@ -978,6 +981,117 @@ fn readable_left_landing(
     candidates
         .into_iter()
         .min_by(|(_, left), (_, right)| static_route_key(left).cmp(&static_route_key(right)))
+}
+
+fn segmented_gravity_lift_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    // Solve each visible lift bay independently. The alternating standing regions force the
+    // right-left-right switchback while still allowing the ordinary solver to choose the exact
+    // jump, Wall-Jump, and Dash timing inside each bay.
+    let waypoints = [
+        GroundedSupportTarget::new(
+            10,
+            280,
+            130,
+            [GroundedStandingRegion::new(240, 272).expect("valid lower lift landing")],
+        )
+        .expect("valid lower lift waypoint"),
+        GroundedSupportTarget::new(
+            40,
+            310,
+            90,
+            [GroundedStandingRegion::new(40, 72).expect("valid middle lift landing")],
+        )
+        .expect("valid middle lift waypoint"),
+        GroundedSupportTarget::new(
+            10,
+            280,
+            50,
+            [GroundedStandingRegion::new(240, 272).expect("valid upper lift landing")],
+        )
+        .expect("valid upper lift waypoint"),
+    ];
+    let config = SolverConfig::for_abilities(AbilitySet::new(true, true));
+    let Some((mut intermediate, mut actions)) = approach_x(initial, 220) else {
+        eprintln!("  segmented Gravity Lift could not reach its lower launch bay");
+        return None;
+    };
+    while intermediate.player().bounds().x < 288 && actions.len() < 180 {
+        let action = right_action(false, false);
+        if !clean_step(&mut intermediate, action) || intermediate.reached_exit().is_some() {
+            return None;
+        }
+        actions.push(action);
+    }
+    if intermediate.player().bounds().x < 288 || !intermediate.player().grounded() {
+        return None;
+    }
+    for (index, waypoint) in waypoints.iter().enumerate() {
+        let outcome = solve_grounded_support(&intermediate, waypoint, &config).ok()?;
+        let GroundedSupportSolveOutcome::Solved(solution) = outcome else {
+            eprintln!(
+                "  segmented Gravity Lift leg {} failed: {outcome:?}",
+                index + 1
+            );
+            return None;
+        };
+        let leg = solution.replay.actions().collect::<Vec<_>>();
+        for &action in &leg {
+            if !clean_step(&mut intermediate, action) {
+                return None;
+            }
+        }
+        actions.extend(leg);
+        let (target_x, move_x, expected_y) = match index {
+            0 => (20, -1, 118),
+            1 => (288, 1, 78),
+            2 => continue,
+            _ => unreachable!("Gravity Lift has exactly three waypoints"),
+        };
+        for _ in 0..200 {
+            let x = intermediate.player().bounds().x;
+            if (move_x < 0 && x <= target_x) || (move_x > 0 && x >= target_x) {
+                break;
+            }
+            let action = Action {
+                move_x,
+                move_y: 0,
+                jump: false,
+                dash: false,
+                restart: false,
+            };
+            if !clean_step(&mut intermediate, action) {
+                return None;
+            }
+            actions.push(action);
+        }
+        let x = intermediate.player().bounds().x;
+        if !intermediate.player().grounded()
+            || intermediate.player().bounds().y != expected_y
+            || (move_x < 0 && x > target_x)
+            || (move_x > 0 && x < target_x)
+        {
+            eprintln!(
+                "  segmented Gravity Lift leg {} lost its recovery traverse",
+                index + 1
+            );
+            return None;
+        }
+    }
+    let outcome = solve_target(&intermediate, target.clone(), &config).ok()?;
+    let TargetSolveOutcome::Solved(solution) = outcome else {
+        eprintln!("  segmented Gravity Lift final leg failed: {outcome:?}");
+        return None;
+    };
+    actions.extend(solution.replay.actions());
+    Some(TargetSolution {
+        target: solution.target,
+        reached: solution.reached,
+        replay: Replay::record(initial, actions),
+        stats: solution.stats,
+    })
 }
 
 fn readable_nova_niche_suffix(

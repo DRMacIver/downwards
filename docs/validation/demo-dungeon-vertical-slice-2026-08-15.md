@@ -218,6 +218,18 @@ retain 32, 36, 37, and 50 successes out of 64. Same-budget Wall-Jump-only and Da
 have no positive. Those finite searches and perturbation counts validate the intended structure;
 they are not a scalar human-difficulty score or a proof that no unknown bypass exists.
 
+Gravity Lift is the thirteenth replacement in v23. Its previous ceiling route took 77 ticks and
+14 spans, fired five Dashes, accepted no Wall Jump, and crossed a loose diagonal set of one-way
+shelves. The replacement is a deliberately non-lethal right-left-right lift: three solid baffles
+span almost the full room width, alternating the only upward opening while turning each completed
+rise into a safe recovery floor. A three-waypoint composition avoids the global solver's repeated
+horizontal Dash spam. Its 525-tick route has only 18 semantic spans, three accepted Dashes, two
+accepted Wall Jumps, and three horizontal reversals. It lands on all three authored baffles and
+reaches the ceiling branch cleanly. An independent exact solve enters from that ceiling branch and
+descends to the east corridor, while a same-budget baseline search has no positive. Every
+strength-one blind-continuation family retains at least 20/64 successes. The duration records a
+long traversal, not a claim that time or solver effort equals human difficulty.
+
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
 persistent item omission, additive mid-run Wall Jump and Dash state, gate rejection without room reset, client

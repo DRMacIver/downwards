@@ -1521,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v22".to_owned(),
+        id: "demo-dungeon-v23".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -3990,6 +3990,97 @@ mod tests {
                 "{label} search unexpectedly reached the Observatory coin: {outcome:?}"
             );
         }
+    }
+
+    #[test]
+    fn gravity_lift_checked_route_uses_all_three_nonlethal_switchbacks_and_can_descend() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::GravityLift)
+            .expect("Gravity Lift has route metadata");
+        let room = demo_dungeon_room(spec.room, spec.inventory);
+        let mut replayed = Simulation::enter_via_door(
+            room.clone(),
+            spec.inventory.abilities(),
+            spec.entry_door.expect("Gravity Lift has a west entry"),
+        )
+        .unwrap();
+        replayed.enable_current_player_movement();
+        let mut dashes = 0;
+        let mut wall_jumps = 0;
+        let mut landings = Vec::new();
+        for action in crate::demo_dungeon_witness_actions(spec.room) {
+            for event in replayed.step(action).events {
+                assert!(
+                    !matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset),
+                    "the checked Gravity Lift route must remain clean: {event:?}"
+                );
+                dashes += usize::from(matches!(event, SimulationEvent::Dashed { .. }));
+                wall_jumps += usize::from(matches!(
+                    event,
+                    SimulationEvent::Jumped(JumpKind::Wall { .. })
+                ));
+                if matches!(event, SimulationEvent::Landed) {
+                    landings.push((replayed.player().bounds().x, replayed.player().bounds().y));
+                }
+            }
+        }
+        assert_eq!(replayed.reached_exit(), Some("ceiling"));
+        assert_eq!(dashes, 3, "Gravity Lift should use one Dash per rise");
+        assert!(wall_jumps >= 2, "Gravity Lift bypassed both end-wall kicks");
+        assert!(
+            landings
+                .iter()
+                .any(|&(x, y)| (240..=272).contains(&x) && y == 118)
+                && landings
+                    .iter()
+                    .any(|&(x, y)| (40..=72).contains(&x) && y == 78)
+                && landings
+                    .iter()
+                    .any(|&(x, y)| (240..=272).contains(&x) && y == 38),
+            "Gravity Lift route lost its right-left-right recoveries: {landings:?}"
+        );
+
+        let mut descending =
+            Simulation::enter_via_door(room, spec.inventory.abilities(), "ceiling").unwrap();
+        descending.enable_current_player_movement();
+        let return_outcome = solve_target(
+            &descending,
+            SearchTarget::door("east"),
+            &SolverConfig::for_abilities(spec.inventory.abilities()),
+        )
+        .unwrap();
+        let TargetSolveOutcome::Solved(return_solution) = return_outcome else {
+            panic!("Gravity Lift ceiling branch cannot descend: {return_outcome:?}");
+        };
+        for action in return_solution.replay.actions() {
+            descending.step(action);
+        }
+        assert_eq!(descending.reached_exit(), Some("east"));
+
+        let baseline = DemoDungeonInventory {
+            climbing_gloves: false,
+            winged_boots: false,
+            ..spec.inventory
+        };
+        let room = demo_dungeon_room(spec.room, baseline);
+        let mut initial = Simulation::enter_via_door(
+            room,
+            baseline.abilities(),
+            spec.entry_door.expect("Gravity Lift has a west entry"),
+        )
+        .unwrap();
+        initial.enable_current_player_movement();
+        let outcome = solve_target(
+            &initial,
+            route_spec_target(spec.target),
+            &SolverConfig::for_abilities(baseline.abilities()),
+        )
+        .unwrap();
+        assert!(
+            !matches!(outcome, TargetSolveOutcome::Solved(_)),
+            "baseline search unexpectedly climbed the Gravity Lift: {outcome:?}"
+        );
     }
 
     #[test]
