@@ -1,5 +1,5 @@
 schema downwards-demo-dungeon-witnesses-v1
-palette-generation 36
+palette-generation 37
 player-movement-policy 6
 tuning 110 72 203 50 50 250
 shaky-policy 64 18 2 2
@@ -707,10 +707,10 @@ target pickup winged-boots
 abilities 1 0
 ticks 139
 observation 33 10 9 5 0 6
-shaky BoundaryTiming 28 64 1009
-shaky CorrelatedTiming 31 64 894
-shaky HoldRelease 35 64 715
-shaky DropRepeatFrame 61 64 120
+shaky BoundaryTiming 36 64 145
+shaky CorrelatedTiming 40 64 101
+shaky HoldRelease 41 64 140
+shaky DropRepeatFrame 61 64 18
 span 0 0 0 0 0 1
 span 0 0 1 0 0 4
 span 1 0 1 0 0 1
@@ -752,10 +752,10 @@ target pickup dungeon-coin-13
 abilities 1 1
 ticks 115
 observation 8 3 3 0 0 0
-shaky BoundaryTiming 40 64 0
-shaky CorrelatedTiming 30 64 0
-shaky HoldRelease 40 64 0
-shaky DropRepeatFrame 48 64 0
+shaky BoundaryTiming 48 64 0
+shaky CorrelatedTiming 40 64 0
+shaky HoldRelease 48 64 0
+shaky DropRepeatFrame 56 64 0
 span 1 0 0 0 0 7
 span 1 0 1 0 0 10
 span 1 0 0 0 0 23
@@ -2161,33 +2161,27 @@ room demo-dungeon.star-threshold
 entry west
 target pickup dungeon-coin-52
 abilities 1 1
-ticks 115
-observation 21 5 5 4 1 6
-shaky BoundaryTiming 36 64 13
-shaky CorrelatedTiming 37 64 10
-shaky HoldRelease 43 64 10
-shaky DropRepeatFrame 63 64 1
-span 1 0 0 0 0 7
+ticks 93
+observation 15 4 4 3 3 2
+shaky BoundaryTiming 41 64 17
+shaky CorrelatedTiming 39 64 22
+shaky HoldRelease 56 64 4
+shaky DropRepeatFrame 59 64 5
+span 1 1 0 0 0 7
 span 0 0 0 1 0 1
-span 0 0 0 0 0 18
-span 1 0 0 0 0 4
-span -1 0 0 0 0 4
+span 1 0 0 0 0 12
 span 0 0 1 0 0 4
-span -1 0 1 0 0 8
-span 1 0 0 0 0 4
-span 0 0 0 0 0 3
-span -1 0 1 0 0 2
-span 1 0 1 0 0 2
-span 0 0 0 0 0 8
-span -1 0 1 0 0 1
-span -1 0 0 0 0 7
-span 0 0 0 0 0 4
-span -1 0 1 0 0 1
-span -1 0 0 0 0 5
-span -1 0 1 0 0 1
-span -1 0 0 0 0 7
-span 1 0 0 0 0 20
-span 0 0 0 0 0 4
+span -1 0 1 0 0 4
+span -1 -1 0 1 0 1
+span -1 -1 0 0 0 6
+span -1 0 1 0 0 4
+span 0 -1 0 0 0 10
+span -1 0 1 0 0 4
+span 0 -1 0 0 0 10
+span -1 0 1 0 0 4
+span 1 -1 0 0 0 20
+span 1 -1 0 1 0 1
+span 1 -1 0 0 0 5
 end
 route demo-dungeon.comet-run
 room demo-dungeon.comet-run
@@ -2503,12 +2497,12 @@ room demo-dungeon.vacuum-gallery
 entry west
 target pickup dungeon-coin-59
 abilities 1 1
-ticks 237
-observation 17 5 5 4 3 6
-shaky BoundaryTiming 34 64 22
-shaky CorrelatedTiming 40 64 12
-shaky HoldRelease 42 64 16
-shaky DropRepeatFrame 32 64 32
+ticks 303
+observation 18 5 5 4 3 6
+shaky BoundaryTiming 43 64 11
+shaky CorrelatedTiming 48 64 9
+shaky HoldRelease 45 64 8
+shaky DropRepeatFrame 37 64 27
 span 1 0 0 0 0 72
 span 1 0 1 0 0 3
 span 1 0 0 0 0 7
@@ -2519,13 +2513,14 @@ span 1 0 0 0 0 16
 span -1 0 1 0 0 1
 span -1 0 0 0 0 16
 span 1 0 1 0 0 1
-span 1 0 0 0 0 45
-span -1 0 0 0 0 29
+span 1 0 0 0 0 50
+span -1 0 0 0 0 87
 span 1 0 0 1 0 1
-span 1 0 0 0 0 13
+span 1 0 0 0 0 10
 span 1 0 0 1 0 1
-span 1 0 0 0 0 13
+span 1 0 0 0 0 10
 span 1 -1 0 1 0 1
+span 1 0 0 0 0 9
 end
 route demo-dungeon.tidal-fork
 room demo-dungeon.tidal-fork
@@ -2586,68 +2581,75 @@ room demo-dungeon.aurora-spire
 entry west
 target pickup dungeon-coin-61
 abilities 1 1
-ticks 209
-observation 21 6 6 4 1 8
-shaky BoundaryTiming 54 64 9
-shaky CorrelatedTiming 56 64 6
-shaky HoldRelease 56 64 8
-shaky DropRepeatFrame 32 64 32
-span 1 0 0 0 0 75
-span -1 0 0 0 0 12
+ticks 201
+observation 20 6 6 4 1 8
+shaky BoundaryTiming 37 64 23
+shaky CorrelatedTiming 50 64 8
+shaky HoldRelease 47 64 12
+shaky DropRepeatFrame 50 64 14
+span 1 0 0 0 0 74
+span -1 0 0 0 0 11
 span 1 0 0 0 0 8
 span -1 0 1 0 0 8
-span 1 0 1 0 0 4
-span 1 0 0 0 0 4
-span -1 0 1 0 0 4
-span -1 0 0 0 0 4
+span 1 0 1 0 0 3
+span 1 0 0 0 0 5
+span -1 0 1 0 0 1
+span -1 0 0 0 0 6
 span 0 0 0 0 0 4
-span -1 0 1 0 0 4
-span -1 0 0 0 0 4
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
 span 1 0 0 0 0 4
-span -1 0 1 0 0 4
-span -1 0 0 0 0 4
-span -1 0 1 0 0 4
+span -1 0 1 0 0 1
+span -1 0 0 0 0 6
+span -1 0 1 0 0 1
 span -1 0 0 0 0 12
 span 0 0 0 0 0 4
-span 1 0 0 0 0 20
-span 1 0 1 0 0 1
-span 1 0 0 1 0 1
-span 1 0 0 0 0 24
+span 1 0 1 0 0 2
+span 0 0 0 1 0 1
+span 1 0 0 0 0 42
 end
 route demo-dungeon.void-pass
 room demo-dungeon.void-pass
 entry west
 target door east
 abilities 1 1
-ticks 198
-observation 23 7 7 6 2 8
-shaky BoundaryTiming 42 64 22
-shaky CorrelatedTiming 47 64 17
-shaky HoldRelease 47 64 15
-shaky DropRepeatFrame 48 64 16
-span 1 0 0 0 0 75
-span 1 0 1 0 0 1
-span -1 0 0 0 0 2
+ticks 251
+observation 31 12 10 4 0 10
+shaky BoundaryTiming 43 64 16
+shaky CorrelatedTiming 33 64 33
+shaky HoldRelease 51 64 7
+shaky DropRepeatFrame 56 64 8
+span 1 0 0 0 0 59
+span 1 0 1 0 0 10
+span 1 0 0 0 0 9
+span 0 0 1 0 0 1
+span -1 0 0 0 0 3
+span 0 0 0 0 0 8
+span -1 0 0 0 0 4
 span -1 0 1 0 0 1
 span -1 0 0 0 0 7
+span 1 0 1 0 0 4
+span 0 0 0 0 0 2
 span -1 0 1 0 0 1
-span -1 0 0 0 0 7
-span 1 0 1 0 0 2
-span 0 0 0 0 0 11
-span 1 0 0 0 0 1
-span -1 0 1 0 0 1
-span -1 0 0 0 0 7
+span -1 0 0 0 0 4
+span 1 0 1 0 0 4
+span -1 0 0 0 0 4
 span 1 0 0 0 0 4
 span -1 0 1 0 0 1
 span -1 0 0 0 0 7
-span -1 0 1 0 0 1
-span -1 0 0 0 0 7
+span 0 0 0 0 0 5
+span 1 0 0 0 0 11
+span -1 0 0 0 0 2
+span 1 0 1 0 0 2
 span 1 0 0 0 0 8
-span -1 0 0 0 0 3
-span 1 0 0 1 0 1
-span 1 0 0 0 0 9
-span 0 0 0 1 0 1
-span 1 0 0 0 0 40
+span 1 0 1 0 0 2
+span 1 0 0 0 0 8
+span 1 0 1 0 0 2
+span 1 0 0 0 0 8
+span 1 0 1 0 0 2
+span 1 0 0 0 0 14
+span 1 0 1 0 0 2
+span 1 0 0 0 0 52
 end
 route demo-dungeon.starwell-climb
 room demo-dungeon.starwell-climb
@@ -2832,36 +2834,36 @@ room demo-dungeon.gatehouse
 entry west
 target door east
 abilities 1 1
-ticks 259
-observation 24 8 8 6 3 0
-shaky BoundaryTiming 30 64 0
-shaky CorrelatedTiming 24 64 0
-shaky HoldRelease 47 64 0
-shaky DropRepeatFrame 23 64 0
+ticks 139
+observation 24 4 3 2 6 4
+shaky BoundaryTiming 33 64 0
+shaky CorrelatedTiming 30 64 0
+shaky HoldRelease 52 64 0
+shaky DropRepeatFrame 32 64 0
 span 0 0 0 1 0 1
-span 0 0 0 0 0 9
+span 1 0 0 0 0 9
+span 0 0 0 1 0 1
+span 1 0 0 0 0 9
+span 1 -1 0 0 0 8
+span 0 0 1 0 0 2
+span 1 -1 0 1 0 1
+span 1 -1 0 0 0 9
+span -1 0 1 0 0 4
+span 1 -1 0 0 0 8
+span -1 0 1 0 0 2
+span 1 -1 0 0 0 20
+span 0 0 0 0 0 2
+span 0 0 0 1 0 1
+span 1 0 0 0 0 9
+span 0 0 0 1 0 1
+span 1 0 0 0 0 9
+span 0 0 0 1 0 1
+span 0 0 0 0 0 1
+span 1 -1 0 0 0 14
+span 1 0 0 0 0 10
+span 0 1 1 0 0 1
+span 0 1 0 0 0 3
 span 1 0 0 0 0 13
-span 1 0 1 0 0 4
-span 1 0 0 0 0 16
-span 0 0 1 0 0 1
-span 1 0 0 0 0 23
-span 0 0 1 0 0 1
-span 1 0 0 0 0 21
-span 0 0 1 0 0 1
-span 1 0 0 0 0 23
-span 0 0 1 0 0 1
-span 1 0 0 0 0 23
-span 0 0 1 0 0 1
-span 1 0 0 0 0 23
-span 0 0 1 0 0 1
-span 1 0 0 0 0 16
-span 0 0 0 1 0 1
-span 1 0 0 0 0 41
-span 1 0 1 0 0 1
-span 0 0 0 0 0 3
-span 1 0 0 0 0 28
-span 0 0 0 1 0 1
-span 1 0 0 0 0 6
 end
 route demo-dungeon.crown-sanctum
 room demo-dungeon.crown-sanctum

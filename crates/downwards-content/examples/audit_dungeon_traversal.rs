@@ -10,9 +10,12 @@
 //! relation.
 //!
 //! Results are cached in `generated/demo-dungeon-traversal-v1.txt`; delete the
-//! file or bump the palette/movement versions to re-solve. Solved claims carry
-//! an exact witness; `inconclusive` records are bounded-search evidence only,
-//! never proof of impossibility.
+//! file or bump the palette/movement versions to re-solve. CAUTION: the cache
+//! is keyed by those versions only, not per-room geometry — after editing a
+//! room grid without a palette bump, delete the file (or bump the version) or
+//! its stale verdicts will be reused. Solved claims carry an exact witness;
+//! `inconclusive` records are bounded-search evidence only, never proof of
+//! impossibility.
 //!
 //! Graph checks:
 //! 1. Every room is reachable from the Hollow Landing spawn, granting coins
@@ -413,7 +416,11 @@ fn main() {
 
 const DOOR_NAMES: [&str; 4] = ["west", "east", "ceiling", "floor"];
 
-type State = (DemoDungeonRoom, &'static str, u8); // entry "spawn" for the run start
+/// (room, entry door or "spawn", ability bits, guaranteed coin floor).
+///
+/// The coin floor is the largest coin requirement passed on the way here:
+/// coins never decrease, so a retreat may rely on gates up to that floor.
+type State = (DemoDungeonRoom, &'static str, u8, u16);
 
 fn pair_solved(
     results: &BTreeMap<PairKey, Verdict>,
@@ -432,24 +439,17 @@ fn pair_solved(
     matches!(results.get(&key), Some(Verdict::Solved(_)))
 }
 
-fn requirement_passable(
-    room: DemoDungeonRoom,
-    door: &str,
-    abilities: u8,
-    allow_coins: bool,
-) -> bool {
-    let requirement = demo_dungeon_door_requirement(room, door);
-    if requirement.coins > 0 && !allow_coins {
-        return false;
-    }
+fn door_coin_requirement(room: DemoDungeonRoom, door: &str) -> u16 {
+    demo_dungeon_door_requirement(room, door).coins
+}
+
+fn requirement_methods_passable(room: DemoDungeonRoom, door: &str, abilities: u8) -> bool {
     let mut holder = DemoDungeonInventory::with_coin_count_for_validation(u8::MAX);
     holder.climbing_gloves = abilities & 1 != 0;
     holder.winged_boots = abilities & 2 != 0;
     let methods = holder.authored_progression_inventory();
-    let mut check = requirement;
-    if allow_coins {
-        check.coins = 0;
-    }
+    let mut check = demo_dungeon_door_requirement(room, door);
+    check.coins = 0;
     check.is_satisfied_by(&methods)
 }
 
@@ -496,7 +496,7 @@ fn expand(
     allow_coins: bool,
     allow_upgrades: bool,
 ) -> Vec<State> {
-    let (room, entry, abilities) = state;
+    let (room, entry, abilities, coin_floor) = state;
     let mut next = Vec::new();
     if allow_upgrades {
         if room == DemoDungeonRoom::ClimberVault
@@ -509,7 +509,7 @@ fn expand(
                 abilities,
             )
         {
-            next.push((room, entry, abilities | 1));
+            next.push((room, entry, abilities | 1, coin_floor));
         }
         if room == DemoDungeonRoom::BootsVault
             && abilities & 2 == 0
@@ -521,17 +521,27 @@ fn expand(
                 abilities,
             )
         {
-            next.push((room, entry, abilities | 2));
+            next.push((room, entry, abilities | 2, coin_floor));
         }
     }
     for &(door, destination, destination_door) in &connections[&room] {
         if !pair_solved(results, room, entry, PairTarget::Door(door), abilities) {
             continue;
         }
-        if !requirement_passable(room, door, abilities, allow_coins) {
+        if !requirement_methods_passable(room, door, abilities) {
             continue;
         }
-        next.push((destination, destination_door, abilities));
+        let coins = door_coin_requirement(room, door);
+        // Retreat may rely only on gates the player provably already paid.
+        if !allow_coins && coins > coin_floor {
+            continue;
+        }
+        next.push((
+            destination,
+            destination_door,
+            abilities,
+            coin_floor.max(coins),
+        ));
     }
     next
 }
@@ -539,7 +549,7 @@ fn expand(
 fn run_graph_checks(results: &BTreeMap<PairKey, Verdict>) {
     let connections = connection_map();
     // Check 1: forward reachability from the spawn, coins optimistic.
-    let start: State = (DemoDungeonRoom::HollowLanding, "spawn", 0);
+    let start: State = (DemoDungeonRoom::HollowLanding, "spawn", 0, 0);
     let mut reachable: BTreeSet<State> = BTreeSet::new();
     let mut frontier = VecDeque::from([start]);
     reachable.insert(start);
@@ -551,7 +561,7 @@ fn run_graph_checks(results: &BTreeMap<PairKey, Verdict>) {
         }
     }
     let reachable_rooms: BTreeSet<DemoDungeonRoom> =
-        reachable.iter().map(|(room, _, _)| *room).collect();
+        reachable.iter().map(|(room, _, _, _)| *room).collect();
     let unreachable: Vec<&str> = DemoDungeonRoom::ALL
         .iter()
         .filter(|room| !reachable_rooms.contains(room))
@@ -596,9 +606,9 @@ fn run_graph_checks(results: &BTreeMap<PairKey, Verdict>) {
         reachable.len() - stuck.len(),
         reachable.len()
     );
-    for (room, entry, abilities) in &stuck {
+    for (room, entry, abilities, coin_floor) in &stuck {
         println!(
-            "  STUCK {} entered by {entry} with wall={} dash={}",
+            "  STUCK {} entered by {entry} with wall={} dash={} coin-floor={coin_floor}",
             room.id(),
             abilities & 1 != 0,
             abilities & 2 != 0

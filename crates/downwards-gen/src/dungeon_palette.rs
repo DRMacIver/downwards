@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 36;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 37;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -845,11 +845,13 @@ mod tests {
             assert_eq!(tile(10, row), Tile::Empty, "lower shaft entry is sealed");
             assert_eq!(tile(11, row), Tile::Empty, "lower shaft face is sealed");
         }
+        // Wall-embedded up-spikes became solid when hazard sides turned
+        // lethal; the walls' safe/spike rhythm lives in the side spikes.
         for row in [4, 10] {
-            assert_eq!(tile(11, row), Tile::HazardUp);
+            assert_eq!(tile(11, row), Tile::Solid);
         }
         for row in [7, 13] {
-            assert_eq!(tile(16, row), Tile::HazardUp);
+            assert_eq!(tile(16, row), Tile::Solid);
         }
         for (column, rows) in [(11, [5..7, 11..13]), (16, [8..10, 14..17])] {
             for row in rows.into_iter().flatten() {
@@ -897,11 +899,13 @@ mod tests {
         for row in 15..17 {
             assert_eq!(tile(6, row), Tile::Empty, "shaft entry is sealed");
         }
+        // Wall-embedded up-spikes became solid when hazard sides turned
+        // lethal; the walls' safe/spike rhythm lives in the side spikes.
         for row in [4, 10] {
-            assert_eq!(tile(6, row), Tile::HazardUp);
+            assert_eq!(tile(6, row), Tile::Solid);
         }
         for row in [7, 13] {
-            assert_eq!(tile(11, row), Tile::HazardUp);
+            assert_eq!(tile(11, row), Tile::Solid);
         }
         for (column, rows) in [(6, [5..7, 11..13]), (11, [8..10, 14..17])] {
             for row in rows.into_iter().flatten() {
