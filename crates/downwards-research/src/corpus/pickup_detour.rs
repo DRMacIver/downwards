@@ -818,6 +818,7 @@ fn observe_replay_prefix(
                     deaths += 1;
                     SemanticEvent::DeathFromTimedHazard
                 }
+                SimulationEvent::PickupTouched { .. } => continue,
                 SimulationEvent::PickupCollected { id } => {
                     pickups_collected += 1;
                     retained_pickups.insert(id.clone());

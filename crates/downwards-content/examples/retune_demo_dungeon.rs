@@ -562,6 +562,45 @@ fn segmented_candidate(
         return segmented_tempo_hall_candidate(initial, target);
     }
     let (waypoint, first_config, second_config) = match spec.room {
+        // The strawberry shaft climb must survive single-frame noise: rest on the
+        // mid-shaft nub so a perturbed climb can re-settle before the upper ladder.
+        DemoDungeonRoom::FoundrySeal => (
+            GroundedSupportTarget::new(
+                120,
+                140,
+                90,
+                [GroundedStandingRegion::new(120, 132).expect("valid authored standing range")],
+            )
+            .expect("valid authored support waypoint"),
+            SolverConfig::for_abilities(AbilitySet::new(true, true)),
+            SolverConfig::for_abilities(AbilitySet::new(true, true)),
+        ),
+        // The annealing climb likewise needs a mid-route settle: rest on the
+        // tower one-way before the final dash to the coin shelf.
+        DemoDungeonRoom::AnnealingSpire => (
+            GroundedSupportTarget::new(
+                140,
+                170,
+                60,
+                [GroundedStandingRegion::new(140, 162).expect("valid authored standing range")],
+            )
+            .expect("valid authored support waypoint"),
+            SolverConfig::for_abilities(AbilitySet::new(true, true)),
+            SolverConfig::for_abilities(AbilitySet::new(true, true)),
+        ),
+        // Same contract for the glass chimney: settle on the roof shelf before the
+        // rightward traverse down to the perched coin.
+        DemoDungeonRoom::GlassThreshold => (
+            GroundedSupportTarget::new(
+                110,
+                160,
+                30,
+                [GroundedStandingRegion::new(110, 152).expect("valid authored standing range")],
+            )
+            .expect("valid authored support waypoint"),
+            SolverConfig::for_abilities(AbilitySet::new(true, false)),
+            SolverConfig::for_abilities(AbilitySet::new(true, false)),
+        ),
         DemoDungeonRoom::VoidPass => (
             GroundedSupportTarget::new(
                 170,
@@ -2744,7 +2783,7 @@ fn main() {
     {
         generated_routes += 1;
         let initial = initial_simulation(spec);
-        assert_eq!(initial.movement_tuning(), Some(tuning));
+        assert_eq!(initial.movement_tuning(), tuning);
         let target = search_target(spec);
         let solver_config = SolverConfig::for_abilities(spec.inventory.abilities());
         let outcome = solve_target(&initial, target.clone(), &solver_config)
@@ -2767,9 +2806,12 @@ fn main() {
                     solution,
                     !matches!(
                         spec.room,
-                        DemoDungeonRoom::AstralSeal
+                        DemoDungeonRoom::AnnealingSpire
+                            | DemoDungeonRoom::AstralSeal
                             | DemoDungeonRoom::ConstellationHall
                             | DemoDungeonRoom::EclipseFork
+                            | DemoDungeonRoom::FoundrySeal
+                            | DemoDungeonRoom::GlassThreshold
                             | DemoDungeonRoom::LunarCache
                             | DemoDungeonRoom::TempoHall
                             | DemoDungeonRoom::VacuumGallery

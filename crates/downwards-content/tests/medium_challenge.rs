@@ -56,6 +56,7 @@ fn observe_route(initial: &Simulation, target: &str, actions: &[Action]) -> Rout
                     observation.reached_at_tick.get_or_insert(index + 1);
                 }
                 SimulationEvent::Landed
+                | SimulationEvent::PickupTouched { .. }
                 | SimulationEvent::PickupCollected { .. }
                 | SimulationEvent::ExitReached { .. } => {}
             }

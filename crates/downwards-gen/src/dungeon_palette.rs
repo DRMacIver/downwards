@@ -991,11 +991,18 @@ mod tests {
                 "start recovery is incomplete"
             );
         }
-        for column in (7..17).chain(18..31) {
+        for column in (7..17).chain(18..29) {
             assert_eq!(
                 tile(column, 16),
                 Tile::HazardUp,
                 "slalom floor has a bypass"
+            );
+        }
+        for column in 29..31 {
+            assert_eq!(
+                tile(column, 16),
+                Tile::Solid,
+                "east entry porch keeps the door landing safe"
             );
         }
         assert_eq!(

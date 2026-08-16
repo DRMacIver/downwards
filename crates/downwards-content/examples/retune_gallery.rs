@@ -192,7 +192,7 @@ fn select_witness(
     let initial = level.scenario();
     assert_eq!(
         initial.movement_tuning(),
-        Some(MovementTuning::GAMEPLAY_DEFAULT),
+        MovementTuning::GAMEPLAY_DEFAULT,
         "{} scenario is outside the promoted movement policy",
         level.id()
     );

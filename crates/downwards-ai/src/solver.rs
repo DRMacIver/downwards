@@ -2590,11 +2590,11 @@ mod tests {
         for tile in &mut tiles[17 * width..18 * width] {
             *tile = Tile::Solid;
         }
-        for row in 13..18 {
+        for row in 14..18 {
             tiles[row * width + 6] = Tile::Solid;
         }
         for column in 6..31 {
-            tiles[13 * width + column] = Tile::Solid;
+            tiles[14 * width + column] = Tile::Solid;
         }
         Room::new(
             "buffered-wall-lip",
@@ -2619,8 +2619,8 @@ mod tests {
             Door {
                 id: "east".into(),
                 side: BoundarySide::Right,
-                trigger_bounds: Rect::new(308, 108, 12, 22),
-                arrival: Point::new(290, 118),
+                trigger_bounds: Rect::new(308, 118, 12, 22),
+                arrival: Point::new(290, 128),
                 destination_room: None,
                 destination_door: None,
             },
@@ -2818,8 +2818,9 @@ mod tests {
     #[test]
     fn buffered_wall_climb_probe_mounts_a_lip_and_records_an_exact_door_replay() {
         let abilities = AbilitySet::new(true, false);
-        let initial = Simulation::enter_via_door(buffered_wall_lip_room(), abilities, "west")
+        let mut initial = Simulation::enter_via_door(buffered_wall_lip_room(), abilities, "west")
             .expect("west arrival is valid");
+        initial.enable_current_player_movement();
         let target = resolve_target(&initial, &SearchTarget::door("east")).unwrap();
         let route_probe = RouteProbe {
             move_x: 1,

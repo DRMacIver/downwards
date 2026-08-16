@@ -759,6 +759,7 @@ fn spatial_trace(
                     "tick={} event=Jump({kind:?}) bounds={bounds:?}",
                     index + 1,
                 )),
+                SimulationEvent::PickupTouched { .. } => continue,
                 SimulationEvent::PickupCollected { id } => accepted_events.push(format!(
                     "tick={} event=Pickup({id}) bounds={bounds:?}",
                     index + 1,

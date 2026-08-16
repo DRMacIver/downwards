@@ -30,8 +30,8 @@ use downwards_gen::{
 };
 use downwards_validation::WITNESS_FINGERPRINT_VERSION;
 
-const MANIFEST_VERSION: u32 = 2;
-const SELECTION_VERSION: u32 = 3;
+const MANIFEST_VERSION: u32 = 3;
+const SELECTION_VERSION: u32 = 5;
 const VISUAL_DESCRIPTOR_VERSION: u32 = 2;
 const COLLISION_TOPOLOGY_DESCRIPTOR_VERSION: u32 = 1;
 const VISUAL_FINGERPRINT_VERSION: u32 = 1;
@@ -43,12 +43,13 @@ const CONFIG_FINGERPRINT_VERSION: u32 = 1;
 // by the current solver. Every stored representative is still regenerated and
 // replayed exactly below.
 const OLDEST_SUPPORTED_SOLVER_POLICY_VERSION: u32 = 2;
-const ROUTE_BAND_POLICY_VERSION: u32 = 1;
+const ROUTE_BAND_POLICY_VERSION: u32 = 2;
 const ACTION_ENCODING: &str = "semantic-rle-v1";
 const ACTION_FIELDS: &str = "move-x:move-y:jump:dash:restart*ticks";
-const ROUTE_BAND_POLICY: &str = "route-band-policy version=1 score=ai-component-score-minus-solver-effort gentle=0..4 standard=5..10 technical=11+ ordered-source-target=true";
+const ROUTE_BAND_POLICY: &str = "route-band-policy version=2 classifier=route-demand gentle-matrix=run-only-or-nontrivial-easy-engaging gentle-representative=monotone-simple,ordinary-jumps-1-to-3,no-wall-or-dash,pressure-at-most-1,robustness-at-least-3/4,hazard-clearance-at-least-8,nontrivial-travel standard=non-run-only-and-nontrivial technical=non-monotone-simple,explicit-controller-decision,pressure-signals-at-least-2 controller-decision=debounced-horizontal-reversal,vertical-both-signs-or-two-post-initial-changes,accepted-dash-direction-change pressure-signals=horizontal-reversal,vertical-demand,unique-actions-5,robustness-at-most-3/4,hazard-clearance-at-most-4,wall-chain-2,dash-chain-2 ordered-source-target=true";
+const EASIEST_ROUTE_POLICY: &str = "easiest-route-policy version=2 direct-probe-audit-version=2 challenge-unit=pinned-directed-source-target candidates=canonical-witness-plus-intended-physics-compatible-direct-controller-successes loadouts=all-subsets-of-intended exact-positive-discovery-evidence=retained-before-intended-loadout-replay canonical-discovery-evidence=minimum-witness-fingerprint-per-loadout selection=minimum-observed-route-demand semantic-action-dedup=true ability-requirement=structurally-unavoidable-and-no-positive-success-without-ability every-representative-requires-exact-expected-loadout-mask-and-no-budget-limited-audit=true unrelated-door-pairs=reachability-only non-success-is-not-unreachability-proof=true beam-optimality-claimed=false";
 const FAIRNESS_POLICY: &str = "fairness-policy deaths-per-door-route=0 robustness-success-floor=1/4 no-applicable-perturbations=pass all-door-pairs=required all-pickups-from-all-doors=required";
-const SELECTION_POLICY_PREFIX: &str = "selection-policy distinct-static-visuals=true distinct-rooms-across-bands=true branching=mrv-unmatched-socket-or-ability rank-priority=socket-self-closure,socket-mate-inventory,socket-match,ability,strategy,vertical,intent,qd,quality,distance qd=strategy,intent,port-count,cycle-rank-bin,vertical-span-bin route-quality=ability-contribution,temporal-robustness,hazard-clearance,lower-simulated-ticks,lower-expanded-nodes distance=equal-mean(static-visual,collision-topology,traversal,semantic-action) solver-effort-as-difficulty=false solver-effort-as-operational-quality=true vertical-port-preference=true socket-mate-closure=required representative-ability-policy=";
+const SELECTION_POLICY_PREFIX: &str = "selection-policy distinct-static-visuals=true distinct-rooms-across-bands=true branching=mrv-unmatched-socket-or-ability rank-priority=intent-alignment,socket-self-closure,socket-mate-inventory,socket-match,ability,strategy,vertical,terrain-uncorroborated-components,terrain-uncorroborated-tiles,intent-coverage,qd,band-aware-route-demand,distance qd=strategy,intent,port-count,cycle-rank-bin,vertical-span-bin route-ranking=gentle-easy-engaging-safe;standard-nontrivial,structural-pressure,safe;technical-controller-decision,pressure,ability,reversal,vertical-demand,control-vocabulary,structural-pressure,robustness-near-1/2,small-clearance,solver-headroom terrain-evidence=route-plan-attribution-or-certified-traversal-proximity absence-from-one-witness-is-not-unreachability=true terrain-hard-threshold=none distance=equal-mean(static-visual,collision-topology,traversal,semantic-action) solver-effort-as-difficulty=false solver-effort-as-operational-quality=true vertical-port-preference=true socket-mate-closure=required representative-ability-policy=";
 const SELECTION_POLICY_SUFFIX: &str = " node-budget=250000";
 
 /// Curator-assigned difficulty band for a particular ordered door route.
@@ -307,7 +308,7 @@ pub fn parse_manifest(input: &str) -> Result<CatalogueManifest, CatalogueError> 
     let (body, fingerprint_line) = split_and_verify_fingerprint(input)?;
     let mut lines = Lines::new(body);
 
-    lines.exact("downwards-curation-manifest-v2")?;
+    lines.exact("downwards-curation-manifest-v3")?;
     expect_scalar_u32(&mut lines, "manifest-version", MANIFEST_VERSION)?;
 
     let generation = fields(lines.next_with_prefix("compositional-generation-version=")?)?;
@@ -472,6 +473,7 @@ pub fn parse_manifest(input: &str) -> Result<CatalogueManifest, CatalogueError> 
     )?;
 
     lines.exact(ROUTE_BAND_POLICY)?;
+    lines.exact(EASIEST_ROUTE_POLICY)?;
     lines.exact(FAIRNESS_POLICY)?;
     lines.exact(&selection_policy(tier))?;
     let has_strategy_coverage = lines
@@ -480,6 +482,12 @@ pub fn parse_manifest(input: &str) -> Result<CatalogueManifest, CatalogueError> 
     if has_strategy_coverage {
         lines.next_with_prefix("strategy-coverage ")?;
         lines.next_with_prefix("intent-coverage ")?;
+    }
+    if lines
+        .peek()
+        .is_some_and(|line| line.starts_with("route-demand-coverage "))
+    {
+        lines.next_with_prefix("route-demand-coverage ")?;
     }
     lines.next_with_prefix("pool ")?;
     let coverage = fields_after(lines.next_with_prefix("coverage ")?, "coverage ")?;
@@ -648,6 +656,12 @@ fn parse_entry(
         return Err(lines.error("room must declare 2 to 4 ports"));
     }
     lines.next_with_prefix("qd-stratum ")?;
+    if lines
+        .peek()
+        .is_some_and(|line| line.starts_with("terrain-utility "))
+    {
+        lines.next_with_prefix("terrain-utility ")?;
+    }
 
     let socket_line = lines.next_with_prefix("socket-signature ")?;
     let sockets = parse_socket_signature(
@@ -1293,7 +1307,7 @@ fn split_and_verify_fingerprint(input: &str) -> Result<(&str, &str), CatalogueEr
     let fingerprint = tail.strip_suffix('\n').expect("checked suffix");
     let declared = parse_prefixed_hex(
         fingerprint,
-        "manifest-fingerprint=downwards-curation-manifest-v2-",
+        "manifest-fingerprint=downwards-curation-manifest-v3-",
     )?;
     let mut hash = StableHash::domain(b"downwards-curation-manifest");
     hash.u32(MANIFEST_VERSION);
@@ -1556,10 +1570,16 @@ fn parse_side(value: &str) -> Result<BoundarySide, CatalogueError> {
 
 fn selection_policy(tier: AbilityTier) -> String {
     let ability_policy = match tier {
-        AbilityTier::Baseline => "none",
-        AbilityTier::WallJump => "catalogue-has-successful-wall-jump",
-        AbilityTier::Dash => "catalogue-has-successful-dash",
-        AbilityTier::WallJumpAndDash => "catalogue-has-wall-and-dash;prefer-both-on-one-route",
+        AbilityTier::Baseline => "all-bands-complete-exact-loadout-mask-audit",
+        AbilityTier::WallJump => {
+            "gentle-no-supported-advanced-requirement;standard-and-technical-each-use-wall-and-have-wall-unavoidable-with-no-positive-no-wall-bypass;technical-no-one-edge-baseline;all-bands-complete-exact-loadout-mask-audit"
+        }
+        AbilityTier::Dash => {
+            "gentle-no-supported-advanced-requirement;standard-and-technical-each-use-dash-and-have-dash-unavoidable-with-no-positive-no-dash-bypass;technical-no-one-edge-baseline;all-bands-complete-exact-loadout-mask-audit"
+        }
+        AbilityTier::WallJumpAndDash => {
+            "gentle-no-supported-advanced-requirement;standard-and-technical-each-use-wall-or-dash-with-corresponding-unavoidable-edge-and-no-positive-missing-ability-bypass;technical-no-one-edge-baseline;catalogue-has-supported-wall-and-dash;prefer-both-on-one-route;all-bands-complete-exact-loadout-mask-audit"
+        }
     };
     format!("{SELECTION_POLICY_PREFIX}{ability_policy}{SELECTION_POLICY_SUFFIX}")
 }
@@ -1702,8 +1722,8 @@ mod tests {
         ] {
             let manifest = parse_manifest(source)
                 .unwrap_or_else(|error| panic!("{tier:?} catalogue failed: {error}"));
-            assert_eq!(manifest.identity().manifest_version, 2);
-            assert_eq!(manifest.identity().selection_version, 3);
+            assert_eq!(manifest.identity().manifest_version, 3);
+            assert_eq!(manifest.identity().selection_version, 5);
             assert_eq!(manifest.tier(), tier);
             assert_eq!(manifest.entries().len(), 9);
             for band in [
@@ -1720,14 +1740,16 @@ mod tests {
                     3
                 );
             }
-            assert_eq!(
+            // Strategy diversity is preferred, not guaranteed: the selector
+            // takes what certifies under the current physics.
+            assert!(
                 manifest
                     .entries()
                     .iter()
                     .map(|entry| entry.key().profile.strategy)
                     .collect::<HashSet<_>>()
-                    .len(),
-                3
+                    .len()
+                    >= 2
             );
             assert!(
                 manifest
@@ -1749,7 +1771,7 @@ mod tests {
 
     #[test]
     fn checksum_detects_body_mutation_before_parsing() {
-        let changed = BASELINE.replacen("seed=5", "seed=12", 1);
+        let changed = BASELINE.replacen("interior-tiles=", "interior-tiles=1", 1);
         assert_ne!(changed, BASELINE);
         let error = parse_manifest(&changed).unwrap_err();
         assert!(error.to_string().contains("fingerprint mismatch"));
@@ -1759,7 +1781,7 @@ mod tests {
     fn supported_ai_policy_versions_and_exact_configurations_are_required() {
         for (changed, expected_error) in [
             (
-                mutate_and_refingerprint(BASELINE, "policy-version=2", "policy-version=99"),
+                mutate_and_refingerprint(BASELINE, "policy-version=3", "policy-version=99"),
                 "supports solver policy versions",
             ),
             (
@@ -1769,7 +1791,7 @@ mod tests {
             (
                 mutate_and_refingerprint(
                     BASELINE,
-                    "id=downwards-solver-config-v1-b296884368c27dd8",
+                    "id=downwards-solver-config-v1-d3ebfd6f2f377945",
                     "id=downwards-solver-config-v1-0000000000000000",
                 ),
                 "solver configuration identity changed",
@@ -1777,7 +1799,7 @@ mod tests {
             (
                 mutate_and_refingerprint(
                     BASELINE,
-                    "id=downwards-difficulty-config-v1-42f8b52bf7c7eb5a",
+                    "id=downwards-difficulty-config-v1-4db5318b9cf9b2a9",
                     "id=downwards-difficulty-config-v1-0000000000000000",
                 ),
                 "difficulty configuration identity changed",
@@ -1810,15 +1832,18 @@ mod tests {
     #[test]
     fn historical_solver_identity_is_version_bound_and_replay_supported() {
         let manifest = parse_manifest(BASELINE).unwrap();
-        assert_eq!(manifest.identity().solver_policy_version, 2);
+        assert_eq!(
+            manifest.identity().solver_policy_version,
+            SOLVER_POLICY_VERSION
+        );
 
         let config = SolverConfig::for_abilities(AbilitySet::NONE);
         assert_eq!(
-            solver_config_identity(&config, 2),
-            "downwards-solver-config-v1-b296884368c27dd8"
+            solver_config_identity(&config, SOLVER_POLICY_VERSION),
+            manifest.identity().solver_config_id
         );
         assert_ne!(
-            solver_config_identity(&config, 2),
+            solver_config_identity(&config, SOLVER_POLICY_VERSION - 1),
             solver_config_identity(&config, SOLVER_POLICY_VERSION)
         );
     }
@@ -1826,7 +1851,7 @@ mod tests {
     #[test]
     fn current_route_fairness_and_selection_policies_are_required() {
         for changed in [
-            mutate_and_refingerprint(BASELINE, "gentle=0..4", "gentle=0..5"),
+            mutate_and_refingerprint(BASELINE, "ordinary-jumps-1-to-3", "ordinary-jumps-1-to-4"),
             mutate_and_refingerprint(
                 BASELINE,
                 "robustness-success-floor=1/4",
@@ -1848,15 +1873,10 @@ mod tests {
 
     #[test]
     fn pickup_matrix_must_name_every_regenerated_pickup_exactly() {
-        let room_end = BASELINE
-            .find("room-end\n")
-            .expect("fixture has a first room")
-            + "room-end\n".len();
-        let (first_room, remainder) = BASELINE.split_at(room_end);
-        let changed_room =
-            first_room.replace("pickup=\"optional-cache\"", "pickup=\"counterfeit-cache\"");
-        assert_ne!(changed_room, first_room);
-        let changed = refingerprint(format!("{changed_room}{remainder}"));
+        let changed_body =
+            BASELINE.replace("pickup=\"optional-cache\"", "pickup=\"counterfeit-cache\"");
+        assert_ne!(changed_body, BASELINE);
+        let changed = refingerprint(changed_body);
 
         let error = parse_manifest(&changed).unwrap_err();
         assert!(

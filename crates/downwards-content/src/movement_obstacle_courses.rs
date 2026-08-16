@@ -128,7 +128,7 @@ mod tests {
             let mut simulation = course.scenario();
             assert_eq!(
                 simulation.movement_tuning(),
-                Some(downwards_core::MovementTuning::GAMEPLAY_DEFAULT)
+                downwards_core::MovementTuning::GAMEPLAY_DEFAULT
             );
             assert!(
                 simulation

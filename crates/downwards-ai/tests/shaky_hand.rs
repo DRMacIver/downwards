@@ -357,11 +357,54 @@ fn fragile_hazard_room(phase_ticks: u32) -> Room {
 }
 
 fn find_fragile_witness() -> (Simulation, TargetSolution) {
-    // Phase six is the last safe phase for this uninterrupted crossing: the
-    // exact replay clears the hazard, while a small delay can meet activation.
-    let initial = Simulation::new(fragile_hazard_room(6));
-    let solution = witness(&initial, SearchTarget::exit("goal"), run_right);
-    (initial, solution)
+    // Scan for the last safe phase: the exact replay clears the hazard, while
+    // delaying the whole crossing by one tick meets activation and dies. The
+    // scan keeps this calibrated to the actual movement policy instead of a
+    // hard-coded phase.
+    for phase in 0..60 {
+        let initial = Simulation::new(fragile_hazard_room(phase));
+        let mut exact = initial.clone();
+        let mut exact_clean = true;
+        for tick in 0..240 {
+            let report = exact.step(run_right(tick));
+            if report
+                .events
+                .iter()
+                .any(|event| matches!(event, SimulationEvent::Died(_)))
+            {
+                exact_clean = false;
+                break;
+            }
+            if exact.reached_exit() == Some("goal") {
+                break;
+            }
+        }
+        if !exact_clean || exact.reached_exit() != Some("goal") {
+            continue;
+        }
+        let mut delayed = initial.clone();
+        let mut delayed_died = false;
+        delayed.step(Action::default());
+        for tick in 0..240 {
+            let report = delayed.step(run_right(tick));
+            if report
+                .events
+                .iter()
+                .any(|event| matches!(event, SimulationEvent::Died(_)))
+            {
+                delayed_died = true;
+                break;
+            }
+            if delayed.reached_exit() == Some("goal") {
+                break;
+            }
+        }
+        if delayed_died {
+            let solution = witness(&initial, SearchTarget::exit("goal"), run_right);
+            return (initial, solution);
+        }
+    }
+    panic!("no phase makes the uninterrupted crossing one-tick fragile");
 }
 
 #[test]

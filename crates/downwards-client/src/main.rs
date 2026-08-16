@@ -2043,18 +2043,15 @@ impl PersistentHumanHistory {
             human_jump_input_policy_version: HUMAN_JUMP_INPUT_POLICY_VERSION,
             player_movement_policy_version: PLAYER_MOVEMENT_POLICY_VERSION,
             movement_profile: if attempt.initial.movement_tuning()
-                == Some(MovementTuning::GAMEPLAY_DEFAULT)
+                == MovementTuning::GAMEPLAY_DEFAULT
             {
                 "gameplay-v2"
-            } else if attempt.initial.movement_tuning().is_some() {
-                "custom"
             } else {
-                "legacy"
+                "custom"
             },
-            movement_tuning: attempt
-                .initial
-                .movement_tuning()
-                .map(PersistentMovementTuningV1::from),
+            movement_tuning: Some(PersistentMovementTuningV1::from(
+                attempt.initial.movement_tuning(),
+            )),
             physics_ticks_per_second: TICKS_PER_SECOND,
             abilities: PersistentAbilitiesV1 {
                 wall_jump: attempt.initial.abilities().wall_jump,
@@ -4312,9 +4309,8 @@ impl ClientState {
         } else {
             action
         };
-        let expected_tuning = Some(self.movement_tuning);
         if !self.simulation.human_wall_assists_enabled()
-            || self.simulation.movement_tuning() != expected_tuning
+            || self.simulation.movement_tuning() != self.movement_tuning
         {
             configure_live_simulation(&mut self.simulation, self.movement_tuning);
             // Start a fresh human-attempt boundary when returning to live play so the recorded
@@ -7479,9 +7475,9 @@ fn draw_debug_overlay(viewport: &PixelViewport, client: &ClientState) {
             player.jump_hold_ticks_remaining(),
             HUMAN_JUMP_INPUT_POLICY_VERSION
         ),
-        simulation.movement_tuning().map_or_else(
-            || "movement LEGACY".to_owned(),
-            |tuning| format!("movement {} / F2 tunes", movement_tuning_summary(tuning)),
+        format!(
+            "movement {} / F2 tunes",
+            movement_tuning_summary(simulation.movement_tuning())
         ),
         format!(
             "dash {}  ticks {}  drop {}",
@@ -8459,7 +8455,7 @@ mod tests {
         assert_eq!(client.movement_tuning, MovementTuning::GAMEPLAY_DEFAULT);
         assert_eq!(
             client.simulation.movement_tuning(),
-            Some(MovementTuning::GAMEPLAY_DEFAULT)
+            MovementTuning::GAMEPLAY_DEFAULT
         );
 
         assert!(client.open_movement_tuning_menu());
@@ -8468,7 +8464,7 @@ mod tests {
         assert_eq!(client.movement_tuning, MovementTuning::GAMEPLAY_DEFAULT);
         assert_eq!(
             client.simulation.movement_tuning(),
-            Some(MovementTuning::GAMEPLAY_DEFAULT)
+            MovementTuning::GAMEPLAY_DEFAULT
         );
 
         client.step_human(Action {
@@ -8480,17 +8476,14 @@ mod tests {
         assert_eq!(client.movement_tuning.top_speed_pixels_per_second, 115);
         assert_eq!(
             client.simulation.movement_tuning(),
-            Some(MovementTuning::GAMEPLAY_DEFAULT),
+            MovementTuning::GAMEPLAY_DEFAULT,
             "the paused menu edits a draft until it closes"
         );
         client.move_movement_tuning_selection(1);
         client.adjust_movement_tuning(-1);
         assert_eq!(client.movement_tuning.acceleration_milliseconds, 67);
         client.close_movement_tuning_menu();
-        assert_eq!(
-            client.simulation.movement_tuning(),
-            Some(client.movement_tuning)
-        );
+        assert_eq!(client.simulation.movement_tuning(), client.movement_tuning);
         assert_eq!(client.simulation.room_tick(), 0);
         assert!(matches!(
             client
@@ -8508,7 +8501,7 @@ mod tests {
                 .unwrap()
                 .initial
                 .movement_tuning(),
-            Some(MovementTuning::GAMEPLAY_DEFAULT)
+            MovementTuning::GAMEPLAY_DEFAULT
         );
 
         assert!(client.open_movement_tuning_menu());
@@ -8520,7 +8513,7 @@ mod tests {
         assert!(!client.is_movement_course());
         assert_eq!(
             client.simulation.movement_tuning(),
-            Some(MovementTuning::GAMEPLAY_DEFAULT)
+            MovementTuning::GAMEPLAY_DEFAULT
         );
         assert!(client.open_movement_tuning_menu());
         assert_eq!(client.movement_tuning, MovementTuning::GAMEPLAY_DEFAULT);

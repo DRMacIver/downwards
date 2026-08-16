@@ -252,7 +252,9 @@ fn observe_route(initial: &Simulation, actions: &[Action]) -> RouteObservation {
                 SimulationEvent::ExitReached { ref id } if id == CALIBRATION_GALLERY_A_TARGET => {
                     observation.exit_tick.get_or_insert(tick);
                 }
-                SimulationEvent::PickupCollected { .. } | SimulationEvent::ExitReached { .. } => {}
+                SimulationEvent::PickupTouched { .. }
+                | SimulationEvent::PickupCollected { .. }
+                | SimulationEvent::ExitReached { .. } => {}
             }
         }
         previous = action;

@@ -1081,9 +1081,7 @@ fn human_wall_assists_remember_contact_and_commit_the_launch() {
 fn movement_tuning_has_direct_speed_braking_and_reversal_contracts() {
     let released_speed = |tuning| {
         let mut simulation = Simulation::new(room_with_floor(Point::new(40, 148), 16));
-        if let Some(tuning) = tuning {
-            simulation.set_movement_tuning(tuning);
-        }
+        simulation.set_movement_tuning(tuning);
         simulation.step(Action::default());
         for _ in 0..4 {
             simulation.step(Action {
@@ -1095,18 +1093,17 @@ fn movement_tuning_has_direct_speed_braking_and_reversal_contracts() {
         simulation.player().velocity_subpixels().x
     };
 
-    assert_eq!(released_speed(None), 256);
-    assert_eq!(released_speed(Some(MovementTuning::LAB_DEFAULT)), 429);
+    assert_eq!(released_speed(MovementTuning::LAB_DEFAULT), 429);
     let fast_105 = MovementTuning {
         top_speed_pixels_per_second: 105,
         ..MovementTuning::LAB_DEFAULT
     };
-    assert_eq!(released_speed(Some(fast_105)), 410);
+    assert_eq!(released_speed(fast_105), 410);
     let fast_105_glide = MovementTuning {
         braking_milliseconds: 167,
         ..fast_105
     };
-    assert_eq!(released_speed(Some(fast_105_glide)), 403);
+    assert_eq!(released_speed(fast_105_glide), 403);
 
     let mut retained = Simulation::new(room_with_floor(Point::new(40, 148), 16));
     retained.set_movement_tuning(MovementTuning::LAB_DEFAULT);
@@ -1226,21 +1223,27 @@ fn rising_wall_impact_converts_horizontal_speed_into_one_upward_carry_impulse() 
 }
 
 #[test]
-fn legacy_is_default_and_tuning_identity_is_digest_bound() {
+fn gameplay_tuning_is_the_only_default_and_is_digest_bound() {
     let room = room_with_floor(Point::new(40, 148), 16);
-    let legacy = Simulation::new(room.clone());
-    let mut explicit_legacy = Simulation::new(room.clone());
-    explicit_legacy.clear_movement_tuning();
-    let mut retained = Simulation::new(room);
-    retained.set_movement_tuning(MovementTuning::LAB_DEFAULT);
+    let default = Simulation::new(room.clone());
+    let mut explicit = Simulation::new(room.clone());
+    explicit.set_movement_tuning(MovementTuning::GAMEPLAY_DEFAULT);
+    let mut cleared = Simulation::new(room.clone());
+    cleared.set_movement_tuning(MovementTuning {
+        top_speed_pixels_per_second: 90,
+        ..MovementTuning::GAMEPLAY_DEFAULT
+    });
+    cleared.clear_movement_tuning();
+    let mut altered = Simulation::new(room);
+    altered.set_movement_tuning(MovementTuning {
+        top_speed_pixels_per_second: 90,
+        ..MovementTuning::GAMEPLAY_DEFAULT
+    });
 
-    assert_eq!(legacy, explicit_legacy);
-    assert_eq!(legacy.digest(), explicit_legacy.digest());
-    assert_ne!(legacy.digest(), retained.digest());
-    assert_eq!(
-        retained.movement_tuning(),
-        Some(MovementTuning::LAB_DEFAULT)
-    );
+    assert_eq!(default, explicit);
+    assert_eq!(default.digest(), cleared.digest());
+    assert_ne!(default.digest(), altered.digest());
+    assert_eq!(default.movement_tuning(), MovementTuning::GAMEPLAY_DEFAULT);
 }
 
 #[test]
@@ -1272,9 +1275,16 @@ fn dash_uses_all_eight_directions_with_fixed_integer_velocities() {
             Some(&SimulationEvent::Dashed { direction })
         );
         assert_eq!(simulation.player().velocity_subpixels(), velocity);
+        // Horizontal dashes compress the posture, shifting the top edge down.
+        let compression = if matches!(direction, DashDirection::Left | DashDirection::Right) {
+            (downwards_core::PLAYER_HEIGHT - downwards_core::DASH_PLAYER_HEIGHT)
+                * SUBPIXELS_PER_PIXEL
+        } else {
+            0
+        };
         assert_eq!(
             simulation.player().position_subpixels(),
-            Point::new(start.x + velocity.x, start.y + velocity.y)
+            Point::new(start.x + velocity.x, start.y + velocity.y + compression)
         );
         assert_eq!(simulation.player().dash_direction(), Some(direction));
         assert_eq!(simulation.player().dash_ticks_remaining(), DASH_TICKS - 1);

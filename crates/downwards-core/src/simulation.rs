@@ -26,20 +26,16 @@ pub const ONE_WAY_DROP_TICKS: u8 = 3;
 /// digests therefore remain in the legacy policy domain until that corpus is regenerated.
 pub const PLAYER_MOVEMENT_POLICY_VERSION: u32 = 8;
 
-const RUN_SPEED: i32 = 384;
-const GROUND_ACCELERATION: i32 = 96;
-const AIR_ACCELERATION: i32 = 64;
-const GROUND_DECELERATION: i32 = 128;
-const AIR_DECELERATION: i32 = 32;
 const GRAVITY: i32 = 96;
 const HELD_JUMP_GRAVITY: i32 = 48;
 const MAX_FALL_SPEED: i32 = 1_536;
+/// Clamp for wall-slide-adjacent horizontal motion; matches the tuned top speed scale.
+const RUN_SPEED: i32 = 384;
 const JUMP_SPEED: i32 = -960;
 const JUMP_CUT_SPEED: i32 = -448;
 const WALL_JUMP_HORIZONTAL_SPEED: i32 = 768;
 const WALL_SLIDE_SPEED: i32 = 384;
 const WALL_ASCENT_MAX_UPWARD_SPEED: i32 = -1_536;
-const HUMAN_WALL_GRACE_TICKS: u8 = 6;
 const HUMAN_WALL_FORCE_TICKS: u8 = 9;
 const HUMAN_WALL_MINIMUM_ASCENT_TICKS: u8 = JUMP_HOLD_TICKS;
 const DASH_SPEED: i32 = 1_024;
@@ -86,26 +82,9 @@ struct HorizontalMotionTuning {
     wall_retention_ticks: u8,
 }
 
-fn horizontal_motion_tuning(
-    tuning: Option<MovementTuning>,
-    grounded: bool,
-) -> HorizontalMotionTuning {
-    match (tuning, grounded) {
-        (None, true) => HorizontalMotionTuning {
-            maximum_speed: RUN_SPEED,
-            acceleration: GROUND_ACCELERATION,
-            release_deceleration: GROUND_DECELERATION,
-            reversal_acceleration: GROUND_ACCELERATION,
-            wall_retention_ticks: 0,
-        },
-        (None, false) => HorizontalMotionTuning {
-            maximum_speed: RUN_SPEED,
-            acceleration: AIR_ACCELERATION,
-            release_deceleration: AIR_DECELERATION,
-            reversal_acceleration: AIR_ACCELERATION,
-            wall_retention_ticks: 0,
-        },
-        (Some(tuning), grounded) => {
+fn horizontal_motion_tuning(tuning: MovementTuning, grounded: bool) -> HorizontalMotionTuning {
+    {
+        {
             let maximum_speed =
                 pixels_per_second_to_subpixels_per_tick(tuning.top_speed_pixels_per_second);
             let acceleration_ticks = milliseconds_to_ticks(if grounded {
@@ -460,7 +439,7 @@ pub struct Simulation {
     wall_force_direction: i8,
     wall_force_ticks: u8,
     wall_minimum_ascent_ticks: u8,
-    movement_tuning: Option<MovementTuning>,
+    movement_tuning: MovementTuning,
     retained_wall_velocity_x: i32,
     wall_velocity_retention_ticks: u8,
     wall_ascent_carry_wall: Option<WallSide>,
@@ -525,7 +504,7 @@ impl Simulation {
             wall_force_direction: 0,
             wall_force_ticks: 0,
             wall_minimum_ascent_ticks: 0,
-            movement_tuning: None,
+            movement_tuning: MovementTuning::GAMEPLAY_DEFAULT,
             retained_wall_velocity_x: 0,
             wall_velocity_retention_ticks: 0,
             wall_ascent_carry_wall: None,
@@ -568,8 +547,9 @@ impl Simulation {
         self.human_wall_assists = true;
     }
 
-    /// Apply the current player-facing movement policy. AI searches intended to model live play
-    /// must call this on their initial simulation too.
+    /// Apply the current player-facing movement policy. Tuned movement is the
+    /// only physics; this additionally enables the live wall-jump assists that
+    /// human-modelling searches should share.
     pub fn enable_current_player_movement(&mut self) {
         self.enable_human_wall_assists();
         self.set_movement_tuning(MovementTuning::GAMEPLAY_DEFAULT);
@@ -581,19 +561,16 @@ impl Simulation {
     /// Opt into experimental horizontal-control tuning. Changing tuning clears any short-lived
     /// wall-momentum state; callers should start a new recorded attempt boundary.
     pub fn set_movement_tuning(&mut self, tuning: MovementTuning) {
-        self.movement_tuning = Some(tuning);
+        self.movement_tuning = tuning;
         self.retained_wall_velocity_x = 0;
         self.wall_velocity_retention_ticks = 0;
         self.wall_ascent_carry_wall = None;
     }
     pub fn clear_movement_tuning(&mut self) {
-        self.movement_tuning = None;
-        self.retained_wall_velocity_x = 0;
-        self.wall_velocity_retention_ticks = 0;
-        self.wall_ascent_carry_wall = None;
+        self.set_movement_tuning(MovementTuning::GAMEPLAY_DEFAULT);
     }
     #[must_use]
-    pub const fn movement_tuning(&self) -> Option<MovementTuning> {
+    pub const fn movement_tuning(&self) -> MovementTuning {
         self.movement_tuning
     }
     #[must_use]
@@ -781,7 +758,8 @@ impl Simulation {
             hash.byte(self.wall_force_ticks);
             hash.byte(self.wall_minimum_ascent_ticks);
         }
-        if let Some(tuning) = self.movement_tuning {
+        {
+            let tuning = self.movement_tuning;
             hash.bytes(b"movement-tuning-v1");
             hash.u32(u32::from(tuning.top_speed_pixels_per_second));
             hash.u32(u32::from(tuning.acceleration_milliseconds));
@@ -912,13 +890,7 @@ impl Simulation {
         self.tick_retained_wall_momentum(effective_move_x);
         let tuning = horizontal_motion_tuning(self.movement_tuning, was_grounded);
         let desired_x = i32::from(effective_move_x) * tuning.maximum_speed;
-        // Legacy used the raw input for this branch even while wall assistance temporarily
-        // supplied a forced direction. Preserve that quirk only in the replay-compatible mode.
-        let control_input = if self.movement_tuning.is_none() {
-            action.move_x
-        } else {
-            effective_move_x
-        };
+        let control_input = effective_move_x;
         // Preserve the initial kick away from a wall for one full tick.
         if !matches!(
             events.last(),
@@ -1067,17 +1039,14 @@ impl Simulation {
     }
 
     fn human_wall_grace_ticks(&self) -> u8 {
-        self.movement_tuning
-            .map_or(HUMAN_WALL_GRACE_TICKS, |tuning| {
-                milliseconds_to_ticks(u32::from(tuning.wall_momentum_milliseconds))
-            })
+        milliseconds_to_ticks(u32::from(self.movement_tuning.wall_momentum_milliseconds))
     }
 
     fn begin_wall_jump(&mut self, side: WallSide) {
         self.begin_jump();
-        let carried_speed = self.movement_tuning.map_or(0, |tuning| {
-            self.retained_wall_velocity_x.abs() * i32::from(tuning.wall_carry_percent) / 100
-        });
+        let carried_speed = self.retained_wall_velocity_x.abs()
+            * i32::from(self.movement_tuning.wall_carry_percent)
+            / 100;
         self.retained_wall_velocity_x = 0;
         self.wall_velocity_retention_ticks = 0;
         self.wall_ascent_carry_wall = None;
@@ -1093,8 +1062,7 @@ impl Simulation {
     }
 
     fn begin_dash(&mut self, direction: DashDirection) {
-        if self.movement_tuning.is_some()
-            && matches!(direction, DashDirection::Left | DashDirection::Right)
+        if matches!(direction, DashDirection::Left | DashDirection::Right)
             && !self.state.player.dash_compressed
         {
             self.state.player.position_subpixels.y +=
@@ -1218,9 +1186,9 @@ impl Simulation {
                 && !self.state.player.grounded
                 && self.state.player.velocity_subpixels.y < 0
                 && self.wall_ascent_carry_wall != Some(collision_side)
-                && let Some(tuning) = self.movement_tuning
             {
-                let upward_carry = dx.abs() * i32::from(tuning.wall_ascent_carry_percent) / 100;
+                let upward_carry =
+                    dx.abs() * i32::from(self.movement_tuning.wall_ascent_carry_percent) / 100;
                 self.state.player.velocity_subpixels.y = (self.state.player.velocity_subpixels.y
                     - upward_carry)
                     .max(WALL_ASCENT_MAX_UPWARD_SPEED);

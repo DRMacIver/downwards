@@ -263,6 +263,7 @@ mod tests {
                             panic!("generated seed {} has an invalid event", level.seed());
                         }
                         SimulationEvent::Landed
+                        | SimulationEvent::PickupTouched { .. }
                         | SimulationEvent::PickupCollected { .. }
                         | SimulationEvent::ExitReached { .. } => {}
                     }

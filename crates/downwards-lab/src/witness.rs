@@ -307,6 +307,7 @@ pub fn observe_successful_replay(
                     deaths += 1;
                     SemanticEvent::DeathFromTimedHazard
                 }
+                SimulationEvent::PickupTouched { .. } => continue,
                 SimulationEvent::PickupCollected { .. } => {
                     pickups_collected += 1;
                     SemanticEvent::Pickup
