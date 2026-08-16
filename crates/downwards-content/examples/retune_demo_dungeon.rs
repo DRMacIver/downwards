@@ -457,6 +457,9 @@ fn segmented_candidate(
     if spec.room == DemoDungeonRoom::LunarCache {
         return segmented_lunar_cache_candidate(initial, target);
     }
+    if spec.room == DemoDungeonRoom::MeteorRun {
+        return readable_meteor_run_candidate(initial, target);
+    }
     let (waypoint, first_config, second_config) = match spec.room {
         DemoDungeonRoom::VoidPass => (
             GroundedSupportTarget::new(
@@ -532,6 +535,56 @@ fn segmented_candidate(
         replay: Replay::record(initial, actions),
         stats: second.stats,
     })
+}
+
+fn readable_meteor_run_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    // The three shutters open at ticks 25, 57, and 89. Keep the demonstration deliberately
+    // human-readable: accelerate toward each visible gate, commit one horizontal Dash as its
+    // window arrives, and preserve rightward input while braking in the intervening safe bay.
+    // This is an authored timing policy, not evidence that arbitrary solver thrashing is hard.
+    let mut intermediate = initial.clone();
+    let mut actions = Vec::new();
+    for _ in 0..180 {
+        let tick = intermediate.room_tick();
+        let x = intermediate.player().bounds().x;
+        let staging = (tick < 24 && x >= 35)
+            || (tick < 56 && (104..131).contains(&x) && x >= 119)
+            || (tick < 88 && (186..213).contains(&x) && x >= 201);
+        let action = Action {
+            move_x: if staging { -1 } else { 1 },
+            move_y: 0,
+            jump: false,
+            dash: matches!(tick, 24 | 56 | 88),
+            restart: false,
+        };
+        let report = intermediate.step(action);
+        if report
+            .events
+            .iter()
+            .any(|event| matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset))
+        {
+            eprintln!(
+                "  readable Meteor Run route died at room tick {} near x {}",
+                tick + 1,
+                x
+            );
+            return None;
+        }
+        actions.push(action);
+        if intermediate.reached_exit() == Some("east") {
+            return Some(TargetSolution {
+                target: target.clone(),
+                reached: ReachedTarget::Door("east".to_owned()),
+                replay: Replay::record(initial, actions),
+                stats: SearchStats::default(),
+            });
+        }
+    }
+    eprintln!("  readable Meteor Run route did not reach its east door");
+    None
 }
 
 fn segmented_comet_run_candidate(

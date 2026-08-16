@@ -1,18 +1,23 @@
 # Authored dungeon roadmap — 2026-08-15
 
 The active target is a hand-authored dungeon of at least 100 playable floors. The current playable
-build has 41. The 41 are not being relabelled as completion: they are the first four progression
-regions and the integration testbed for the authoring/runtime contracts needed by the full game.
+build has 101 connected floors. That satisfies the structural scale target, but it is not being
+relabeled as design completion: much of the later geometry remains palette-derived and needs the
+same behavior-level inspection and human feedback already applied to the first evidence-driven
+replacements.
 
 ## Current progression
 
 - Floors 1–10: Rootworks, ordinary movement, six coins, Climbing Gloves unlock Wall Jump.
 - Floors 11–20: a mandatory Wall-Jump course with two required branches and six coins.
-- Floors 21–31: the earlier vertical slice, six more coins, Winged Boots unlock Dash, four final
-  coins, then the entrance to the Dash region.
-- Floors 32–41: a mandatory Dash course with two required branches and six coins, then the Crown.
-- Crown ingress requires all 28 current coins and both traversal methods. This is deliberately
-  stronger than the final contract's minimum of one third of all dungeon coins.
+- Floors 21–36: six remaining pre-Dash branch coins gate a multi-room Winged Vault quest; the boots
+  themselves require an alternating Wall-Jump climb. A mandatory Dash region follows.
+- Floors 37–76: the Aerial Foundry and Glassworks add forty mixed-method floors, six branches, and
+  twenty-four coins behind regional seals.
+- Floors 77–101: the Astral Keep adds twenty-five late floors, three branches, twelve coins, and
+  mixed-method Crown ingress.
+- Crown ingress requires all 64 coins and both traversal methods. This is deliberately stronger
+  than the contract's minimum of one third of all dungeon coins.
 
 The generator palette is scaffolding for geometry, not an authority on quality. Every floor has an
 explicit stable content identity, title, graph position, pickup placement, and progression role.
@@ -51,16 +56,20 @@ branches, and a final physical gate whose known positive uses both walls while t
 baseline search has no positive. The Dash seal likewise records an accepted Dash and no equivalent
 WallJump-only positive; each Dash-region route retains observed successes in all applicable
 strength-one perturbation families. This is early robustness evidence only. Replanning under
-perturbation, durable per-floor witness artifacts, and full-dungeon route verification remain
-required work.
+perturbation and broad human validation of the late game remain required work. A durable generated
+artifact now retains one exact replay and all applicable strength-one outcomes for every floor;
+course-specific retuning rejects visibly noisy routes even when they solve faster.
 
-## Next authored regions
+## Next authoring work
 
-The remaining 59+ floors will be added in bounded regions rather than as generated filler:
+The floor count is no longer the bottleneck. The next bounded slices are:
 
-1. mixed-method traversal and navigation puzzles;
-2. one or more further traversal unlocks with revisitation;
-3. a late Crown Citadel using the calibrated hard-gallery execution envelope.
+1. replace weak mandatory late palette shells with distinct mixed-method and timing vocabulary;
+2. collect full-run human navigation and execution feedback rather than inferring difficulty from
+   AI action counts;
+3. introduce any further traversal unlock only with a real revisitation loop and a physically
+   audited gate;
+4. retune the Crown approach against the calibrated hand-authored challenge envelope.
 
 Each region should introduce new authored geometry and puzzle vocabulary. Reusing a palette shell is
 acceptable for a first draft, but repeated shells do not satisfy the final hand-authored requirement.

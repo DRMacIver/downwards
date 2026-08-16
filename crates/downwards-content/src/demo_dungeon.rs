@@ -1,6 +1,6 @@
 //! Hand-assembled multi-room vertical slice built from the deterministic dungeon palette.
 
-use downwards_core::{AbilitySet, Exit, Pickup, Rect, Room};
+use downwards_core::{AbilitySet, Exit, Pickup, Rect, Room, TimedHazard};
 use downwards_gen::{DungeonPaletteConnection, DungeonPaletteCourse, DungeonPaletteKey};
 
 use crate::{
@@ -1521,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v15".to_owned(),
+        id: "demo-dungeon-v16".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -1591,8 +1591,26 @@ pub fn demo_dungeon_room(room: DemoDungeonRoom, inventory: DemoDungeonInventory)
         );
     }
     built
-        .with_objects(vec![], pickups)
+        .with_objects(room_timed_hazards(room), pickups)
         .expect("built-in dungeon pickups must satisfy room invariants")
+}
+
+fn room_timed_hazards(room: DemoDungeonRoom) -> Vec<TimedHazard> {
+    if room != DemoDungeonRoom::MeteorRun {
+        return Vec::new();
+    }
+
+    // Three broad shutters share one period, with their twenty-six-tick inactive windows
+    // advancing from west to east. A player can read each inactive sprite from the preceding safe
+    // bay; the thirty-two-tick phase offset leaves enough time for a committed Dash and controlled
+    // braking, but not for a blind uninterrupted run through the whole room.
+    [(52, 45), (134, 13), (216, 77)]
+        .into_iter()
+        .map(|(x, phase)| {
+            TimedHazard::new(Rect::new(x, 0, 52, 170), 96, 70, phase)
+                .expect("authored Meteor shutters satisfy timed-hazard invariants")
+        })
+        .collect()
 }
 
 fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
@@ -3379,6 +3397,83 @@ mod tests {
         assert!(
             !matches!(outcome, TargetSolveOutcome::Solved(_)),
             "no-Dash search unexpectedly reached the Comet Run coin: {outcome:?}"
+        );
+    }
+
+    #[test]
+    fn meteor_run_is_a_readable_three_shutter_dash_timing_course() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::MeteorRun)
+            .expect("Meteor Run has route metadata");
+        assert!(spec.inventory.winged_boots);
+        let room = demo_dungeon_room(spec.room, spec.inventory);
+        assert_eq!(room.timed_hazards().len(), 3);
+        assert!(room.timed_hazards().iter().all(|hazard| {
+            hazard.period_ticks() == 96
+                && hazard.active_ticks() == 70
+                && hazard.bounds().height == 170
+        }));
+
+        let mut replayed = Simulation::enter_via_door(
+            room,
+            spec.inventory.abilities(),
+            spec.entry_door.expect("Meteor Run has a west entry"),
+        )
+        .unwrap();
+        replayed.enable_current_player_movement();
+        let mut dash_positions = Vec::new();
+        for action in crate::demo_dungeon_witness_actions(spec.room) {
+            let x_before = replayed.player().bounds().x;
+            for event in replayed.step(action).events {
+                assert!(
+                    !matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset),
+                    "the checked Meteor Run demonstration must remain clean: {event:?}"
+                );
+                assert!(
+                    !matches!(event, SimulationEvent::Jumped(_)),
+                    "Meteor Run should demonstrate shutter timing rather than jump spam"
+                );
+                if matches!(event, SimulationEvent::Dashed { .. }) {
+                    dash_positions.push(x_before);
+                }
+            }
+        }
+        assert_eq!(replayed.reached_exit(), Some("east"));
+        assert_eq!(
+            dash_positions.len(),
+            3,
+            "the checked route should commit once through each shutter: {dash_positions:?}"
+        );
+        for (position, launch_range) in dash_positions.into_iter().zip([30..52, 105..134, 185..216])
+        {
+            assert!(
+                launch_range.contains(&position),
+                "Meteor Dash launches outside its readable safe bay: {position}"
+            );
+        }
+
+        let no_dash = DemoDungeonInventory {
+            winged_boots: false,
+            ..spec.inventory
+        };
+        let room = demo_dungeon_room(spec.room, no_dash);
+        let mut initial = Simulation::enter_via_door(
+            room,
+            no_dash.abilities(),
+            spec.entry_door.expect("Meteor Run has a west entry"),
+        )
+        .unwrap();
+        initial.enable_current_player_movement();
+        let outcome = solve_target(
+            &initial,
+            SearchTarget::door("east"),
+            &SolverConfig::for_abilities(no_dash.abilities()),
+        )
+        .unwrap();
+        assert!(
+            !matches!(outcome, TargetSolveOutcome::Solved(_)),
+            "no-Dash search unexpectedly crossed the Meteor shutters: {outcome:?}"
         );
     }
 

@@ -1,5 +1,5 @@
 schema downwards-demo-dungeon-witnesses-v1
-palette-generation 15
+palette-generation 16
 player-movement-policy 4
 tuning 110 72 203 50 50 250
 shaky-policy 64 18 2 2
@@ -2412,22 +2412,20 @@ room demo-dungeon.meteor-run
 entry west
 target door east
 abilities 1 1
-ticks 180
-observation 10 5 5 0 0 0
-shaky BoundaryTiming 36 64 56
-shaky CorrelatedTiming 30 64 72
-shaky HoldRelease 32 64 64
-shaky DropRepeatFrame 59 64 13
-span 1 0 0 0 0 29
-span 1 0 1 0 0 10
-span 1 0 0 0 0 27
-span 1 0 1 0 0 10
-span 1 0 0 0 0 27
-span 1 0 1 0 0 10
-span 1 0 0 0 0 27
-span 1 0 1 0 0 10
-span 1 0 0 0 0 27
-span 1 0 1 0 0 3
+ticks 134
+observation 8 0 0 0 3 2
+shaky BoundaryTiming 39 64 98
+shaky CorrelatedTiming 64 64 0
+shaky HoldRelease 42 64 66
+shaky DropRepeatFrame 63 64 6
+span 1 0 0 0 0 16
+span -1 0 0 0 0 8
+span 1 0 0 1 0 1
+span 1 0 0 0 0 31
+span 0 0 0 1 0 1
+span 1 0 0 0 0 31
+span 0 0 0 1 0 1
+span 1 0 0 0 0 45
 end
 route demo-dungeon.vacuum-gallery
 room demo-dungeon.vacuum-gallery

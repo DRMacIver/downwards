@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 15;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 16;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1637,15 +1637,10 @@ impl PaletteDraft<'_> {
                 self.vertical(16, 7, 10, Tile::HazardLeft);
             }
             DungeonPaletteCourse::MeteorRun => {
-                self.horizontal(14, 3, 7, Tile::OneWay);
-                self.horizontal(12, 10, 13, Tile::OneWay);
-                self.horizontal(8, 16, 19, Tile::OneWay);
-                self.horizontal(11, 22, 25, Tile::OneWay);
-                self.horizontal(6, 28, 30, Tile::OneWay);
-                for (start, end) in [(7, 10), (13, 16), (19, 22), (25, 28)] {
-                    self.horizontal(16, start, end, Tile::HazardUp);
-                    self.horizontal(17, start, end, Tile::Solid);
-                }
+                // The collision layer is intentionally a clear runway: Meteor Run's obstacle
+                // course is supplied by three room-clock shutters in authored dungeon content.
+                // Keeping broad safe bays between them makes their advancing timing legible and
+                // gives the player somewhere to brake rather than hiding difficulty in landings.
             }
             DungeonPaletteCourse::VacuumGallery => {
                 // A late mixed-method route: enter the narrow alternating wall shaft from the

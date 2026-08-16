@@ -95,7 +95,7 @@ returns the player to its validated interior arrival without resetting room-loca
 Crown similarly persists and is the only terminal goal. Ordinary door exits change rooms and are
 deliberately not counted as whole-level victories.
 
-Palette generation v15 contains five evidence-driven room replacements. Persistent history recorded
+Palette generation v16 contains six evidence-driven room replacements. Persistent history recorded
 24 Gale Chasm attempts, all ending on spikes, while its old AI witness used 43 action spans and 11
 horizontal reversals. As the first post-Boots room, it now teaches the action as two readable
 sixty-pixel Dash gaps separated by a three-tile full-recovery island. Its mechanically selected
@@ -137,11 +137,22 @@ unconstrained global solve is behaviorally busier and is rejected. A same-budget
 no positive, a post-coin solve reaches the east door, and all four strength-one perturbation
 families retain at least 44/64 observed successes.
 
+Meteor Run is the sixth replacement in v16. Its old mandatory late route consisted of five
+repeated full-height jumps along broad shelves and used neither unlocked traversal method. The
+replacement is a flat, legible timing course: three full-height room-clock shutters remain active
+for seventy of every ninety-six ticks, and their twenty-six-tick inactive windows advance east at
+thirty-two-tick intervals. Safe bays between shutters make the next state visible and provide
+braking room. The retained authored policy launches exactly one horizontal Dash through each
+window, with no jumps and only two braking reversals. The unconstrained solver's eleven-Dash trace
+is rejected as behaviorally noisy. A same-budget no-Dash search has no positive, and all four
+strength-one perturbation families retain at least 39/64 observed successes. This is robustness
+evidence for the timing controller, not a claim that the room is difficult for a human.
+
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
 persistent item omission, additive mid-run Wall Jump and Dash state, gate rejection without room reset, client
 traversal of the intended loop, and authoritative solver positives for every critical leg and coin
-branch. The retained boots route now takes 111 ticks, eight accepted jumps, four wall jumps, and at
+branch. The retained boots route now takes 76 ticks, five accepted jumps, four wall jumps, and at
 least two rapid wall-side changes through two-tile contact windows. A WallJump-only search misses
 the chasm under the same bounded search budget while the
 post-boots loadout succeeds. That miss is evidence for this vertical slice, not a proof of physical

@@ -234,7 +234,7 @@ methods as well as the coins. Deaths and restarts return to the door used to ent
 without discarding gloves, boots, Crown, or coins. `V` demonstrates the next intended room-local
 objective; it is not a whole-dungeon route.
 
-Palette generation v15 includes five evidence-driven replacements. The first post-Boots Gale Chasm
+Palette generation v16 includes six evidence-driven replacements. The first post-Boots Gale Chasm
 was implicated by 24 recorded human deaths and an AI witness with 43 action spans and 11 reversals;
 it now presents two readable sixty-pixel Dash gaps separated by a three-tile full-recovery island.
 The mechanically selected route uses nine spans, two jumps, two Dashes, and no reversals, while a
@@ -267,12 +267,20 @@ the unconstrained global solve's retry-heavy route is retained only as a rejecte
 same-budget no-Dash search has no positive, the collected route can continue to the east door, and
 all strength-one perturbation families retain at least 44 of 64 successes.
 
+Meteor Run is the sixth replacement. Its former late route was five identical forgiving jumps to
+the right and used neither unlocked method. The v16 room is a clear runway interrupted by three
+full-height timed shutters. Their twenty-six-tick safe windows advance east every thirty-two ticks,
+with visible safe bays between them. The retained demonstration brakes in each bay and commits one
+horizontal Dash per shutter: three Dashes, no jumps, and two reversals. The unconstrained solver's
+eleven-Dash trace is kept only as a rejected comparison. A same-budget no-Dash search has no
+positive, while each strength-one perturbation family retains at least 39 of 64 successes.
+
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 
 ```sh
 cargo run -p downwards-content --example retune_demo_dungeon
 cargo run -p downwards-content --example retune_demo_dungeon -- --check
-cargo run -p downwards-content --example retune_demo_dungeon -- --route demo-dungeon.void-pass
+cargo run -p downwards-content --example retune_demo_dungeon -- --route demo-dungeon.meteor-run
 ```
 
 The checked-in artifact contains one exact route and 64-trial strength-one input-perturbation
