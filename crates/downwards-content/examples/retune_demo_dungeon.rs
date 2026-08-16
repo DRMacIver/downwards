@@ -735,70 +735,121 @@ fn segmented_constellation_hall_candidate(
     initial: &Simulation,
     target: &SearchTarget,
 ) -> Option<TargetSolution> {
-    let waypoints = [
-        (
-            GroundedSupportTarget::new(
-                100,
-                140,
-                140,
-                [GroundedStandingRegion::new(100, 132).expect("valid authored standing range")],
-            )
-            .expect("valid authored support waypoint"),
-            AbilitySet::new(false, true),
-        ),
-        (
-            GroundedSupportTarget::new(
-                170,
-                220,
-                70,
-                [GroundedStandingRegion::new(170, 212).expect("valid authored standing range")],
-            )
-            .expect("valid authored support waypoint"),
-            AbilitySet::new(true, true),
-        ),
-        (
-            GroundedSupportTarget::new(
-                200,
-                240,
-                140,
-                [GroundedStandingRegion::new(200, 232).expect("valid authored standing range")],
-            )
-            .expect("valid authored support waypoint"),
-            AbilitySet::new(true, true),
-        ),
-    ];
-    let mut intermediate = initial.clone();
-    let mut actions = Vec::new();
-    for (waypoint, abilities) in waypoints {
-        let outcome = solve_grounded_support(
-            &intermediate,
-            &waypoint,
-            &SolverConfig::for_abilities(abilities),
-        )
-        .ok()?;
-        let GroundedSupportSolveOutcome::Solved(solution) = outcome else {
-            return None;
-        };
-        actions.extend(solution.replay.actions());
-        for action in solution.replay.actions() {
-            intermediate.step(action);
-        }
-    }
-    let outcome = solve_target(
-        &intermediate,
-        target.clone(),
-        &SolverConfig::for_abilities(AbilitySet::new(false, true)),
-    )
-    .ok()?;
-    let TargetSolveOutcome::Solved(solution) = outcome else {
+    let Some((mut intermediate, mut actions)) =
+        readable_directional_landing(initial, 100..=132, 128, &[-1, 0], 1)
+    else {
+        eprintln!("  segmented Constellation first underpass failed");
         return None;
     };
-    actions.extend(solution.replay.actions());
+    let Some((summit, climb)) = readable_alternating_climb(
+        &intermediate,
+        104,
+        128,
+        58,
+        170,
+        212,
+        AlternatingClimbPolicy::strict(2),
+    ) else {
+        eprintln!("  segmented Constellation central climb failed");
+        return None;
+    };
+    intermediate = summit;
+    actions.extend(climb);
+
+    let mut lower_candidates = Vec::new();
+    for takeoff_x in 170..=212 {
+        let Some((takeoff, approach)) = approach_x(&intermediate, takeoff_x) else {
+            continue;
+        };
+        for run_off_ticks in 0..=20 {
+            for fall_x in [-1, 0, 1] {
+                let mut simulation = takeoff.clone();
+                let mut descent = approach.clone();
+                let suffix = std::iter::repeat_n(right_action(false, false), run_off_ticks).chain(
+                    std::iter::repeat_n(
+                        Action {
+                            move_x: fall_x,
+                            move_y: 0,
+                            jump: false,
+                            dash: false,
+                            restart: false,
+                        },
+                        100,
+                    ),
+                );
+                for action in suffix {
+                    if !clean_step(&mut simulation, action) {
+                        break;
+                    }
+                    descent.push(action);
+                    let player = simulation.player();
+                    let bounds = player.bounds();
+                    if player.grounded() && bounds.y == 128 && (190..=212).contains(&bounds.x) {
+                        lower_candidates.push((simulation.clone(), descent));
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    let Some((mut lower, descent)) = lower_candidates
+        .into_iter()
+        .min_by(|(_, left), (_, right)| static_route_key(left).cmp(&static_route_key(right)))
+    else {
+        eprintln!("  segmented Constellation controlled descent failed");
+        return None;
+    };
+    actions.extend(descent);
+    // Make the lower recovery an actual reset point rather than immediately chaining the next
+    // launch from the landing edge. This is both more legible to a player and gives one-frame
+    // input perturbations somewhere safe to converge before the low Dash commitment.
+    for _ in 0..12 {
+        let action = Action::default();
+        if !clean_step(&mut lower, action) || !lower.player().grounded() {
+            return None;
+        }
+        actions.push(action);
+    }
+    let Some((mut finish, crossing)) =
+        readable_directional_landing(&lower, 270..=292, 128, &[-1, 0, 1], 1)
+    else {
+        eprintln!("  segmented Constellation final underpass failed");
+        return None;
+    };
+    actions.extend(crossing);
+    for _ in 0..20 {
+        if finish
+            .collected_pickups()
+            .any(|pickup| pickup.id() == "dungeon-coin-55")
+        {
+            break;
+        }
+        let action = right_action(false, false);
+        if !clean_step(&mut finish, action) {
+            return None;
+        }
+        actions.push(action);
+    }
+    if !finish
+        .collected_pickups()
+        .any(|pickup| pickup.id() == "dungeon-coin-55")
+    {
+        eprintln!("  segmented Constellation final landing missed its coin");
+        return None;
+    }
+    let mut replayed = initial.clone();
+    let first_collection = actions.iter().position(|&action| {
+        replayed.step(action);
+        replayed
+            .collected_pickups()
+            .any(|pickup| pickup.id() == "dungeon-coin-55")
+    })?;
+    actions.truncate(first_collection + 1);
     Some(TargetSolution {
-        target: solution.target,
-        reached: solution.reached,
+        target: target.clone(),
+        reached: ReachedTarget::Pickup("dungeon-coin-55".to_owned()),
         replay: Replay::record(initial, actions),
-        stats: solution.stats,
+        stats: SearchStats::default(),
     })
 }
 
@@ -2549,6 +2600,7 @@ fn main() {
                     !matches!(
                         spec.room,
                         DemoDungeonRoom::AstralSeal
+                            | DemoDungeonRoom::ConstellationHall
                             | DemoDungeonRoom::EclipseFork
                             | DemoDungeonRoom::LunarCache
                             | DemoDungeonRoom::VacuumGallery

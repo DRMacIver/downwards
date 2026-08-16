@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 31;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 32;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1585,12 +1585,18 @@ impl PaletteDraft<'_> {
                 self.vertical(9, 1, 11, Tile::Solid);
                 self.horizontal(14, 10, 14, Tile::OneWay);
 
+                // A short opposing wall turns the centre rise into an actual alternating climb.
+                // It hangs above the entry shelf so the first underpass remains open, then ends
+                // below the centre roof so the player can visibly exit onto recovery.
+                self.vertical(13, 6, 11, Tile::Solid);
                 self.vertical(17, 7, 17, Tile::Solid);
                 self.horizontal(7, 17, 22, Tile::Solid);
 
-                self.vertical(24, 1, 11, Tile::Solid);
-                self.horizontal(14, 20, 24, Tile::OneWay);
-                self.horizontal(14, 25, 30, Tile::OneWay);
+                // The last pillar leaves only Dash posture beneath it. This closes the long-jump
+                // bypass introduced by the faster gameplay tuning without adding a hidden wall.
+                self.vertical(24, 1, 13, Tile::Solid);
+                self.horizontal(14, 19, 22, Tile::OneWay);
+                self.horizontal(14, 28, 30, Tile::OneWay);
             }
             DungeonPaletteCourse::ZenithShaft => {
                 // Two offset chambers make the late mainline read as a deliberate sequence:
@@ -2286,12 +2292,21 @@ mod tests {
         );
         for row in 1..11 {
             assert_eq!(tile(9, row), Tile::Solid, "first hanging pillar is open");
+        }
+        for row in 1..13 {
             assert_eq!(tile(24, row), Tile::Solid, "last hanging pillar is open");
+        }
+        for row in 6..11 {
+            assert_eq!(
+                tile(13, row),
+                Tile::Solid,
+                "central climb lacks its opposing wall"
+            );
         }
         for row in 7..17 {
             assert_eq!(tile(17, row), Tile::Solid, "central pillar is open");
         }
-        for (row, range) in [(14, 10..14), (7, 17..22), (14, 20..24), (14, 25..30)] {
+        for (row, range) in [(14, 10..14), (7, 17..22), (14, 19..22), (14, 28..30)] {
             for column in range {
                 assert!(
                     matches!(tile(column, row), Tile::OneWay | Tile::Solid),

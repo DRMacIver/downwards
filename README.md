@@ -305,13 +305,12 @@ late-game movement laboratory with a readable preferred route, deliberately not 
 a two-method gate.
 
 Constellation Hall is the tenth replacement. Its old mandatory coin route was a monotone diagonal
-staircase: five Dashes, no Wall Jumps, and no change of direction. The v20 silhouette is an
-under-over-under slalom around two ceiling pillars and one floor-anchored centre, with broad
-braking shelves above lethal floor. A waypoint-composed route preserves the three visible
-recoveries and is preferred over the first solver positive: four Dashes, two Wall Jumps, and eight
-direction changes tied to the slalom rather than 12 in the unconstrained trace. It can continue
-east after the coin, baseline search has no positive, and every strength-one perturbation family
-retains at least 27/64 successes.
+staircase: five Dashes, no Wall Jumps, and no change of direction. The v32 silhouette is an
+under-over-under slalom around two ceiling pillars and one floor-anchored centre. A new opposing
+wall makes the centre a real alternating climb, while the last pillar leaves a Dash-height aperture
+above a lethal gap and a two-tile landing. The retained route uses two alternating Wall Jumps and
+exactly two Dashes, with a deliberate recovery before the final commitment. Neither Wall-Jump-only
+nor Dash-only search has a positive; all strength-one perturbation families remain nonzero.
 
 Shadow Duct is the eleventh replacement. Its former mandatory branch was three broad shelves: an
 85-tick route with one incidental Wall Jump, no Dash, and five solver braking reversals. The v21

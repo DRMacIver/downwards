@@ -1521,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v31".to_owned(),
+        id: "demo-dungeon-v32".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -1676,7 +1676,7 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         DemoDungeonRoom::StarThreshold => vec![(52, Rect::new(144, 20, 8, 10))],
         DemoDungeonRoom::CometRun => vec![(53, Rect::new(294, 60, 8, 10))],
         DemoDungeonRoom::MoonVault => vec![(54, Rect::new(274, 40, 8, 10))],
-        DemoDungeonRoom::ConstellationHall => vec![(55, Rect::new(274, 120, 8, 10))],
+        DemoDungeonRoom::ConstellationHall => vec![(55, Rect::new(284, 120, 8, 10))],
         DemoDungeonRoom::ShadowDuct => vec![(56, Rect::new(224, 10, 8, 10))],
         DemoDungeonRoom::Observatory => vec![(57, Rect::new(14, 10, 8, 10))],
         DemoDungeonRoom::NovaNiche => vec![(58, Rect::new(284, 20, 8, 10))],
@@ -4233,22 +4233,29 @@ mod tests {
         )
         .unwrap();
         replayed.enable_current_player_movement();
-        let mut wall_jumps = 0;
-        let mut dashes = 0;
+        let mut wall_sides = Vec::new();
+        let mut wall_ticks = Vec::new();
+        let mut dash_ticks = Vec::new();
         let mut landings = Vec::new();
-        for action in crate::demo_dungeon_witness_actions(spec.room) {
+        for (tick, action) in crate::demo_dungeon_witness_actions(spec.room)
+            .into_iter()
+            .enumerate()
+        {
             for event in replayed.step(action).events {
                 assert!(
                     !matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset),
                     "the checked Constellation slalom must remain clean: {event:?}"
                 );
-                wall_jumps += usize::from(matches!(
-                    event,
-                    SimulationEvent::Jumped(JumpKind::Wall { .. })
-                ));
-                dashes += usize::from(matches!(event, SimulationEvent::Dashed { .. }));
-                if matches!(event, SimulationEvent::Landed) {
-                    landings.push((replayed.player().bounds().x, replayed.player().bounds().y));
+                match event {
+                    SimulationEvent::Jumped(JumpKind::Wall { side }) => {
+                        wall_sides.push(side);
+                        wall_ticks.push(tick);
+                    }
+                    SimulationEvent::Dashed { .. } => dash_ticks.push(tick),
+                    SimulationEvent::Landed => {
+                        landings.push((replayed.player().bounds().x, replayed.player().bounds().y));
+                    }
+                    _ => {}
                 }
             }
         }
@@ -4257,14 +4264,10 @@ mod tests {
                 .collected_pickups()
                 .any(|pickup| pickup.id() == spec.target.id())
         );
-        assert!(
-            wall_jumps >= 2,
-            "Constellation route bypassed its central climb"
-        );
-        assert!(
-            dashes >= 4,
-            "Constellation route bypassed its slalom transfers"
-        );
+        assert_eq!(wall_sides.len(), 2, "Constellation central climb changed");
+        assert_ne!(wall_sides[0], wall_sides[1]);
+        assert_eq!(dash_ticks.len(), 2, "Constellation transfer count changed");
+        assert!(dash_ticks[0] < wall_ticks[0] && wall_ticks[1] < dash_ticks[1]);
         assert!(
             landings
                 .iter()
@@ -4274,7 +4277,10 @@ mod tests {
                     .any(|&(x, y)| (160..=212).contains(&x) && y == 58)
                 && landings
                     .iter()
-                    .any(|&(x, y)| (200..=240).contains(&x) && y == 128),
+                    .any(|&(x, y)| (190..=212).contains(&x) && y == 128)
+                && landings
+                    .iter()
+                    .any(|&(x, y)| (266..=292).contains(&x) && y == 128),
             "Constellation route lost its under-over-under recoveries: {landings:?}"
         );
 
@@ -4292,30 +4298,44 @@ mod tests {
         }
         assert_eq!(replayed.reached_exit(), Some("east"));
 
-        let baseline = DemoDungeonInventory {
-            climbing_gloves: false,
-            winged_boots: false,
-            ..spec.inventory
-        };
-        let room = demo_dungeon_room(spec.room, baseline);
-        let mut initial = Simulation::enter_via_door(
-            room,
-            baseline.abilities(),
-            spec.entry_door
-                .expect("Constellation Hall has a west entry"),
-        )
-        .unwrap();
-        initial.enable_current_player_movement();
-        let outcome = solve_target(
-            &initial,
-            route_spec_target(spec.target),
-            &SolverConfig::for_abilities(baseline.abilities()),
-        )
-        .unwrap();
-        assert!(
-            !matches!(outcome, TargetSolveOutcome::Solved(_)),
-            "baseline search unexpectedly crossed the Constellation slalom: {outcome:?}"
-        );
+        for (label, inventory) in [
+            (
+                "Wall-Jump-only",
+                DemoDungeonInventory {
+                    climbing_gloves: true,
+                    winged_boots: false,
+                    ..spec.inventory
+                },
+            ),
+            (
+                "Dash-only",
+                DemoDungeonInventory {
+                    climbing_gloves: false,
+                    winged_boots: true,
+                    ..spec.inventory
+                },
+            ),
+        ] {
+            let room = demo_dungeon_room(spec.room, inventory);
+            let mut initial = Simulation::enter_via_door(
+                room,
+                inventory.abilities(),
+                spec.entry_door
+                    .expect("Constellation Hall has a west entry"),
+            )
+            .unwrap();
+            initial.enable_current_player_movement();
+            let outcome = solve_target(
+                &initial,
+                route_spec_target(spec.target),
+                &SolverConfig::for_abilities(inventory.abilities()),
+            )
+            .unwrap();
+            assert!(
+                !matches!(outcome, TargetSolveOutcome::Solved(_)),
+                "{label} search unexpectedly crossed the Constellation slalom: {outcome:?}"
+            );
+        }
     }
 
     #[test]

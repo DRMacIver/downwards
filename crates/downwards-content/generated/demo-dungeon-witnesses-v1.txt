@@ -1,5 +1,5 @@
 schema downwards-demo-dungeon-witnesses-v1
-palette-generation 31
+palette-generation 32
 player-movement-policy 4
 tuning 110 72 203 50 50 250
 shaky-policy 64 18 2 2
@@ -2209,37 +2209,28 @@ room demo-dungeon.constellation-hall
 entry west
 target pickup dungeon-coin-55
 abilities 1 1
-ticks 165
-observation 25 5 4 2 4 8
-shaky BoundaryTiming 27 64 59
-shaky CorrelatedTiming 35 64 50
-shaky HoldRelease 40 64 40
-shaky DropRepeatFrame 49 64 23
-span 0 0 0 1 0 1
-span 1 0 0 0 0 9
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 17
-span -1 0 0 0 0 2
+ticks 195
+observation 16 5 5 2 2 4
+shaky BoundaryTiming 20 64 60
+shaky CorrelatedTiming 14 64 63
+shaky HoldRelease 34 64 42
+shaky DropRepeatFrame 31 64 33
+span 1 0 0 0 0 20
+span 1 0 1 0 0 7
+span 1 0 0 1 0 1
+span 1 0 0 0 0 26
 span 1 0 1 0 0 6
-span 0 0 1 0 0 1
-span -1 0 0 0 0 7
-span 0 0 1 0 0 8
-span -1 0 1 0 0 3
-span 1 0 0 0 0 11
-span -1 -1 0 1 0 1
-span -1 -1 0 0 0 2
-span 1 0 0 0 0 4
-span 0 0 1 0 0 4
-span 1 -1 0 0 0 10
-span -1 0 1 0 0 4
-span 1 -1 0 0 0 10
-span 0 1 0 0 0 6
-span 1 0 0 0 0 10
-span 0 0 0 1 0 1
-span 1 0 0 0 0 5
-span 0 -1 0 0 0 20
-span 1 0 1 0 0 1
-span 1 0 0 0 0 21
+span 1 0 0 0 0 14
+span -1 0 1 0 0 10
+span -1 0 0 0 0 2
+span 1 0 1 0 0 10
+span 1 0 0 0 0 33
+span -1 0 0 0 0 21
+span 0 0 0 0 0 12
+span 1 0 0 0 0 17
+span 1 0 1 0 0 2
+span 1 0 0 1 0 1
+span 1 0 0 0 0 13
 end
 route demo-dungeon.zenith-shaft
 room demo-dungeon.zenith-shaft

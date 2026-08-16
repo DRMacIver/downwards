@@ -184,17 +184,17 @@ strength-one perturbation family. Current movement semantics also admit a noisie
 corona leap and a Dash-only ascent using wall-momentum carry. Both are exact retained evidence:
 this room explores the interaction between methods and does not falsely claim to gate either one.
 
-Constellation Hall is the tenth replacement in v20. The old mandatory coin route was another broad
-diagonal staircase and exact-replayed in 112 ticks with five Dashes, no Wall Jumps, and no
-horizontal reversal. The replacement is a single readable under-over-under silhouette: recover
-beneath a ceiling pillar, climb over a floor-anchored centre, then descend beneath a second ceiling
-pillar to the coin. Lethal floor closes the low bypass while four broad shelves preserve deliberate
-braking. The unconstrained first positive took 189 ticks, six Dashes, three Wall Jumps, and 12
-reversals. A three-waypoint composition exact-replays in 165 ticks with four Dashes, two Wall Jumps,
-and eight reversals, and lands on all three authored recovery heights. A separate exact solve
-continues east after the coin, same-budget baseline search has no positive, and each strength-one
-perturbation family retains at least 27/64 successes. The route-shape comparison, not its raw event
-count, is the reason the composed witness is retained.
+Constellation Hall is the tenth replacement, tightened again in v32. The old mandatory coin route
+was a broad diagonal staircase and exact-replayed in 112 ticks with five Dashes, no Wall Jumps, and
+no horizontal reversal. The current room retains its readable under-over-under silhouette but adds
+a short opposing wall to make the centre a real alternating climb. Its final hanging pillar now
+leaves only Dash posture above a lethal gap, ending on a two-tile recovery. The mechanically
+retained route takes 195 ticks and 16 spans: one Dash to the first shelf, two alternating Wall
+Jumps, a controlled descent and neutral recovery, then one jump-Dash commitment to the coin. The
+neutral recovery lifts DropRepeatFrame strength-one success from 0/64 to 31/64. Same-budget
+Wall-Jump-only and Dash-only searches have no positive, a separate solve continues east after the
+coin, and every strength-one family remains nonzero. These are exact behavior and bounded-search
+facts, not a scalar human-difficulty claim.
 
 Shadow Duct is the eleventh replacement in v21. Its old mandatory coin route took 85 ticks across
 three broad shelves, with one incidental Wall Jump, no Dash, and five braking reversals. The
