@@ -2974,6 +2974,11 @@ impl ClientState {
         if self.selection.mode == RoomMode::Dungeon {
             return None;
         }
+        // Floor-lab rooms continue through their own doors, never into the
+        // generated catalogue.
+        if let RoomMode::Challenge(ChallengeKind::DungeonFloor(_)) = self.selection.mode {
+            return None;
+        }
         if self.selection.mode == RoomMode::Gallery {
             let index =
                 gallery_adjacent_index(self.selection.seed, calibration_gallery().len(), true)?;
@@ -4326,7 +4331,8 @@ impl ClientState {
         } else {
             None
         };
-        let dungeon_boundary = self.observe_dungeon_progress(&report);
+        let dungeon_boundary =
+            self.observe_dungeon_progress(&report) || self.observe_floor_lab_progress(&report);
         if !dungeon_boundary && let Some(notice) = completed_notice {
             self.replay_notice = Some(notice);
         }
@@ -4383,6 +4389,76 @@ impl ClientState {
             eprintln!("human attempt history disabled after dungeon-event failure: {error}");
             self.human_history = None;
         }
+    }
+
+    /// In the non-persistent floor lab, a reached connected door continues
+    /// into the destination room's floor lab (entered via the mate door, with
+    /// that room's analysis loadout) instead of ending the session.
+    fn observe_floor_lab_progress(&mut self, report: &StepReport) -> bool {
+        let RoomMode::Challenge(ChallengeKind::DungeonFloor(_)) = self.selection.mode else {
+            return false;
+        };
+        if !self.human_controlled() {
+            return false;
+        }
+        let Some(exit_id) = report.events.iter().find_map(|event| match event {
+            SimulationEvent::ExitReached { id } => Some(id.as_str()),
+            _ => None,
+        }) else {
+            return false;
+        };
+        let Some(door) = self
+            .simulation
+            .room()
+            .doors()
+            .iter()
+            .find(|door| door.id == exit_id)
+            .cloned()
+        else {
+            // The crown goal is a terminal legacy Exit, not a room transition.
+            return false;
+        };
+        let Some(destination_room) = door
+            .destination_room
+            .as_deref()
+            .and_then(DemoDungeonRoom::from_id)
+        else {
+            return false;
+        };
+        let destination_door = door
+            .destination_door
+            .as_deref()
+            .expect("built-in dungeon doors always name their mate");
+        let spec = dungeon_floor_route_spec(destination_room);
+        let room = demo_dungeon_room(destination_room, spec.inventory);
+        let mut simulation =
+            match Simulation::enter_via_door(room, spec.inventory.abilities(), destination_door) {
+                Ok(simulation) => simulation,
+                Err(error) => {
+                    eprintln!(
+                        "floor lab cannot enter {} by {destination_door:?}: {error}",
+                        destination_room.id()
+                    );
+                    return false;
+                }
+            };
+        configure_live_simulation(&mut simulation, self.movement_tuning);
+        self.selection = ScenarioSelection {
+            mode: RoomMode::Challenge(ChallengeKind::DungeonFloor(destination_room)),
+            seed: 0,
+            tier: AbilityTier::Baseline,
+        }
+        .canonicalized();
+        self.simulation = simulation;
+        self.feedback = SimulationFeedback::default();
+        self.human_recorder = HumanRecorder::new(&self.simulation);
+        self.replay_mode = ReplayMode::Human;
+        self.replay_notice = Some(ReplayNotice {
+            title: destination_room.title().to_ascii_uppercase(),
+            detail: "FLOOR LAB · non-persistent · M browses floors".to_owned(),
+            is_error: false,
+        });
+        true
     }
 
     fn observe_dungeon_progress(&mut self, report: &StepReport) -> bool {
@@ -8015,6 +8091,31 @@ mod tests {
         client.open_level_menu();
         assert_eq!(client.browser_mode, BrowserMode::DungeonFloors);
         assert_eq!(client.gallery_menu.selected_index, tempo_index);
+    }
+
+    #[test]
+    fn floor_lab_door_continues_into_the_connected_room() {
+        let selection = ScenarioSelection {
+            mode: RoomMode::Challenge(ChallengeKind::DungeonFloor(DemoDungeonRoom::HollowLanding)),
+            seed: 0,
+            tier: AbilityTier::Baseline,
+        };
+        let mut client = ClientState::new(selection, None, false).unwrap();
+        let report = StepReport {
+            tick: client.simulation.tick(),
+            events: vec![SimulationEvent::ExitReached {
+                id: "east".to_owned(),
+            }],
+            digest: client.simulation.digest(),
+        };
+        assert!(client.observe_floor_lab_progress(&report));
+        assert_eq!(
+            client.selection.mode,
+            RoomMode::Challenge(ChallengeKind::DungeonFloor(DemoDungeonRoom::MossWalk))
+        );
+        assert_eq!(client.simulation.entry_door(), Some("west"));
+        // Completion never falls through to the generated catalogue.
+        assert_eq!(client.next_level_selection(), None);
     }
 
     #[test]
