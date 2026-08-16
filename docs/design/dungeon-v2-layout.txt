@@ -1,0 +1,84 @@
+# Dungeon v2 layout — braided three-column keep
+# Columns of shafts (strata/one-way-loop/tide/shutter) tied by horizontal
+# corridors. Spawn mid-west, crown sanctum east behind a coin door.
+
+# --- rooms -------------------------------------------------------------
+room s1   strata-sort-a          # spawn hub (easy)
+room ga   greed-loop-a
+room met  metronome-gallery-a
+room bv   keep-boots-vault       # boots live here
+room sh   shutter-chute-a
+room s3   strata-sort-b
+room o4   one-way-loop-b
+room s5   strata-sort-c          # hard, guards the shard vault
+room sv   keep-shard-vault       # dead-end treasure
+room ob   keep-observatory       # glove lives here
+room ap   antiphase-airlock-a
+room gb   greed-loop-b
+room t2   tide-shaft-b
+room oc   one-way-loop-c
+room sb2  strata-sort-b          # duplicate instance of the grid
+room swb  switchback-spine-a
+room crown keep-crown-sanctum    # goal
+room o2   one-way-loop-b         # duplicate instance of the grid
+room t1   tide-shaft-a
+room kv   keyhole-vault-a
+room br   braided-crossing-a
+room ga2  greed-loop-a           # duplicate instance of the grid
+room sa2  strata-sort-a          # duplicate instance of the grid
+room lcb  low-ceiling-arena-b
+room wg   keep-wall-gate
+room tc   two-clock-fork-b
+room lcc  low-ceiling-arena-c
+room gc   greed-loop-c
+
+# --- vertical shafts ---------------------------------------------------
+edge ga floor s1 ceiling
+edge s1 floor o2 ceiling
+edge o2 floor t1 ceiling
+edge t1 floor kv ceiling
+edge bv floor sh ceiling
+edge sh floor s3 ceiling
+edge s3 floor o4 ceiling
+edge o4 floor s5 ceiling
+edge s5 floor sv ceiling
+edge gb floor t2 ceiling
+edge t2 floor oc ceiling
+edge oc floor sb2 ceiling
+edge sb2 floor swb ceiling
+edge ga2 floor sa2 ceiling
+edge sa2 floor lcb ceiling
+edge gc floor lcc ceiling
+
+# --- horizontal corridors ---------------------------------------------
+edge bv east met west
+edge met east ga west
+edge s1 east ap west
+edge ap east gb west
+edge s3 east ob west
+edge ob east oc west
+edge o2 east br west
+edge br east ga2 west
+edge o4 east wg west
+edge wg east lcb west
+edge s5 east tc west
+edge tc east kv west
+edge kv east lcc west
+edge lcc east swb west
+edge sa2 east gc west
+edge sb2 east crown west
+
+# --- gates -------------------------------------------------------------
+gate o4 east ability wall      # seal on the wall-gate wing, seen bare
+gate met west ability wall     # boots vault upper seal
+gate sh ceiling ability wall   # boots vault lower seal
+gate s5 floor ability dash     # shard vault: also prevents soft-lock inside
+gate kv east ability dash      # dash wing seal, seen bare from the west
+gate gb floor coins 6          # toll into the east tide shaft (west retreat free)
+gate sb2 east coins 30         # crown sanctum coin door (one direction only)
+
+# --- pickups / endpoints ----------------------------------------------
+pickup glove ob
+pickup boots bv
+spawn s1
+goal crown
