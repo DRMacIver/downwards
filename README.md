@@ -392,6 +392,16 @@ Jumps), then uses one airborne Dash. Strength-one perturbations retain 23–58/6
 Wall-Jump-only and Dash-only bounded searches both have no coin positive, and the full-loadout
 route can continue east through the independently coin-gated door.
 
+The Eclipse Fork is the nineteenth replacement. Its old ceiling-branch route was a generic shelf
+solve with 27 spans and ten Dashes, including four before any Wall Jump. The v29 junction leaves
+the east-west corridor completely safe and baseline-traversable, but turns the optional ceiling
+branch into a two-method checkpoint: enter a broad shaft, settle and alternate twice, recover on a
+balcony, then jump and use one upward Dash into the ceiling door. The retained route takes 130
+ticks and 10 spans, accepts all four jump presses, and has no pre-climb Dash. Strength-one
+perturbations retain 27–58/64 successes without deaths. Wall-Jump-only and Dash-only searches both
+have no ceiling positive; an earlier, higher balcony that admitted a Wall-Jump-only ascent was
+rejected during authoring rather than encoded as the intended solution.
+
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 
 ```sh

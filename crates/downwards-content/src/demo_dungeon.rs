@@ -1521,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v28".to_owned(),
+        id: "demo-dungeon-v29".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -3173,6 +3173,129 @@ mod tests {
             !matches!(outcome, TargetSolveOutcome::Solved(_)),
             "Wall-Jump-only search unexpectedly crossed the mixed Astral Seal: {outcome:?}"
         );
+    }
+
+    #[test]
+    fn eclipse_fork_checked_ceiling_route_alternates_then_uses_one_upward_dash() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::EclipseFork)
+            .expect("Eclipse Fork has route metadata");
+        let room = demo_dungeon_room(spec.room, spec.inventory);
+        let mut replayed =
+            Simulation::enter_via_door(room, spec.inventory.abilities(), "west").unwrap();
+        replayed.enable_current_player_movement();
+        let actions = crate::demo_dungeon_witness_actions(spec.room);
+        let mut previous = downwards_core::Action::default();
+        let mut jump_presses = 0;
+        let mut accepted_jumps = 0;
+        let mut wall_sides = Vec::new();
+        let mut wall_jump_ticks = Vec::new();
+        let mut dash_positions = Vec::new();
+        let mut dash_ticks = Vec::new();
+        for (tick, action) in actions.into_iter().enumerate() {
+            jump_presses += usize::from(action.jump && !previous.jump);
+            previous = action;
+            let report = replayed.step(action);
+            for event in report.events {
+                assert!(
+                    !matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset),
+                    "the checked Eclipse route must remain clean: {event:?}"
+                );
+                match event {
+                    SimulationEvent::Jumped(kind) => {
+                        accepted_jumps += 1;
+                        if let JumpKind::Wall { side } = kind {
+                            wall_sides.push(side);
+                            wall_jump_ticks.push(tick);
+                        }
+                    }
+                    SimulationEvent::Dashed { .. } => {
+                        dash_positions.push(replayed.player().bounds());
+                        dash_ticks.push(tick);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        assert_eq!(replayed.reached_exit(), Some("ceiling"));
+        assert_eq!(
+            jump_presses, accepted_jumps,
+            "Eclipse witness has jump spam"
+        );
+        assert!(
+            wall_sides.len() >= 2 && wall_sides.windows(2).all(|pair| pair[0] != pair[1]),
+            "Eclipse climb no longer alternates across the shaft: {wall_sides:?}"
+        );
+        assert_eq!(
+            dash_positions.len(),
+            1,
+            "Eclipse ceiling relay should use one Dash: {dash_positions:?}"
+        );
+        assert!(
+            dash_ticks[0] > *wall_jump_ticks.last().expect("wall ascent occurs"),
+            "Eclipse route used Dash to assist its climb"
+        );
+        assert!(
+            (160..=175).contains(&dash_positions[0].x) && dash_positions[0].y <= 45,
+            "Eclipse Dash no longer launches from the upper balcony: {:?}",
+            dash_positions[0]
+        );
+    }
+
+    #[test]
+    fn eclipse_fork_ceiling_branch_refuses_each_incomplete_loadout_but_corridor_stays_open() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::EclipseFork)
+            .expect("Eclipse Fork has route metadata");
+        for (label, inventory) in [
+            (
+                "Wall-Jump-only",
+                DemoDungeonInventory {
+                    climbing_gloves: true,
+                    winged_boots: false,
+                    ..spec.inventory
+                },
+            ),
+            (
+                "Dash-only",
+                DemoDungeonInventory {
+                    climbing_gloves: false,
+                    winged_boots: true,
+                    ..spec.inventory
+                },
+            ),
+        ] {
+            let room = demo_dungeon_room(spec.room, inventory);
+            let mut initial = Simulation::enter_via_door(room, inventory.abilities(), "west")
+                .expect("Eclipse west entry is valid");
+            initial.enable_current_player_movement();
+            let outcome = solve_target(
+                &initial,
+                SearchTarget::door("ceiling"),
+                &SolverConfig::for_abilities(inventory.abilities()),
+            )
+            .unwrap();
+            assert!(
+                !matches!(outcome, TargetSolveOutcome::Solved(_)),
+                "{label} search unexpectedly reached the Eclipse ceiling: {outcome:?}"
+            );
+        }
+
+        let room = demo_dungeon_room(DemoDungeonRoom::EclipseFork, spec.inventory);
+        let mut corridor = Simulation::enter_via_door(room, AbilitySet::NONE, "west").unwrap();
+        corridor.enable_current_player_movement();
+        for _ in 0..220 {
+            corridor.step(downwards_core::Action {
+                move_x: 1,
+                ..downwards_core::Action::default()
+            });
+            if corridor.reached_exit().is_some() {
+                break;
+            }
+        }
+        assert_eq!(corridor.reached_exit(), Some("east"));
     }
 
     #[test]

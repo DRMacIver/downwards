@@ -1,5 +1,5 @@
 schema downwards-demo-dungeon-witnesses-v1
-palette-generation 28
+palette-generation 29
 player-movement-policy 4
 tuning 110 72 203 50 50 250
 shaky-policy 64 18 2 2
@@ -2282,39 +2282,22 @@ room demo-dungeon.eclipse-fork
 entry west
 target door ceiling
 abilities 1 1
-ticks 129
-observation 27 3 3 0 10 3
-shaky BoundaryTiming 30 64 14
-shaky CorrelatedTiming 30 64 8
-shaky HoldRelease 48 64 6
-shaky DropRepeatFrame 32 64 19
-span 1 1 0 1 0 1
-span 1 1 0 0 0 9
-span 1 0 1 0 0 4
-span 0 0 0 1 0 1
-span 1 0 0 0 0 13
-span 0 0 0 1 0 1
-span 1 0 0 0 0 9
-span 0 0 0 1 0 1
-span 1 0 0 0 0 9
-span 0 0 0 1 0 1
-span 1 0 0 0 0 9
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 8
-span -1 0 0 0 0 4
+ticks 130
+observation 10 4 4 2 1 2
+shaky BoundaryTiming 27 64 0
+shaky CorrelatedTiming 42 64 0
+shaky HoldRelease 40 64 0
+shaky DropRepeatFrame 58 64 0
+span 1 0 0 0 0 71
+span 1 0 1 0 0 7
 span 1 0 0 0 0 4
-span -1 0 1 0 0 7
+span -1 0 1 0 0 1
+span -1 0 0 0 0 16
+span 1 0 1 0 0 1
+span 1 0 0 0 0 17
+span 0 0 1 0 0 3
 span 0 -1 0 1 0 1
-span 0 -1 0 0 0 7
-span -1 0 0 0 0 4
-span -1 -1 0 1 0 1
-span -1 -1 0 0 0 4
-span -1 1 0 0 0 10
-span -1 0 0 1 0 1
-span -1 0 0 0 0 9
-span -1 0 1 0 0 4
-span -1 -1 0 1 0 1
-span -1 -1 0 0 0 5
+span 0 0 0 0 0 9
 end
 route demo-dungeon.shadow-duct
 room demo-dungeon.shadow-duct

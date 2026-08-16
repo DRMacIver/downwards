@@ -287,6 +287,16 @@ one Dash, and four reversals. The four strength-one families retain 23, 33, 39, 
 of 64. Same-budget Wall-Jump-only and Dash-only searches both have no coin positive; an independent
 full-loadout solve reaches the east door after collection.
 
+The Eclipse Fork is the nineteenth replacement in v29. Its former ceiling route took 129 ticks and
+27 spans while firing ten Dashes, four before its first Wall Jump, and never using Wall Jump at all.
+The replacement preserves a flat, non-lethal east-west corridor but gives the ceiling branch a
+broad paired-wall shaft, explicit contact-settle rhythm, and a recovery balcony below the vertical
+Dash lane. Its witness exact-replays in 130 ticks and 10 spans with four accepted jump presses, two
+alternating Wall Jumps, one upward Dash after the climb, and two reversals. The four strength-one
+families retain 27, 42, 40, and 58 successes out of 64 with no deaths. Wall-Jump-only and Dash-only
+searches both have no ceiling positive, while an explicit no-ability run crosses west to east. A
+higher prototype balcony failed the Wall-Jump-only refusal search and was lowered before promotion.
+
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
 persistent item omission, additive mid-run Wall Jump and Dash state, gate rejection without room reset, client

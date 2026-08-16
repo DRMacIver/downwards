@@ -311,6 +311,7 @@ fn compare_routes(
                     | DemoDungeonRoom::ShadowDuct
                     | DemoDungeonRoom::Observatory
                     | DemoDungeonRoom::AuroraSpire
+                    | DemoDungeonRoom::EclipseFork
                     | DemoDungeonRoom::AstralSeal
                     | DemoDungeonRoom::Gatehouse
                     | DemoDungeonRoom::CrownSanctum
@@ -492,6 +493,9 @@ fn segmented_candidate(
     }
     if spec.room == DemoDungeonRoom::Skybridge {
         return segmented_skybridge_candidate(initial, target);
+    }
+    if spec.room == DemoDungeonRoom::EclipseFork {
+        return segmented_eclipse_fork_candidate(initial, target);
     }
     if spec.room == DemoDungeonRoom::AstralSeal {
         return segmented_astral_seal_candidate(initial, target);
@@ -1423,6 +1427,76 @@ fn segmented_astral_seal_candidate(
     })
 }
 
+fn segmented_eclipse_fork_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    let Some((intermediate, climb)) =
+        readable_alternating_climb(initial, 124, 144, 58, 160, 192, 3)
+    else {
+        eprintln!("  segmented Eclipse climb failed");
+        return None;
+    };
+    let mut candidates = Vec::new();
+    for takeoff_x in 160..=172 {
+        let Some((takeoff, approach)) = approach_x(&intermediate, takeoff_x) else {
+            continue;
+        };
+        for horizontal in [-1, 0, 1] {
+            for jump_hold in 0..=10 {
+                for dash_delay in 0..=10 {
+                    let mut simulation = takeoff.clone();
+                    let mut suffix = approach.clone();
+                    let ascent = std::iter::repeat_n(
+                        Action {
+                            move_x: horizontal,
+                            move_y: 0,
+                            jump: true,
+                            dash: false,
+                            restart: false,
+                        },
+                        jump_hold,
+                    )
+                    .chain(std::iter::repeat_n(Action::default(), dash_delay))
+                    .chain(std::iter::once(Action {
+                        move_x: horizontal,
+                        move_y: -1,
+                        jump: false,
+                        dash: true,
+                        restart: false,
+                    }))
+                    .chain(std::iter::repeat_n(Action::default(), 40));
+                    for action in ascent {
+                        if !clean_step(&mut simulation, action) {
+                            break;
+                        }
+                        suffix.push(action);
+                        if simulation.reached_exit() == Some("ceiling") {
+                            let mut full_actions = climb.clone();
+                            full_actions.extend(suffix);
+                            candidates.push(full_actions);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    let Some(actions) = candidates
+        .into_iter()
+        .min_by(|left, right| static_route_key(left).cmp(&static_route_key(right)))
+    else {
+        eprintln!("  segmented Eclipse ceiling ascent failed");
+        return None;
+    };
+    Some(TargetSolution {
+        target: target.clone(),
+        reached: ReachedTarget::Door("ceiling".to_owned()),
+        replay: Replay::record(initial, actions),
+        stats: SearchStats::default(),
+    })
+}
+
 fn readable_alternating_climb(
     initial: &Simulation,
     takeoff_min_x: i32,
@@ -2121,8 +2195,15 @@ fn main() {
             audit_direct_controller_probes(&initial, std::slice::from_ref(&target), &solver_config)
                 .unwrap_or_else(|error| panic!("{} direct audit failed: {error}", spec.id()));
         candidates.extend(
-            segmented_candidate(&initial, spec, &target)
-                .map(|solution| (solution, spec.room != DemoDungeonRoom::AstralSeal)),
+            segmented_candidate(&initial, spec, &target).map(|solution| {
+                (
+                    solution,
+                    !matches!(
+                        spec.room,
+                        DemoDungeonRoom::AstralSeal | DemoDungeonRoom::EclipseFork
+                    ),
+                )
+            }),
         );
         candidates.extend(direct.witnesses.into_iter().map(|witness| {
             (

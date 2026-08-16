@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 28;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 29;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1613,15 +1613,15 @@ impl PaletteDraft<'_> {
                 }
             }
             DungeonPaletteCourse::EclipseFork => {
-                self.horizontal(14, 3, 8, Tile::OneWay);
-                self.horizontal(12, 11, 17, Tile::OneWay);
-                self.horizontal(8, 21, 27, Tile::OneWay);
-                self.horizontal(14, 26, 30, Tile::OneWay);
-                self.horizontal(16, 8, 14, Tile::Solid);
-                self.horizontal(16, 18, 24, Tile::Solid);
-                self.horizontal(5, 13, 19, Tile::OneWay);
-                self.horizontal(16, 14, 18, Tile::HazardUp);
-                self.horizontal(5, 19, 24, Tile::HazardDown);
+                // The three-way junction remains safe to traverse east-west, while its ceiling
+                // branch is a compact two-method movement checkpoint. Both walls leave a
+                // standing-height opening above the corridor; their broad alternating shaft
+                // reaches a full launch balcony, from which one upward Dash enters the eclipse.
+                self.horizontal(16, 1, 31, Tile::Solid);
+                self.horizontal(17, 1, 31, Tile::Solid);
+                self.vertical(11, 7, 14, Tile::Solid);
+                self.vertical(16, 7, 14, Tile::Solid);
+                self.horizontal(7, 16, 20, Tile::Solid);
             }
             DungeonPaletteCourse::ShadowDuct => {
                 // A compact three-act branch instead of three broad staircase shelves. The floor
@@ -2601,6 +2601,49 @@ mod tests {
                 Tile::Solid,
                 "starwell lacks floor backing"
             );
+        }
+    }
+
+    #[test]
+    fn eclipse_fork_serializes_a_safe_alternating_shaft_and_launch_balcony() {
+        let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::EclipseFork).generate();
+        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
+
+        for column in 1..31 {
+            assert_eq!(
+                tile(column, 16),
+                Tile::Solid,
+                "fork corridor floor is incomplete"
+            );
+            assert_eq!(tile(column, 17), Tile::Solid, "fork corridor lacks backing");
+        }
+        for row in 7..14 {
+            assert_eq!(tile(11, row), Tile::Solid, "west shaft face is open");
+            assert_eq!(tile(16, row), Tile::Solid, "east shaft face is open");
+        }
+        for row in 14..16 {
+            assert_eq!(
+                tile(11, row),
+                Tile::Empty,
+                "west shaft entrance is obstructed"
+            );
+            assert_eq!(
+                tile(16, row),
+                Tile::Empty,
+                "east shaft entrance is obstructed"
+            );
+        }
+        for column in 16..20 {
+            assert_eq!(tile(column, 7), Tile::Solid, "launch balcony is incomplete");
+        }
+        for row in 1..7 {
+            for column in 14..18 {
+                assert_eq!(
+                    tile(column, row),
+                    Tile::Empty,
+                    "ceiling Dash lane is obstructed"
+                );
+            }
         }
     }
 
