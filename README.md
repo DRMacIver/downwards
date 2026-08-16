@@ -437,9 +437,23 @@ observations for every floor under the current movement and palette policies. Th
 tractability and controller-behaviour records, not difficulty scores. The retuner considers the
 previous checked-in witness, finite direct-controller positives, and course-specific segmented
 routes; it mechanically simplifies exact replays, compares action shape lexicographically, and
-only adopts a candidate with at least one success in every applicable perturbation family. The
+selects the first candidate whose worst strength-one perturbation family retains at least 75%
+success, falling back to the most jitter-tolerant candidate found when none clears that bar. The
 targeted `--route` form prints candidate observations plus the selected route's exact
 event/position/velocity/input trace without rewriting the full artifact.
+
+Summarise the recorded perturbation evidence across the whole dungeon — per-route worst/mean
+strength-one survival, the distribution, and outliers — without re-solving anything:
+
+```sh
+cargo run -p downwards-content --example shaky_report
+```
+
+Room tile geometry is authored as ASCII grids in `crates/downwards-gen/rooms/<slug>.txt`
+(`#` solid, `-` one-way, `^v<>` directional hazards, `.` empty; door mouths are the boundary
+gaps). Edit a grid, bump `DUNGEON_PALETTE_GENERATION_VERSION`, and regenerate the witness
+artifact. `cargo run -p downwards-gen --example export_room_grids` rebuilds the include table
+when rooms are added, removed, or renamed.
 
 Join that evidence to the persistent human-attempt history and a tile-layout similarity audit with:
 
