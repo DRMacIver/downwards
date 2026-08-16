@@ -1,5 +1,5 @@
 schema downwards-demo-dungeon-witnesses-v1
-palette-generation 32
+palette-generation 33
 player-movement-policy 4
 tuning 110 72 203 50 50 250
 shaky-policy 64 18 2 2
@@ -397,39 +397,46 @@ room demo-dungeon.tempo-hall
 entry west
 target pickup dungeon-coin-19
 abilities 1 0
-ticks 150
-observation 27 8 8 4 0 6
-shaky BoundaryTiming 36 64 13
-shaky CorrelatedTiming 44 64 5
-shaky HoldRelease 44 64 10
-shaky DropRepeatFrame 63 64 1
-span 1 0 0 0 0 22
-span 1 0 1 0 0 2
-span 1 0 0 0 0 7
-span 0 0 0 0 0 7
-span 1 0 0 0 0 5
-span 1 0 1 0 0 3
-span 1 0 0 0 0 4
-span 0 0 0 0 0 4
-span -1 0 1 0 0 1
-span -1 1 0 0 0 3
-span 0 0 0 0 0 4
-span -1 0 0 0 0 6
-span -1 0 1 0 0 2
-span 0 0 0 0 0 1
-span -1 0 1 0 0 1
-span -1 0 0 0 0 7
-span 1 0 0 0 0 4
-span 0 0 1 0 0 4
-span -1 0 0 0 0 5
-span -1 0 1 0 0 7
+ticks 226
+observation 34 6 6 1 0 10
+shaky BoundaryTiming 58 67 0
+shaky CorrelatedTiming 50 64 0
+shaky HoldRelease 58 64 0
+shaky DropRepeatFrame 64 64 0
+span 1 0 0 0 0 39
 span 1 0 1 0 0 4
-span 0 0 1 0 0 2
-span 1 0 0 0 0 4
-span -1 0 1 0 0 1
-span -1 0 0 0 0 7
-span 1 0 0 0 0 31
+span 1 0 0 0 0 33
+span -1 1 1 0 0 1
+span -1 1 0 0 0 3
+span -1 0 1 0 0 8
+span 1 0 1 0 0 4
+span -1 0 0 0 0 4
+span 0 0 0 0 0 5
+span 1 0 0 0 0 10
 span 0 0 0 0 0 2
+span 1 0 1 0 0 4
+span -1 0 1 0 0 4
+span 0 1 1 0 0 1
+span 0 1 0 0 0 3
+span 0 0 0 0 0 8
+span -1 0 0 0 0 10
+span 0 0 0 0 0 2
+span -1 0 1 0 0 4
+span 1 0 1 0 0 4
+span -1 1 1 0 0 1
+span -1 1 0 0 0 3
+span -1 0 0 0 0 4
+span 0 0 0 0 0 1
+span 1 0 0 0 0 10
+span 0 0 0 0 0 2
+span 1 0 1 0 0 4
+span 0 0 1 0 0 4
+span 0 1 1 0 0 1
+span 0 1 0 0 0 3
+span 1 0 0 0 0 8
+span -1 0 0 0 0 4
+span 0 0 0 0 0 4
+span 1 0 0 0 0 24
 end
 route demo-dungeon.split-spire
 room demo-dungeon.split-spire

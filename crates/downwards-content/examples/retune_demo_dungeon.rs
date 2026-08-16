@@ -533,6 +533,9 @@ fn segmented_candidate(
     if spec.room == DemoDungeonRoom::CrownSanctum {
         return segmented_crown_sanctum_candidate(initial, target);
     }
+    if spec.room == DemoDungeonRoom::TempoHall {
+        return segmented_tempo_hall_candidate(initial, target);
+    }
     let (waypoint, first_config, second_config) = match spec.room {
         DemoDungeonRoom::VoidPass => (
             GroundedSupportTarget::new(
@@ -745,6 +748,134 @@ fn segmented_vacuum_gallery_candidate(
         replay: Replay::record(initial, actions),
         stats: SearchStats::default(),
     })
+}
+
+/// Author Tempo Hall's intended rhythm directly: an alternating climb to the
+/// lower recovery bridge, a full stop there, a second alternating verse to the
+/// upper bridge, a stop, a final verse out of the shaft onto the cap, then a
+/// walk to the coin. The grounded stops on the authored bridges are where a
+/// shaky hand can resynchronise between verses.
+fn segmented_tempo_hall_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    let mut hop = None;
+    'hop: for takeoff_x in 78..=94 {
+        let Some((takeoff, approach)) = approach_x(initial, takeoff_x) else {
+            continue;
+        };
+        for hold in 4..=12 {
+            let mut simulation = takeoff.clone();
+            let mut actions = approach.clone();
+            for tick in 0..60 {
+                let action = right_action(tick < hold, false);
+                if !clean_step(&mut simulation, action) {
+                    break;
+                }
+                actions.push(action);
+                let bounds = simulation.player().bounds();
+                if simulation.player().grounded()
+                    && bounds.y == 158
+                    && (112..=142).contains(&bounds.x)
+                {
+                    hop = Some((simulation, actions));
+                    break 'hop;
+                }
+            }
+        }
+    }
+    let Some((mut simulation, mut actions)) = hop else {
+        eprintln!("  segmented Tempo Hall could not hop into the shaft pit");
+        return None;
+    };
+    // Converge in the pit against the right wall before the first verse.
+    for _ in 0..14 {
+        if !clean_step(&mut simulation, right_action(false, false)) {
+            eprintln!("  segmented Tempo Hall pit settle died");
+            return None;
+        }
+        actions.push(right_action(false, false));
+    }
+    let config = SolverConfig::for_abilities(AbilitySet::new(true, false));
+    for (surface_left, surface_right, surface_y, region_min, region_max) in [
+        (120, 150, 130, 121, 141),
+        (120, 150, 100, 121, 141),
+        (120, 150, 70, 121, 141),
+        (150, 250, 40, 151, 210),
+    ] {
+        let bridge = GroundedSupportTarget::new(
+            surface_left,
+            surface_right,
+            surface_y,
+            [GroundedStandingRegion::new(region_min, region_max)
+                .expect("valid authored standing range")],
+        )
+        .expect("valid authored support waypoint");
+        let outcome = match solve_grounded_support(&simulation, &bridge, &config) {
+            Ok(outcome) => outcome,
+            Err(error) => {
+                eprintln!("  segmented Tempo Hall verse to y={surface_y} errored: {error}");
+                return None;
+            }
+        };
+        let GroundedSupportSolveOutcome::Solved(verse) = outcome else {
+            eprintln!("  segmented Tempo Hall verse to y={surface_y} failed: {outcome:?}");
+            return None;
+        };
+        for action in verse.replay.actions() {
+            simulation.step(action);
+            actions.push(action);
+        }
+        if surface_left != 120 {
+            continue;
+        }
+        // Press into a safe wall so every verse restarts from the same pixel:
+        // the wall stop converges position and velocity exactly, which is what
+        // lets a jittered replay resynchronise between verses. The middle
+        // bridge leans left, away from the hazard tile on its right wall; the
+        // others lean right.
+        let settle = Action {
+            move_x: if surface_y == 100 { -1 } else { 1 },
+            move_y: 0,
+            jump: false,
+            dash: false,
+            restart: false,
+        };
+        for _ in 0..10 {
+            if !clean_step(&mut simulation, settle) {
+                return None;
+            }
+            actions.push(settle);
+        }
+        for _ in 0..2 {
+            if !clean_step(&mut simulation, Action::default()) {
+                return None;
+            }
+            actions.push(Action::default());
+        }
+    }
+    // Walk right toward the coin; the cap parapet past it means a jittered
+    // replay that overshoots still ends against a wall instead of off the cap.
+    for _ in 0..60 {
+        if !clean_step(&mut simulation, right_action(false, false)) {
+            eprintln!("  segmented Tempo Hall cap walk died");
+            return None;
+        }
+        actions.push(right_action(false, false));
+        if simulation
+            .collected_pickups()
+            .any(|pickup| pickup.id() == "dungeon-coin-19")
+        {
+            return Some(TargetSolution {
+                target: target.clone(),
+                reached: ReachedTarget::Pickup("dungeon-coin-19".to_owned()),
+                replay: Replay::record(initial, actions),
+                stats: SearchStats::default(),
+            });
+        }
+    }
+    eprintln!("  segmented Tempo Hall reached the cap but not the coin");
+    None
 }
 
 fn segmented_constellation_hall_candidate(
@@ -2619,6 +2750,7 @@ fn main() {
                             | DemoDungeonRoom::ConstellationHall
                             | DemoDungeonRoom::EclipseFork
                             | DemoDungeonRoom::LunarCache
+                            | DemoDungeonRoom::TempoHall
                             | DemoDungeonRoom::VacuumGallery
                             | DemoDungeonRoom::ZenithShaft
                     ),
