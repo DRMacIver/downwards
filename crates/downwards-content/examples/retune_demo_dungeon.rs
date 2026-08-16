@@ -797,12 +797,9 @@ fn segmented_tempo_hall_candidate(
         actions.push(right_action(false, false));
     }
     let config = SolverConfig::for_abilities(AbilitySet::new(true, false));
-    for (surface_left, surface_right, surface_y, region_min, region_max) in [
-        (120, 150, 130, 121, 141),
-        (120, 150, 100, 121, 141),
-        (120, 150, 70, 121, 141),
-        (150, 250, 40, 151, 210),
-    ] {
+    for (surface_left, surface_right, surface_y, region_min, region_max) in
+        [(120, 150, 100, 121, 141), (150, 250, 40, 151, 210)]
+    {
         let bridge = GroundedSupportTarget::new(
             surface_left,
             surface_right,
@@ -831,11 +828,10 @@ fn segmented_tempo_hall_candidate(
         }
         // Press into a safe wall so every verse restarts from the same pixel:
         // the wall stop converges position and velocity exactly, which is what
-        // lets a jittered replay resynchronise between verses. The middle
-        // bridge leans left, away from the hazard tile on its right wall; the
-        // others lean right.
+        // lets a jittered replay resynchronise between verses. The bridge
+        // leans left, away from the hazard band on its right wall.
         let settle = Action {
-            move_x: if surface_y == 100 { -1 } else { 1 },
+            move_x: -1,
             move_y: 0,
             jump: false,
             dash: false,
