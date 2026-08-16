@@ -1,7 +1,7 @@
 mod playable_catalogue;
 
 use std::{
-    collections::{HashMap, VecDeque},
+    collections::{BTreeSet, HashMap, HashSet, VecDeque},
     env, fs,
     fs::{File, OpenOptions},
     io::{BufWriter, Write},
@@ -17,15 +17,14 @@ use downwards_ai::{
 use downwards_catalogue::CatalogueBand;
 use downwards_content::{
     AuthoredDoorRequirement, CalibratedGeneratorPlaytestLevel, CalibrationLevel,
-    DEMO_DUNGEON_BOOT_GATE_REQUIREMENT, DEMO_DUNGEON_BOOT_PICKUP, DEMO_DUNGEON_CROWN_PICKUP,
-    DEMO_DUNGEON_GLOVE_GATE_REQUIREMENT, DEMO_DUNGEON_GLOVE_PICKUP, DEMO_DUNGEON_GOAL_EXIT,
-    DEMO_DUNGEON_TOTAL_COINS, DemoDungeonInventory, DemoDungeonRoom, DemoDungeonRouteSpec,
-    DemoDungeonRouteTarget, HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET, MEDIUM_NO_DASH_ABILITIES,
-    MEDIUM_NO_DASH_TARGET, TraversalMethod, calibrated_generator_playtest, calibration_gallery,
-    demo_dungeon_definition, demo_dungeon_door_requirement, demo_dungeon_room,
-    demo_dungeon_route_specs, demo_dungeon_witness_actions, first_steps_room,
-    hard_no_dash_scenario, hard_no_dash_witness_actions, medium_no_dash_scenario,
-    medium_no_dash_witness_actions,
+    DEMO_DUNGEON_BOOT_PICKUP, DEMO_DUNGEON_CROWN_PICKUP, DEMO_DUNGEON_GLOVE_PICKUP,
+    DEMO_DUNGEON_GOAL_EXIT, DEMO_DUNGEON_TOTAL_COINS, DemoDungeonInventory, DemoDungeonRoom,
+    DemoDungeonRouteSpec, DemoDungeonRouteTarget, HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET,
+    MEDIUM_NO_DASH_ABILITIES, MEDIUM_NO_DASH_TARGET, TraversalMethod,
+    calibrated_generator_playtest, calibration_gallery, demo_dungeon_definition,
+    demo_dungeon_door_requirement, demo_dungeon_room, demo_dungeon_route_specs,
+    demo_dungeon_witness_actions, first_steps_room, hard_no_dash_scenario,
+    hard_no_dash_witness_actions, medium_no_dash_scenario, medium_no_dash_witness_actions,
 };
 use downwards_core::{
     AbilitySet, Action, BoundarySide, DeathReason, HazardDirection, JUMP_BUFFER_TICKS, JumpKind,
@@ -407,6 +406,25 @@ async fn main() {
             next_frame().await;
             continue;
         }
+        if is_key_pressed(KeyCode::Tab)
+            && client.selection.mode == RoomMode::Dungeon
+            && !client.level_menu_visible()
+        {
+            client.map_visible = !client.map_visible;
+        }
+        if client.map_visible {
+            if is_key_pressed(KeyCode::Escape) {
+                client.map_visible = false;
+            }
+            accumulated_seconds = 0.0;
+            dash_queued = false;
+            jump_input.reset();
+            restart_queued = false;
+            replay_frame_queued = false;
+            render(&client, &visual_assets);
+            next_frame().await;
+            continue;
+        }
         if is_key_pressed(KeyCode::M) {
             client.open_level_menu();
             accumulated_seconds = 0.0;
@@ -640,6 +658,53 @@ impl ChallengeKind {
             },
         }
     }
+}
+
+/// Stable 2D layout of the dungeon graph: BFS from Hollow Landing, stepping
+/// one cell per door direction and extending past occupied cells so every
+/// room gets a distinct coordinate.
+fn dungeon_map_layout() -> &'static HashMap<DemoDungeonRoom, (i32, i32)> {
+    static LAYOUT: std::sync::OnceLock<HashMap<DemoDungeonRoom, (i32, i32)>> =
+        std::sync::OnceLock::new();
+    LAYOUT.get_or_init(|| {
+        let definition = demo_dungeon_definition();
+        let room_by_key: HashMap<u16, DemoDungeonRoom> = DemoDungeonRoom::ALL
+            .into_iter()
+            .map(|room| (room.authored_key().0, room))
+            .collect();
+        let mut positions: HashMap<DemoDungeonRoom, (i32, i32)> = HashMap::new();
+        let mut occupied: HashSet<(i32, i32)> = HashSet::new();
+        let mut queue = VecDeque::from([DemoDungeonRoom::HollowLanding]);
+        positions.insert(DemoDungeonRoom::HollowLanding, (0, 0));
+        occupied.insert((0, 0));
+        while let Some(room) = queue.pop_front() {
+            let origin = positions[&room];
+            let floor = definition
+                .floor(room.authored_key())
+                .expect("room has a floor definition");
+            for connection in &floor.connections {
+                let destination = room_by_key[&connection.destination_floor.0];
+                if positions.contains_key(&destination) {
+                    continue;
+                }
+                let step = match connection.door_id.as_str() {
+                    "west" => (-1, 0),
+                    "east" => (1, 0),
+                    "ceiling" => (0, -1),
+                    "floor" => (0, 1),
+                    _ => (1, 0),
+                };
+                let mut cell = (origin.0 + step.0, origin.1 + step.1);
+                while occupied.contains(&cell) {
+                    cell = (cell.0 + step.0, cell.1 + step.1);
+                }
+                positions.insert(destination, cell);
+                occupied.insert(cell);
+                queue.push_back(destination);
+            }
+        }
+        positions
+    })
 }
 
 fn dungeon_floor_route_spec(room: DemoDungeonRoom) -> DemoDungeonRouteSpec {
@@ -2476,6 +2541,8 @@ struct ClientState {
     dungeon_run: Option<DungeonRunState>,
     dungeon_persistence: Option<DungeonPersistence>,
     death_pause_ticks: u8,
+    explored_rooms: BTreeSet<DemoDungeonRoom>,
+    map_visible: bool,
 }
 
 /// Ticks of zeroed human input after a death (~0.4s at 60Hz).
@@ -2509,11 +2576,17 @@ struct DungeonSaveV1 {
     winged_boots: bool,
     crown: bool,
     collected_coins: Vec<u8>,
+    #[serde(default)]
+    explored_rooms: Vec<String>,
     saved_at_unix_ms: u64,
 }
 
 impl DungeonSaveV1 {
-    fn from_run(run: DungeonRunState, entry_door: Option<&str>) -> Self {
+    fn from_run(
+        run: DungeonRunState,
+        entry_door: Option<&str>,
+        explored: &BTreeSet<DemoDungeonRoom>,
+    ) -> Self {
         Self {
             schema: DUNGEON_SAVE_SCHEMA.to_owned(),
             dungeon_id: demo_dungeon_definition().id,
@@ -2528,11 +2601,12 @@ impl DungeonSaveV1 {
             collected_coins: (0..DEMO_DUNGEON_TOTAL_COINS)
                 .filter(|index| run.inventory.has_coin(&format!("dungeon-coin-{index:02}")))
                 .collect(),
+            explored_rooms: explored.iter().map(|room| room.id().to_owned()).collect(),
             saved_at_unix_ms: unix_time_ms(),
         }
     }
 
-    fn validate(&self) -> Result<(DungeonRunState, Option<String>), String> {
+    fn validate(&self) -> Result<LoadedDungeonProgress, String> {
         if self.schema != DUNGEON_SAVE_SCHEMA {
             return Err(format!(
                 "dungeon save schema {:?} is not current {:?}",
@@ -2592,7 +2666,20 @@ impl DungeonSaveV1 {
             }
             Some(_) | None => {}
         }
-        Ok((DungeonRunState { room, inventory }, self.entry_door.clone()))
+        let mut explored: BTreeSet<DemoDungeonRoom> = self
+            .explored_rooms
+            .iter()
+            .map(|id| {
+                DemoDungeonRoom::from_id(id)
+                    .ok_or_else(|| format!("dungeon save explored unknown room {id:?}"))
+            })
+            .collect::<Result<_, _>>()?;
+        explored.insert(room);
+        Ok((
+            DungeonRunState { room, inventory },
+            self.entry_door.clone(),
+            explored,
+        ))
     }
 }
 
@@ -2601,7 +2688,7 @@ struct DungeonPersistence {
     path: PathBuf,
 }
 
-type LoadedDungeonProgress = (DungeonRunState, Option<String>);
+type LoadedDungeonProgress = (DungeonRunState, Option<String>, BTreeSet<DemoDungeonRoom>);
 
 impl DungeonPersistence {
     fn open(path: &Path, fresh: bool) -> Result<(Self, Option<LoadedDungeonProgress>), String> {
@@ -2655,8 +2742,13 @@ impl DungeonPersistence {
         ))
     }
 
-    fn persist(&self, run: DungeonRunState, entry_door: Option<&str>) -> Result<(), String> {
-        let save = DungeonSaveV1::from_run(run, entry_door);
+    fn persist(
+        &self,
+        run: DungeonRunState,
+        entry_door: Option<&str>,
+        explored: &BTreeSet<DemoDungeonRoom>,
+    ) -> Result<(), String> {
+        let save = DungeonSaveV1::from_run(run, entry_door, explored);
         let mut bytes = serde_json::to_vec_pretty(&save)
             .map_err(|error| format!("could not serialize dungeon save: {error}"))?;
         bytes.push(b'\n');
@@ -2697,7 +2789,7 @@ impl DungeonPersistence {
         })?;
         let parsed: DungeonSaveV1 = serde_json::from_slice(&readback)
             .map_err(|error| format!("published dungeon save is not readable: {error}"))?;
-        if parsed.validate()? != (run, entry_door.map(str::to_owned)) {
+        if parsed.validate()? != (run, entry_door.map(str::to_owned), explored.clone()) {
             return Err("published dungeon save readback changed the run state".to_owned());
         }
         Ok(())
@@ -2745,10 +2837,15 @@ impl ClientState {
         }
         let (mut simulation, generated_provenance) = load_scenario(selection, &catalogue)?;
         let mut dungeon_run = (selection.mode == RoomMode::Dungeon).then(DungeonRunState::default);
+        let mut explored_rooms = BTreeSet::new();
+        if dungeon_run.is_some() {
+            explored_rooms.insert(DemoDungeonRoom::HollowLanding);
+        }
         let dungeon_persistence = match (selection.mode, dungeon_save) {
             (RoomMode::Dungeon, Some((path, fresh))) => {
                 let (persistence, loaded) = DungeonPersistence::open(path, fresh)?;
-                if let Some((loaded_run, entry_door)) = loaded {
+                if let Some((loaded_run, entry_door, loaded_explored)) = loaded {
+                    explored_rooms = loaded_explored;
                     let room = demo_dungeon_room(loaded_run.room, loaded_run.inventory);
                     simulation = match entry_door.as_deref() {
                         Some(door) => {
@@ -2762,7 +2859,7 @@ impl ClientState {
                     dungeon_run = Some(loaded_run);
                 }
                 let run = dungeon_run.expect("dungeon mode initializes run state");
-                persistence.persist(run, simulation.entry_door())?;
+                persistence.persist(run, simulation.entry_door(), &explored_rooms)?;
                 Some(persistence)
             }
             (RoomMode::Dungeon, None) => None,
@@ -2820,6 +2917,8 @@ impl ClientState {
             dungeon_run,
             dungeon_persistence,
             death_pause_ticks: 0,
+            explored_rooms,
+            map_visible: false,
         })
     }
 
@@ -2837,6 +2936,12 @@ impl ClientState {
         self.movement_tuning_menu = None;
         self.dungeon_run = (selection.mode == RoomMode::Dungeon).then(DungeonRunState::default);
         self.dungeon_persistence = None;
+        self.explored_rooms = if selection.mode == RoomMode::Dungeon {
+            BTreeSet::from([DemoDungeonRoom::HollowLanding])
+        } else {
+            BTreeSet::new()
+        };
+        self.map_visible = false;
         Ok(())
     }
 
@@ -3546,174 +3651,39 @@ impl ClientState {
             self.perform_pickup_solve(initial, None, coin_id);
             return;
         }
-        let target_door = match run.room {
-            DemoDungeonRoom::HollowLanding | DemoDungeonRoom::MossWalk => Some("east"),
-            DemoDungeonRoom::SplitRoot if run.inventory.coin_count() < 4 => Some("floor"),
-            DemoDungeonRoom::SplitRoot => Some("east"),
-            DemoDungeonRoom::RootCellar => Some("ceiling"),
-            DemoDungeonRoom::BrokenAqueduct | DemoDungeonRoom::OldLift => Some("east"),
-            DemoDungeonRoom::LanternGallery
-                if run.inventory.coin_count() < DEMO_DUNGEON_GLOVE_GATE_REQUIREMENT =>
-            {
-                Some("ceiling")
-            }
-            DemoDungeonRoom::LanternGallery => Some("east"),
-            DemoDungeonRoom::WatchPost => Some("floor"),
-            DemoDungeonRoom::Sluice | DemoDungeonRoom::ClimberVault => Some("east"),
-            DemoDungeonRoom::WallAntechamber | DemoDungeonRoom::BroadChimney => Some("east"),
-            DemoDungeonRoom::BellSwitchback if !run.inventory.has_coin("dungeon-coin-18") => {
-                Some("floor")
-            }
-            DemoDungeonRoom::BellSwitchback | DemoDungeonRoom::TempoHall => Some("east"),
-            DemoDungeonRoom::BellNiche => Some("ceiling"),
-            DemoDungeonRoom::SplitSpire if !run.inventory.has_coin("dungeon-coin-20") => {
-                Some("ceiling")
-            }
-            DemoDungeonRoom::SplitSpire
-            | DemoDungeonRoom::LandingChain
-            | DemoDungeonRoom::NeedleTurn
-            | DemoDungeonRoom::WallGate => Some("east"),
-            DemoDungeonRoom::RafterShrine => Some("floor"),
-            DemoDungeonRoom::Threshold => Some("east"),
-            DemoDungeonRoom::Crossroads if run.inventory.winged_boots => Some("east"),
-            DemoDungeonRoom::Crossroads
-                if !run.inventory.has_coin("dungeon-coin-08")
-                    || !run.inventory.has_coin("dungeon-coin-09") =>
-            {
-                Some("floor")
-            }
-            DemoDungeonRoom::Crossroads
-                if run.inventory.coin_count() < DEMO_DUNGEON_BOOT_GATE_REQUIREMENT =>
-            {
-                Some("east")
-            }
-            DemoDungeonRoom::Crossroads => Some("ceiling"),
-            DemoDungeonRoom::BootsVault => Some("east"),
-            DemoDungeonRoom::Underpass
-                if !run.inventory.has_coin("dungeon-coin-14")
-                    || !run.inventory.has_coin("dungeon-coin-15") =>
-            {
-                Some("east")
-            }
-            DemoDungeonRoom::Underpass if !run.inventory.winged_boots => Some("west"),
-            DemoDungeonRoom::Underpass => Some("ceiling"),
-            DemoDungeonRoom::WallGallery
-                if !run.inventory.winged_boots && !run.inventory.has_coin("dungeon-coin-11") =>
-            {
-                Some("ceiling")
-            }
-            DemoDungeonRoom::WallGallery if !run.inventory.winged_boots => Some("floor"),
-            DemoDungeonRoom::WallGallery => Some("east"),
-            DemoDungeonRoom::DashChasm => Some("east"),
-            DemoDungeonRoom::GaleLanding | DemoDungeonRoom::LowPassage => Some("east"),
-            DemoDungeonRoom::CurrentFork if !run.inventory.has_coin("dungeon-coin-24") => {
-                Some("floor")
-            }
-            DemoDungeonRoom::CurrentFork | DemoDungeonRoom::PulseGallery => Some("east"),
-            DemoDungeonRoom::CoinDuct => Some("ceiling"),
-            DemoDungeonRoom::StormSplit if !run.inventory.has_coin("dungeon-coin-26") => {
-                Some("ceiling")
-            }
-            DemoDungeonRoom::StormSplit
-            | DemoDungeonRoom::RelayChasm
-            | DemoDungeonRoom::BrakeTower
-            | DemoDungeonRoom::DashSeal => Some("east"),
-            DemoDungeonRoom::StormCache => Some("floor"),
-            DemoDungeonRoom::AlloyThreshold | DemoDungeonRoom::Windshaft => Some("east"),
-            DemoDungeonRoom::SplitFurnace if !run.inventory.has_coin("dungeon-coin-30") => {
-                Some("floor")
-            }
-            DemoDungeonRoom::SplitFurnace | DemoDungeonRoom::GearGallery => Some("east"),
-            DemoDungeonRoom::EmberVault => Some("ceiling"),
-            DemoDungeonRoom::CrosswindChimney => Some("east"),
-            DemoDungeonRoom::FoundryFork if !run.inventory.has_coin("dungeon-coin-32") => {
-                Some("ceiling")
-            }
-            DemoDungeonRoom::FoundryFork | DemoDungeonRoom::HammerHall => Some("east"),
-            DemoDungeonRoom::CoolingDuct => Some("floor"),
-            DemoDungeonRoom::LiftShaft if !run.inventory.has_coin("dungeon-coin-34") => {
-                Some("ceiling")
-            }
-            DemoDungeonRoom::LiftShaft
-            | DemoDungeonRoom::RivetRun
-            | DemoDungeonRoom::BlastGallery => Some("east"),
-            DemoDungeonRoom::SparkNiche => Some("floor"),
-            DemoDungeonRoom::PressureFork if !run.inventory.has_coin("dungeon-coin-36") => {
-                Some("floor")
-            }
-            DemoDungeonRoom::PressureFork
-            | DemoDungeonRoom::VentSpire
-            | DemoDungeonRoom::PistonPass
-            | DemoDungeonRoom::CrucibleClimb
-            | DemoDungeonRoom::CinderBridge
-            | DemoDungeonRoom::FoundrySeal => Some("east"),
-            DemoDungeonRoom::AshCache => Some("ceiling"),
-            DemoDungeonRoom::GlassThreshold | DemoDungeonRoom::PrismRun => Some("east"),
-            DemoDungeonRoom::SplitKiln if !run.inventory.has_coin("dungeon-coin-42") => {
-                Some("floor")
-            }
-            DemoDungeonRoom::SplitKiln | DemoDungeonRoom::GlassGallery => Some("east"),
-            DemoDungeonRoom::ShardVault => Some("ceiling"),
-            DemoDungeonRoom::RefractionShaft => Some("east"),
-            DemoDungeonRoom::MirrorFork if !run.inventory.has_coin("dungeon-coin-44") => {
-                Some("ceiling")
-            }
-            DemoDungeonRoom::MirrorFork | DemoDungeonRoom::TemperHall => Some("east"),
-            DemoDungeonRoom::MirrorDuct => Some("floor"),
-            DemoDungeonRoom::FurnaceLift if !run.inventory.has_coin("dungeon-coin-46") => {
-                Some("ceiling")
-            }
-            DemoDungeonRoom::FurnaceLift
-            | DemoDungeonRoom::SliverRun
-            | DemoDungeonRoom::HotGlass => Some("east"),
-            DemoDungeonRoom::LensNiche => Some("floor"),
-            DemoDungeonRoom::CulletFork if !run.inventory.has_coin("dungeon-coin-48") => {
-                Some("floor")
-            }
-            DemoDungeonRoom::CulletFork
-            | DemoDungeonRoom::AnnealingSpire
-            | DemoDungeonRoom::RazorPass
-            | DemoDungeonRoom::LatticeClimb
-            | DemoDungeonRoom::CrystalBridge
-            | DemoDungeonRoom::GlassSeal => Some("east"),
-            DemoDungeonRoom::CulletCache => Some("ceiling"),
-            DemoDungeonRoom::StarThreshold | DemoDungeonRoom::CometRun => Some("east"),
-            DemoDungeonRoom::OrbitFork if !run.inventory.has_coin("dungeon-coin-54") => {
-                Some("floor")
-            }
-            DemoDungeonRoom::OrbitFork | DemoDungeonRoom::ConstellationHall => Some("east"),
-            DemoDungeonRoom::MoonVault => Some("ceiling"),
-            DemoDungeonRoom::ZenithShaft => Some("east"),
-            DemoDungeonRoom::EclipseFork if !run.inventory.has_coin("dungeon-coin-56") => {
-                Some("ceiling")
-            }
-            DemoDungeonRoom::EclipseFork | DemoDungeonRoom::Observatory => Some("east"),
-            DemoDungeonRoom::ShadowDuct => Some("floor"),
-            DemoDungeonRoom::GravityLift if !run.inventory.has_coin("dungeon-coin-58") => {
-                Some("ceiling")
-            }
-            DemoDungeonRoom::GravityLift
-            | DemoDungeonRoom::MeteorRun
-            | DemoDungeonRoom::VacuumGallery => Some("east"),
-            DemoDungeonRoom::NovaNiche => Some("floor"),
-            DemoDungeonRoom::TidalFork if !run.inventory.has_coin("dungeon-coin-60") => {
-                Some("floor")
-            }
-            DemoDungeonRoom::TidalFork
-            | DemoDungeonRoom::AuroraSpire
-            | DemoDungeonRoom::VoidPass
-            | DemoDungeonRoom::StarwellClimb
-            | DemoDungeonRoom::Skybridge
-            | DemoDungeonRoom::AstralSeal => Some("east"),
-            DemoDungeonRoom::LunarCache => Some("ceiling"),
-            DemoDungeonRoom::CoinLoft => Some("ceiling"),
-            DemoDungeonRoom::NeedleRoom => Some("floor"),
-            DemoDungeonRoom::Treasury => Some("west"),
-            DemoDungeonRoom::Gatehouse => Some("east"),
-            DemoDungeonRoom::CrownSanctum => None,
-        };
+        // The Crown goal is the only terminal exit; everything else picks the
+        // nearest openable door that is not the one the player entered by
+        // (the entry door is a last resort so retreat is still offered).
+        if run.room == DemoDungeonRoom::CrownSanctum {
+            self.perform_exit_solve(initial, None);
+            return;
+        }
+        let entry_door = self.simulation.entry_door().map(str::to_owned);
+        let player = self.simulation.player().bounds();
+        let progression = run.inventory.authored_progression_inventory();
+        let mut candidates: Vec<(i64, String)> = self
+            .simulation
+            .room()
+            .doors()
+            .iter()
+            .filter(|door| {
+                demo_dungeon_door_requirement(run.room, &door.id).is_satisfied_by(&progression)
+            })
+            .map(|door| {
+                let trigger = door.trigger_bounds;
+                let dx = i64::from(trigger.x + trigger.width / 2 - player.x - player.width / 2);
+                let dy = i64::from(trigger.y + trigger.height / 2 - player.y - player.height / 2);
+                let mut score = dx * dx + dy * dy;
+                if Some(door.id.as_str()) == entry_door.as_deref() {
+                    score += 1_000_000_000;
+                }
+                (score, door.id.clone())
+            })
+            .collect();
+        candidates.sort();
+        let target_door = candidates.into_iter().next().map(|(_, id)| id);
         if let Some(target) = target_door {
-            self.perform_target_door_solve(initial, None, target.to_owned(), None, 0, 0);
+            self.perform_target_door_solve(initial, None, target, None, 0, 0);
         } else {
             self.perform_exit_solve(initial, None);
         }
@@ -4226,14 +4196,18 @@ impl ClientState {
             return;
         }
 
-        let completed_objective = match &mut self.replay_mode {
+        let (complete, completed_objective) = match &mut self.replay_mode {
             ReplayMode::Playback(playback) => {
                 playback.transport.mark_advanced();
-                (playback.transport.phase == PlaybackPhase::Complete)
-                    .then(|| playback.expected_objective.clone())
-                    .flatten()
+                let complete = playback.transport.phase == PlaybackPhase::Complete;
+                (
+                    complete,
+                    complete
+                        .then(|| playback.expected_objective.clone())
+                        .flatten(),
+                )
             }
-            ReplayMode::Human | ReplayMode::SolveRequested(_) => None,
+            ReplayMode::Human | ReplayMode::SolveRequested(_) => (false, None),
         };
         if let Some(expected_objective) = completed_objective
             && !expected_objective.is_satisfied_by(&self.simulation)
@@ -4245,6 +4219,32 @@ impl ClientState {
                     expected_objective.status_label()
                 ),
             );
+            return;
+        }
+        // AI progress is as real as human progress: persist coins and follow
+        // door transitions, and hand control back the moment a goal lands.
+        let boundary =
+            self.observe_dungeon_progress(&report) || self.observe_floor_lab_progress(&report);
+        if boundary {
+            self.replay_mode = ReplayMode::Human;
+            self.human_recorder = HumanRecorder::new(&self.simulation);
+        } else if complete
+            && matches!(&self.replay_mode, ReplayMode::Playback(_))
+            && (self.selection.mode == RoomMode::Dungeon
+                || matches!(
+                    self.selection.mode,
+                    RoomMode::Challenge(ChallengeKind::DungeonFloor(_))
+                ))
+        {
+            // In the dungeon and the floor lab, a finished AI goal hands
+            // control straight back; review modes keep the replay transport.
+            self.replay_mode = ReplayMode::Human;
+            self.human_recorder.resume_at(&self.simulation);
+            self.replay_notice = Some(ReplayNotice {
+                title: "AI GOAL COMPLETE".to_owned(),
+                detail: "control returned; V solves the next goal".to_owned(),
+                is_error: false,
+            });
         }
     }
 
@@ -4374,7 +4374,7 @@ impl ClientState {
     fn persist_dungeon_progress(&mut self) {
         let result = match (self.dungeon_persistence.as_ref(), self.dungeon_run) {
             (Some(persistence), Some(run)) => {
-                persistence.persist(run, self.simulation.entry_door())
+                persistence.persist(run, self.simulation.entry_door(), &self.explored_rooms)
             }
             (None, _) | (_, None) => return,
         };
@@ -4425,9 +4425,6 @@ impl ClientState {
         let RoomMode::Challenge(ChallengeKind::DungeonFloor(_)) = self.selection.mode else {
             return false;
         };
-        if !self.human_controlled() {
-            return false;
-        }
         let Some(exit_id) = report.events.iter().find_map(|event| match event {
             SimulationEvent::ExitReached { id } => Some(id.as_str()),
             _ => None,
@@ -4681,6 +4678,7 @@ impl ClientState {
             .expect("built-in dungeon doors always name their mate");
         let source_room = run.room;
         run.room = destination_room;
+        self.explored_rooms.insert(destination_room);
         let room = demo_dungeon_room(run.room, run.inventory);
         let mut simulation =
             Simulation::enter_via_door(room, run.inventory.abilities(), destination_door)
@@ -5481,6 +5479,11 @@ fn render(client: &ClientState, visual_assets: &VisualAssets) {
         return;
     }
 
+    if client.map_visible {
+        draw_dungeon_map(&viewport.translated(0, ROOM_TOP), client);
+        return;
+    }
+
     let room_viewport = viewport.translated(0, ROOM_TOP);
     draw_tiles(&room_viewport, client.simulation.room(), visual_assets);
     draw_room_objects(&room_viewport, &client.simulation, visual_assets);
@@ -5692,6 +5695,96 @@ fn draw_gallery_menu(viewport: &PixelViewport, client: &ClientState, visual_asse
         6,
         UI_DIM,
     );
+}
+
+fn draw_dungeon_map(viewport: &PixelViewport, client: &ClientState) {
+    const CELL_W: i32 = 12;
+    const CELL_H: i32 = 8;
+    const PITCH_X: i32 = 17;
+    const PITCH_Y: i32 = 13;
+    const CENTER_X: i32 = 160;
+    const CENTER_Y: i32 = 92;
+
+    let Some(run) = client.dungeon_run else {
+        return;
+    };
+    viewport.rectangle(CoreRect::new(0, 0, 320, 180), MENU_BACKGROUND);
+    viewport.centered_text("DUNGEON MAP", 12, 9, PLAYER);
+    viewport.centered_text(
+        &format!(
+            "COINS {}/{}   GOLD DOT = COINS LEFT IN A ROOM YOU HAVE SEEN",
+            run.inventory.coin_count(),
+            DEMO_DUNGEON_TOTAL_COINS
+        ),
+        24,
+        5,
+        PLAYER_ACCENT,
+    );
+
+    let layout = dungeon_map_layout();
+    let definition = demo_dungeon_definition();
+    let origin = layout[&run.room];
+    let cell_origin = |room: DemoDungeonRoom| {
+        let (x, y) = layout[&room];
+        (
+            CENTER_X + (x - origin.0) * PITCH_X - CELL_W / 2,
+            CENTER_Y + (y - origin.1) * PITCH_Y - CELL_H / 2,
+        )
+    };
+    let on_screen =
+        |(x, y): (i32, i32)| (-CELL_W..320).contains(&x) && (30 - CELL_H..168).contains(&y);
+
+    // Connection stubs between explored neighbours first, so cells draw over
+    // them.
+    for &room in &client.explored_rooms {
+        let (x, y) = cell_origin(room);
+        if !on_screen((x, y)) {
+            continue;
+        }
+        let floor = definition
+            .floor(room.authored_key())
+            .expect("room has a floor definition");
+        for connection in &floor.connections {
+            let (stub_x, stub_y, stub_w, stub_h) = match connection.door_id.as_str() {
+                "west" => (x - (PITCH_X - CELL_W), y + CELL_H / 2, PITCH_X - CELL_W, 1),
+                "east" => (x + CELL_W, y + CELL_H / 2, PITCH_X - CELL_W, 1),
+                "ceiling" => (x + CELL_W / 2, y - (PITCH_Y - CELL_H), 1, PITCH_Y - CELL_H),
+                _ => (x + CELL_W / 2, y + CELL_H, 1, PITCH_Y - CELL_H),
+            };
+            viewport.rectangle(CoreRect::new(stub_x, stub_y, stub_w, stub_h), UI_DIM);
+        }
+    }
+
+    for &room in &client.explored_rooms {
+        let (x, y) = cell_origin(room);
+        if !on_screen((x, y)) {
+            continue;
+        }
+        let current = room == run.room;
+        viewport.rectangle(
+            CoreRect::new(x, y, CELL_W, CELL_H),
+            if current { MENU_SELECTED } else { DEBUG_PANEL },
+        );
+        viewport.rectangle_outline(
+            CoreRect::new(x, y, CELL_W, CELL_H),
+            1,
+            if current { PLAYER_ACCENT } else { UI_DIM },
+        );
+        let floor = definition
+            .floor(room.authored_key())
+            .expect("room has a floor definition");
+        let remaining = floor
+            .coin_indices
+            .iter()
+            .filter(|index| !run.inventory.has_coin(&format!("dungeon-coin-{index:02}")))
+            .count();
+        if remaining > 0 {
+            viewport.rectangle(CoreRect::new(x + CELL_W - 4, y + 1, 3, 3), PICKUP);
+        }
+    }
+
+    viewport.centered_text(&run.room.title().to_ascii_uppercase(), 168, 7, UI_TEXT);
+    viewport.centered_text("TAB/ESC CLOSE", 177, 5, UI_DIM);
 }
 
 fn draw_dungeon_floor_menu(
@@ -7764,10 +7857,19 @@ mod tests {
             room: DemoDungeonRoom::BroadChimney,
             inventory,
         };
-        persistence.persist(expected, Some("west")).unwrap();
+        let explored = BTreeSet::from([
+            DemoDungeonRoom::HollowLanding,
+            DemoDungeonRoom::BroadChimney,
+        ]);
+        persistence
+            .persist(expected, Some("west"), &explored)
+            .unwrap();
 
         let (_, loaded) = DungeonPersistence::open(&path, false).unwrap();
-        assert_eq!(loaded, Some((expected, Some("west".to_owned()))));
+        assert_eq!(
+            loaded,
+            Some((expected, Some("west".to_owned()), explored.clone()))
+        );
         let mut save: DungeonSaveV1 = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
         save.collected_coins = vec![0, 0];
         assert!(save.validate().unwrap_err().contains("unique, sorted"));
@@ -7791,7 +7893,11 @@ mod tests {
         let path = temporary_test_path("dungeon-save-fresh", "save.json");
         let (persistence, _) = DungeonPersistence::open(&path, false).unwrap();
         persistence
-            .persist(DungeonRunState::default(), None)
+            .persist(
+                DungeonRunState::default(),
+                None,
+                &BTreeSet::from([DemoDungeonRoom::HollowLanding]),
+            )
             .unwrap();
         let original = fs::read(&path).unwrap();
 
@@ -8167,6 +8273,37 @@ mod tests {
         assert_eq!(client.simulation.entry_door(), Some("west"));
         // Completion never falls through to the generated catalogue.
         assert_eq!(client.next_level_selection(), None);
+    }
+
+    #[test]
+    fn dungeon_map_layout_places_every_room_distinctly() {
+        let layout = dungeon_map_layout();
+        assert_eq!(layout.len(), DemoDungeonRoom::ALL.len());
+        let cells: HashSet<(i32, i32)> = layout.values().copied().collect();
+        assert_eq!(cells.len(), layout.len(), "map cells must be distinct");
+        assert_eq!(layout[&DemoDungeonRoom::HollowLanding], (0, 0));
+    }
+
+    #[test]
+    fn dungeon_save_roundtrips_explored_rooms() {
+        let mut explored = BTreeSet::from([DemoDungeonRoom::HollowLanding]);
+        explored.insert(DemoDungeonRoom::MossWalk);
+        let run = DungeonRunState::default();
+        let save = DungeonSaveV1::from_run(run, None, &explored);
+        let (restored_run, entry, restored_explored) = save.validate().unwrap();
+        assert_eq!(restored_run, run);
+        assert_eq!(entry, None);
+        assert_eq!(restored_explored, explored);
+
+        // Old saves without the field restore with the current room explored.
+        let mut value = serde_json::to_value(&save).unwrap();
+        value.as_object_mut().unwrap().remove("explored_rooms");
+        let legacy: DungeonSaveV1 = serde_json::from_value(value).unwrap();
+        let (_, _, legacy_explored) = legacy.validate().unwrap();
+        assert_eq!(
+            legacy_explored,
+            BTreeSet::from([DemoDungeonRoom::HollowLanding])
+        );
     }
 
     #[test]
@@ -9287,8 +9424,18 @@ mod tests {
             for _ in 0..frame_count {
                 client.advance_replay(false);
             }
-            assert!(kind.objective().is_satisfied_by(&client.simulation));
-            assert!(client.replay_complete());
+            // A finished floor-lab goal returns control to the human: either
+            // the objective is satisfied in place (pickup goals) or the door
+            // goal already carried the lab into the connected room.
+            assert!(client.human_controlled());
+            let transitioned = client.selection.mode
+                != RoomMode::Challenge(ChallengeKind::DungeonFloor(room))
+                || client.simulation.room().id() != room.id();
+            assert!(
+                kind.objective().is_satisfied_by(&client.simulation) || transitioned,
+                "{} witness ended neither on its objective nor in a connected room",
+                room.id()
+            );
         }
     }
 
