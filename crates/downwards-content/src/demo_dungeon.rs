@@ -4195,9 +4195,12 @@ mod tests {
             &SolverConfig::for_abilities(dash_only.abilities()),
         )
         .unwrap();
+        // The old Dash-only "corona leap" carried off the side faces of the
+        // up-spike field; side faces are now lethal, so no Dash-only route is
+        // known. This is bounded-search evidence, not an impossibility proof.
         assert!(
-            matches!(outcome, TargetSolveOutcome::Solved(_)),
-            "Nova's Dash-only wall-ascent-carry route should remain honestly recorded: {outcome:?}"
+            !matches!(outcome, TargetSolveOutcome::Solved(_)),
+            "Dash-only search unexpectedly reached the Nova coin: {outcome:?}"
         );
 
         let wall_only = DemoDungeonInventory {
@@ -4470,27 +4473,12 @@ mod tests {
             &SolverConfig::for_abilities(dash_only.abilities()),
         )
         .unwrap();
-        let TargetSolveOutcome::Solved(solution) = outcome else {
-            panic!("the retained Dash-only wall-carry alternative disappeared: {outcome:?}");
-        };
-        let mut dashes = 0;
-        for action in solution.replay.actions() {
-            for event in initial.step(action).events {
-                assert!(
-                    !matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset),
-                    "Dash-only Shadow alternative is not a clean replay: {event:?}"
-                );
-                dashes += usize::from(matches!(event, SimulationEvent::Dashed { .. }));
-            }
-        }
+        // The old Dash-only alternative carried off the side faces of the
+        // spike columns; side faces are now lethal, so no Dash-only route is
+        // known. This is bounded-search evidence, not an impossibility proof.
         assert!(
-            initial
-                .collected_pickups()
-                .any(|pickup| pickup.id() == spec.target.id())
-        );
-        assert!(
-            dashes >= dash_ticks.len() * 2,
-            "Dash-only wall-carry alternate became comparable to the intended mixed route"
+            !matches!(outcome, TargetSolveOutcome::Solved(_)),
+            "Dash-only search unexpectedly reached the Shadow coin: {outcome:?}"
         );
     }
 

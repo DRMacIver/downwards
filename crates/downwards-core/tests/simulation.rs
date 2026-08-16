@@ -718,6 +718,138 @@ fn wall_spike_back_blocks_while_its_pointed_face_kills() {
     )));
 }
 
+fn single_hazard_room(tile: Tile, spawn: Point) -> Room {
+    let mut tiles = vec![Tile::Empty; WIDTH * HEIGHT];
+    tiles[11 * WIDTH + 20] = tile;
+    for x in 0..WIDTH {
+        tiles[12 * WIDTH + x] = Tile::Solid;
+    }
+    Room::new(
+        "hazard",
+        "Hazard",
+        WIDTH as u16,
+        HEIGHT as u16,
+        TILE_SIZE,
+        tiles,
+        spawn,
+        vec![],
+    )
+    .unwrap()
+}
+
+fn drop_until_death_or_rest(simulation: &mut Simulation) -> Option<(u16, u16)> {
+    for _ in 0..120 {
+        let report = simulation.step(Action::default());
+        for event in report.events {
+            if let SimulationEvent::Died(DeathReason::Hazard { tile_x, tile_y }) = event {
+                return Some((tile_x, tile_y));
+            }
+        }
+        if simulation.player().grounded() && simulation.player().velocity_subpixels().y == 0 {
+            return None;
+        }
+    }
+    panic!("player neither died nor came to rest");
+}
+
+#[test]
+fn side_spike_top_kills_a_player_landing_on_it() {
+    // A side-facing spike is lethal from its sides, not only its point: the
+    // tile top must never be a standable perch.
+    for tile in [Tile::HazardLeft, Tile::HazardRight] {
+        let mut simulation = Simulation::new(single_hazard_room(tile, Point::new(200, 60)));
+        assert_eq!(
+            drop_until_death_or_rest(&mut simulation),
+            Some((20, 11)),
+            "{tile:?} top should kill on landing"
+        );
+    }
+}
+
+#[test]
+fn down_spike_top_is_its_safe_back() {
+    let mut simulation = Simulation::new(single_hazard_room(Tile::HazardDown, Point::new(200, 60)));
+    assert_eq!(drop_until_death_or_rest(&mut simulation), None);
+    assert_eq!(simulation.player().bounds().y, 98);
+}
+
+#[test]
+fn side_spike_underside_kills_from_below() {
+    for tile in [Tile::HazardLeft, Tile::HazardRight] {
+        let mut room_tiles = vec![Tile::Empty; WIDTH * HEIGHT];
+        room_tiles[8 * WIDTH + 20] = tile;
+        for x in 0..WIDTH {
+            room_tiles[12 * WIDTH + x] = Tile::Solid;
+        }
+        let room = Room::new(
+            "hazard-underside",
+            "Hazard underside",
+            WIDTH as u16,
+            HEIGHT as u16,
+            TILE_SIZE,
+            room_tiles,
+            Point::new(200, 108),
+            vec![],
+        )
+        .unwrap();
+        let mut simulation = Simulation::new(room);
+        let mut died = false;
+        for tick in 0..120 {
+            let report = simulation.step(Action {
+                jump: tick < 12,
+                ..Action::default()
+            });
+            if report.events.iter().any(|event| {
+                matches!(
+                    event,
+                    SimulationEvent::Died(DeathReason::Hazard {
+                        tile_x: 20,
+                        tile_y: 8
+                    })
+                )
+            }) {
+                died = true;
+                break;
+            }
+        }
+        assert!(died, "{tile:?} underside should kill a rising player");
+    }
+}
+
+#[test]
+fn up_spike_underside_is_its_safe_back() {
+    let mut room_tiles = vec![Tile::Empty; WIDTH * HEIGHT];
+    room_tiles[8 * WIDTH + 20] = Tile::HazardUp;
+    for x in 0..WIDTH {
+        room_tiles[12 * WIDTH + x] = Tile::Solid;
+    }
+    let room = Room::new(
+        "up-underside",
+        "Up underside",
+        WIDTH as u16,
+        HEIGHT as u16,
+        TILE_SIZE,
+        room_tiles,
+        Point::new(200, 108),
+        vec![],
+    )
+    .unwrap();
+    let mut simulation = Simulation::new(room);
+    for tick in 0..120 {
+        let report = simulation.step(Action {
+            jump: tick < 12,
+            ..Action::default()
+        });
+        assert!(
+            !report
+                .events
+                .iter()
+                .any(|event| matches!(event, SimulationEvent::Died(_))),
+            "an up spike's underside is its back and must stay a safe bonk"
+        );
+    }
+}
+
 #[test]
 fn manual_restart_restores_canonical_dash_edge_state() {
     let room = room_with_floor(Point::new(40, 148), 16);

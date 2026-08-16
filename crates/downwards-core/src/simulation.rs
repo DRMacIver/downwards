@@ -24,7 +24,7 @@ pub const ONE_WAY_DROP_TICKS: u8 = 3;
 ///
 /// Historical corpus replays deliberately keep constructing an unconfigured `Simulation`; their
 /// digests therefore remain in the legacy policy domain until that corpus is regenerated.
-pub const PLAYER_MOVEMENT_POLICY_VERSION: u32 = 4;
+pub const PLAYER_MOVEMENT_POLICY_VERSION: u32 = 5;
 
 const RUN_SPEED: i32 = 384;
 const GROUND_ACCELERATION: i32 = 96;
@@ -1214,17 +1214,20 @@ impl Simulation {
                     let Some(tile_kind) = self.room.tile(x, y) else {
                         continue;
                     };
+                    // A hazard is solid only on its back face; every other
+                    // face lets the player pass into the tile, where the
+                    // overlap trigger kills them.
                     let collides_down = match tile_kind {
                         Tile::Solid => true,
                         Tile::OneWay => self.state.player.one_way_drop_ticks == 0,
                         Tile::HazardUp
                         | Tile::HazardDown
                         | Tile::HazardLeft
-                        | Tile::HazardRight => !matches!(
+                        | Tile::HazardRight => matches!(
                             self.room
                                 .hazard_direction(x, y)
                                 .expect("hazard tile has a direction"),
-                            HazardDirection::Up
+                            HazardDirection::Down
                         ),
                         Tile::Empty => false,
                     };
@@ -1233,11 +1236,11 @@ impl Simulation {
                         Tile::HazardUp
                         | Tile::HazardDown
                         | Tile::HazardLeft
-                        | Tile::HazardRight => !matches!(
+                        | Tile::HazardRight => matches!(
                             self.room
                                 .hazard_direction(x, y)
                                 .expect("hazard tile has a direction"),
-                            HazardDirection::Down
+                            HazardDirection::Up
                         ),
                         Tile::Empty | Tile::OneWay => false,
                     };
@@ -1348,12 +1351,14 @@ impl Simulation {
         match self.room.tile(x, y) {
             Some(Tile::Solid) => true,
             Some(Tile::HazardUp | Tile::HazardDown | Tile::HazardLeft | Tile::HazardRight) => {
+                // Only a hazard's back face blocks; its point and sides let
+                // the player pass into the lethal overlap.
                 match self
                     .room
                     .hazard_direction(x, y)
                     .expect("hazard tile has a direction")
                 {
-                    HazardDirection::Up | HazardDirection::Down => true,
+                    HazardDirection::Up | HazardDirection::Down => false,
                     HazardDirection::Left => dx < 0,
                     HazardDirection::Right => dx > 0,
                 }
@@ -1371,10 +1376,12 @@ impl Simulation {
                     .hazard_direction(x, y)
                     .expect("hazard tile has a direction");
                 match side {
-                    // A wall to the player's left exposes the tile's right face.
-                    WallSide::Left => direction != HazardDirection::Right,
-                    // A wall to the player's right exposes the tile's left face.
-                    WallSide::Right => direction != HazardDirection::Left,
+                    // A wall to the player's left exposes the tile's right
+                    // face, which is safe only as a left spike's back.
+                    WallSide::Left => direction == HazardDirection::Left,
+                    // A wall to the player's right exposes the tile's left
+                    // face, which is safe only as a right spike's back.
+                    WallSide::Right => direction == HazardDirection::Right,
                 }
             }
             Some(Tile::Empty | Tile::OneWay) | None => false,
@@ -1389,9 +1396,8 @@ impl Simulation {
         };
         (first_y..=last_y).any(|y| {
             (first_x..=last_x).any(|x| {
-                if !self.room.tile(x, y).is_some_and(Tile::is_hazard)
-                    || self.room.hazard_direction(x, y) == Some(HazardDirection::Up)
-                {
+                // Only a down spike's back (its top) supports the player.
+                if self.room.hazard_direction(x, y) != Some(HazardDirection::Down) {
                     return false;
                 }
                 let tile = scale_rect(self.room.tile_bounds(x, y));

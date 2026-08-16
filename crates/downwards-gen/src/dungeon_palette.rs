@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 35;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 36;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -926,11 +926,14 @@ mod tests {
         for row in 1..17 {
             assert_eq!(tile(12, row), Tile::Solid, "Nova core backing is open");
         }
+        // These wall segments were up-spikes when hazard sides were safe;
+        // side lethality made wall-embedded spikes unslidable, so they are
+        // solid now.
         for row in [4, 10] {
-            assert_eq!(tile(13, row), Tile::HazardUp);
+            assert_eq!(tile(13, row), Tile::Solid);
         }
         for row in [7, 13] {
-            assert_eq!(tile(18, row), Tile::HazardUp);
+            assert_eq!(tile(18, row), Tile::Solid);
         }
         for (column, rows) in [(13, [5..7, 11..13]), (18, [8..10, 14..17])] {
             for row in rows.into_iter().flatten() {
@@ -1043,11 +1046,13 @@ mod tests {
                 "Shadow backing has a bypass at row {row}"
             );
         }
+        // Wall-embedded up-spikes became solid when hazard sides turned
+        // lethal; the walls' safe/spike rhythm lives in the side spikes.
         for row in [4, 10] {
-            assert_eq!(tile(5, row), Tile::HazardUp);
+            assert_eq!(tile(5, row), Tile::Solid);
         }
         for row in [7, 13] {
-            assert_eq!(tile(9, row), Tile::HazardUp);
+            assert_eq!(tile(9, row), Tile::Solid);
         }
         for (column, range) in [(9, 9..15), (22, 22..29)] {
             for shelf_column in range {
