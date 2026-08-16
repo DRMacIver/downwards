@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 24;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 25;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1921,16 +1921,19 @@ impl PaletteDraft<'_> {
                 }
             }
             DungeonPaletteCourse::Skybridge => {
-                self.horizontal(14, 3, 7, Tile::OneWay);
-                self.horizontal(10, 11, 14, Tile::OneWay);
-                self.horizontal(7, 18, 21, Tile::OneWay);
-                self.horizontal(10, 25, 28, Tile::OneWay);
-                self.horizontal(14, 28, 30, Tile::OneWay);
-                for (start, end) in [(7, 11), (14, 18), (21, 25)] {
-                    self.horizontal(16, start, end, Tile::HazardUp);
-                    self.horizontal(17, start, end, Tile::Solid);
-                }
-                self.horizontal(4, 15, 24, Tile::HazardDown);
+                // The broken bridge first goes over a floor-anchored mast, then beneath a
+                // ceiling-hung one. Broad recovery decks make the two readings explicit: climb
+                // the left obstruction, then drop and Dash through the thirty-pixel aperture.
+                self.horizontal(16, 1, 6, Tile::Solid);
+                self.horizontal(16, 6, 28, Tile::HazardUp);
+                self.horizontal(17, 1, 31, Tile::Solid);
+                self.horizontal(16, 28, 31, Tile::Solid);
+                self.horizontal(13, 5, 11, Tile::OneWay);
+                self.vertical(7, 5, 11, Tile::Solid);
+                self.vertical(11, 5, 17, Tile::Solid);
+                self.horizontal(5, 11, 18, Tile::Solid);
+                self.vertical(20, 1, 10, Tile::Solid);
+                self.horizontal(13, 21, 28, Tile::Solid);
             }
             DungeonPaletteCourse::AstralSeal => {
                 self.horizontal(14, 3, 7, Tile::OneWay);
@@ -2484,6 +2487,51 @@ mod tests {
                 Tile::Solid,
                 "lower recovery is incomplete"
             );
+        }
+    }
+
+    #[test]
+    fn skybridge_serializes_an_over_then_under_broken_bridge() {
+        let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::Skybridge).generate();
+        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
+
+        for column in 1..6 {
+            assert_eq!(tile(column, 16), Tile::Solid, "west sill is incomplete");
+        }
+        for column in 6..28 {
+            let expected = if column == 11 {
+                Tile::Solid
+            } else {
+                Tile::HazardUp
+            };
+            assert_eq!(tile(column, 16), expected, "bridge abyss has a safe gap");
+        }
+        for column in 28..31 {
+            assert_eq!(tile(column, 16), Tile::Solid, "east sill is incomplete");
+        }
+        for column in 1..31 {
+            assert_eq!(tile(column, 17), Tile::Solid, "bridge abyss lacks backing");
+        }
+        for column in 5..11 {
+            assert_eq!(tile(column, 13), Tile::OneWay, "lower island is incomplete");
+        }
+        for row in 5..11 {
+            assert_eq!(tile(7, row), Tile::Solid, "left climb face is open");
+        }
+        for row in 5..17 {
+            assert_eq!(tile(11, row), Tile::Solid, "floor mast is open");
+        }
+        for column in 11..18 {
+            assert_eq!(tile(column, 5), Tile::Solid, "mast roof is incomplete");
+        }
+        for row in 1..10 {
+            assert_eq!(tile(20, row), Tile::Solid, "hanging mast is open");
+        }
+        for row in 10..13 {
+            assert_eq!(tile(20, row), Tile::Empty, "low aperture is obstructed");
+        }
+        for column in 21..28 {
+            assert_eq!(tile(column, 13), Tile::Solid, "far recovery is incomplete");
         }
     }
 

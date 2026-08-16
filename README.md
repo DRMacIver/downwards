@@ -351,6 +351,16 @@ Every strength-one perturbation family retains at least 31/64 successes. An inde
 continues east after collection. A harder Dash-free Wall-Jump route also exists, so Aurora is
 documented as a preferred mixed-method challenge rather than falsely labelled a strict Dash gate.
 
+The Skybridge is the fifteenth replacement. Its former mandatory route was another rightward
+staircase: 107 ticks, six Dashes, no Wall Jumps, and no reversal. The v25 bridge now has one
+floor-anchored mast and one ceiling-hung mast. The player lands on a lower island, alternates three
+Wall Jumps up the first mast, crosses its broad roof, then drops beneath the second mast through a
+thirty-pixel aperture and recovers on the coin deck. The staged demonstration is 182 ticks and 18
+spans with exactly one downward Dash after the climb. It retains 6–37/64 successes across the four
+strength-one perturbation families, can continue east, and has no baseline positive under the
+bounded solver. Failure lands in the abyss, so this is deliberately a later and less forgiving
+route than the non-lethal Gravity Lift.
+
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 
 ```sh

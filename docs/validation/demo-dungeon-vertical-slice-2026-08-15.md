@@ -242,6 +242,18 @@ solve continues from the coin to the east door. Ordinary search also retains a c
 Wall-Jump route, so the evidence describes a readable preferred mixed route rather than a strict
 method gate.
 
+The Skybridge is the fifteenth replacement in v25. Its previous mandatory coin route took 107
+ticks and 18 spans while firing six Dashes monotonically right, with no accepted Wall Jump or
+horizontal reversal. The replacement makes the bridge itself a readable over-under puzzle. A
+lower recovery island leads into a narrow floor-anchored mast; three alternating Wall Jumps reach
+its broad roof. The route then walks to the far edge, drops along a ceiling-hung mast, uses one
+downward Dash through a thirty-pixel aperture, and lands on the lower coin deck. The staged witness
+exact-replays in 182 ticks and 18 spans with five accepted jumps, three Wall Jumps, one Dash, and
+two horizontal reversals. An independent exact solve continues east after collection, while a
+same-budget baseline search has no positive. Its strength-one blind-continuation families retain
+6, 24, 25, and 37 successes out of 64; that lower tail is recorded as a genuinely less forgiving
+late-game route, not converted into a scalar human-difficulty score.
+
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
 persistent item omission, additive mid-run Wall Jump and Dash state, gate rejection without room reset, client

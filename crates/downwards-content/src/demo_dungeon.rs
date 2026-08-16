@@ -1521,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v24".to_owned(),
+        id: "demo-dungeon-v25".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -1683,7 +1683,7 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         DemoDungeonRoom::VacuumGallery => vec![(59, Rect::new(294, 150, 8, 10))],
         DemoDungeonRoom::LunarCache => vec![(60, Rect::new(294, 20, 8, 10))],
         DemoDungeonRoom::AuroraSpire => vec![(61, Rect::new(294, 50, 8, 10))],
-        DemoDungeonRoom::Skybridge => vec![(62, Rect::new(274, 60, 8, 10))],
+        DemoDungeonRoom::Skybridge => vec![(62, Rect::new(264, 110, 8, 10))],
         DemoDungeonRoom::AstralSeal => vec![(63, Rect::new(224, 50, 8, 10))],
         DemoDungeonRoom::SplitRoot
         | DemoDungeonRoom::OldLift
@@ -4202,6 +4202,118 @@ mod tests {
         assert!(
             alternate_wall_jumps >= wall_jump_ticks.len(),
             "Aurora's Dash-free crossing became simpler than its readable mixed route"
+        );
+    }
+
+    #[test]
+    fn skybridge_checked_route_goes_over_then_under_and_can_continue() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::Skybridge)
+            .expect("Skybridge has route metadata");
+        let room = demo_dungeon_room(spec.room, spec.inventory);
+        let mut replayed = Simulation::enter_via_door(
+            room,
+            spec.inventory.abilities(),
+            spec.entry_door.expect("Skybridge has a west entry"),
+        )
+        .unwrap();
+        replayed.enable_current_player_movement();
+        let mut dash_ticks = Vec::new();
+        let mut wall_jump_ticks = Vec::new();
+        let mut wall_sides = Vec::new();
+        let mut landings = Vec::new();
+        for (tick, action) in crate::demo_dungeon_witness_actions(spec.room)
+            .into_iter()
+            .enumerate()
+        {
+            for event in replayed.step(action).events {
+                assert!(
+                    !matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset),
+                    "the checked Skybridge route must remain clean: {event:?}"
+                );
+                match event {
+                    SimulationEvent::Dashed { .. } => dash_ticks.push(tick),
+                    SimulationEvent::Jumped(JumpKind::Wall { side }) => {
+                        wall_jump_ticks.push(tick);
+                        wall_sides.push(side);
+                    }
+                    SimulationEvent::Landed => {
+                        landings.push((replayed.player().bounds().x, replayed.player().bounds().y));
+                    }
+                    _ => {}
+                }
+            }
+        }
+        assert!(
+            replayed
+                .collected_pickups()
+                .any(|pickup| pickup.id() == spec.target.id())
+        );
+        assert_eq!(
+            dash_ticks.len(),
+            1,
+            "Skybridge should descend with one Dash"
+        );
+        assert_eq!(wall_jump_ticks.len(), 3, "Skybridge climb lost its rhythm");
+        assert!(
+            wall_sides.windows(2).all(|pair| pair[0] != pair[1]),
+            "Skybridge climb stopped alternating sides: {wall_sides:?}"
+        );
+        assert!(
+            wall_jump_ticks.last().expect("Skybridge climb exists")
+                < dash_ticks.first().expect("Skybridge drop exists"),
+            "Skybridge no longer climbs before dropping beneath the hanging mast"
+        );
+        assert!(
+            landings
+                .iter()
+                .any(|&(x, y)| (40..=102).contains(&x) && y == 118)
+                && landings
+                    .iter()
+                    .any(|&(x, y)| (110..=172).contains(&x) && y == 38)
+                && landings
+                    .iter()
+                    .any(|&(x, y)| (200..=272).contains(&x) && y == 118),
+            "Skybridge route lost its lower-roof-lower recoveries: {landings:?}"
+        );
+
+        let exit_outcome = solve_target(
+            &replayed,
+            SearchTarget::door("east"),
+            &SolverConfig::for_abilities(spec.inventory.abilities()),
+        )
+        .unwrap();
+        let TargetSolveOutcome::Solved(exit_solution) = exit_outcome else {
+            panic!("Skybridge cannot continue after its coin: {exit_outcome:?}");
+        };
+        for action in exit_solution.replay.actions() {
+            replayed.step(action);
+        }
+        assert_eq!(replayed.reached_exit(), Some("east"));
+
+        let baseline = DemoDungeonInventory {
+            climbing_gloves: false,
+            winged_boots: false,
+            ..spec.inventory
+        };
+        let room = demo_dungeon_room(spec.room, baseline);
+        let mut initial = Simulation::enter_via_door(
+            room,
+            baseline.abilities(),
+            spec.entry_door.expect("Skybridge has a west entry"),
+        )
+        .unwrap();
+        initial.enable_current_player_movement();
+        let outcome = solve_target(
+            &initial,
+            route_spec_target(spec.target),
+            &SolverConfig::for_abilities(baseline.abilities()),
+        )
+        .unwrap();
+        assert!(
+            !matches!(outcome, TargetSolveOutcome::Solved(_)),
+            "baseline search unexpectedly crossed the broken Skybridge: {outcome:?}"
         );
     }
 

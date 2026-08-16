@@ -1,5 +1,5 @@
 schema downwards-demo-dungeon-witnesses-v1
-palette-generation 24
+palette-generation 25
 player-movement-policy 4
 tuning 110 72 203 50 50 250
 shaky-policy 64 18 2 2
@@ -2655,30 +2655,30 @@ room demo-dungeon.skybridge
 entry west
 target pickup dungeon-coin-62
 abilities 1 1
-ticks 107
-observation 18 2 2 0 6 0
-shaky BoundaryTiming 38 64 36
-shaky CorrelatedTiming 48 64 26
-shaky HoldRelease 48 64 24
-shaky DropRepeatFrame 41 64 4
-span 1 -1 0 1 0 1
-span 0 -1 0 0 0 16
-span 1 0 1 0 0 8
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 18
-span 1 1 0 1 0 1
-span 1 1 0 0 0 9
-span 0 0 0 0 0 4
-span 1 0 1 0 0 1
-span 1 0 0 0 0 1
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 9
-span 1 0 0 0 0 4
-span 0 0 0 1 0 1
-span 1 0 0 0 0 5
-span 1 -1 0 0 0 20
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 6
+ticks 182
+observation 18 5 5 3 1 2
+shaky BoundaryTiming 24 64 9
+shaky CorrelatedTiming 25 64 18
+shaky HoldRelease 37 64 9
+shaky DropRepeatFrame 6 64 8
+span 1 0 0 0 0 6
+span 1 0 1 0 0 4
+span 0 0 1 0 0 6
+span 1 0 0 0 0 24
+span -1 0 0 0 0 4
+span 0 0 0 0 0 1
+span -1 0 1 0 0 4
+span -1 1 0 0 0 4
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
+span 0 0 0 0 0 6
+span 1 0 0 0 0 51
+span 0 1 0 1 0 1
+span 1 0 0 0 0 47
 end
 route demo-dungeon.astral-seal
 room demo-dungeon.astral-seal

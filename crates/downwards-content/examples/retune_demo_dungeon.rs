@@ -486,6 +486,9 @@ fn segmented_candidate(
     if spec.room == DemoDungeonRoom::AuroraSpire {
         return segmented_aurora_spire_candidate(initial, target);
     }
+    if spec.room == DemoDungeonRoom::Skybridge {
+        return segmented_skybridge_candidate(initial, target);
+    }
     let (waypoint, first_config, second_config) = match spec.room {
         DemoDungeonRoom::VoidPass => (
             GroundedSupportTarget::new(
@@ -1150,6 +1153,122 @@ fn segmented_gravity_lift_candidate(
         replay: Replay::record(initial, actions),
         stats: solution.stats,
     })
+}
+
+fn segmented_skybridge_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    // Treat the two bridge readings as separate legs: first land at the mast's foot, then climb
+    // onto its roof. From that stable state the ordinary target solver only has to discover the
+    // intended drop-and-Dash through the hanging mast's low aperture.
+    let waypoints = [
+        GroundedSupportTarget::new(
+            40,
+            110,
+            130,
+            [GroundedStandingRegion::new(80, 102).expect("valid Skybridge lower island")],
+        )
+        .expect("valid Skybridge lower waypoint"),
+        GroundedSupportTarget::new(
+            100,
+            180,
+            50,
+            [GroundedStandingRegion::new(110, 172).expect("valid Skybridge mast roof")],
+        )
+        .expect("valid Skybridge upper waypoint"),
+    ];
+    let config = SolverConfig::for_abilities(AbilitySet::new(true, false));
+    let mut intermediate = initial.clone();
+    let mut actions = Vec::new();
+    for (index, waypoint) in waypoints.iter().enumerate() {
+        let outcome = solve_grounded_support(&intermediate, waypoint, &config).ok()?;
+        let GroundedSupportSolveOutcome::Solved(solution) = outcome else {
+            eprintln!(
+                "  segmented Skybridge leg {} failed: {outcome:?}",
+                index + 1
+            );
+            return None;
+        };
+        let leg = solution.replay.actions().collect::<Vec<_>>();
+        for &action in &leg {
+            if !clean_step(&mut intermediate, action) {
+                return None;
+            }
+        }
+        actions.extend(leg);
+    }
+    let Some((mut intermediate, crossing)) = readable_drop_dash_landing(&intermediate) else {
+        eprintln!("  segmented Skybridge aperture leg failed");
+        return None;
+    };
+    actions.extend(crossing);
+    for _ in 0..100 {
+        if intermediate
+            .collected_pickups()
+            .any(|pickup| pickup.id() == "dungeon-coin-62")
+        {
+            break;
+        }
+        let action = right_action(false, false);
+        if !clean_step(&mut intermediate, action) || intermediate.reached_exit().is_some() {
+            return None;
+        }
+        actions.push(action);
+    }
+    if !intermediate
+        .collected_pickups()
+        .any(|pickup| pickup.id() == "dungeon-coin-62")
+    {
+        return None;
+    }
+    Some(TargetSolution {
+        target: target.clone(),
+        reached: ReachedTarget::Pickup("dungeon-coin-62".to_owned()),
+        replay: Replay::record(initial, actions),
+        stats: SearchStats::default(),
+    })
+}
+
+fn readable_drop_dash_landing(initial: &Simulation) -> Option<(Simulation, Vec<Action>)> {
+    let mut candidates = Vec::new();
+    for takeoff_x in 140..=172 {
+        let Some((takeoff, approach)) = approach_x(initial, takeoff_x) else {
+            continue;
+        };
+        for drop_ticks in 1..=120 {
+            for (dash_x, dash_y) in [(1, 0), (1, 1), (0, 1)] {
+                let mut simulation = takeoff.clone();
+                let mut actions = approach.clone();
+                let suffix = std::iter::repeat_n(right_action(false, false), drop_ticks)
+                    .chain(std::iter::once(Action {
+                        move_x: dash_x,
+                        move_y: dash_y,
+                        jump: false,
+                        dash: true,
+                        restart: false,
+                    }))
+                    .chain(std::iter::repeat_n(right_action(false, false), 100));
+                for action in suffix {
+                    if !clean_step(&mut simulation, action) {
+                        break;
+                    }
+                    actions.push(action);
+                    let bounds = simulation.player().bounds();
+                    if simulation.player().grounded()
+                        && bounds.y == 118
+                        && (210..=272).contains(&bounds.x)
+                    {
+                        candidates.push((simulation.clone(), actions));
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    candidates
+        .into_iter()
+        .min_by(|(_, left), (_, right)| static_route_key(left).cmp(&static_route_key(right)))
 }
 
 fn readable_nova_niche_suffix(
