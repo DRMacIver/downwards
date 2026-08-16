@@ -178,6 +178,55 @@ def main() -> int:
             visited = local_visited
             wall, dash, coins = new_wall, new_dash, new_coins
 
+    def fixed_loadout_states(wall: bool, dash: bool):
+        """(room, entry) states reachable with a FIXED loadout, optimistic coins,
+        no ability pickups granted."""
+        coins = 10**9  # coin-optimistic: traps/goal checks are about abilities
+        visited: set[tuple[str, str]] = set()
+        frontier = deque()
+        slug = layout.rooms[layout.spawn]
+        for door in table.get(slug, {}).get("doors", []):
+            frontier.append((layout.spawn, door))
+        while frontier:
+            room, entry = frontier.popleft()
+            if (room, entry) in visited:
+                continue
+            visited.add((room, entry))
+            slug = layout.rooms[room]
+            loadout = loadout_name(wall, dash)
+            for exit_door in table.get(slug, {}).get("doors", []):
+                if not crossable(slug, entry, exit_door, loadout):
+                    continue
+                if not gate_open(room, exit_door, wall, dash, coins):
+                    continue
+                nxt = step.get((room, exit_door))
+                if nxt and nxt not in visited:
+                    frontier.append(nxt)
+        return visited
+
+    def can_retreat(start: tuple[str, str], wall: bool, dash: bool) -> bool:
+        """Can this state reach the spawn room at a fixed loadout?"""
+        visited = set()
+        frontier = deque([start])
+        while frontier:
+            room, entry = frontier.popleft()
+            if room == layout.spawn:
+                return True
+            if (room, entry) in visited:
+                continue
+            visited.add((room, entry))
+            slug = layout.rooms[room]
+            loadout = loadout_name(wall, dash)
+            for exit_door in table.get(slug, {}).get("doors", []):
+                if not crossable(slug, entry, exit_door, loadout):
+                    continue
+                if not gate_open(room, exit_door, wall, dash, 10**9):
+                    continue
+                nxt = step.get((room, exit_door))
+                if nxt:
+                    frontier.append(nxt)
+        return False
+
     rooms_seen, _, backtracks, still_locked = explore()
     metrics = {}
     unreached = set(layout.rooms) - rooms_seen
@@ -186,6 +235,19 @@ def main() -> int:
     if layout.goal not in rooms_seen:
         problems.append("problem goal is not reachable")
     metrics["rooms"] = len(layout.rooms)
+    for wall, dash in [(False, False), (True, False), (False, True), (True, True)]:
+        name = loadout_name(wall, dash)
+        states = fixed_loadout_states(wall, dash)
+        loadout_rooms = {room for room, _ in states}
+        metrics[f"rooms-at-{name}"] = len(loadout_rooms)
+        metrics[f"goal-reachable-at-{name}"] = layout.goal in loadout_rooms
+        trapped = sorted(
+            {room for (room, entry) in states if not can_retreat((room, entry), wall, dash)}
+        )
+        if trapped:
+            problems.append(
+                f"problem absorbing trap at loadout {name}: states in {trapped} cannot retreat to spawn"
+            )
     metrics["edges"] = len(layout.edges)
     metrics["backtrack-unlock-events"] = backtracks
     metrics["still-locked-doors-at-end"] = len(still_locked)
