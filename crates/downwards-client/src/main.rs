@@ -6441,24 +6441,46 @@ fn draw_spikes(
     draw_environment_sprite(viewport, bounds, sprite, assets, flip_x);
 }
 
+/// Deliberately procedural stand-in for the timed shutters: chunky diagonal
+/// hazard stripes that stay crisp at any bounds size, until real pixel art
+/// exists for large timed hazards.
+fn draw_timed_hazard_placeholder(viewport: &PixelViewport, bounds: CoreRect, active: bool) {
+    const STRIPE_PERIOD: i32 = 16;
+    const STRIPE_WIDTH: i32 = 8;
+    const ROW_STEP: i32 = 2;
+    let (stripe, outline) = if active {
+        viewport.rectangle(bounds, HAZARD_DARK);
+        (HAZARD, HAZARD)
+    } else {
+        (HAZARD_DARK, HAZARD_DARK)
+    };
+    let mut row = 0;
+    while row < bounds.height {
+        let height = ROW_STEP.min(bounds.height - row);
+        let mut start = -((row + bounds.y) % STRIPE_PERIOD) - STRIPE_PERIOD;
+        while start < bounds.width {
+            let left = start.max(0);
+            let right = (start + STRIPE_WIDTH).min(bounds.width);
+            if right > left {
+                viewport.rectangle(
+                    CoreRect::new(bounds.x + left, bounds.y + row, right - left, height),
+                    stripe,
+                );
+            }
+            start += STRIPE_PERIOD;
+        }
+        row += ROW_STEP;
+    }
+    viewport.rectangle_outline(bounds, 1, outline);
+}
+
 fn draw_room_objects(viewport: &PixelViewport, simulation: &Simulation, assets: &VisualAssets) {
     for (index, hazard) in simulation.room().timed_hazards().iter().enumerate() {
         let active = simulation
             .timed_hazard_is_active(index)
             .expect("hazard index came from the room");
         let bounds = hazard.bounds();
-        draw_environment_sprite(
-            viewport,
-            bounds,
-            if active {
-                EnvironmentSprite::TimedHazardActive
-            } else {
-                EnvironmentSprite::TimedHazardInactive
-            },
-            assets,
-            false,
-        );
-        viewport.rectangle_outline(bounds, 1, if active { HAZARD } else { HAZARD_DARK });
+        draw_timed_hazard_placeholder(viewport, bounds, active);
     }
 
     for (index, pickup) in simulation.room().pickups().iter().enumerate() {
