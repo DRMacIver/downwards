@@ -1,0 +1,1012 @@
+[
+ {
+  "slug": "alloy-threshold",
+  "purpose": "A spike-floor traversal corridor between The Dash Seal and The Windshaft whose coin (28) makes running the hazard gauntlet mandatory for door progress.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "passable",
+  "filler": false,
+  "notes": "The witness uses 3 jumps and 3 dashes over 122 ticks across a floor broken by three spike clusters and open pit edges, with one-way ledges providing the coin hop. Noise robustness is poor with real deaths everywhere (BoundaryTiming 30/64 with 46 deaths logged, CorrelatedTiming 48/64 with 16), so the spikes are a genuine lethal threat, not decoration. Execution is a straightforward left-to-right dash-over-spikes run with no route decision.",
+  "recommendation": "Keep the room, but add one meaningful choice: put coin 28 on a higher one-way ledge reachable by a riskier wall-jump line so players can trade a safer low dash route against the coin detour, instead of a single linear run."
+ },
+ {
+  "slug": "annealing-spire",
+  "purpose": "A coin-guarding execution test: a small interior spire climb (narrow chute wall-jump plus dashes onto one-way platforms) off an otherwise flat west-east corridor.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "passable",
+  "filler": false,
+  "notes": "Witness route to coin-49 takes 154 ticks with 4 jumps, 1 wall jump, and 2 dashes \u2014 a real climb up the twin-wall chute (columns 12 and 18) and the one-way ledges at rows 3/6/9/28. Shaky success is only 26-40/64 across all four noise models but with 0 deaths, so it is timing-sensitive without any hazard threat (no spikes anywhere in the grid). There is exactly one route and no decision; the through-corridor itself (row 13-15, west to east) is trivial if you skip the coin.",
+  "recommendation": "Add a lethal element (spikes lining the chute walls or under the one-way ledges) so the timing-sensitive climb carries actual stakes, or offer a second, riskier shortcut route to the coin to create a decision; otherwise the climb is pure retry-until-lucky with no consequence."
+ },
+ {
+  "slug": "ash-cache",
+  "purpose": "A dead-end side pocket off The Pressure Fork whose only job is to hold coin 36 behind a short dash maneuver.",
+  "purpose_clarity": "clear",
+  "challenge": "light",
+  "fun": "passable",
+  "filler": false,
+  "notes": "Witness reaches the coin in 49 ticks with 0 jumps, 0 wall-jumps, and just 2 dashes \u2014 you drop in from the ceiling and dash to the pickup. Shaky success is only 25-39% across noise models but with 0 deaths in 256 trials, so the route is timing-sensitive (dash precision through the one-way shelves) yet completely unthreatening; the spike strip at bottom-right never factors into the mandatory path. The interior walls and one-way platforms are mostly decoration relative to the actual route.",
+  "recommendation": "Make the coin cost something: place it above the ^^^ spike strip or behind the tall central wall so retrieving it requires a wall-jump climb or a dash over live spikes, turning the decorative geometry into the actual test."
+ },
+ {
+  "slug": "astral-seal",
+  "purpose": "Capstone execution challenge guarding coin 63, the final coin needed to open the adjacent Crown Gate.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness route uses 7 jumps, 4 wall jumps, 6 dashes, and 8 reversals over 189 ticks \u2014 a dense full-kit route across two tall wall shafts and a 14-tile lethal spike floor. Shaky success is only ~50-65% with real deaths (11-30 per ~64 trials), so the spikes are an actual hazard, not decoration. As room 98 holding the last coin before the 64-coin Crown Gate, its role as a final gatekeeper is unambiguous.",
+  "recommendation": "keep as-is"
+ },
+ {
+  "slug": "aurora-spire",
+  "purpose": "A late-run (floor 94/101) lethal spike gauntlet guarding coin 61 \u2014 an execution challenge combining wall jumps and one-way platform climbs under real death threat.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness needs 201 ticks with 6 jumps, 4 wall jumps, 1 dash and 8 reversals \u2014 a genuine movement sequence, not walk-through. Under 1-tick noise, success drops to 37-50/64 with 8-23 actual deaths (BoundaryTiming worst at 23 deaths), so the spike-lined central shaft and the ^^^^ floor rows on the right are a real lethal hazard, not decoration. The right half's mix of one-way platforms over spike beds forces committed jumps with punished mistiming.",
+  "recommendation": "Keep as-is; if anything, soften the west entry chamber (columns 1-12 are dead empty space) by pulling the first hazard leftward so the room's challenge density matches its footprint."
+ },
+ {
+  "slug": "bell-niche",
+  "purpose": "A dead-end side pocket off Bell Switchback meant to stash coin-18, but the coin sits effectively at the door so it rewards nothing.",
+  "purpose_clarity": "weak",
+  "challenge": "trivial",
+  "fun": "dull",
+  "filler": true,
+  "notes": "The witness reaches the coin in 1 tick with zero inputs (0 jumps/wall-jumps/dashes/reversals), and shaky robustness is 64/64 with 0 deaths on both noise modes \u2014 you fall in from the ceiling and instantly collect. The grid has an interior shaft-and-ledge structure (walls at cols 11/17, two one-way platforms) that the mandatory route never touches, and the room has no hazards, no unlock, and only the one ceiling connection back out.",
+  "recommendation": "Move coin-18 to the bottom of the enclosed inner shaft (between the col-11 and col-17 walls) so collecting it forces a drop through the one-way platforms and a wall-jump climb back out to the ceiling exit."
+ },
+ {
+  "slug": "bell-switchback",
+  "purpose": "A three-way junction routing traffic between The Broad Chimney (west), Evening Measure (east), and The Bell Niche (below), with the floor exit reached by dropping through a one-way strip in the floor.",
+  "purpose_clarity": "weak",
+  "challenge": "light",
+  "fun": "passable",
+  "filler": true,
+  "notes": "Witness: 82 ticks, 3 jump presses / 2 accepted, 0 wall jumps, 0 dashes, 3 reversals \u2014 the mandatory path is walk right, hop over the short pillars, and drop through the \"----\" one-way at row 31 into the floor door. There are zero coins, zero spikes, and zero deaths under any noise model; shaky success is low (19-39/64) but that reflects the tight timing of lining up the drop-through gap, not any real threat. The interior walls and one-way ledges at rows 22/29 are decoration the witness route never needs.",
+  "recommendation": "Give the junction a job: place a coin on the high shelf behind the row-22 one-way (reachable only via a wall-jump climb up the two interior pillars), so the \"switchback\" geometry becomes an optional wall-jump test instead of unused scenery."
+ },
+ {
+  "slug": "blast-gallery",
+  "purpose": "A dash-chain execution gauntlet: six dashes threaded through one-way platforms and spike beds to grab coin 35 on the east-west corridor.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness uses 6 dashes and only 1 jump in 94 ticks, so the coin route is a genuine dash chain rather than a walk-through. Under 1-tick noise the route succeeds only 37-54/64 with 10-20 actual deaths, meaning both tight timing and real spike lethality (floor ^^^^ pits and the vvvv ceiling spikes near the mid one-ways). The room name matches its content, and it sits between two connector rooms as a skill check.",
+  "recommendation": "Keep as-is, though the ~30% shaky death rate suggests widening the safe landing on the ----/vvvv row slightly if mid-run difficulty should stay moderate rather than spiky."
+ },
+ {
+  "slug": "boots-vault",
+  "purpose": "A challenge vault guarding the Dash unlock (winged boots): a spike-lined wall-jump chute the player must climb without dash, testing the wall-jump skills learned so far.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The witness route needs 9 accepted jumps, 5 wall jumps, and 6 reversals over 139 ticks, climbing a narrow chute whose walls carry facing spikes (rows 4-15 have &gt; and &lt; spikes on the shaft walls) above a one-way platform entry. Under 1-tick input noise success drops to ~36-41/64 with 100-145 deaths per condition, so failures are lethal spike hits, not just timing wobble \u2014 a genuine hazard-backed execution test. It gates the Dash traversal unlock and a coin, so the reward justifies the difficulty spike.",
+  "recommendation": "keep as-is"
+ },
+ {
+  "slug": "brake-tower",
+  "purpose": "A dash-chain execution room whose optional-feeling coin (27) forces a 6-dash climb up scattered one-way platforms, warming the player up for The Dash Seal next door.",
+  "purpose_clarity": "weak",
+  "challenge": "moderate",
+  "fun": "passable",
+  "filler": false,
+  "notes": "Witness uses 6 dashes, 1 jump, 0 wall jumps over 113 ticks, and noise robustness is genuinely low (BoundaryTiming 25/64, HoldRelease 31/64) with zero deaths \u2014 so the room is timing-sensitive dash execution with no actual hazard threat; failure just means falling back down and retrying. The grid is a sparse scatter of one-way platforms with one solid column; there is no routing decision, only one obvious dash ladder, and the west-east walk-through itself is nearly free since the coin climb is what carries all the difficulty.",
+  "recommendation": "Add a consequence to failed dashes \u2014 spikes or a drop that resets to the room bottom past the solid column \u2014 or offer a second, riskier shortcut line to the coin, so the timing sensitivity the shaky data shows is backed by stakes and a decision rather than free retries."
+ },
+ {
+  "slug": "broad-chimney",
+  "purpose": "A dash-less wall-jump chimney climb up a ladder of one-way platforms to earn coin 17 en route between Stone Lessons and Bell Switchback \u2014 an execution test of the wall-jump skill the previous room presumably taught.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "passable",
+  "filler": false,
+  "notes": "The witness needed 10 accepted jumps, 5 wall jumps, and 12 reversals over 220 ticks to reach the coin, using the staggered one-way platforms on the right half of the grid as an alternating ascent \u2014 this is real climbing, not walk-through. Shaky success drops to 55-64/64 under correlated/hold-release noise with zero deaths, so it is timing-sensitive but entirely hazard-free: there are no spikes, so failure only costs the player a re-climb.",
+  "recommendation": "Add a small spike hazard or two on the chimney floor or a platform back-face so mistimed wall-jumps carry a stake beyond falling back down; alternatively widen a platform or two if this is meant as the first pure wall-jump test."
+ },
+ {
+  "slug": "broken-aqueduct",
+  "purpose": "Nominally a coin-collection room (4 coins presumably on its scattered one-way platforms), but the mandatory path is a corridor with a single spike hop.",
+  "purpose_clarity": "weak",
+  "challenge": "trivial",
+  "fun": "dull",
+  "filler": true,
+  "notes": "Witness: 2 jumps, 0 wall-jumps/dashes/reversals, 163 ticks \u2014 the route is walk right and hop a 3-tile ^^^ patch on an otherwise flat floor. Shaky rates of 32-36/64 with 0 deaths indicate the hop is timing-sensitive under noise but nothing can kill you. The upper two-thirds of the grid is empty air; the four one-way platforms sit low and loose with no structured climb.",
+  "recommendation": "Give the coins a real job: stack the one-way platforms into an ascending optional climb over the spike floor (widen the spike patch to make ground routes cost something), so the mandatory path stays a breather but the 4 coins demand actual platforming."
+ },
+ {
+  "slug": "cinder-bridge",
+  "purpose": "A dash-heavy hazard gauntlet guarding coin-38: an ascending relay of one-way platforms over a spiked floor, capped by ceiling spikes, between Crucible Climb and The Foundry Seal.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The 115-tick witness uses 7 dashes, 3 jumps, and 2 reversals to climb a left-to-right staircase of one-way platforms (rows 14, 11, 8, 5) over three spike beds on the floor, with a ceiling spike strip (row 3) punishing overshoot near the top. Noise robustness is genuinely fragile with real deaths, not just resets: BoundaryTiming 44/64 with 32 deaths, HoldRelease 46/64 with 24 deaths \u2014 the spikes are a live threat, not decoration. This is a proper execution test, though it is a single-line room with no route decision.",
+  "recommendation": "Keep as-is; if anything, verify the mandatory west-east pass-through (as opposed to the coin detour) is not equally punishing, since 50% death rates under 1-tick noise on a corridor everyone must cross may be harsher than intended at floor 57."
+ },
+ {
+  "slug": "demo-dungeon.climber-vault",
+  "purpose": "A vault room whose job is to award the WallJump unlock (climbing-gloves), reached by a short staircase of one-way platforms before the player continues east into Stone Lessons.",
+  "purpose_clarity": "clear",
+  "challenge": "light",
+  "fun": "passable",
+  "filler": false,
+  "notes": "The pre-walljump witness uses 5 jumps over 132 ticks hopping an ascending ladder of one-way platforms; there are no spikes and zero deaths under noise. Shaky success rates of 38-40/64 (CorrelatedTiming 25/64) show the jumps are timing-sensitive but never lethal, so failure just costs a retry of a hop. The room has a real structural job (ability grant gating the east door, which requires methods=1) but no decision or hazard.",
+  "recommendation": "Add a short post-pickup beat that requires the freshly acquired wall jump to exit east (e.g. a wall-jump chimney by the east mouth using the existing vertical wall), so the reward is immediately exercised instead of just collected."
+ },
+ {
+  "slug": "coin-duct",
+  "purpose": "A dead-end coin-stash room hanging below The Forked Current, meant to reward a detour with coin 24.",
+  "purpose_clarity": "weak",
+  "challenge": "trivial",
+  "fun": "dull",
+  "filler": true,
+  "notes": "The witness completes in 1 tick with observation \"1 0 0 0 0 0\" \u2014 zero jumps, wall-jumps, dashes, or reversals; the coin is effectively at the ceiling entry mouth, so you drop in and instantly collect. Shaky trials are 64/64 with 0 deaths for both noise types, confirming no timing sensitivity or hazard exposure. The one-way platform staircase and the spike strip on the floor are pure decoration the mandatory route never touches.",
+  "recommendation": "Move coin 24 to the bottom of the room past the spike strip so collecting it requires descending the one-way platform ladder and climbing back out via wall jumps, making the decoration into the actual test."
+ },
+ {
+  "slug": "coin-loft",
+  "purpose": "A dead-end coin cache off Three-Way Hall: drop in from the ceiling, descend a staircase of one-way ledges to collect coins 8 and 9, then climb back out.",
+  "purpose_clarity": "weak",
+  "challenge": "trivial",
+  "fun": "dull",
+  "filler": true,
+  "notes": "The witness reaches the target coin in 71 ticks with 2 jump presses, 0 accepted jumps, 0 wall jumps, 0 reversals \u2014 it is essentially a controlled fall down descending one-way ledges. The grid has zero spikes and huge open air, and all four noise curves show 0 deaths, so there is no hazard whatsoever; the mediocre shaky success rates (35-50/64) reflect replay timing brittleness of landing on narrow ledges, not danger. Nothing gates the coins and no decision exists beyond walking to each ledge.",
+  "recommendation": "Make the coin cache earn its reward: put coin 9 in a spike-lined alcove reachable only by a wall-jump off the left #-block column (the room's wall_jump loadout is currently unused), so the detour tests the ability the player just has."
+ },
+ {
+  "slug": "comet-run",
+  "purpose": "A dash-heavy hazard gauntlet: cross a room whose entire lower floor is a lethal spike run while detouring upward off sparse one-way platforms to grab coin 53.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The witness needs 3 jumps, 4 dashes, and 4 direction reversals over 131 ticks \u2014 a genuinely busy route, consistent with the grid: the west entry sits at floor level directly above a near-full-width spike strip (row 30), with only a short one-way ledge and scattered small one-way platforms plus a ceiling spike cluster higher up. Noise robustness is poor with real deaths (BoundaryTiming 47/64 with 36 deaths, DropRepeatFrame 44/64 with 60 deaths), so the spikes are an actual threat, not decoration.",
+  "recommendation": "Keep as-is; if anything, add a safe landing pocket mid-room so the death-on-any-slip spike floor punishes slightly less brutally for a mandatory coin route."
+ },
+ {
+  "slug": "constellation-hall",
+  "purpose": "A dash/one-way-platform gauntlet over a near-full-width lethal spike floor that guards coin 55 on the mandatory west-east corridor between The Orbit Fork and Zenith Shaft.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness needs 6 dashes, 2 wall jumps, 3 jumps and 7 reversals over 149 ticks \u2014 a busy route across sparse one-way platforms (rows 28) above a spike row spanning almost the whole floor. Noise robustness is poor with real deaths, not just resets: DropRepeatFrame kills 61/64 trials and BoundaryTiming 37/64, so the spikes genuinely punish sloppy dash timing. Success rates of 44-69% under 1-tick noise mark this as one of the harder execution tests, not decoration.",
+  "recommendation": "Keep as-is, though consider whether 6 dashes with sub-50% noise robustness overshoots the local difficulty curve \u2014 widening one of the one-way platforms (e.g. the two-tile '--' near the east exit) would soften the worst frame-perfect landing without removing the gauntlet."
+ },
+ {
+  "slug": "cooling-duct",
+  "purpose": "A short vertical execution room: dash/wall-jump up narrow one-way-platform shafts to grab coin 32 and exit through the ceiling.",
+  "purpose_clarity": "clear",
+  "challenge": "light",
+  "fun": "passable",
+  "filler": false,
+  "notes": "Witness uses 3 jumps, 1 wall jump, 3 dashes in only 86 ticks, so the mandatory climb is a genuine if brief input sequence, and shaky success of 30-55/64 shows real timing sensitivity around the one-way lips. However the grid contains zero spikes and the witness records 0 deaths, so failure costs nothing but a retry; there is one route and no decision to make.",
+  "recommendation": "Add a lethal element (e.g. spikes on the shaft walls or beneath the one-way platforms) so the timing sensitivity the noise curves show actually threatens something, turning retry-friction into a real hazard test."
+ },
+ {
+  "slug": "crossroads",
+  "purpose": "A four-way navigation hub connecting west/east halls, the coin-gated Winged Vault above, and Rafter Mint below \u2014 its job is routing, plus advertising the 21-coin ceiling gate.",
+  "purpose_clarity": "clear",
+  "challenge": "trivial",
+  "fun": "passable",
+  "filler": false,
+  "notes": "The witness route to the floor door is 82 ticks with 2 accepted jumps, no wall-jumps or dashes and zero deaths; the grid has no spikes or hazards at all, just one-way platforms leading down through the ###----### floor slot. Shaky success is low (20-38/64) but entirely deathless, meaning the drop-through-the-one-way timing is finicky rather than dangerous. The decision content is purely which of four exits to take; the ceiling door's coins=21 gate is the only interesting feature.",
+  "recommendation": "Make the ceiling gate legible and aspirational in-room (visible locked door plus a taste of the Winged Vault, e.g. a coin visible but unreachable without the gate), and add one small optional execution test \u2014 a spike-lined side alcove holding the room's coin \u2014 so the hub rewards a decision instead of only routing traffic."
+ },
+ {
+  "slug": "crosswind-chimney",
+  "purpose": "A mandatory wall-jump execution test: a full-height central wall forces an up-and-over chimney climb between two connector rooms.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The x16 wall spans nearly floor to ceiling, so the west-to-east route requires climbing the narrow shaft between the x10 and x16 walls (witness: 9 jumps, 5 wall-jumps, 6 reversals, 257 ticks, 0 dashes) and descending past one-way platforms and a spike strip. Shaky success is only 32-50/64 across all noise modes with 0 deaths, indicating real timing sensitivity in the wall-jump chain but little lethal threat.",
+  "recommendation": "Keep the core climb, but make the spike strip (or a hazard in the shaft) actually punish sloppy descents so the room's threat matches its timing demand \u2014 currently failure only costs time, never a death."
+ },
+ {
+  "slug": "crown-sanctum",
+  "purpose": "Finale challenge room guarding the Crown: a spike-floored gauntlet of pillars and wall-jump shafts that serves as the run's capstone execution test.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness needs 178 ticks with 5 jumps, 4 wall jumps, 7 dashes, and 6 direction reversals over a full-width lethal spike floor, so the mandatory path is a genuine mixed-ability gauntlet, not a walk-through. Noise robustness is 50-78% depending on perturbation, and DropRepeatFrame kills the run 27/64 times, showing real hazard threat (spike deaths), not just timing shakiness. The pillar-and-shaft layout above the spike bed forces committed dashes and wall-jump climbs to reach the elevated crown exit in the northeast.",
+  "recommendation": "keep as-is"
+ },
+ {
+  "slug": "crucible-climb",
+  "purpose": "An execution-test corridor: threading past/through a spike-lined wall-jump channel is the mandatory east-west route.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The central shaft (cols 11-16) has spikes on both facing walls ('>' rows 4-6/10-12, '<' rows 7-9 and 27-29), and the witness uses 4 wall jumps, 6 accepted jumps, 3 reversals over 204 ticks with no dashes \u2014 a genuine wall-jump threading section, not a walkthrough. Input-noise trials kill the route often (19/12/13 deaths out of 64 across the three timing perturbations, ~60-70% success), so the spikes are a real lethal threat with tight timing, not decoration.",
+  "recommendation": "keep as-is"
+ },
+ {
+  "slug": "crystal-bridge",
+  "purpose": "A hazard gauntlet guarding coin 50: a dash/jump traverse across a spike-pit floor bridged by sparse one-way platforms, en route between Lattice Climb and The Glass Seal.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The witness needs 3 jumps, 5 dashes, and 2 reversals over 115 ticks, and the floor row is three upward spike clusters with only two narrow one-way ledges plus a ceiling spike run overhead, so the route is dash-linked rather than walkable. Under 1-tick noise success drops to roughly 65-73% with real deaths (26/23 on boundary and hold-release perturbations), meaning the spikes are a genuine threat, not decoration. The coin itself is the analysis target, giving the room a concrete job as a paid execution test.",
+  "recommendation": "keep as-is"
+ },
+ {
+  "slug": "cullet-cache",
+  "purpose": "An optional-feeling side cache: a short spike-guarded execution test that gates coin 48 behind wall-jump/dash precision off The Cullet Fork.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness route is dense for its 94 ticks: 3 accepted jumps, 3 wall jumps, 2 dashes, 5 reversals around a leftward spike column and one-way platforms. Timing noise kills it roughly half the time with real deaths (BoundaryTiming 36/64 with 22 deaths, CorrelatedTiming 30/64 with 31 deaths), so the spikes are a genuine threat, not decoration. Single-entrance dead-end structure means every bit of that difficulty is spent on the coin, which is the right shape for a cache.",
+  "recommendation": "Keep as-is; if anything, consider softening CorrelatedTiming death rate slightly (widen the safe landing beside the spike column by one tile) so failure reads as retryable rather than punishing."
+ },
+ {
+  "slug": "cullet-fork",
+  "purpose": "A three-way junction routing traffic between Hot Glass, Annealing Spire, and the floor drop to Cullet Cache.",
+  "purpose_clarity": "weak",
+  "challenge": "trivial",
+  "fun": "dull",
+  "filler": true,
+  "notes": "Witness: 82 ticks, 2 jumps, 0 wall-jumps, 0 dashes, 0 deaths \u2014 the route is walk along the bottom and drop through the one-way lip into the floor door. The upper two-thirds of the grid (spike row, three floating one-way platforms) is never touched by the mandatory path, so it is decoration. Shaky rates of 20-38/64 with zero deaths show only fiddly timing on the door drop, no real hazard or decision.",
+  "recommendation": "Give the fork a reason to choose: put a coin (or the east-route shortcut) up among the one-way platforms under the spike ceiling so the vertical half of the room becomes an optional execution test rather than dead space."
+ },
+ {
+  "slug": "demo-dungeon.current-fork",
+  "purpose": "A three-way junction routing players between The Low Passage, Pulse Gallery, and the drop into The Coin Duct through the one-way-flanked floor gap.",
+  "purpose_clarity": "weak",
+  "challenge": "light",
+  "fun": "passable",
+  "filler": false,
+  "notes": "The witness route to the floor door is 82 ticks with only 2 accepted jumps, 0 wall-jumps/dashes, and 3 reversals \u2014 hop across scattered one-way ledges and drop through the narrow \"####----####\" floor gap. There are no spikes, no coins, and no gates, so nothing threatens the player: all four shaky curves show heavy failure (19-39/64 success) but zero deaths, meaning the drop alignment is timing/positioning-fiddly rather than dangerous. The fork itself is the only content, and with no information or reward differentiating the three exits there is no real decision, just navigation.",
+  "recommendation": "Make the fork an actual choice: place a visible coin below the one-way floor gap (previewing The Coin Duct) and line the gap's solid lips with spikes so committing to the drop is a deliberate, slightly tested decision rather than a fiddly neutral hole."
+ },
+ {
+  "slug": "dash-chasm",
+  "purpose": "A mandatory dash-execution gauntlet: cross a wide spike-floored chasm using chained dashes, with a single one-way safe ledge as an optional mid-point landing.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness uses 5 dashes, 3 jumps, and 2 reversals over 123 ticks, and all four noise models produce heavy real deaths (33-49 deaths per 64 trials, ~50-70% success), so the spike floor is a live threat, not decoration. The grid backs this: full-width lethal floor with only a 3-tile one-way ledge, plus a ceiling spike bar constraining jump height, giving a small commit-vs-rest route decision.",
+  "recommendation": "Keep as-is; if anything, consider whether ~50% failure under 1-tick noise is harsher than intended for a mandatory room at floor 28 and widen the mid-chasm one-way ledge slightly to make the rest-stop option more viable."
+ },
+ {
+  "slug": "dash-seal",
+  "purpose": "Nominally a dash-gated corridor (\"Dash Seal\") between Brake Tower and the coin-gated Alloy Threshold door, but in practice it is just a flat walk/dash across the bottom of the room.",
+  "purpose_clarity": "weak",
+  "challenge": "trivial",
+  "fun": "dull",
+  "filler": true,
+  "notes": "The witness crosses in 79 ticks with 0 jump presses, 0 wall jumps, and 8 dashes \u2014 pure horizontal dash-spam along the open bottom lane, with 64/64 success and 0 deaths under every noise model, so there is zero timing sensitivity or hazard threat. The ceiling spike strip (row 8) and the one-way platforms are entirely off the mandatory path; the dividing wall at column 21 never blocks the bottom route. No coins, no unlock, no decision \u2014 the eastern coins=28 gate is checked by the neighbor, not earned here.",
+  "recommendation": "Make the name true: seal the bottom lane with a spike pit or wall segment so the only crossing is a dash through a spike-lined gap (e.g. a mid-air dash window under the row-8 spikes or through the column-21 wall), turning it into an actual dash execution check."
+ },
+ {
+  "slug": "eclipse-fork",
+  "purpose": "A three-way junction (west/east/ceiling) whose central pillar-and-slot structure turns the optional ceiling exit into a short wall-jump/dash climbing test.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The witness needs 4 jumps, 2 wall jumps, 1 dash, and 2 reversals in 130 ticks to climb from the west door through the twin interior walls to the ceiling gap, so the vertical route is a real execution test, not a walk-through. Shaky success rates of 27-58/64 with zero deaths show tight timing sensitivity but no lethal hazard, appropriate for a hazard-free junction. The flat west-east floor path stays trivial, letting the room double as low-cost navigation for players skipping the ceiling.",
+  "recommendation": "Keep as-is, though a single spike or coin near the ceiling slot would give the climb a stake beyond routing; the 27/64 BoundaryTiming rate suggests slightly widening the ceiling gap if consistency matters."
+ },
+ {
+  "slug": "ember-vault",
+  "purpose": "A dead-end side vault holding coin 30 \u2014 a reward alcove off The Split Furnace, but the reward is unguarded.",
+  "purpose_clarity": "weak",
+  "challenge": "trivial",
+  "fun": "dull",
+  "filler": true,
+  "notes": "Witness collects the coin in 29 ticks with 1 jump and 1 dash, 0 deaths; the room has no spikes or hazards at all, and the six one-way platforms are never used by the route. Shaky trials fail moderately (46-64/64 successes) but with zero deaths, so it is mere retry-timing, not threat. Single ceiling connection makes it a pure in-and-out detour with nothing to decide.",
+  "recommendation": "Make the vault earn its name: add spike-lined drops or a timed one-way descent so reaching coin 30 requires a committed dash through hazard, turning the optional detour into a risk-reward choice."
+ },
+ {
+  "slug": "foundry-fork",
+  "purpose": "A three-way junction (west/east/ceiling) whose ceiling exit is gated by an execution test: a zig-zag dash ascent up staggered one-way platforms.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The witness route to the ceiling door takes 78 ticks with 2 jumps, 5 dashes, and 6 reversals \u2014 a genuine back-and-forth climb up four offset one-way ledges, not a walk-through. Shaky success is low across all noise types (9-33/64) with zero deaths, so the ascent is timing-sensitive but consequence-free: no spikes, no coins, failure just drops you back to the floor to retry. Horizontal west-east passage along the floor is trivial, so the challenge only applies to travelers heading up.",
+  "recommendation": "Add stakes or reward to the climb \u2014 a coin at the top ledge or spikes on the floor beneath the one-ways \u2014 so the timing-sensitive ascent risks something instead of being a free-retry ladder; otherwise keep as-is as a junction."
+ },
+ {
+  "slug": "foundry-seal",
+  "purpose": "A wall-jump execution room guarding coin-39, which feeds the coins=40 gate into Glass Threshold to the east.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "passable",
+  "filler": false,
+  "notes": "Witness: 189 ticks, 8 jumps, 5 wall-jumps, 7 reversals, 0 dashes \u2014 real climbing between the interior columns, not a corridor. Shaky success is only ~50% under all four noise modes (e.g. 31-42/64) with 0 deaths, so the route is timing-tight but consequence-free; the lone spike strip (vvvvvv under the one-way platform) rarely threatens the path.",
+  "recommendation": "Add teeth to the wall-jump shafts (spikes on one wall or a lethal floor beneath the climb) so the existing timing sensitivity becomes tension instead of free retries."
+ },
+ {
+  "slug": "furnace-lift",
+  "purpose": "A vertical ascent challenge: dash-and-jump up a staggered ladder of one-way platforms over a spiked floor to reach the ceiling exit, while also serving as a three-way junction (west/east/ceiling).",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The witness route uses 3 jumps, 5 dashes, and 2 reversals over 76 ticks, zig-zagging up staggered one-way platforms (rows 11, 8, 6, 3) to the ceiling gap, with lethal spike patches on the floor. Robustness is genuinely low (20-34/64 successes) with 12-15 deaths per noise mode, so the spikes are a real threat and the ascent is timing-sensitive, not decorative.",
+  "recommendation": "Keep as-is; optionally widen the vertical alignment tolerance of one mid-ladder platform if the ~50-80% noise failure rate proves too punishing for a mandatory junction room."
+ },
+ {
+  "slug": "gale-landing",
+  "purpose": "A hazard room on the west-east corridor whose optional-feeling coin (22) sits above a central spike pit, forcing a dash/one-way-platform climb over lethal ground to collect it.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The witness needs 4 jumps, 1 wall jump, 4 dashes, and 4 reversals over 176 ticks to reach the coin, so this is not walk-through: the route bounces between the two low one-way ledges flanking a 13-tile spike strip and climbs to the high central one-way platform. Noise robustness is poor with real deaths (BoundaryTiming 46/64 with 24 deaths, CorrelatedTiming 43/64 with 39 deaths), meaning the spikes genuinely punish mistimed hops rather than just resetting timing. The mandatory west-east transit itself is much easier than the coin route, giving a nice optional-risk structure.",
+  "recommendation": "Keep as-is; if anything, tighten readability of the coin route (e.g. shift the flanking one-way ledges so the intended dash chain over the spikes reads at a glance) rather than changing difficulty."
+ },
+ {
+  "slug": "gatehouse",
+  "purpose": "Final antechamber/coin-gate before The Empty Throne: the east door's 64-coin requirement is the real barrier, with a modest movement flourish (a one-way platform stagger up the right side) as ceremony on the way to the Crown.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "passable",
+  "filler": false,
+  "notes": "Witness needs 3 jumps, 2 wall jumps, 6 dashes and 4 reversals over 139 ticks, so the mandatory path (climbing the central pillar gap and the offset one-way platforms on the right) is real movement, not walk-through. Shaky success is only ~47-52% across all noise types with zero deaths, meaning it is timing-sensitive but completely harmless \u2014 there are no spikes or hazards anywhere in the grid, so failure just costs a retry of a hop. The room's actual job is the coins=64 gate on the east door, which it performs regardless of the platforming.",
+  "recommendation": "Since this is the threshold to the finale, make the execution readable as ceremony: either add a light hazard (a spike floor under the one-way platform stagger) so the climb has stakes befriending the Crown gate, or simplify the dash-heavy reversals so the room reads as a deliberate breather before the throne rather than fiddly-but-toothless timing."
+ },
+ {
+  "slug": "gear-gallery",
+  "purpose": "An optional coin-collection climb: a hazard-free one-way-platform tower guarding coin 31 off a flat walk-through corridor between The Split Furnace and Crosswind Chimney.",
+  "purpose_clarity": "weak",
+  "challenge": "light",
+  "fun": "passable",
+  "filler": false,
+  "notes": "Witness route to the coin takes 154 ticks with 4 jumps, 1 wall jump, 2 dashes \u2014 real movement, but shaky success is only 23-31/64 with zero deaths under every noise model, meaning tight timing with no consequence for failure (the grid contains no spikes at all). The west-east transit itself is a flat floor walk; all challenge is in the optional vertical detour, and neither door has a gate.",
+  "recommendation": "Give the tower teeth or stakes: add a few spike faces inside the one-way platform stack (or move the coin so the dash sequence crosses a hazard), so the timing-sensitive climb risks something instead of being a free-retry ladder next to a trivially walkable exit."
+ },
+ {
+  "slug": "glass-gallery",
+  "purpose": "A pass-through corridor whose real content is an optional coin climb: a wall-jump/dash ascent through one-way platforms under a spike ceiling to grab coin 43.",
+  "purpose_clarity": "weak",
+  "challenge": "moderate",
+  "fun": "passable",
+  "filler": false,
+  "notes": "The mandatory west-east traversal is a flat walk along the open bottom rows \u2014 trivial. The coin route (154 ticks, 4 jumps, 1 wall jump, 2 dashes) is genuinely timing-sensitive: shaky success drops to 22-32/64 across all four noise models, yet with 0 deaths, so it is precision without threat \u2014 the vvvv spikes and one-ways constrain landings but failure just means retrying the climb.",
+  "recommendation": "Make the coin climb bite: either place the spikes so a missed one-way landing costs a death (real hazard, not just retry), or move the coin so the mandatory path must engage at least one jump/dash \u2014 right now a player who skips the coin experiences the room as an empty hallway."
+ },
+ {
+  "slug": "glass-seal",
+  "purpose": "A wall-jump execution room guarding coin 51, the penultimate coin needed for the 52-coin door directly east into Star Threshold.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness uses 10 jumps, 6 wall jumps, 7 reversals over 199 ticks with no dashes \u2014 real shaft-climbing execution, and the coin sits in a chamber with a one-way platform over a lethal spike row. All four 1-tick-noise models drop success to ~48-69% but with 0 deaths, so the route is timing-tight yet the spike hazard almost never converts to actual kills.",
+  "recommendation": "Make the spike pocket bite: tighten the gap between the one-way platform and the spike row (or add a back-face spike on the retreat wall) so a mistimed drop toward the coin actually risks death instead of just a retry, turning timing-sensitivity into genuine threat."
+ },
+ {
+  "slug": "glass-threshold",
+  "purpose": "An execution gauntlet: dash/jump across one-way platforms over a lethal spike floor to grab coin 40 on the west-east corridor between The Foundry Seal and Prism Run.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness: 122 ticks, 3 jumps + 3 dashes, no wall-jumps; route hops one-way ledges over three spike clusters. Noise trials show real hazard, not just wobble: BoundaryTiming 29/64 successes with 49 deaths, HoldRelease 43/64 with 26 deaths \u2014 mistimed inputs land on spikes. No decisions though: one linear route, and the top ~12 rows of the 18-row room are empty air.",
+  "recommendation": "Use the dead vertical space: add a high alternate route (wall-jump line along the ceiling platforms) that trades the spike gauntlet for slower, safer traversal, giving the room a route decision to match its execution test."
+ },
+ {
+  "slug": "gravity-lift",
+  "purpose": "A three-exit switchback junction that lifts the player through offset shelf layers from the west entry up to the ceiling exit toward Nova Niche.",
+  "purpose_clarity": "weak",
+  "challenge": "light",
+  "fun": "passable",
+  "filler": true,
+  "notes": "The grid is three full-width corridors joined by narrow gaps at alternating ends, so the route is a rote zigzag: run right, hop up through the gap, run left, repeat. The witness needs 4 jumps, 2 wall-jumps, 3 dashes, 3 reversals over 525 ticks with zero deaths and no spikes anywhere; shaky success rates of 25-48/64 show timing sensitivity from tight gap mouths, not real hazard. No coins, no unlock, no decision \u2014 the east and ceiling exits share the same forced path until the last corridor.",
+  "recommendation": "Give the lift a job: put a coin at the dead-end shelf on each switchback (or spike the corridor ceilings so the dashes must stay low), turning the rote zigzag into a small risk/collect test that justifies its 525-tick length."
+ },
+ {
+  "slug": "hammer-hall",
+  "purpose": "A spike-gap execution test guarding coin 33: cross a lethal spike bed via two flanking one-way platforms and climb to a high central one-way ledge for the coin.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The mandatory route uses 5 jumps, 1 wall jump, and 3 dashes over 158 ticks, hopping the two low one-way platforms across a 13-tile spike bed and reaching the central one-way at row 11 for the coin. Noise robustness is genuinely low (36-55% success) and nearly all failures are deaths (24-51 per 64 trials), so the spikes are a real hazard, not decoration. The rest of the room is a big empty upper chamber, but the floor gauntlet gives it a job.",
+  "recommendation": "Keep the spike gauntlet, but shrink the dead upper half of the room (or place the coin ledge higher with a wall-jump setup that uses that space) so the geometry all serves the challenge."
+ },
+ {
+  "slug": "hollow-landing",
+  "purpose": "Opening spawn room / safe landing that funnels the player rightward to The Moss Walk \u2014 pure pacing, teaching nothing.",
+  "purpose_clarity": "weak",
+  "challenge": "trivial",
+  "fun": "dull",
+  "filler": true,
+  "notes": "The witness route is a single span with 0 jump presses, 0 wall jumps, 0 dashes, 0 reversals (159 ticks), and both shaky curves are 64/64 with 0 deaths \u2014 the mandatory path is literally walk right along the floor to the east door mouth. The one-way platforms overhead are decoration; there are no coins gated behind them worth anything (room lists coin count 0 needed), no spikes, no vertical structure to use. As a spawn room a soft landing is legitimate, but this one doesn't even ask for a jump, so it teaches nothing before The Moss Walk.",
+  "recommendation": "Make it a 30-second tutorial: put a coin on the one-way platforms so the first jump (and one-way drop-through) is taught here, and raise the east door mouth a tile or two so reaching it requires one hop."
+ },
+ {
+  "slug": "hot-glass",
+  "purpose": "Execution challenge: a dash-chain gauntlet across spike beds guarding coin 47 on the west-east through-route.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness route is 94 ticks with 6 dashes and only 1 jump \u2014 a sustained dash chain past floor spikes (^^^^) and ceiling spikes (vvvvv) among one-way platforms. Noise trials show real deaths, not just resets: HoldRelease 38/64 successes with 21 deaths, BoundaryTiming 34/64 with 12 deaths, so the hazards genuinely punish imprecision.",
+  "recommendation": "Keep as-is; if anything, consider whether ~35-50% success under 1-tick noise is harsher than intended for a mandatory coin and widen one spike gap slightly."
+ },
+ {
+  "slug": "landing-chain",
+  "purpose": "Nominally a connector between The Split Spire and Needle Turn, but the mandatory path is a flat walk with no mechanic, gate, or reward.",
+  "purpose_clarity": "none",
+  "challenge": "trivial",
+  "fun": "dull",
+  "filler": true,
+  "notes": "Witness observation is 0 jump presses, 0 wall jumps, 0 dashes, 0 reversals over 163 ticks \u2014 the east door sits on the same open floor row as the west entry, so the route is literally walk right. Shaky robustness is 64/64 with 0 deaths on both noise modes, confirming zero timing sensitivity or hazard. The interior walls and three one-way platforms sit above the path and are never touched; there are no coins, spikes on the path, or unlocks.",
+  "recommendation": "Break the flat floor with a lethal spike pit under the one-way platform chain so the mandatory route actually uses the \"landing chain\" of platforms (a few timed jumps), or place a coin on the upper ledges to make the decoration optional-reward instead of dead space."
+ },
+ {
+  "slug": "lantern-gallery",
+  "purpose": "A three-way junction whose ceiling exit is reached by a zig-zag ladder of one-way platforms climbed with base jumps only.",
+  "purpose_clarity": "weak",
+  "challenge": "light",
+  "fun": "passable",
+  "filler": false,
+  "notes": "Witness: 153 ticks, 8 jumps, 9 reversals, no wall-jumps/dashes; shaky success is only ~44-50% (28-32/64) under 1-tick noise but with zero deaths, so the climb is timing/spacing-sensitive without any hazard threat. The room has zero spikes, zero coins, zero unlocks \u2014 the only content is back-and-forth hopping up staggered one-way platforms to the ceiling door. It routes three exits, so it earns its keep as navigation, but the climb itself tests nothing a player hasn't done by room 6.",
+  "recommendation": "Give the climb stakes or a choice: add a spike lip on one platform edge (making the zig-zag order matter and turning shaky retries into real risk), or place a coin on a side platform off the mandatory path so the vertical route offers an optional reach test."
+ },
+ {
+  "slug": "lattice-climb",
+  "purpose": "A mandatory execution test: a narrow spike-lined vertical shaft that must be wall-jumped/dashed up to cross over a dividing wall, making it the room's whole job to test precise wall-jump climbing past alternating spike faces.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The east exit is walled off at floor level (solid column at x=17, rows 13-16), so the route forces a climb up the 3-4 tile shaft (cols 13-16) lined with alternating right- and left-facing spikes, then a traverse over the row-4 shelf and drop to the east door. Witness shows real work: 6 jumps, 4 wall jumps, 5 dashes, 4 reversals in 150 ticks. Under 1-tick noise, BoundaryTiming succeeds only 42/64 with 17 deaths and CorrelatedTiming 43/64 with 19 deaths \u2014 genuine lethal hazard pressure, not just timing shakiness.",
+  "recommendation": "Keep as-is; if anything, consider a coin perched in the spike shaft or on the row-4 shelf so the risk also gates optional reward, since the room currently holds no coins."
+ },
+ {
+  "slug": "lens-niche",
+  "purpose": "A short dead-end side pocket guarding coin 46 with a compact dash/wall-jump execution test before rejoining The Furnace Lift.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The witness reaches the coin in only 44 ticks but packs in 3 dashes, a wall jump, and a reversal across the pillar/one-way lattice, with a spike strip (^^^^) flanking the floor entry. Robustness is genuinely tight \u2014 BoundaryTiming succeeds only 29/64 and CorrelatedTiming 32/64 under 1-tick noise \u2014 yet with 0 deaths, so it is a timing-precision test rather than a lethal hazard. As a coin-guard niche off a single connection, its job is unambiguous even if brief.",
+  "recommendation": "Keep as-is; optionally position the spikes so the noisy-timing failure mode actually threatens death, giving the precision requirement real teeth instead of just a retry."
+ },
+ {
+  "slug": "lift-shaft",
+  "purpose": "A three-way junction that doubles as a one-way-platform ascent puzzle: reach the ceiling door to Spark Niche by hopping a staggered ladder of one-way platforms over a spiked floor.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness uses 8 accepted jumps and 9 reversals over 153 ticks with no wall-jumps or dashes: a genuine zig-zag climb up the staggered one-way platforms, not a walk-through. Shaky success is only ~47-53% (30-34/64) with 2-3 deaths under timing noise, so the ascent is timing-sensitive and the floor spikes are a real, if mild, hazard. The east/west floor route is trivial, but the analyzed mandatory ceiling target has actual execution content.",
+  "recommendation": "Mostly keep as-is; the weak spot is the trivial west-east floor crossing, so shifting the floor spike clusters to force at least one platform hop on the horizontal route would make the room earn its keep from every direction."
+ },
+ {
+  "slug": "low-passage",
+  "purpose": "A low horizontal connector between Gale Landing and The Forked Current holding coin 23, nominally a dash-chaining corridor.",
+  "purpose_clarity": "weak",
+  "challenge": "light",
+  "fun": "dull",
+  "filler": true,
+  "notes": "The witness crosses in 87 ticks with 0 jumps, 0 wall-jumps, and 8 dashes \u2014 the room has no spikes and its two huge chambers are dead air above a flat bottom corridor with a few one-way platforms the route barely needs. Shaky trials show 25-52% success but 0 deaths across all four noise models, so the fragility is pure dash-cadence timing with no actual threat; a failed input just costs a re-dash, not a life. There is no route choice, no hazard, and no use of the vertical space; the coin sits on the mandatory line.",
+  "recommendation": "Give it a job: block the flat floor route with spike pits or gaps so the 8-dash chain becomes a real air-dash relay across the one-way platforms (with lethal floor below), or move coin 23 up into the empty upper-left chamber behind an optional wall-jump climb so the room tests something."
+ },
+ {
+  "slug": "lunar-cache",
+  "purpose": "Optional-feeling dead-end challenge shaft guarding coin 60: a spike-lined wall-jump/dash descent that tests precision movement.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness route uses 4 wall jumps, 3 dashes and 4 reversals over 155 ticks to reach the coin, and the right shaft is lined with alternating-face spikes. Under 1-tick noise, BoundaryTiming succeeds only 28/64 with 13 deaths (CorrelatedTiming 39/64, 11 deaths) \u2014 real lethal hazard plus tight timing, not just shakiness. The open left chamber with one-way platforms is a calm staging area before committing to the spike shaft.",
+  "recommendation": "keep as-is"
+ },
+ {
+  "slug": "meteor-run",
+  "purpose": "Nothing discernible \u2014 it is a completely empty 4-tile-high corridor between Gravity Lift and Vacuum Gallery with no coins, hazards, or platforming, despite a name that promises a hazard gauntlet.",
+  "purpose_clarity": "none",
+  "challenge": "trivial",
+  "fun": "dull",
+  "filler": true,
+  "notes": "The grid is an empty box: solid floor/ceiling, no spikes, no platforms, no coins; the mandatory route is walk/dash east along the floor (134 ticks, 0 jumps, 3 dashes, 2 reversals \u2014 the dashes are just speed, not necessity). Shaky failures (e.g. BoundaryTiming 39/64) with reported deaths are inconsistent with a hazardless grid and look like witness noise/timeout artifacts, not real threat. Even as a breather it can't be justified without knowing its neighbors are demanding, and its name signals unbuilt content.",
+  "recommendation": "Build the room its name promises: a horizontal dodge run \u2014 falling/diagonal spike columns or spike-floor gaps forcing timed dashes across the corridor \u2014 or at minimum add a spike floor with platforms so the east door costs one real execution test."
+ },
+ {
+  "slug": "mirror-duct",
+  "purpose": "A short optional-feeling side pocket off The Mirror Fork that guards coin 44 behind a wall-jump climb over a spiked entry gap.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness uses 5 jumps, 3 wall-jumps, and 4 reversals in 82 ticks with no dash, threading a spike-flanked floor mouth and one-way platforms between vertical walls. Noise robustness is low (12-27 successes per 64 across all noise types) with real deaths (2-8), so the route is both timing-sensitive and genuinely hazardous. The room has exactly one job \u2014 earn the coin \u2014 and the grid supports it.",
+  "recommendation": "keep as-is"
+ },
+ {
+  "slug": "mirror-fork",
+  "purpose": "A three-way junction (west/east/ceiling) whose ceiling-door route is a dash-driven staircase climb over a central spike pit via staggered one-way platforms.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The witness route to the ceiling door uses 2 jumps, 4 dashes, and 2 reversals over 81 ticks, ascending a zig-zag of three one-way platforms above a spiked floor trench (row 16 spikes) to a narrow ceiling gap. Noise robustness is genuinely poor with real deaths: BoundaryTiming 21/64 with 13 deaths and CorrelatedTiming 15/64 with 20 deaths, so the spikes are a live threat, not decoration. The room also serves as an actual fork with three zero-cost exits, so it has both navigation and execution roles.",
+  "recommendation": "Keep as-is; if anything, widen the landing margin on the lowest one-way platform slightly so the mandatory-path death rate under timing noise reads as challenge rather than jank."
+ },
+ {
+  "slug": "demo-dungeon.moon-vault",
+  "purpose": "A dead-end treasure vault: descend from the ceiling entry and traverse one-way platforms over a lethal spike floor to collect coin 54, then climb back out.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The witness route is 111 ticks with 3 accepted jumps, 1 wall jump, and 3 dashes \u2014 a real movement sequence, not a walk-through. The entire floor is spikes plus a hanging double-spiked block below the entry, and noise runs show genuine deaths (16/64 BoundaryTiming, 12/64 CorrelatedTiming, 16/64 HoldRelease), so failure means dying, not just wobbling; DropRepeatFrame at 63/64 shows it is not frame-perfect. Sparse one-way platforms at staggered heights force route choice across the spike pit.",
+  "recommendation": "Keep as-is; if anything, differentiate the return climb (e.g. one asymmetric platform) so exit isn't a rewind of the entry path."
+ },
+ {
+  "slug": "moss-walk",
+  "purpose": "Nominally the first corridor after Hollow Landing, presumably meant to introduce one-way platforms and coin collection, but the mandatory route uses neither.",
+  "purpose_clarity": "weak",
+  "challenge": "trivial",
+  "fun": "dull",
+  "filler": true,
+  "notes": "The witness is 1 movement span with 0 jump presses, 0 wall jumps, 0 dashes, 0 reversals over 163 ticks \u2014 literally hold right along the open floor row; both door mouths sit at the same floor level. Shaky trials are 64/64 with 0 deaths on both noise modes, confirming zero timing sensitivity or hazard. The one-way platforms and the room's single coin hang above the path and are never engaged by the mandatory route.",
+  "recommendation": "Give it a job as the coin/one-way tutorial: block the flat floor route with a low wall or pit so the player must hop up the one-way platform staircase, and place the coin on that platform chain so the room teaches jump-through platforms and coin pickup on the very first screen."
+ },
+ {
+  "slug": "needle-room",
+  "purpose": "Ostensibly a spike-shaft wall-jump climb (\"Needle Belfry\"), but the mandatory coin route ignores the shaft entirely, so in practice it does nothing.",
+  "purpose_clarity": "weak",
+  "challenge": "trivial",
+  "fun": "dull",
+  "filler": true,
+  "notes": "Witness reaches coin-11 in 19 ticks with 1 jump, 0 wall jumps, 0 dashes despite wall_jump being the loadout focus; the spike-lined shaft (rows of > and < spikes with staggered one-way platforms) is never touched. Shaky success 25-48/64 with 0 deaths indicates only jump-timing sensitivity on the single hop, no real hazard exposure.",
+  "recommendation": "Move coin-11 to the top of the spike shaft (above the row-2 platform) so the staggered one-way ledges and spike walls force the wall-jump needle climb the room is built around."
+ },
+ {
+  "slug": "needle-turn",
+  "purpose": "A precision wall-jump execution test: thread a narrow spike-lined chute (\"the needle\") to earn coin 21 on the mandatory west-east path.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Grid has a tight vertical channel (cols 11-16) lined with opposing spikes plus staggered one-way ledges; witness route takes 229 ticks with 11 jumps, 3 wall jumps, and 17 reversals. Under 1-tick input noise success drops sharply with many actual deaths (40/85 trials dead on BoundaryTiming, 33/64 on CorrelatedTiming), so this is real timing-sensitive hazard threat, not decoration.",
+  "recommendation": "Keep as-is; at most, consider whether its difficulty spike at floor 18 fits the local pacing curve, since it may be harsher than its neighbors this early."
+ },
+ {
+  "slug": "nova-niche",
+  "purpose": "A lethal wall-jump execution challenge: climb a narrow shaft whose walls carry alternating spike faces, forcing precise side-picking on each wall-jump to grab coin 58 and exit upward.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The mandatory route uses 6 jumps, 4 wall-jumps, 1 dash and 5 reversals in 102 ticks up a 2-3 tile shaft where spike faces alternate sides (rows of &gt; on the left wall, &lt; on the right), so each wall-jump must target the currently safe face. Under 1-tick input noise the witness fails roughly half of trials with many actual deaths (28/64, 16/64, 22/64), confirming real hazard threat rather than mere timing shakiness. A spike row along the bottom-right ledge further punishes overshoot.",
+  "recommendation": "keep as-is"
+ },
+ {
+  "slug": "observatory",
+  "purpose": "A lethal execution test: a spike-lined wall-jump/dash shaft guarding coin-57, one of the harder coin challenges late in the run (floor 87/101).",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness needs 5 jumps, 3 wall jumps, 3 dashes, 5 reversals in 276 ticks; under 1-tick noise it succeeds only ~50-58% with 27-32 deaths out of 64 trials, so the spikes are a real threat, not decoration. The grid shows a narrow vertical channel (cols 22-27) with facing > and < spike walls plus ^ spike floors, forcing precise wall-jump chains between lethal faces, and a long spike floor under the upper-left ledge run.",
+  "recommendation": "Keep as-is; if anything, verify the ~50% noise-death rate is intended difficulty for its floor position rather than an unfair pixel-tight wall-jump window, and widen the shaft by one tile if playtests show it reads as unfair."
+ },
+ {
+  "slug": "old-lift",
+  "purpose": "Nominally a connector between Broken Aqueduct and Lantern Gallery, but it asks nothing of the player and offers nothing.",
+  "purpose_clarity": "none",
+  "challenge": "trivial",
+  "fun": "dull",
+  "filler": true,
+  "notes": "Witness observation is 1 span, 0 jumps, 0 dashes, 0 reversals over 163 ticks \u2014 a pure hold-right walk along the open bottom rows, with 64/64 success and 0 deaths under both noise modes. The scattered one-way platforms suggest a lift shaft but carry no coins, no unlock, no crown, and the mandatory west-to-east path never touches them.",
+  "recommendation": "Make the title real: block the ground route and put the east door high, forcing an ascent up the staggered one-way \"lift\" platforms (or place a coin at the top so the climb is at least optional-but-rewarded)."
+ },
+ {
+  "slug": "orbit-fork",
+  "purpose": "A three-way junction (west/east/floor) meant to route the player between Comet Run, Constellation Hall, and Moon Vault.",
+  "purpose_clarity": "weak",
+  "challenge": "light",
+  "fun": "passable",
+  "filler": true,
+  "notes": "Witness clears west-to-floor in 82 ticks with 2 jumps, 0 wall jumps, 0 dashes, 0 deaths \u2014 a couple of hops down to the floor gap between the two low platforms. The spike strips (vvvvv row 4, plus one-ways) sit high above the natural path and never threaten the route, as shown by 0 deaths across all 256 noisy trials; shaky success of 19-39/64 indicates some timing sensitivity on the hop over the floor-adjacent one-way ledges but nothing lethal. No coins, no unlocks, no gates \u2014 the \"fork\" offers a topological choice but nothing in-room to make any branch cost or teach anything.",
+  "recommendation": "Make the fork a real decision point: place a coin behind the spike ceiling reachable only via a dash/wall-jump line, so the room signposts and previews the ability demands of its three branches instead of being an empty crossroads."
+ },
+ {
+  "slug": "piston-pass",
+  "purpose": "A horizontal execution corridor between Vent Spire and Crucible Climb: a dash/hop relay across scattered one-way platforms over a spiked floor.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The witness uses 3 jumps and 4 dashes over 144 ticks with no wall jumps, chaining one-way platforms (rows 8, 10, 12-13) over three spike clusters on the floor and a ceiling spike bank at row 6. Robustness collapses under noise with real deaths, not just timeouts: 37/64 with 55 deaths (BoundaryTiming) and 37/64 with 53 deaths (DropRepeatFrame), so the spikes are a genuine lethal threat and the dash timings are tight. There are no coins or unlocks, but the mandatory path is a real execution test rather than a walk-through.",
+  "recommendation": "Keep the layout, but consider whether ~58% baseline failure under 1-tick noise is tighter than intended for a mandatory corridor; widening one platform or shortening one spike cluster would soften the harshest link. Otherwise keep as-is."
+ },
+ {
+  "slug": "demo-dungeon.pressure-fork",
+  "purpose": "A three-way junction (west/east/floor) whose real job is routing; the analyzed mandatory path just crosses the low corridor and drops through the one-way slot in the floor into Ash Cache.",
+  "purpose_clarity": "weak",
+  "challenge": "light",
+  "fun": "passable",
+  "filler": true,
+  "notes": "Witness: 82 ticks, 2 accepted jumps, 0 wall-jumps, 0 dashes, 3 reversals \u2014 a short hop-and-drop through the bottom one-way slot; the entire upper two-thirds of the room (spike cluster, three floating one-ways) is off the mandatory path and pure decoration. Shaky success is low (19-38/64) with zero deaths, so the route is timing-fiddly around the drop slot but never dangerous. No coins, no unlock, no gate: nothing rewards engaging with the room beyond passing through.",
+  "recommendation": "Give the fork a reason to be a fork: put a coin on the upper one-way platforms guarded by the spike cluster, so choosing the floor exit versus detouring upward becomes an actual decision instead of dead decoration."
+ },
+ {
+  "slug": "prism-run",
+  "purpose": "A dash-execution gauntlet over lethal floor spikes that guards coin 41 on the west-east corridor between Glass Threshold and The Split Kiln.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness uses 5 dashes, 3 jumps, and 2 reversals in 115 ticks to cross a floor broken by three ^^^^ spike beds with sparse one-way platforms and a ceiling spike strip. Under 1-tick input noise, success drops to ~60-70% and every profile records substantial deaths (26/64 BoundaryTiming, 42/64 DropRepeatFrame), meaning the spikes actually kill sloppy execution rather than being decoration. The reversals suggest the coin forces a doubling-back rather than a straight-line sprint.",
+  "recommendation": "keep as-is"
+ },
+ {
+  "slug": "pulse-gallery",
+  "purpose": "A short east-west link corridor whose job is guarding coin 25 behind a few spike-gap platform hops.",
+  "purpose_clarity": "weak",
+  "challenge": "light",
+  "fun": "passable",
+  "filler": false,
+  "notes": "Witness: 83 ticks, 3 jumps, 0 wall-jumps, 0 dashes \u2014 pure ground hops across one-way platforms over floor spikes. Noise robustness is genuinely low (39-45/64 on timing variants) with real deaths (8-13), so the spike gaps do threaten, but only barely; the top half of the room, including the ceiling spike row at row 8, is unused by the mandatory route. Both exits are ungated, so the coin is the only reason the room exists.",
+  "recommendation": "Make the coin cost something distinct: move coin 25 up beneath the ceiling spike row so collecting it requires a precise capped jump (or a dash) from the central one-way ledge, giving the dead upper half of the room a job and differentiating the optional pickup from the trivial pass-through."
+ },
+ {
+  "slug": "rafter-shrine",
+  "purpose": "A dashless wall-jump climbing room: narrow shafts formed by the x=10 and x=16 pillars with one-way ledges, guarding coin 20 on the way up to The Split Spire's ceiling exit.",
+  "purpose_clarity": "clear",
+  "challenge": "light",
+  "fun": "passable",
+  "filler": false,
+  "notes": "Witness needs 5 accepted jumps, 2 wall jumps, and 5 reversals in 88 ticks, so it is a real climb rather than walk-through. Shaky robustness is poor (16-43/64 across noise models) with zero deaths, meaning the route is timing-sensitive but completely unthreatened: there are no spikes or hazards anywhere in the grid, so failure just costs retries, not lives. The one-way platforms and twin shafts give some structure, but there is only one sensible route and no decision to make.",
+  "recommendation": "Add a spike strip on one shaft wall or floor of the right chamber so the timing-sensitive wall-jump climb has actual stakes, turning retry-friction into a genuine execution test."
+ },
+ {
+  "slug": "razor-pass",
+  "purpose": "A pure execution gauntlet: a low horizontal corridor where you dash/hop across one-way platforms over three floor spike beds, under a ceiling spike run, linking Annealing Spire to Lattice Climb.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The witness needs 3 jumps and 4 dashes in 146 ticks with no wall jumps, and under 1-tick noise success drops to roughly 44-56% with heavy death counts (e.g. 32/64 with 38 deaths on DropRepeatFrame), so the spike beds are a real lethal threat, not decoration. The entry sits at floor level with staggered one-way platforms (rows 13-14, then row 10/8 area) forcing precise dash chains over the three ^^^^ beds on the floor.",
+  "recommendation": "Keep as-is mechanically, but consider one optional decision \u2014 e.g. a harder high route under the vvvv ceiling spikes that skips a dash bed \u2014 so the room tests choice as well as execution; currently it is a single-line corridor."
+ },
+ {
+  "slug": "refraction-shaft",
+  "purpose": "A mandatory wall-jump execution test: the west-to-east path is blocked by a near-full-height wall, forcing the player up a narrow shaft lined with alternating left/right-facing spikes before dropping down the far side.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The central wall (col 16) seals the direct corridor, and the climbable slot between cols 11-15 has > spikes on one face at rows 4-6/10-12 and < spikes on the other at rows 7-9 and 13-15, so the player must alternate which wall they cling to mid-climb (4 wall jumps, 3 reversals, 6 jumps, 204 ticks, zero dashes needed). Noise robustness is poor with real deaths: BoundaryTiming 35/64 with 24 deaths, HoldRelease 46/64 with 14 \u2014 this is genuine spike hazard plus tight timing, not decoration.",
+  "recommendation": "Keep as-is; the alternating-face spike shaft is a real skill gate. If anything, place a coin at the top of the shaft to reward the climb rather than leaving the room reward-empty."
+ },
+ {
+  "slug": "relay-chasm",
+  "purpose": "A dash/jump execution gauntlet: relay across one-way platforms over lethal spike pits on the mandatory Storm Split -> Brake Tower path.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness uses 3 jumps and 3 dashes over 147 ticks, and noise robustness collapses to 33-42/64 with 40-55 deaths per trial set \u2014 the spike beds under the one-way platform relay are a real hazard, not timing shakiness alone. The grid is a single low corridor of three platform strips over two spike pits; the top 12 rows are unused empty space. No coins, no unlock, no branch \u2014 pure execution.",
+  "recommendation": "Use the wasted upper two-thirds: add an optional coin on a harder high line (e.g. a wall-jump detour above the spikes) so skilled players get a reward beyond mere passage."
+ },
+ {
+  "slug": "rivet-run",
+  "purpose": "A horizontal dash-and-jump gauntlet over three floor spike clusters \u2014 an execution-test corridor linking The Lift Shaft to Blast Gallery.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness uses 3 jumps and 4 dashes in 144 ticks crossing three ^^^ spike clusters on the floor row, with one-way platforms (rows 5/8/11/14) available as safer high-road options. Noise robustness is poor with real deaths (BoundaryTiming 37/64, CorrelatedTiming 54/64 but many death lines), so the spikes are an actual lethal execution test, not decoration. No coins, no unlock, no route decision though \u2014 it is a pure skill corridor.",
+  "recommendation": "Add an optional coin tucked between spike clusters or under the low one-way ledge so the room rewards taking the riskier ground route instead of hopping the platforms."
+ },
+ {
+  "slug": "root-cellar",
+  "purpose": "A dead-end coin-cache cellar below The Split Root, meant to reward a detour with coins 2 and 3.",
+  "purpose_clarity": "weak",
+  "challenge": "trivial",
+  "fun": "dull",
+  "filler": true,
+  "notes": "The witness route to dungeon-coin-03 is 1 span, 0 jump presses, 0 of everything else in 50 ticks \u2014 you literally drop in from the ceiling and land on the coin, with 64/64 success and 0 deaths under both noise modes. The five one-way platforms scattered through the grid are pure decoration on this route, and there are no spikes or hazards anywhere. Exiting back up requires jumping the platform ladder, but with no threat it is rote.",
+  "recommendation": "Make the coins cost something: line the floor with spikes so the entry drop must land on the one-way platforms, and place coin-03 in a spiked alcove so the descent through the staggered platforms becomes an actual routing/precision test."
+ },
+ {
+  "slug": "shadow-duct",
+  "purpose": "A lethal spike-chimney execution challenge guarding coin 56 as an optional-feeling dead-end side room off The Eclipse Fork.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Walls of both shafts alternate spiked (&gt;/&lt;) and safe segments, forcing precise wall-jump placement, and the exit strip sits over a full row of ^ spikes. Witness uses 3 wall-jumps, 3 dashes, 5 reversals in 136 ticks; under BoundaryTiming noise it succeeds only 40/64 with 42 deaths, so the spikes are a real threat, not decoration.",
+  "recommendation": "Keep as-is; at most, verify the 42/64 death rate under 1-tick noise is intended difficulty for floor position 86, and widen one safe wall segment if it should be slightly more forgiving."
+ },
+ {
+  "slug": "shard-vault",
+  "purpose": "Dead-end treasure vault: a spike-guarded execution challenge protecting coin-42, entered and exited through the same ceiling door.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness: 202 ticks, 8 jumps, 3 wall jumps, 20 reversals to reach the coin past a left-facing spike column flanked by one-way platforms. Noise robustness is low with real deaths (BoundaryTiming 31/91, 14 deaths; CorrelatedTiming 18/64, 9 deaths), so the spikes are a live hazard and the timing test is genuine. Single connection confirms it is an optional vault, not navigation filler.",
+  "recommendation": "Keep the concept as-is, but verify the dash (unused by the witness despite being unlocked) cannot trivially bypass the spike gap; if it can, tighten the gap or reposition spikes so the intended timing challenge holds."
+ },
+ {
+  "slug": "skybridge",
+  "purpose": "A late-run (floor 97/101) spike-floor execution gauntlet: dash/wall-jump across a spiked pit to collect coin 62 while transiting from Starwell Climb toward The Astral Seal.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Nearly the whole floor is lethal spikes with only a one-way ledge near the west entry and a narrow safe strip; the witness needs 149 ticks with 3 jumps, 2 wall jumps, 6 dashes, and 6 reversals \u2014 a real routed execution test, not a walk-through. Noise robustness is poor with heavy actual deaths (BoundaryTiming 31/64 with 31 deaths, DropRepeatFrame 28/64 with 37 deaths), so the spike floor is a genuine threat, not just timing shakiness. The pillar-and-alcove geometry (interior walls at cols 7/11, hanging platform at row 27) forces direction reversals and dash chaining rather than a straight right-run.",
+  "recommendation": "Keep as-is; if anything, the mandatory east-west transit sharing the same spike gauntlet may be punishing for players skipping the coin \u2014 consider whether the coin detour, not the through-route, should carry the hardest dashes."
+ },
+ {
+  "slug": "sliver-run",
+  "purpose": "A horizontal spike-gauntlet corridor testing dash/jump execution over three spike beds between The Furnace Lift and Hot Glass.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "passable",
+  "filler": false,
+  "notes": "The mandatory west-to-east route crosses three floor-level spike beds using 3 jumps and 4 dashes in 146 ticks, and noise trials show real lethality, not just timing shake: BoundaryTiming succeeds only 29/64 with 71 deaths, and even HoldRelease noise kills 52 times. So the spikes genuinely punish sloppy inputs. However, the route is a straight left-to-right line with no decision point, and the one-way platforms in the upper half appear decorative \u2014 the witness never needs them.",
+  "recommendation": "Vary the three spike hops (e.g. raise one bed's approach so the middle gap forces a dash-jump off the low one-way platform, or stagger platform heights to offer a slower safe high route vs the fast dash line) so the room offers a speed-vs-safety decision instead of three identical hops."
+ },
+ {
+  "slug": "demo-dungeon.sluice",
+  "purpose": "A flat corridor linking Lantern Gallery to the coins=6 east door; its only content is a single two-tile spike hop.",
+  "purpose_clarity": "none",
+  "challenge": "trivial",
+  "fun": "dull",
+  "filler": true,
+  "notes": "Witness clears it in 166 ticks with exactly one jump (over the lone ^^ spike pair) and zero wall-jumps/dashes/reversals. Noise trials do show 19-26 deaths of 64, so the spikes are lethal if mistimed, but the hop is trivial under clean input. The four one-way platforms are off the mandatory path and hold no coins, so they are pure decoration.",
+  "recommendation": "Give it a job: put 1-2 coins on the upper one-way platforms (feeding the coins=6 gate it leads to) with a short spike-guarded climb to reach them, or extend the spike floor so the platforms become the mandatory route."
+ },
+ {
+  "slug": "spark-niche",
+  "purpose": "A dead-end coin challenge room: a spike-floored chamber of narrow wall niches and one-way ledges guarding dungeon-coin-34, entered and exited through the same connection to The Lift Shaft.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness needs 5 jumps, 3 wall jumps, and 4 reversals in 82 ticks with no dashes, threading interior wall stubs and one-way ledges above a spike row (^^^) beside the floor entry gap. Under 1-tick input noise success drops to roughly 21-27/64 across all four noise models, with 2-8 deaths per batch \u2014 so the route is genuinely timing-sensitive and the spikes are a real threat, not decoration. As the room's only job is the coin and it has one connection, it reads as an intentional optional-ish execution test rather than filler.",
+  "recommendation": "Keep as-is; if anything, widen the safe landing strip by one tile at the entry so the punishment for a failed wall-jump chain is retrying the climb rather than instant spike death, keeping the timing test but softening the deaths."
+ },
+ {
+  "slug": "split-furnace",
+  "purpose": "A three-way junction linking Windshaft (west), Gear Gallery (east), and the floor drop to Ember Vault \u2014 its only real job is routing traffic.",
+  "purpose_clarity": "weak",
+  "challenge": "light",
+  "fun": "passable",
+  "filler": true,
+  "notes": "The witness crosses in 82 ticks with 2 accepted jumps, 0 wall-jumps, 0 dashes, and 3 reversals: walk in at floor level, line up over the one-way lip at the bottom center, and drop through the floor gap. Shaky success is low (20-39/64) but with zero deaths, so the only difficulty is fiddly positioning over the one-way platforms flanking the exit gap, not hazard threat. The ceiling spikes and upper one-way platforms sit far off the mandatory path and are pure decoration \u2014 no coin, unlock, or crown gives them a reason to exist.",
+  "recommendation": "Give the upper two-thirds a job: put a coin above the vvvv spike cluster reachable via the one-way platforms so the room offers an optional risk/reward climb, or else compress the room and let it be an honest small junction."
+ },
+ {
+  "slug": "split-kiln",
+  "purpose": "A three-way junction (Prism Run west, Glass Gallery east, Shard Vault below) whose only real content is dropping through the one-way slot in the floor.",
+  "purpose_clarity": "weak",
+  "challenge": "light",
+  "fun": "dull",
+  "filler": true,
+  "notes": "Witness: 82 ticks, 2 accepted jumps, 0 wall-jumps, 0 dashes, 3 reversals \u2014 enter west near the floor, hop across, and drop through the ----- gap in the bottom into Shard Vault. Shaky success is low (19-38/64) but with 0 deaths on every noise model, so the route is timing-fiddly (lining up the one-way drop) rather than dangerous; the ceiling spikes and upper one-way platforms are pure decoration the mandatory path never touches. No coins, no unlock, no decision beyond which exit to take.",
+  "recommendation": "Give the junction a stake: put a coin up among the currently-unused upper one-way platforms under the vvvvv spikes, so the room offers an optional spike-ceiling jump puzzle instead of dead decoration."
+ },
+ {
+  "slug": "split-root",
+  "purpose": "A three-way junction early in the run (floor key 2) that routes the player west/east/down, with the mandatory path being a drop through one-way platforms into the floor gap to Root Cellar.",
+  "purpose_clarity": "weak",
+  "challenge": "trivial",
+  "fun": "dull",
+  "filler": true,
+  "notes": "The grid is an almost empty box: no spikes, no coins, no unlocks \u2014 just three one-way platforms and a floor gap flanked by one-way lips. The witness clears it in 82 ticks with 2 jumps and 0 deaths under all noise models; the low shaky success rates (19-39/64) reflect only landing-in-the-gap timing fussiness, not any hazard. Nothing gates the exit choice, so the \"junction\" role carries no decision weight either.",
+  "recommendation": "Give the junction a real decision: put a visible coin cluster or a locked door hint down one branch and light spike hazards around the floor gap so choosing and executing the drop means something; alternatively collapse the room and connect Moss Walk to the drop directly."
+ },
+ {
+  "slug": "split-spire",
+  "purpose": "A wall-jump/one-way-platform ascent up two split pillars that serves as the vertical connector to Rafter Shrine while also linking the west-east horizontal corridor.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The witness route to the ceiling door takes 189 ticks with 10 accepted jumps, 5 wall jumps, and a reversal \u2014 a genuine no-dash climb up the two solid pillars using the staggered one-way ledges. Noise robustness is poor (DropRepeatFrame 9/64, BoundaryTiming 44/64) but with zero deaths: the room has no spikes, so failure means falling and re-climbing, i.e. timing-sensitive but not lethal. It is also a three-way junction (west/east/ceiling), so the vertical route is optional relative to the walk-through floor corridor.",
+  "recommendation": "Keep the climb, but widen the tightest wall-jump window (the DropRepeatFrame 9/64 chokepoint, likely the staggered one-way ledges between the two pillars) so retrying feels fair rather than frame-perfect; alternatively add a coin atop the spire so the demanding branch pays off."
+ },
+ {
+  "slug": "star-threshold",
+  "purpose": "An execution-test room: a spike-lined wall-jump chute followed by a one-way-platform ladder guarding coin 52 on the mandatory west-to-east path.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness uses 4 jumps, 3 wall-jumps, 3 dashes, and 2 reversals in 93 ticks, so the route is a real input sequence, not walk-and-jump. The west chute alternates > and < spikes so wall-jumps must land on safe back faces; timing noise drops success to 41/64 and 39/64 with 17 and 22 deaths respectively, showing genuine lethal hazard, not just shakiness. The staggered one-way platforms on the right require reading which ledge chains upward to the coin.",
+  "recommendation": "keep as-is"
+ },
+ {
+  "slug": "starwell-climb",
+  "purpose": "A late-run (floor 96/101) execution gauntlet: a mixed dash/wall-jump relay across a long lethal spike floor connecting Void Pass to The Skybridge.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The witness needs 3 jumps, 2 wall jumps, 7 dashes, and 4 reversals over 152 ticks \u2014 a dense mixed-input route over a spike floor spanning most of the room's bottom, threading between three vertical wall structures. Under 1-tick boundary/correlated noise only 34/64 trials succeed with 22 deaths, so failures are real hazard deaths, not just timing wobble; HoldRelease still kills 11 times. This is a genuine execution test, appropriate to its position two rooms from the Crown.",
+  "recommendation": "keep as-is"
+ },
+ {
+  "slug": "demo-dungeon.storm-cache",
+  "purpose": "Optional-feeling coin cache: a short dash-assisted climb up staggered one-way platforms to collect coin 26.",
+  "purpose_clarity": "clear",
+  "challenge": "light",
+  "fun": "passable",
+  "filler": false,
+  "notes": "Witness: 90 ticks, 2 jumps, 5 dashes, 2 reversals, 0 wall-jumps \u2014 a real dash-hop ascent, not walk-through. Shaky success is 62-83% with 0 deaths across all four noise modes, so the route is mildly timing-sensitive but the grid has zero hazards; missing a platform just drops you back to retry. There is exactly one route and no decisions \u2014 pure light execution.",
+  "recommendation": "Add one or two spike faces on the underside of the mid platforms (or a lethal floor pit beside the entry mouth) so the dash sequencing carries a stake, turning free retries into an actual execution test worthy of a cache room."
+ },
+ {
+  "slug": "storm-split",
+  "purpose": "A three-way junction whose ceiling route is a zig-zag one-way-platform climb guarding access to Storm Cache.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness climb uses 9 jumps with 9 reversals over 161 ticks, hopping staggered one-way platforms (rows 3-14) with no dash or wall-jump needed. Under 1-tick timing noise success drops to ~11/64 with 28-31 deaths, so the floor spikes (^^^^ near the east floor gap) are a real threat and the platform hops are genuinely timing-sensitive, not decorative. Three ungated exits make it a legitimate routing decision point rather than a corridor.",
+  "recommendation": "Keep as-is, though the west/east floor-level pass-through is nearly free; adding a small hazard or coin along the horizontal route would make the non-climb traversal earn its space."
+ },
+ {
+  "slug": "temper-hall",
+  "purpose": "A short dash-over-spikes execution corridor guarding coin 45 on the Mirror Fork to Furnace Lift link.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness: 57 ticks, 1 jump, 3 dashes across two floor spike beds with staggered one-way platforms. Noise runs show real lethality, not mere shakiness: BoundaryTiming 39/64 with 8 deaths, HoldRelease 41/64 with 12 deaths, while CorrelatedTiming is 64/64 so the route is not frame-perfect. It is a linear execution test with no route decision, and the upper two-thirds of the room (including the vv ceiling strip) is dead space the route never touches.",
+  "recommendation": "Use the dead upper half: add a riskier high route under the ceiling spikes that skips the coin but exits faster, turning the room's one line into a coin-vs-speed decision."
+ },
+ {
+  "slug": "tempo-hall",
+  "purpose": "A wall-jump execution test: an optional-feeling but coin-gated climb up a narrow chimney whose walls carry staggered spikes, guarding dungeon-coin-19 on the west-to-east corridor.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The coin route needs 5 jumps, 2 wall-jumps, and 8 reversals over 183 ticks with no dash \u2014 the two-tile chimney has right-facing spikes on its left wall (rows 5-6) and left-facing spikes on the right wall (rows 8-9), plus a one-way ledge, forcing precise alternating wall-jumps. Noise trials show real lethality, not just timing shake: 5-10 deaths out of 64 across all four perturbation modes, with success around 84-92%. That is genuine hazard pressure on a coin that gates progress doors.",
+  "recommendation": "Keep as-is; if anything, tighten the readable staggering of the spike pairs so the intended zig-zag line is visually telegraphed from the chimney entrance."
+ },
+ {
+  "slug": "threshold",
+  "purpose": "Nominally a connective corridor between Climber's Gate and Three-Way Hall with one optional coin on high one-way platforms, but the mandatory path serves no function beyond distance.",
+  "purpose_clarity": "weak",
+  "challenge": "trivial",
+  "fun": "dull",
+  "filler": true,
+  "notes": "The witness crosses west-to-east in 163 ticks with 0 jump presses, 0 wall jumps, 0 reversals \u2014 literally hold right along the floor gap at rows 13-16. Shaky robustness is 64/64 with 0 deaths on both perturbation classes, confirming zero timing sensitivity or hazard. The three one-way platforms and the coin sit above the path and are entirely ignorable; there are no spikes or gaps anywhere.",
+  "recommendation": "Give it a job: either place the coin so collecting it requires a small one-way-platform hop chain (and make that coin matter for the next door), or cut the floor into spiked gaps so the corridor tests basic jumps between Climber's Gate and the Three-Way junction; otherwise merge it into a neighbor."
+ },
+ {
+  "slug": "tidal-fork",
+  "purpose": "A three-way junction routing traffic between Vacuum Gallery (west), Aurora Spire (east), and the floor drop into Lunar Cache.",
+  "purpose_clarity": "weak",
+  "challenge": "light",
+  "fun": "passable",
+  "filler": true,
+  "notes": "The witness route is 82 ticks with 2 accepted jumps, 0 wall jumps, 0 dashes, 3 reversals: enter west near the floor, hop between the low one-way ledges, and drop through the centered floor gap flanked by one-way lips. The spike clusters (rows 4) and upper one-way platforms sit well above the mandatory path and are pure decoration. Shaky trials show 19-38/64 successes with zero deaths, so the only difficulty is mild timing sensitivity around lining up the floor gap, not any real hazard or decision.",
+  "recommendation": "Make the fork mean something: guard the floor drop into Lunar Cache with the spikes (move them to flank the gap's one-way lips) so choosing the descent costs a precise drop, while the east route stays free \u2014 giving the junction an actual routing decision."
+ },
+ {
+  "slug": "treasury",
+  "purpose": "A dead-end treasure vault: an optional side room off Rootbound Underpass whose job is to make players earn two coins by climbing a spike-floored one-way-platform ascent.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The witness needs 3 jumps and 3 dashes over 114 ticks to reach coin-15, hopping a zig-zag ladder of four one-way platforms above a floor with two spike clusters. Noise robustness is genuinely low (37-46/64 successes) and, crucially, most failures are deaths (16-36 per 64 trials), so the spikes are a real hazard, not decoration. As a dead end it costs backtracking but that is standard for a treasure room.",
+  "recommendation": "Keep as-is; if anything, tighten the reward by making coin-14 sit on a slightly harder optional branch so the room offers a risk/reward decision rather than one linear climb."
+ },
+ {
+  "slug": "underpass",
+  "purpose": "A three-way junction (west/east/ceiling) with a free coin, functioning as a low-stakes connective corridor between two coin-gated doors.",
+  "purpose_clarity": "weak",
+  "challenge": "light",
+  "fun": "passable",
+  "filler": true,
+  "notes": "The grid has zero spikes and only scattered one-way platforms forming a loose staircase; the witness reaches the coin in 115 ticks with 3 jumps, no wall jumps, dashes, or reversals, and no deaths under any noise mode. Shaky success (62-88%) shows mild timing sensitivity on platform hops but nothing threatens the player. With both side doors coin-gated and a free ceiling exit, the room's only job is handing over coin 13 and routing traffic.",
+  "recommendation": "Give the ceiling route a real cost: place the coin high on the one-way platform stack guarded by a spike lip or a gap that requires a deliberate wall-jump or dash, so the free path up to Climbers' Gallery tests something instead of being three casual hops."
+ },
+ {
+  "slug": "vacuum-gallery",
+  "purpose": "A coin-guarding execution challenge: a spike-lined wall-jump chute followed by a one-way-platform zigzag climb, testing mixed wall-jump/dash movement on the Meteor Run -> Tidal Fork path.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness route uses 5 jumps, 4 wall-jumps, 3 dashes, and 6 reversals over 303 ticks \u2014 clearly a multi-technique route. Shaky success is only 37-48/64 with 8-27 deaths, so the spiked chute (columns 11-17, opposing > and < spike faces) is a real lethal hazard, not decoration; DropRepeatFrame's 27 deaths show the wall-jump timing window is tight. The right chamber's staggered one-way platforms add a distinct second movement phrase.",
+  "recommendation": "keep as-is"
+ },
+ {
+  "slug": "vent-spire",
+  "purpose": "A coin-collection climb: the mandatory west-east floor passage is trivial, and coin 37 sits up a chimney/spire structure reached by a short wall-jump-and-dash ascent using one-way platforms.",
+  "purpose_clarity": "weak",
+  "challenge": "light",
+  "fun": "passable",
+  "filler": false,
+  "notes": "Witness to the coin is 154 ticks with 4 jumps, 1 wall jump, 2 dashes, 0 reversals \u2014 a short single-line climb between the two vertical walls and one-way ledges. Shaky success is only 22-33/64 across all noise types with 0 deaths, so it is purely timing-sensitive (retry tax, no threat): the grid has no spikes at all, so failure just means falling back down. The ground-level west-east through-route bypasses everything, so the room's whole job is the optional coin.",
+  "recommendation": "Give the climb stakes or a decision: add spikes on the chimney walls or floor beneath the one-way ledges so the timing-sensitive wall-jump/dash sequence has real failure cost, or offer a second, harder dash-only line to the coin so the player chooses an approach."
+ },
+ {
+  "slug": "void-pass",
+  "purpose": "An execution test: a spike-lined wall-jump chute (safe wall segments interleaved with lethal > and < spike faces) followed by a staggered one-way platform hop, linking Aurora Spire to Starwell Climb.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness needs 10 jumps, 4 wall jumps, and 10 reversals over 251 ticks with no dash use, so the chute demands reading which wall faces are spiked (## segments) versus lethal (>/&lt;) before each wall jump. Robustness is genuinely fragile: BoundaryTiming 43/64 with 16 deaths and CorrelatedTiming 33/64 with 33 deaths \u2014 that is real spike lethality, not just retry-timing shake. The right-hand chamber's staggered one-ways add a lighter precision coda after the chute.",
+  "recommendation": "Keep the design, but consider softening CorrelatedTiming lethality slightly (widen one or two safe ## wall segments in the chute) since a ~50% death rate under 1-tick noise this late in the run (floor 95/101) may read as unfair rather than demanding."
+ },
+ {
+  "slug": "wall-antechamber",
+  "purpose": "Nominally a wall-jump teaching room (\"Stone Lessons\", antechamber before The Broad Chimney) with a central wall pillar and one-way platforms, but the mandatory route never exercises the mechanic.",
+  "purpose_clarity": "weak",
+  "challenge": "light",
+  "fun": "passable",
+  "filler": true,
+  "notes": "Witness reaches coin-16 in 146 ticks with only 2 accepted jumps and 0 wall jumps, 0 dashes, 0 reversals \u2014 the pillar and one-way platforms can be bypassed by plain jumping along the low route. No spikes anywhere and 0 deaths under all noise models; BoundaryTiming/HoldRelease drop to ~75-78% success, so there is mild jump-timing sensitivity but zero threat. As a lesson before the wall-jump-heavy Broad Chimney it fails to force the lesson.",
+  "recommendation": "Raise the coin (or the east exit approach) atop the central pillar so the only way up is chaining wall jumps in the pillar/right-wall gap, making the room actually teach the wall jump it is named for."
+ },
+ {
+  "slug": "wall-gallery",
+  "purpose": "A wall-jump/ledge-climb execution room and four-way junction: reach the ceiling door via staggered one-way platforms while serving as the hub above the coins=18 floor gate.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "passable",
+  "filler": false,
+  "notes": "Witness needs 287 ticks with 13 jumps, 3 wall jumps and 19 reversals to zig-zag up staggered one-way platforms and interior wall columns to the ceiling door \u2014 a real climb, not a walk-through. Noise robustness is low (26/103 to 7/64 successes) with zero deaths, so it is purely timing-sensitive: no spikes anywhere, so failure only costs a re-climb. It also hubs four exits including a coins=18 floor gate and holds a coin.",
+  "recommendation": "Add a small lethal element (e.g. spikes on the central column's face or beneath a late platform) so a missed wall jump has stakes, and vary the platform offsets so at least one ascent step offers a route choice; otherwise the room is fine to keep."
+ },
+ {
+  "slug": "wall-gate",
+  "purpose": "An execution checkpoint that tests wall-jump proficiency: two tall interior walls (the second running floor-to-ceiling gap-free at column 16) force a climb-and-cross before the coin-gated east door.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "Witness with wall_jump-only loadout takes 301 ticks with 9 jumps, 8 wall jumps and 12 reversals \u2014 a genuine climb of the central wall (column 16 spans rows 4-16, so it must be scaled, likely bouncing between it and the column-10 wall or the one-way platforms). Shaky success is only ~55% under BoundaryTiming/CorrelatedTiming/HoldRelease noise with 0 deaths, so it is timing-sensitive execution rather than hazard threat. No coins or unlocks here, but the room's name and geometry match its job as the wall-jump proof before Mosslit Threshold's 12-coin door.",
+  "recommendation": "Keep as-is, though adding one optional coin high on the central wall would reward a fuller climb and tie the room into the east door's coins=12 requirement."
+ },
+ {
+  "slug": "watch-post",
+  "purpose": "A dead-end coin vault: a zigzag one-way-platform climb that gates dungeon-coin-05 behind a base-kit (no wall-jump/dash) precision ascent.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The witness needs 553 ticks, 25 accepted jumps and 32 reversals to climb six staggered one-way ledges with no wall-jump or dash, so the mandatory route is a genuine back-and-forth ladder, not walk-and-jump. Shaky robustness is poor (BoundaryTiming 127/215, DropRepeatFrame 10/64) with zero deaths: the hops are timing-sensitive but the only failure cost is falling back a tier, since the grid contains no spikes at all. Single connection (floor to Lantern Gallery's ceiling) confirms it is a purpose-built side room for coin 5.",
+  "recommendation": "Add a small hazard or narrowing near the upper ledges (e.g. spike tips on one platform edge) so the timing-sensitive hops carry some stake beyond losing height; otherwise keep as-is."
+ },
+ {
+  "slug": "windshaft",
+  "purpose": "A dash-ladder coin challenge: an open shaft of staggered one-way platforms you climb (mostly by dashing) above a walk-through bottom corridor to grab coin 29, with a spike pair punishing sloppy drops.",
+  "purpose_clarity": "clear",
+  "challenge": "moderate",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The coin route needs 6 dashes, 2 jumps, and a reversal in 89 ticks up alternating one-way platforms, and it is genuinely fragile: BoundaryTiming noise succeeds only 20/64 with 9 deaths (CorrelatedTiming 10 deaths), so the ^^ spikes on the floor are a real threat, not decoration. However, the west-east through-route along the open bottom rows is nearly flat walking past one small spike pair, so the mandatory path itself is trivial; all the challenge lives in the coin climb.",
+  "recommendation": "Keep the coin climb, but give the mandatory bottom corridor at least one beat \u2014 e.g. widen the spike patch or break the floor so the through-route needs a jump or dash \u2014 so players who skip the coin still engage with the room."
+ },
+ {
+  "slug": "zenith-shaft",
+  "purpose": "A wall-jump execution gauntlet: cross a spike floor via an offset series of walls/pillars, climbing and descending through the central shaft to reach the east door.",
+  "purpose_clarity": "clear",
+  "challenge": "demanding",
+  "fun": "interesting",
+  "filler": false,
+  "notes": "The witness needs 318 ticks with 9 jumps, 6 wall jumps, 1 dash, and 6 reversals \u2014 a genuine multi-move route over a near-full-width lethal spike floor (row 15). Noise robustness confirms real threat, not just timing shakiness: BoundaryTiming succeeds only 41/64 with 45 deaths, HoldRelease 48/64 with 28 deaths. The geometry (pillar at col 4, wall at col 9, offset structures at cols 20 and 24 with a narrow one-tile shaft) forces committed wall-jump chains rather than a walk-through.",
+  "recommendation": "Keep as-is; if anything, place an optional coin deep in the col 24-29 alcove so the mandatory route's skill test also offers a small risk-reward decision."
+ }
+]
