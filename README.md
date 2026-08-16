@@ -413,6 +413,16 @@ through hazardous execution rather than merely timing out on forgiving shelves. 
 and Dash-only bounded searches both have no east-door positive; the full loadout also has a clean
 reverse route through the catch's dedicated return shaft.
 
+Zenith Shaft is the twenty-first replacement. Its old route repeated the same generic shell:
+two ordinary floor jumps, a Right–Left–Left wall sequence, no Dash, and a 64-tick run off the roof.
+The v31 room is an offset double ascent. Four alternating Wall Jumps reach the lower recovery;
+one horizontal Dash commits to the upper chamber; two more alternating Wall Jumps reach its roof;
+and a dedicated east bay preserves backtracking. The exact route takes 318 ticks and 20 spans,
+accepts all nine jump presses, uses exactly one Dash between its two climbs, and has six reversals.
+Strength-one perturbations retain 41–64/64 successes, while the event trace—not the aggregate—is
+the evidence for its intended movement shape. Wall-Jump-only and Dash-only bounded searches both
+have no east-door positive. A shorter lower chamber was rejected because Dash-only solved it.
+
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 
 ```sh

@@ -311,6 +311,19 @@ Same-budget Wall-Jump-only and Dash-only searches both have no east-door positiv
 full-loadout solve enters from the east, climbs the catch's return shaft, and reaches the west door
 cleanly, so the mandatory mainline remains physically reversible.
 
+Zenith Shaft is the twenty-first replacement in v31. Its former mainline witness took 221 ticks and
+24 spans, accepted only six of seven jump presses, used no Dash, and reached its roof through a
+Right–Left–Left wall sequence after two ordinary floor jumps. The replacement separates two offset
+shaft chambers with a single exposed horizontal transfer. Its 318-tick, 20-span route accepts all
+nine jump presses, alternates four Wall Jumps in the lower chamber, lands on the full recovery,
+uses one Dash to reach the upper floor, then alternates two more Wall Jumps before the east descent.
+It has six reversals. Strength-one Boundary, Correlated, Hold/Release, and Drop/Repeat perturbations
+retain 41, 61, 48, and 64 successes out of 64. Those counts are retained as robustness evidence;
+the ordered event trace establishes the two-climb movement contract. Same-budget Wall-Jump-only
+and Dash-only searches both have no east-door positive, and a separate full-loadout reverse solve
+reaches west cleanly. The first shorter lower chamber was not promoted because the Dash-only audit
+found a positive through it.
+
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
 persistent item omission, additive mid-run Wall Jump and Dash state, gate rejection without room reset, client

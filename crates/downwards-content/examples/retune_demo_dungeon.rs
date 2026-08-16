@@ -311,6 +311,7 @@ fn compare_routes(
                     | DemoDungeonRoom::ShadowDuct
                     | DemoDungeonRoom::Observatory
                     | DemoDungeonRoom::AuroraSpire
+                    | DemoDungeonRoom::ZenithShaft
                     | DemoDungeonRoom::EclipseFork
                     | DemoDungeonRoom::StarwellClimb
                     | DemoDungeonRoom::AstralSeal
@@ -497,6 +498,9 @@ fn segmented_candidate(
     }
     if spec.room == DemoDungeonRoom::EclipseFork {
         return segmented_eclipse_fork_candidate(initial, target);
+    }
+    if spec.room == DemoDungeonRoom::ZenithShaft {
+        return segmented_zenith_shaft_candidate(initial, target);
     }
     if spec.room == DemoDungeonRoom::StarwellClimb {
         return segmented_starwell_climb_candidate(initial, target);
@@ -1349,7 +1353,15 @@ fn segmented_gatehouse_candidate(
     initial: &Simulation,
     target: &SearchTarget,
 ) -> Option<TargetSolution> {
-    let (intermediate, climb) = readable_alternating_climb(initial, 84, 104, 48, 120, 132, 0)?;
+    let (intermediate, climb) = readable_alternating_climb(
+        initial,
+        84,
+        104,
+        48,
+        120,
+        132,
+        AlternatingClimbPolicy::recorded(0),
+    )?;
 
     let mut candidates = Vec::new();
     for takeoff_x in 120..=132 {
@@ -1388,7 +1400,15 @@ fn segmented_astral_seal_candidate(
     initial: &Simulation,
     target: &SearchTarget,
 ) -> Option<TargetSolution> {
-    let (intermediate, climb) = readable_alternating_climb(initial, 104, 124, 48, 140, 162, 3)?;
+    let (intermediate, climb) = readable_alternating_climb(
+        initial,
+        104,
+        124,
+        48,
+        140,
+        162,
+        AlternatingClimbPolicy::recorded(3),
+    )?;
     let mut candidates = Vec::new();
     for takeoff_x in 140..=162 {
         let Some((takeoff, approach)) = approach_x(&intermediate, takeoff_x) else {
@@ -1435,9 +1455,15 @@ fn segmented_eclipse_fork_candidate(
     initial: &Simulation,
     target: &SearchTarget,
 ) -> Option<TargetSolution> {
-    let Some((intermediate, climb)) =
-        readable_alternating_climb(initial, 124, 144, 58, 160, 192, 3)
-    else {
+    let Some((intermediate, climb)) = readable_alternating_climb(
+        initial,
+        124,
+        144,
+        58,
+        160,
+        192,
+        AlternatingClimbPolicy::recorded(3),
+    ) else {
         eprintln!("  segmented Eclipse climb failed");
         return None;
     };
@@ -1505,8 +1531,15 @@ fn segmented_starwell_climb_candidate(
     initial: &Simulation,
     target: &SearchTarget,
 ) -> Option<TargetSolution> {
-    let Some((intermediate, climb)) = readable_alternating_climb(initial, 82, 102, 28, 120, 172, 3)
-    else {
+    let Some((intermediate, climb)) = readable_alternating_climb(
+        initial,
+        82,
+        102,
+        28,
+        120,
+        172,
+        AlternatingClimbPolicy::recorded(3),
+    ) else {
         eprintln!("  segmented Starwell climb failed");
         return None;
     };
@@ -1566,6 +1599,84 @@ fn segmented_starwell_climb_candidate(
     })
 }
 
+fn segmented_zenith_shaft_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    let Some((mut intermediate, mut actions)) = readable_alternating_climb(
+        initial,
+        52,
+        72,
+        48,
+        90,
+        112,
+        AlternatingClimbPolicy::strict(3),
+    ) else {
+        eprintln!("  segmented Zenith lower climb failed");
+        return None;
+    };
+    let Some((next, crossing)) =
+        readable_directional_landing(&intermediate, 202..=232, 88, &[-1, 0, 1], 1)
+    else {
+        eprintln!("  segmented Zenith transfer failed");
+        return None;
+    };
+    intermediate = next;
+    actions.extend(crossing);
+    let Some((next, upper_climb)) = readable_alternating_climb(
+        &intermediate,
+        215,
+        235,
+        18,
+        240,
+        272,
+        AlternatingClimbPolicy::strict(3),
+    ) else {
+        eprintln!("  segmented Zenith upper climb failed");
+        return None;
+    };
+    intermediate = next;
+    actions.extend(upper_climb);
+    for _ in 0..180 {
+        if intermediate.reached_exit() == Some("east") {
+            break;
+        }
+        let action = right_action(false, false);
+        if !clean_step(&mut intermediate, action) {
+            return None;
+        }
+        actions.push(action);
+    }
+    (intermediate.reached_exit() == Some("east")).then(|| TargetSolution {
+        target: target.clone(),
+        reached: ReachedTarget::Door("east".to_owned()),
+        replay: Replay::record(initial, actions),
+        stats: SearchStats::default(),
+    })
+}
+
+#[derive(Clone, Copy)]
+struct AlternatingClimbPolicy {
+    wall_settle_ticks: u8,
+    require_strict_wall_events: bool,
+}
+
+impl AlternatingClimbPolicy {
+    const fn recorded(wall_settle_ticks: u8) -> Self {
+        Self {
+            wall_settle_ticks,
+            require_strict_wall_events: false,
+        }
+    }
+
+    const fn strict(wall_settle_ticks: u8) -> Self {
+        Self {
+            wall_settle_ticks,
+            require_strict_wall_events: true,
+        }
+    }
+}
+
 fn readable_alternating_climb(
     initial: &Simulation,
     takeoff_min_x: i32,
@@ -1573,7 +1684,7 @@ fn readable_alternating_climb(
     staging_y: i32,
     staging_min_x: i32,
     staging_max_x: i32,
-    wall_settle_ticks: u8,
+    policy: AlternatingClimbPolicy,
 ) -> Option<(Simulation, Vec<Action>)> {
     let mut candidates = Vec::new();
     for takeoff_x in takeoff_min_x..=takeoff_max_x {
@@ -1589,13 +1700,17 @@ fn readable_alternating_climb(
                 let mut last_wall = None;
                 let mut pending_wall = None;
                 let mut settle_ticks_remaining = 0_u8;
+                let mut last_accepted_wall = None;
+                let mut accepted_wall_jumps = 0_u8;
                 for _ in 0..240 {
                     let bounds = simulation.player().bounds();
                     if simulation.player().grounded()
                         && bounds.y == staging_y
                         && (staging_min_x..=staging_max_x).contains(&bounds.x)
                     {
-                        candidates.push((simulation.clone(), actions));
+                        if !policy.require_strict_wall_events || accepted_wall_jumps >= 2 {
+                            candidates.push((simulation.clone(), actions));
+                        }
                         break;
                     }
                     if jump_ticks == 0 {
@@ -1612,13 +1727,13 @@ fn readable_alternating_climb(
                         } else if let Some(side) = simulation.player().wall_contact()
                             && Some(side) != last_wall
                         {
-                            if wall_settle_ticks == 0 {
+                            if policy.wall_settle_ticks == 0 {
                                 last_wall = Some(side);
                                 direction = -wall_direction(side);
                                 jump_ticks = wall_hold;
                             } else {
                                 pending_wall = Some(side);
-                                settle_ticks_remaining = wall_settle_ticks;
+                                settle_ticks_remaining = policy.wall_settle_ticks;
                                 direction = wall_direction(side);
                             }
                         }
@@ -1630,7 +1745,23 @@ fn readable_alternating_climb(
                         dash: false,
                         restart: false,
                     };
-                    if !clean_step(&mut simulation, action) {
+                    let report = simulation.step(action);
+                    if report.events.iter().any(|event| {
+                        matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset)
+                    }) {
+                        break;
+                    }
+                    let mut repeated_wall = false;
+                    for event in report.events {
+                        if let SimulationEvent::Jumped(downwards_core::JumpKind::Wall { side }) =
+                            event
+                        {
+                            repeated_wall |= last_accepted_wall == Some(side);
+                            last_accepted_wall = Some(side);
+                            accepted_wall_jumps += 1;
+                        }
+                    }
+                    if policy.require_strict_wall_events && repeated_wall {
                         break;
                     }
                     actions.push(action);
@@ -2269,7 +2400,9 @@ fn main() {
                     solution,
                     !matches!(
                         spec.room,
-                        DemoDungeonRoom::AstralSeal | DemoDungeonRoom::EclipseFork
+                        DemoDungeonRoom::AstralSeal
+                            | DemoDungeonRoom::EclipseFork
+                            | DemoDungeonRoom::ZenithShaft
                     ),
                 )
             }),

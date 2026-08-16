@@ -1521,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v30".to_owned(),
+        id: "demo-dungeon-v31".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -3201,6 +3201,150 @@ mod tests {
             caught_star,
             "Starwell route no longer lands on its catch platform"
         );
+    }
+
+    #[test]
+    fn zenith_shaft_checked_route_climbs_dashes_then_climbs_again() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::ZenithShaft)
+            .expect("Zenith Shaft has route metadata");
+        let room = demo_dungeon_room(spec.room, spec.inventory);
+        let mut replayed =
+            Simulation::enter_via_door(room, spec.inventory.abilities(), "west").unwrap();
+        replayed.enable_current_player_movement();
+        let actions = crate::demo_dungeon_witness_actions(spec.room);
+        let mut previous = downwards_core::Action::default();
+        let mut jump_presses = 0;
+        let mut accepted_jumps = 0;
+        let mut wall_sides = Vec::new();
+        let mut wall_jump_ticks = Vec::new();
+        let mut dash_ticks = Vec::new();
+        let mut lower_recovery = false;
+        let mut upper_floor = false;
+        let mut upper_recovery = false;
+        for (tick, action) in actions.into_iter().enumerate() {
+            jump_presses += usize::from(action.jump && !previous.jump);
+            previous = action;
+            let report = replayed.step(action);
+            for event in report.events {
+                assert!(
+                    !matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset),
+                    "the checked Zenith route must remain clean: {event:?}"
+                );
+                match event {
+                    SimulationEvent::Jumped(kind) => {
+                        accepted_jumps += 1;
+                        if let JumpKind::Wall { side } = kind {
+                            wall_sides.push(side);
+                            wall_jump_ticks.push(tick);
+                        }
+                    }
+                    SimulationEvent::Dashed { .. } => dash_ticks.push(tick),
+                    SimulationEvent::Landed => {
+                        let bounds = replayed.player().bounds();
+                        lower_recovery |= bounds.y == 48 && (82..=112).contains(&bounds.x);
+                        upper_floor |= bounds.y == 88 && (182..=232).contains(&bounds.x);
+                        upper_recovery |= bounds.y == 18 && (232..=272).contains(&bounds.x);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        assert_eq!(replayed.reached_exit(), Some("east"));
+        assert_eq!(jump_presses, accepted_jumps, "Zenith witness has jump spam");
+        assert_eq!(
+            wall_sides.len(),
+            6,
+            "Zenith climb changed shape: {wall_sides:?}"
+        );
+        assert!(
+            wall_sides.windows(2).all(|pair| pair[0] != pair[1]),
+            "Zenith walls no longer alternate: {wall_sides:?}"
+        );
+        assert_eq!(dash_ticks.len(), 1, "Zenith transfer should use one Dash");
+        assert!(
+            wall_jump_ticks[3] < dash_ticks[0] && dash_ticks[0] < wall_jump_ticks[4],
+            "Zenith Dash no longer separates its two climbs"
+        );
+        assert!(lower_recovery, "Zenith route skipped its lower roof");
+        assert!(upper_floor, "Zenith route skipped its upper shaft floor");
+        assert!(upper_recovery, "Zenith route skipped its upper roof");
+    }
+
+    #[test]
+    fn zenith_shaft_refuses_each_incomplete_loadout() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::ZenithShaft)
+            .expect("Zenith Shaft has route metadata");
+        for (label, inventory) in [
+            (
+                "Wall-Jump-only",
+                DemoDungeonInventory {
+                    climbing_gloves: true,
+                    winged_boots: false,
+                    ..spec.inventory
+                },
+            ),
+            (
+                "Dash-only",
+                DemoDungeonInventory {
+                    climbing_gloves: false,
+                    winged_boots: true,
+                    ..spec.inventory
+                },
+            ),
+        ] {
+            let room = demo_dungeon_room(spec.room, inventory);
+            let mut initial = Simulation::enter_via_door(room, inventory.abilities(), "west")
+                .expect("Zenith west entry is valid");
+            initial.enable_current_player_movement();
+            let outcome = solve_target(
+                &initial,
+                SearchTarget::door("east"),
+                &SolverConfig::for_abilities(inventory.abilities()),
+            )
+            .unwrap();
+            assert!(
+                !matches!(outcome, TargetSolveOutcome::Solved(_)),
+                "{label} search unexpectedly crossed Zenith Shaft: {outcome:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn zenith_shaft_retains_a_clean_full_loadout_return_route() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::ZenithShaft)
+            .expect("Zenith Shaft has route metadata");
+        let room = demo_dungeon_room(spec.room, spec.inventory);
+        let mut initial =
+            Simulation::enter_via_door(room, spec.inventory.abilities(), "east").unwrap();
+        initial.enable_current_player_movement();
+        let outcome = solve_target(
+            &initial,
+            SearchTarget::door("west"),
+            &SolverConfig::for_abilities(spec.inventory.abilities()),
+        )
+        .unwrap();
+        let TargetSolveOutcome::Solved(solution) = outcome else {
+            panic!("full-loadout return route could not cross Zenith Shaft: {outcome:?}");
+        };
+        let mut replayed = initial;
+        for action in solution.replay.actions() {
+            let report = replayed.step(action);
+            assert!(
+                !report.events.iter().any(|event| matches!(
+                    event,
+                    SimulationEvent::Died(_) | SimulationEvent::Reset
+                )),
+                "Zenith return route is not clean: {:?}",
+                report.events
+            );
+        }
+        assert_eq!(replayed.reached_exit(), Some("west"));
     }
 
     #[test]

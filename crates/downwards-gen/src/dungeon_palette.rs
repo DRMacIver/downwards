@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 30;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 31;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1593,24 +1593,25 @@ impl PaletteDraft<'_> {
                 self.horizontal(14, 25, 30, Tile::OneWay);
             }
             DungeonPaletteCourse::ZenithShaft => {
-                self.vertical(9, 1, 17, Tile::Solid);
-                self.vertical(16, 4, 17, Tile::Solid);
-                self.vertical(10, 1, 5, Tile::Solid);
-                self.vertical(10, 5, 8, Tile::HazardRight);
-                self.vertical(10, 8, 11, Tile::Solid);
-                self.vertical(10, 11, 14, Tile::HazardRight);
-                self.vertical(10, 14, 16, Tile::Solid);
-                self.vertical(15, 4, 6, Tile::Solid);
-                self.vertical(15, 6, 9, Tile::HazardLeft);
-                self.vertical(15, 9, 12, Tile::Solid);
-                self.vertical(15, 12, 15, Tile::HazardLeft);
-                self.vertical(15, 15, 17, Tile::Solid);
-                self.horizontal(4, 15, 24, Tile::Solid);
-                self.horizontal(14, 24, 30, Tile::OneWay);
-                for row in 13..16 {
-                    self.set(9, row, Tile::Empty);
-                    self.set(10, row, Tile::Empty);
-                }
+                // Two offset chambers make the late mainline read as a deliberate sequence:
+                // climb the lower shaft, recover on its roof, Dash to the upper shaft's floor,
+                // then climb again and descend through the east return bay. Backed hazards close
+                // the ground route while every transfer retains a visible recovery surface.
+                self.horizontal(16, 1, 10, Tile::Solid);
+                self.horizontal(16, 10, 28, Tile::HazardUp);
+                self.horizontal(16, 28, 31, Tile::Solid);
+                self.horizontal(17, 1, 31, Tile::Solid);
+
+                self.vertical(4, 1, 14, Tile::Solid);
+                self.vertical(9, 6, 14, Tile::Solid);
+                self.horizontal(6, 9, 12, Tile::Solid);
+
+                self.vertical(20, 3, 8, Tile::Solid);
+                self.vertical(24, 3, 17, Tile::Solid);
+                self.horizontal(10, 20, 25, Tile::Solid);
+                self.horizontal(3, 24, 28, Tile::Solid);
+
+                self.vertical(30, 3, 14, Tile::Solid);
             }
             DungeonPaletteCourse::EclipseFork => {
                 // The three-way junction remains safe to traverse east-west, while its ceiling
@@ -2669,6 +2670,90 @@ mod tests {
                 tile(30, row),
                 Tile::Empty,
                 "return shaft entrance is obstructed"
+            );
+        }
+    }
+
+    #[test]
+    fn zenith_shaft_serializes_two_offset_climbs_and_a_return_bay() {
+        let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::ZenithShaft).generate();
+        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
+
+        for column in 1..10 {
+            assert_eq!(
+                tile(column, 16),
+                Tile::Solid,
+                "lower launch floor is incomplete"
+            );
+        }
+        for column in 10..28 {
+            let expected = if column == 24 {
+                Tile::Solid
+            } else {
+                Tile::HazardUp
+            };
+            assert_eq!(tile(column, 16), expected, "Zenith floor has a bypass");
+        }
+        for column in 28..31 {
+            assert_eq!(
+                tile(column, 16),
+                Tile::Solid,
+                "east arrival floor is incomplete"
+            );
+        }
+        for column in 1..31 {
+            assert_eq!(tile(column, 17), Tile::Solid, "Zenith floor lacks backing");
+        }
+
+        for row in 1..14 {
+            assert_eq!(tile(4, row), Tile::Solid, "lower west wall is open");
+        }
+        for row in 6..14 {
+            assert_eq!(tile(9, row), Tile::Solid, "lower east wall is open");
+        }
+        for column in 9..12 {
+            assert_eq!(
+                tile(column, 6),
+                Tile::Solid,
+                "lower recovery roof is incomplete"
+            );
+        }
+
+        for row in 3..8 {
+            assert_eq!(tile(20, row), Tile::Solid, "upper west wall is open");
+        }
+        for row in 8..10 {
+            assert_eq!(
+                tile(20, row),
+                Tile::Empty,
+                "upper entry aperture is obstructed"
+            );
+        }
+        for row in 3..17 {
+            assert_eq!(tile(24, row), Tile::Solid, "upper east wall is open");
+        }
+        for column in 20..24 {
+            assert_eq!(
+                tile(column, 10),
+                Tile::Solid,
+                "upper shaft floor is incomplete"
+            );
+        }
+        for column in 24..28 {
+            assert_eq!(
+                tile(column, 3),
+                Tile::Solid,
+                "upper recovery roof is incomplete"
+            );
+        }
+        for row in 3..14 {
+            assert_eq!(tile(30, row), Tile::Solid, "return wall is open");
+        }
+        for row in 14..16 {
+            assert_eq!(
+                tile(30, row),
+                Tile::Empty,
+                "return-bay entrance is obstructed"
             );
         }
     }
