@@ -2475,7 +2475,11 @@ struct ClientState {
     replay_notice: Option<ReplayNotice>,
     dungeon_run: Option<DungeonRunState>,
     dungeon_persistence: Option<DungeonPersistence>,
+    death_pause_ticks: u8,
 }
+
+/// Ticks of zeroed human input after a death (~0.4s at 60Hz).
+const DEATH_PAUSE_TICKS: u8 = 24;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct DungeonRunState {
@@ -2815,6 +2819,7 @@ impl ClientState {
             replay_notice: None,
             dungeon_run,
             dungeon_persistence,
+            death_pause_ticks: 0,
         })
     }
 
@@ -3250,6 +3255,11 @@ impl ClientState {
             return true;
         }
         if let Some(kind) = self.selection.mode.challenge() {
+            // Floor labs never declare completion: their analysis target is a
+            // study coordinate, and rooms are left through their doors.
+            if matches!(kind, ChallengeKind::DungeonFloor(_)) {
+                return false;
+            }
             return kind.objective().is_satisfied_by(&self.simulation);
         }
         match self.selected_target_id() {
@@ -4268,6 +4278,16 @@ impl ClientState {
     }
 
     fn step_human(&mut self, action: Action) -> StepReport {
+        // A short input lockout after dying keeps held movement from carrying
+        // the respawned player straight back through the entry door. This is
+        // presentation-side only: the authoritative simulation and recorded
+        // replays are unaffected by how the client debounces human input.
+        let action = if self.death_pause_ticks > 0 {
+            self.death_pause_ticks -= 1;
+            Action::default()
+        } else {
+            action
+        };
         let expected_tuning = Some(self.movement_tuning);
         if !self.simulation.human_wall_assists_enabled()
             || self.simulation.movement_tuning() != expected_tuning
@@ -4284,6 +4304,13 @@ impl ClientState {
             .then(|| self.selected_target_id().map(str::to_owned))
             .flatten();
         let report = self.step(action);
+        if report
+            .events
+            .iter()
+            .any(|event| matches!(event, SimulationEvent::Died(_)))
+        {
+            self.death_pause_ticks = DEATH_PAUSE_TICKS;
+        }
         let completed = self.human_recorder.observe_step(
             action,
             &report,
