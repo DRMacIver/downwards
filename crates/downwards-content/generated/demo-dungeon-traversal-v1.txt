@@ -1,5 +1,5 @@
 schema downwards-demo-dungeon-traversal-v1
-palette-generation 38
+palette-generation 39
 player-movement-policy 7
 pair demo-dungeon.alloy-threshold east door east 00 solved
 span 1 0 0 0 0 6

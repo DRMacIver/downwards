@@ -1,5 +1,5 @@
 schema downwards-demo-dungeon-witnesses-v1
-palette-generation 38
+palette-generation 39
 player-movement-policy 7
 tuning 110 72 203 50 50 250
 shaky-policy 64 18 2 2
@@ -323,38 +323,26 @@ room demo-dungeon.wall-antechamber
 entry west
 target pickup dungeon-coin-16
 abilities 1 0
-ticks 186
-observation 26 8 8 2 0 3
-shaky BoundaryTiming 13 64 0
-shaky CorrelatedTiming 5 64 0
-shaky HoldRelease 23 64 0
-shaky DropRepeatFrame 32 64 0
-span 1 0 0 0 0 41
-span 1 0 1 0 0 3
-span 1 0 0 0 0 6
-span 0 0 0 0 0 8
-span 1 0 1 0 0 8
-span 0 0 1 0 0 1
-span 0 0 0 0 0 3
-span 1 0 0 0 0 6
-span 0 0 0 0 0 6
-span 1 0 0 0 0 3
-span 0 0 1 0 0 2
-span 1 0 0 0 0 3
-span 0 0 0 0 0 12
-span -1 0 1 0 0 2
-span 0 0 0 0 0 4
-span 1 0 0 0 0 4
-span -1 0 0 0 0 4
-span -1 0 1 0 0 4
-span 0 0 1 0 0 8
-span -1 0 0 0 0 4
-span 0 0 1 0 0 4
-span -1 0 0 0 0 4
-span -1 0 1 0 0 1
-span -1 0 0 0 0 32
+ticks 230
+observation 14 6 6 1 0 1
+shaky BoundaryTiming 37 64 0
+shaky CorrelatedTiming 40 64 0
+shaky HoldRelease 38 64 0
+shaky DropRepeatFrame 58 64 0
+span 1 0 0 0 0 55
+span 1 0 1 0 0 1
+span 0 0 0 0 0 2
+span 1 0 0 0 0 64
+span 1 0 1 0 0 6
+span 1 0 0 0 0 15
+span 1 0 1 0 0 6
+span 1 0 0 0 0 12
+span 1 0 1 0 0 4
+span -1 0 0 0 0 18
 span -1 0 1 0 0 6
-span -1 0 0 0 0 7
+span -1 0 0 0 0 16
+span -1 0 1 0 0 6
+span -1 0 0 0 0 19
 end
 route demo-dungeon.broad-chimney
 room demo-dungeon.broad-chimney

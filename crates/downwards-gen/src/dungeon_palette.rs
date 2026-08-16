@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 38;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 39;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
