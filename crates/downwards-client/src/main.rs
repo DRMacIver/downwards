@@ -2543,6 +2543,8 @@ struct ClientState {
     death_pause_ticks: u8,
     explored_rooms: BTreeSet<DemoDungeonRoom>,
     map_visible: bool,
+    notice_seen: Option<(String, String)>,
+    notice_age: u32,
 }
 
 /// Ticks of zeroed human input after a death (~0.4s at 60Hz).
@@ -2920,6 +2922,8 @@ impl ClientState {
             death_pause_ticks: 0,
             explored_rooms,
             map_visible: false,
+            notice_seen: None,
+            notice_age: 0,
         })
     }
 
@@ -4264,6 +4268,24 @@ impl ClientState {
     }
 
     fn step(&mut self, action: Action) -> StepReport {
+        // Notices live on the HUD rail and expire on their own so gameplay is
+        // never obscured; errors linger a little longer.
+        match &self.replay_notice {
+            Some(notice) => {
+                let key = (notice.title.clone(), notice.detail.clone());
+                if self.notice_seen.as_ref() == Some(&key) {
+                    self.notice_age += 1;
+                    let lifetime = if notice.is_error { 600 } else { 300 };
+                    if self.notice_age > lifetime {
+                        self.replay_notice = None;
+                    }
+                } else {
+                    self.notice_seen = Some(key);
+                    self.notice_age = 0;
+                }
+            }
+            None => self.notice_seen = None,
+        }
         let velocity_x_before = self.simulation.player().velocity_subpixels().x;
         let grounded_before = self.simulation.player().grounded();
         self.feedback.advance_tick();
@@ -5529,7 +5551,7 @@ fn render(client: &ClientState, visual_assets: &VisualAssets) {
     } else if client.wrong_door().is_some() {
         draw_wrong_door_feedback(&room_viewport, client);
     }
-    draw_replay_status(&room_viewport, client);
+    draw_replay_status(&viewport, &room_viewport, client);
     if client.movement_tuning_menu_visible() {
         draw_movement_tuning_menu(&room_viewport, client);
     }
@@ -6849,9 +6871,9 @@ fn draw_hud(viewport: &PixelViewport, client: &ClientState) {
             if !client.simulation.abilities().wall_jump {
                 format!("DUNGEON · COINS {coins}/{DEMO_DUNGEON_TOTAL_COINS} · FIND CLIMBING GLOVES")
             } else if client.simulation.abilities().dash {
-                format!("DUNGEON · COINS {coins}/{DEMO_DUNGEON_TOTAL_COINS} · BOOTS:ON · X DASH")
+                format!("DUNGEON · COINS {coins}/{DEMO_DUNGEON_TOTAL_COINS} · X DASH · TAB MAP")
             } else {
-                format!("DUNGEON · COINS {coins}/{DEMO_DUNGEON_TOTAL_COINS} · FIND WINGED BOOTS")
+                format!("DUNGEON · COINS {coins}/{DEMO_DUNGEON_TOTAL_COINS} · FIND BOOTS · TAB MAP")
             }
         } else {
             gameplay_control_summary(client.selection.tier).to_owned()
@@ -7118,7 +7140,14 @@ fn draw_wrong_door_feedback(viewport: &PixelViewport, client: &ClientState) {
     viewport.centered_text("R RETRY FROM SOURCE   /   M LEVELS", 108, 6, PLAYER_ACCENT);
 }
 
-fn draw_replay_status(viewport: &PixelViewport, client: &ClientState) {
+fn draw_replay_status(
+    viewport: &PixelViewport,
+    room_viewport: &PixelViewport,
+    client: &ClientState,
+) {
+    // The status panel must never cover gameplay: everything renders as a
+    // single line on the bottom HUD rail, and the detailed multi-line panel
+    // appears only while a replay is deliberately paused for inspection.
     let (lines, colour) = match &client.replay_mode {
         ReplayMode::Human => {
             let Some(notice) = &client.replay_notice else {
@@ -7283,40 +7312,29 @@ fn draw_replay_status(viewport: &PixelViewport, client: &ClientState) {
             )
         }
     };
-    let panel_height = 5 + lines.len() as i32 * 8;
-    let panel_width = 150;
-    // Dodge the player: the panel slides to the top-right whenever the player
-    // is anywhere near the default top-left spot, so it never hides the tile
-    // the player is actually interacting with.
-    let player = client.simulation.player().bounds();
-    let near = |panel_x: i32| {
-        player.x < panel_x + panel_width + 12
-            && player.right() > panel_x - 12
-            && player.y < 12 + panel_height + 12
-    };
-    let panel_x = if near(4) && !near(320 - panel_width - 4) {
-        320 - panel_width - 4
-    } else {
-        4
-    };
-    viewport.rectangle(
-        CoreRect::new(panel_x, 12, panel_width, panel_height),
-        DEBUG_PANEL,
-    );
-    viewport.rectangle_outline(
-        CoreRect::new(panel_x, 12, panel_width, panel_height),
-        1,
-        colour,
-    );
-    for (index, line) in lines.iter().enumerate() {
-        let line_colour = if index == 0 { colour } else { UI_TEXT };
-        viewport.text(
-            &fit_status_line(line),
-            panel_x + 4,
-            20 + index as i32 * 8,
-            6,
-            line_colour,
-        );
+    let mut rail_line = lines.first().cloned().unwrap_or_default();
+    if let Some(detail) = lines.get(1)
+        && !detail.is_empty()
+    {
+        rail_line = format!("{rail_line} \u{00b7} {detail}");
+    }
+    viewport.rectangle(CoreRect::new(0, 190, 320, 10), HUD_PANEL);
+    viewport.text(&fit_status_line(&rail_line), 5, 197, 6, colour);
+
+    if client.replay_paused() {
+        let panel_height = 5 + lines.len() as i32 * 8;
+        room_viewport.rectangle(CoreRect::new(4, 12, 150, panel_height), DEBUG_PANEL);
+        room_viewport.rectangle_outline(CoreRect::new(4, 12, 150, panel_height), 1, colour);
+        for (index, line) in lines.iter().enumerate() {
+            let line_colour = if index == 0 { colour } else { UI_TEXT };
+            room_viewport.text(
+                &fit_status_line(line),
+                8,
+                20 + index as i32 * 8,
+                6,
+                line_colour,
+            );
+        }
     }
 }
 
