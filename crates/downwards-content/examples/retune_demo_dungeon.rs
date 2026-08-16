@@ -308,6 +308,7 @@ fn compare_routes(
                     | DemoDungeonRoom::LunarCache
                     | DemoDungeonRoom::StarThreshold
                     | DemoDungeonRoom::ShadowDuct
+                    | DemoDungeonRoom::Observatory
             ) {
                 observation.accepted_dashes_before_first_wall_jump
             } else {
@@ -474,6 +475,9 @@ fn segmented_candidate(
     }
     if spec.room == DemoDungeonRoom::ShadowDuct {
         return segmented_shadow_duct_candidate(initial, target);
+    }
+    if spec.room == DemoDungeonRoom::Observatory {
+        return segmented_observatory_candidate(initial, target);
     }
     let (waypoint, first_config, second_config) = match spec.room {
         DemoDungeonRoom::VoidPass => (
@@ -795,6 +799,185 @@ fn segmented_shadow_duct_candidate(
         replay: Replay::record(initial, actions),
         stats: SearchStats::default(),
     })
+}
+
+fn segmented_observatory_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    // Keep the three visible acts independent while choosing a demonstration. Ordinary movement
+    // approaches the tower; a mixed wall rhythm climbs it; Dash-only crosses each roof gap from a full
+    // recovery. This prevents a global beam from substituting a diagonal Dash staircase for the
+    // authored out-and-back silhouette.
+    let Some((mut intermediate, mut actions)) = approach_x(initial, 220) else {
+        eprintln!("  segmented Observatory could not run into the tower floor");
+        return None;
+    };
+    while intermediate.player().bounds().x < 240 && actions.len() < 140 {
+        let action = right_action(false, false);
+        if !clean_step(&mut intermediate, action) {
+            return None;
+        }
+        actions.push(action);
+    }
+    if intermediate.player().bounds().x < 240 || !intermediate.player().grounded() {
+        eprintln!("  segmented Observatory could not settle inside the tower floor");
+        return None;
+    }
+    let tower_roof = GroundedSupportTarget::new(
+        190,
+        230,
+        30,
+        [GroundedStandingRegion::new(190, 222).expect("valid Observatory tower roof")],
+    )
+    .expect("valid Observatory tower-roof waypoint");
+    let outcome = solve_grounded_support(
+        &intermediate,
+        &tower_roof,
+        &SolverConfig::for_abilities(AbilitySet::new(true, true)),
+    )
+    .ok()?;
+    let GroundedSupportSolveOutcome::Solved(solution) = outcome else {
+        eprintln!("  segmented Observatory tower climb failed: {outcome:?}");
+        return None;
+    };
+    for action in solution.replay.actions() {
+        intermediate.step(action);
+        actions.push(action);
+        let player = intermediate.player();
+        let bounds = player.bounds();
+        if player.grounded() && bounds.y == 18 && (190..=230).contains(&bounds.x) {
+            break;
+        }
+    }
+    if !intermediate.player().grounded()
+        || intermediate.player().bounds().y != 18
+        || !(190..=230).contains(&intermediate.player().bounds().x)
+    {
+        eprintln!("  segmented Observatory climb lost its first tower-roof landing");
+        return None;
+    }
+
+    let (next, crossing) = readable_left_landing(&intermediate, 100..=122, 48, &[-1, 0, 1])?;
+    intermediate = next;
+    actions.extend(crossing);
+    let (next, crossing) = readable_left_landing(&intermediate, 10..=42, 18, &[-1, 0])?;
+    intermediate = next;
+    actions.extend(crossing);
+    for _ in 0..40 {
+        if intermediate
+            .collected_pickups()
+            .any(|pickup| pickup.id() == "dungeon-coin-57")
+        {
+            break;
+        }
+        let action = Action {
+            move_x: -1,
+            move_y: 0,
+            jump: false,
+            dash: false,
+            restart: false,
+        };
+        if !clean_step(&mut intermediate, action) {
+            return None;
+        }
+        actions.push(action);
+    }
+    if !intermediate
+        .collected_pickups()
+        .any(|pickup| pickup.id() == "dungeon-coin-57")
+    {
+        eprintln!("  segmented Observatory final shelf did not reach its coin");
+        return None;
+    }
+    Some(TargetSolution {
+        target: target.clone(),
+        reached: ReachedTarget::Pickup("dungeon-coin-57".to_owned()),
+        replay: Replay::record(initial, actions),
+        stats: SearchStats::default(),
+    })
+}
+
+fn readable_left_landing(
+    initial: &Simulation,
+    target_x: std::ops::RangeInclusive<i32>,
+    target_y: i32,
+    dash_verticals: &[i8],
+) -> Option<(Simulation, Vec<Action>)> {
+    let mut candidates = Vec::new();
+    for run_off_ticks in 0..=20 {
+        for jump_hold in 1..=10 {
+            for dash_delay in 0..=8 {
+                for &move_y in dash_verticals {
+                    let mut simulation = initial.clone();
+                    let mut actions = Vec::new();
+                    let suffix = std::iter::repeat_n(
+                        Action {
+                            move_x: -1,
+                            move_y: 0,
+                            jump: false,
+                            dash: false,
+                            restart: false,
+                        },
+                        run_off_ticks,
+                    )
+                    .chain(std::iter::repeat_n(
+                        Action {
+                            move_x: -1,
+                            move_y: 0,
+                            jump: true,
+                            dash: false,
+                            restart: false,
+                        },
+                        jump_hold,
+                    ))
+                    .chain(std::iter::repeat_n(
+                        Action {
+                            move_x: -1,
+                            move_y: 0,
+                            jump: false,
+                            dash: false,
+                            restart: false,
+                        },
+                        dash_delay,
+                    ))
+                    .chain(std::iter::once(Action {
+                        move_x: -1,
+                        move_y,
+                        jump: false,
+                        dash: true,
+                        restart: false,
+                    }))
+                    .chain(std::iter::repeat_n(
+                        Action {
+                            move_x: -1,
+                            move_y: 0,
+                            jump: false,
+                            dash: false,
+                            restart: false,
+                        },
+                        80,
+                    ));
+                    for action in suffix {
+                        if !clean_step(&mut simulation, action) {
+                            break;
+                        }
+                        actions.push(action);
+                        let player = simulation.player();
+                        let bounds = player.bounds();
+                        if player.grounded() && bounds.y == target_y && target_x.contains(&bounds.x)
+                        {
+                            candidates.push((simulation.clone(), actions));
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    candidates
+        .into_iter()
+        .min_by(|(_, left), (_, right)| static_route_key(left).cmp(&static_route_key(right)))
 }
 
 fn readable_nova_niche_suffix(
@@ -1350,13 +1533,18 @@ fn main() {
         let solver_config = SolverConfig::for_abilities(spec.inventory.abilities());
         let outcome = solve_target(&initial, target.clone(), &solver_config)
             .unwrap_or_else(|error| panic!("{} solve failed: {error}", spec.id()));
-        let TargetSolveOutcome::Solved(solution) = outcome else {
-            panic!("{} has no exact generated witness: {outcome:?}", spec.id());
+        let (mut candidates, global_miss) = match outcome {
+            TargetSolveOutcome::Solved(solution) => (vec![(solution, true)], None),
+            outcome => (Vec::new(), Some(format!("{outcome:?}"))),
         };
+        if selected_route.is_some()
+            && let Some(reason) = &global_miss
+        {
+            eprintln!("  global solve missed: {reason}");
+        }
         let direct =
             audit_direct_controller_probes(&initial, std::slice::from_ref(&target), &solver_config)
                 .unwrap_or_else(|error| panic!("{} direct audit failed: {error}", spec.id()));
-        let mut candidates = vec![(solution, true)];
         candidates
             .extend(segmented_candidate(&initial, spec, &target).map(|solution| (solution, true)));
         candidates.extend(direct.witnesses.into_iter().map(|witness| {
@@ -1383,6 +1571,12 @@ fn main() {
                 false,
             ));
         }
+        assert!(
+            !candidates.is_empty(),
+            "{} has no exact generated, segmented, direct, or retained witness; global outcome: {}",
+            spec.id(),
+            global_miss.as_deref().unwrap_or("no miss")
+        );
         let mut simplified = candidates
             .into_iter()
             .map(|(mut solution, should_simplify)| {
@@ -1429,6 +1623,38 @@ fn main() {
                     observation.horizontal_reversals,
                     if fragile { " FRAGILE" } else { "" },
                 );
+                if fragile {
+                    let zero_families = shaky
+                        .curves
+                        .iter()
+                        .filter(|curve| {
+                            curve.family != NoiseFamily::Exact
+                                && curve.strength_ticks == 1
+                                && curve.trials > 0
+                                && curve.successes == 0
+                        })
+                        .map(|curve| {
+                            (
+                                curve.family,
+                                curve.trials_with_death,
+                                curve.timeouts,
+                                curve.wrong_target_outcomes,
+                            )
+                        })
+                        .collect::<Vec<_>>();
+                    eprintln!(
+                        "    zero-success strength-one families (family, deaths, timeouts, wrong): {zero_families:?}"
+                    );
+                    for curve in shaky.curves.iter().filter(|curve| {
+                        curve.family != NoiseFamily::Exact
+                            && curve.strength_ticks == 1
+                            && curve.trials > 0
+                            && curve.successes == 0
+                    }) {
+                        eprintln!("    first failure: {:?}", curve.first_failure);
+                    }
+                    print_behavior_trace(&initial, spec, &actions);
+                }
             }
             assessed.push((fragile, solution, actions, shaky));
             if !fragile && selected_route.is_none() {

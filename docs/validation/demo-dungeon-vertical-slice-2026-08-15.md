@@ -206,6 +206,18 @@ search has no positive. Dash-only search does find a 489-tick, ten-Dash wall-asc
 the documented claim is a readable mixed route with a costly expert alternate—not a strict
 two-method gate or a scalar human-difficulty score.
 
+The Observatory is the twelfth replacement in v22. Its old mandatory route was a monotone
+up-right staircase: 143 ticks, 15 spans, three Dashes, one incidental Wall Jump, and no horizontal
+reversal. The replacement keeps the entire lower approach safe but seals its ceiling against a
+shortcut. The player runs to a far-right observatory tower, climbs three deliberately broad
+alternating contact bands, then reverses west across a middle lens and final coin roof. The staged
+route exact-replays in 276 ticks with 17 spans, one climb-assist Dash, three accepted Wall Jumps,
+and two roof-crossing Dashes. It records every authored recovery landing, and an independent exact
+solve continues from the coin to the east door. Its four strength-one blind-continuation families
+retain 32, 36, 37, and 50 successes out of 64. Same-budget Wall-Jump-only and Dash-only searches
+have no positive. Those finite searches and perturbation counts validate the intended structure;
+they are not a scalar human-difficulty score or a proof that no unknown bypass exists.
+
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
 persistent item omission, additive mid-run Wall Jump and Dash state, gate rejection without room reset, client

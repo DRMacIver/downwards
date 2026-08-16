@@ -1521,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v21".to_owned(),
+        id: "demo-dungeon-v22".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -1678,7 +1678,7 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         DemoDungeonRoom::MoonVault => vec![(54, Rect::new(274, 40, 8, 10))],
         DemoDungeonRoom::ConstellationHall => vec![(55, Rect::new(274, 120, 8, 10))],
         DemoDungeonRoom::ShadowDuct => vec![(56, Rect::new(224, 10, 8, 10))],
-        DemoDungeonRoom::Observatory => vec![(57, Rect::new(214, 20, 8, 10))],
+        DemoDungeonRoom::Observatory => vec![(57, Rect::new(14, 10, 8, 10))],
         DemoDungeonRoom::NovaNiche => vec![(58, Rect::new(284, 20, 8, 10))],
         DemoDungeonRoom::VacuumGallery => vec![(59, Rect::new(294, 150, 8, 10))],
         DemoDungeonRoom::LunarCache => vec![(60, Rect::new(294, 20, 8, 10))],
@@ -3867,6 +3867,129 @@ mod tests {
             dashes >= dash_ticks.len() * 2,
             "Dash-only wall-carry alternate became comparable to the intended mixed route"
         );
+    }
+
+    #[test]
+    fn observatory_checked_route_climbs_then_crosses_both_roof_gaps_and_can_continue() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::Observatory)
+            .expect("Observatory has route metadata");
+        let room = demo_dungeon_room(spec.room, spec.inventory);
+        let mut replayed = Simulation::enter_via_door(
+            room,
+            spec.inventory.abilities(),
+            spec.entry_door.expect("Observatory has a west entry"),
+        )
+        .unwrap();
+        replayed.enable_current_player_movement();
+        let mut dash_ticks = Vec::new();
+        let mut wall_jump_ticks = Vec::new();
+        let mut landings = Vec::new();
+        for (tick, action) in crate::demo_dungeon_witness_actions(spec.room)
+            .into_iter()
+            .enumerate()
+        {
+            for event in replayed.step(action).events {
+                assert!(
+                    !matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset),
+                    "the checked Observatory route must remain clean: {event:?}"
+                );
+                match event {
+                    SimulationEvent::Dashed { .. } => dash_ticks.push(tick),
+                    SimulationEvent::Jumped(JumpKind::Wall { .. }) => {
+                        wall_jump_ticks.push(tick);
+                    }
+                    SimulationEvent::Landed => {
+                        landings.push((replayed.player().bounds().x, replayed.player().bounds().y));
+                    }
+                    _ => {}
+                }
+            }
+        }
+        assert!(
+            replayed
+                .collected_pickups()
+                .any(|pickup| pickup.id() == spec.target.id())
+        );
+        assert_eq!(
+            dash_ticks.len(),
+            3,
+            "Observatory should demonstrate one climb assist and two roof crossings"
+        );
+        assert!(
+            wall_jump_ticks.len() >= 3,
+            "Observatory demonstration bypassed its alternating tower"
+        );
+        assert!(
+            dash_ticks[0] < wall_jump_ticks[0]
+                && wall_jump_ticks.last().expect("tower climb exists") < &dash_ticks[1],
+            "Observatory lost its climb-assist, wall-rhythm, roof-crossing order"
+        );
+        assert!(
+            landings
+                .iter()
+                .any(|&(x, y)| (190..=222).contains(&x) && y == 18)
+                && landings
+                    .iter()
+                    .any(|&(x, y)| (100..=122).contains(&x) && y == 48)
+                && landings
+                    .iter()
+                    .any(|&(x, y)| (10..=48).contains(&x) && y == 18),
+            "Observatory route lost its three full roof recoveries: {landings:?}"
+        );
+
+        let exit_outcome = solve_target(
+            &replayed,
+            SearchTarget::door("east"),
+            &SolverConfig::for_abilities(spec.inventory.abilities()),
+        )
+        .unwrap();
+        let TargetSolveOutcome::Solved(exit_solution) = exit_outcome else {
+            panic!("Observatory cannot continue after its coin: {exit_outcome:?}");
+        };
+        for action in exit_solution.replay.actions() {
+            replayed.step(action);
+        }
+        assert_eq!(replayed.reached_exit(), Some("east"));
+
+        for (label, inventory) in [
+            (
+                "Wall-Jump-only",
+                DemoDungeonInventory {
+                    climbing_gloves: true,
+                    winged_boots: false,
+                    ..spec.inventory
+                },
+            ),
+            (
+                "Dash-only",
+                DemoDungeonInventory {
+                    climbing_gloves: false,
+                    winged_boots: true,
+                    ..spec.inventory
+                },
+            ),
+        ] {
+            let room = demo_dungeon_room(spec.room, inventory);
+            let mut initial = Simulation::enter_via_door(
+                room,
+                inventory.abilities(),
+                spec.entry_door.expect("Observatory has a west entry"),
+            )
+            .unwrap();
+            initial.enable_current_player_movement();
+            let outcome = solve_target(
+                &initial,
+                route_spec_target(spec.target),
+                &SolverConfig::for_abilities(inventory.abilities()),
+            )
+            .unwrap();
+            assert!(
+                !matches!(outcome, TargetSolveOutcome::Solved(_)),
+                "{label} search unexpectedly reached the Observatory coin: {outcome:?}"
+            );
+        }
     }
 
     #[test]

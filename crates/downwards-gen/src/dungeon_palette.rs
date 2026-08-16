@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 21;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 22;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1667,17 +1667,45 @@ impl PaletteDraft<'_> {
                 self.horizontal(3, 22, 29, Tile::Solid);
             }
             DungeonPaletteCourse::Observatory => {
-                self.vertical(12, 2, 16, Tile::Solid);
-                self.vertical(19, 5, 17, Tile::Solid);
-                self.horizontal(16, 12, 20, Tile::Solid);
-                self.horizontal(10, 20, 26, Tile::OneWay);
-                self.horizontal(7, 13, 17, Tile::OneWay);
-                self.horizontal(3, 14, 18, Tile::OneWay);
-                self.horizontal(14, 26, 30, Tile::OneWay);
-                self.horizontal(12, 20, 24, Tile::HazardDown);
-                for row in 13..16 {
-                    self.set(12, row, Tile::Empty);
+                // Enter beneath a sealed observatory roof, run to the far tower, climb its broad
+                // cap-safe alternating core, then reverse direction across two separated roof
+                // instruments to the coin. The lethal canopy closes the direct west-side ascent
+                // without making the lower approach dangerous; the three roof shelves retain
+                // full braking space and make the return route visible.
+                self.horizontal(16, 1, 31, Tile::Solid);
+                self.horizontal(8, 1, 21, Tile::Solid);
+                self.horizontal(7, 1, 21, Tile::HazardUp);
+
+                self.vertical(21, 1, 17, Tile::Solid);
+                self.vertical(22, 1, 3, Tile::HazardRight);
+                self.set(22, 3, Tile::HazardUp);
+                self.vertical(22, 4, 9, Tile::Solid);
+                self.vertical(22, 9, 13, Tile::HazardRight);
+                self.set(22, 13, Tile::HazardUp);
+                self.vertical(22, 14, 17, Tile::Solid);
+
+                self.vertical(27, 1, 17, Tile::Solid);
+                self.vertical(26, 2, 6, Tile::Solid);
+                self.set(26, 6, Tile::HazardLeft);
+                self.set(26, 7, Tile::HazardUp);
+                self.vertical(26, 8, 12, Tile::Solid);
+                self.vertical(26, 12, 14, Tile::HazardLeft);
+                self.set(26, 14, Tile::HazardUp);
+                self.vertical(26, 15, 17, Tile::Solid);
+
+                for row in 14..16 {
+                    for column in [21, 22, 26, 27] {
+                        self.set(column, row, Tile::Empty);
+                    }
                 }
+                for row in 1..3 {
+                    for column in [21, 22] {
+                        self.set(column, row, Tile::Empty);
+                    }
+                }
+                self.horizontal(3, 19, 23, Tile::Solid);
+                self.horizontal(6, 10, 13, Tile::Solid);
+                self.horizontal(3, 1, 5, Tile::Solid);
             }
             DungeonPaletteCourse::GravityLift => {
                 self.horizontal(14, 4, 9, Tile::OneWay);
@@ -2265,6 +2293,65 @@ mod tests {
         }
         for column in 15..22 {
             assert_eq!(tile(column, 3), Tile::Empty, "Shadow reward gap is bridged");
+        }
+    }
+
+    #[test]
+    fn observatory_serializes_a_broad_tower_and_two_roof_crossings() {
+        let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::Observatory).generate();
+        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
+
+        for column in 1..31 {
+            assert_eq!(tile(column, 16), Tile::Solid, "Observatory floor is open");
+        }
+        for column in 1..21 {
+            assert_eq!(tile(column, 8), Tile::Solid, "Observatory canopy is open");
+            assert_eq!(
+                tile(column, 7),
+                Tile::HazardUp,
+                "Observatory canopy admits a direct ascent"
+            );
+        }
+        for row in 3..14 {
+            assert_eq!(tile(21, row), Tile::Solid, "left tower backing is open");
+            assert_eq!(tile(27, row), Tile::Solid, "right tower backing is open");
+        }
+        for row in [1, 2, 14, 15] {
+            assert_eq!(tile(21, row), Tile::Empty, "tower opening is sealed");
+        }
+        for row in [14, 15] {
+            assert_eq!(tile(22, row), Tile::Empty, "tower entrance is sealed");
+            assert_eq!(tile(26, row), Tile::Empty, "tower entrance is sealed");
+            assert_eq!(tile(27, row), Tile::Empty, "tower entrance is sealed");
+        }
+        for row in 4..9 {
+            assert_eq!(
+                tile(22, row),
+                Tile::Solid,
+                "left contact band is too narrow"
+            );
+        }
+        for row in 8..12 {
+            assert_eq!(
+                tile(26, row),
+                Tile::Solid,
+                "right contact band is too narrow"
+            );
+        }
+        for (row, range) in [(3, 19..23), (6, 10..13), (3, 1..5)] {
+            for column in range {
+                assert_eq!(
+                    tile(column, row),
+                    Tile::Solid,
+                    "roof shelf is incomplete at ({column}, {row})"
+                );
+            }
+        }
+        for column in 13..19 {
+            assert_eq!(tile(column, 3), Tile::Empty, "first roof gap is bridged");
+        }
+        for column in 5..10 {
+            assert_eq!(tile(column, 3), Tile::Empty, "second roof gap is bridged");
         }
     }
 

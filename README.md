@@ -322,6 +322,16 @@ Wall-Jump-only search has no positive. Dash-only wall-ascent carry does admit a 
 ten-Dash alternate, so Shadow is recorded as a readable mixed route rather than falsely claimed as
 a strict two-method gate.
 
+The Observatory is the twelfth replacement. Its former route held up-right across another broad
+diagonal staircase: 143 ticks, three Dashes, one incidental Wall Jump, and no horizontal reversal.
+The v22 room instead hides the approach beneath a sealed lethal canopy, sends the player to a
+far-right tower with broad alternating contacts, then reverses across two separated roof
+instruments to the coin. The retained staged route uses one upward Dash, three Wall Jumps, and one
+Dash for each roof gap. It lands cleanly on all three recovery roofs, can continue to the east door,
+and retains 32–50 of 64 successes in every strength-one perturbation family. Same-budget searches
+with either Wall Jump or Dash removed have no positive; those are explicit bounded no-known-bypass
+results rather than a claim of physical impossibility.
+
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 
 ```sh
