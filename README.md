@@ -234,7 +234,7 @@ methods as well as the coins. Deaths and restarts return to the door used to ent
 without discarding gloves, boots, Crown, or coins. `V` demonstrates the next intended room-local
 objective; it is not a whole-dungeon route.
 
-Palette generation v17 includes seven evidence-driven replacements. The first post-Boots Gale Chasm
+Palette generation v18 includes eight evidence-driven replacements. The first post-Boots Gale Chasm
 was implicated by 24 recorded human deaths and an AI witness with 43 action spans and 11 reversals;
 it now presents two readable sixty-pixel Dash gaps separated by a three-tile full-recovery island.
 The mechanically selected route uses nine spans, two jumps, two Dashes, and no reversals, while a
@@ -283,6 +283,15 @@ ceiling spikes close the former walk-over shortcut. The retained route has 17 sp
 Dashes, one final Wall Jump, no reversals, and at least 40/64 successes in every strength-one
 family. A same-budget no-Dash search has no positive, and an independent exact solve returns from
 the coin to the ceiling branch door.
+
+Star Threshold is the eighth replacement. The former mandatory Astral coin was four ordinary jumps
+across broad staircase shelves; neither late-game traversal method was required. The v18 room first
+shows a low aperture through sealed backing, then opens directly into a cap-safe alternating wall
+shaft. Its retained demonstration commits exactly one horizontal Dash before six accepted Wall
+Jumps, collects the coin cleanly, and can continue to the east door. Same-budget searches with
+either method removed have no positive, and all strength-one perturbation families retain at least
+28/64 successes. These are explicit behavior and no-known-bypass checks, not a scalar human-
+difficulty rating.
 
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 

@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 17;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 18;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1502,15 +1502,37 @@ impl PaletteDraft<'_> {
                 self.horizontal(9, 18, 25, Tile::HazardDown);
             }
             DungeonPaletteCourse::StarThreshold => {
-                self.horizontal(14, 3, 8, Tile::OneWay);
-                self.horizontal(12, 11, 15, Tile::OneWay);
-                self.horizontal(9, 18, 23, Tile::OneWay);
-                self.horizontal(6, 25, 29, Tile::OneWay);
-                self.horizontal(14, 27, 30, Tile::OneWay);
-                for (start, end) in [(8, 11), (15, 18), (23, 25)] {
-                    self.horizontal(16, start, end, Tile::HazardUp);
-                    self.horizontal(17, start, end, Tile::Solid);
+                // The late-game threshold introduces its two-method contract in a visible
+                // sequence. A one-tile passage through the sealed left backing first requires
+                // Dash posture. It opens directly into a broad alternating Wall-Jump shaft;
+                // upward-facing caps keep its safe bands from becoming Dash-refill ledges. The
+                // reward shelf ends before the east wall, leaving a forgiving descent after the
+                // coin instead of making the return journey part of the precision test.
+                self.horizontal(15, 3, 6, Tile::Solid);
+
+                self.vertical(5, 1, 17, Tile::Solid);
+                self.vertical(6, 1, 4, Tile::HazardRight);
+                self.set(6, 4, Tile::HazardUp);
+                self.vertical(6, 5, 7, Tile::Solid);
+                self.vertical(6, 7, 10, Tile::HazardRight);
+                self.set(6, 10, Tile::HazardUp);
+                self.vertical(6, 11, 13, Tile::Solid);
+                self.vertical(6, 13, 15, Tile::HazardRight);
+
+                self.vertical(12, 3, 17, Tile::Solid);
+                self.vertical(11, 3, 5, Tile::Solid);
+                self.vertical(11, 5, 7, Tile::HazardLeft);
+                self.set(11, 7, Tile::HazardUp);
+                self.vertical(11, 8, 10, Tile::Solid);
+                self.vertical(11, 10, 13, Tile::HazardLeft);
+                self.set(11, 13, Tile::HazardUp);
+                self.vertical(11, 14, 17, Tile::Solid);
+
+                self.set(5, 16, Tile::Empty);
+                for row in 15..17 {
+                    self.set(6, row, Tile::Empty);
                 }
+                self.horizontal(3, 11, 18, Tile::Solid);
             }
             DungeonPaletteCourse::CometRun => {
                 // A late precision-Dash contour rather than another monotone bridge staircase.
@@ -2008,6 +2030,49 @@ mod tests {
             tile(28, 16),
             Tile::Empty,
             "tunnel barrier lacks its Dash aperture"
+        );
+    }
+
+    #[test]
+    fn star_threshold_serializes_dash_then_cap_safe_wall_climb() {
+        let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::StarThreshold).generate();
+        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
+
+        for column in 3..6 {
+            assert_eq!(tile(column, 15), Tile::Solid, "low tunnel lacks a ceiling");
+            assert_eq!(tile(column, 16), Tile::Empty, "Dash aperture is obstructed");
+            assert_eq!(tile(column, 17), Tile::Solid, "low tunnel lacks a floor");
+        }
+        for row in 1..15 {
+            assert_eq!(tile(5, row), Tile::Solid, "threshold backing has a bypass");
+        }
+        assert_eq!(tile(5, 15), Tile::Solid, "threshold tunnel ceiling is open");
+        assert_eq!(
+            tile(5, 16),
+            Tile::Empty,
+            "threshold Dash aperture is sealed"
+        );
+        for row in 15..17 {
+            assert_eq!(tile(6, row), Tile::Empty, "shaft entry is sealed");
+        }
+        for row in [4, 10] {
+            assert_eq!(tile(6, row), Tile::HazardUp);
+        }
+        for row in [7, 13] {
+            assert_eq!(tile(11, row), Tile::HazardUp);
+        }
+        for (column, rows) in [(6, [5..7, 11..13]), (11, [8..10, 14..17])] {
+            for row in rows.into_iter().flatten() {
+                assert_eq!(tile(column, row), Tile::Solid);
+            }
+        }
+        for column in 11..18 {
+            assert_eq!(tile(column, 3), Tile::Solid, "reward shelf is incomplete");
+        }
+        assert_eq!(
+            tile(18, 3),
+            Tile::Empty,
+            "reward shelf blocks the safe descent"
         );
     }
 

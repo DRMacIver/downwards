@@ -1521,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v17".to_owned(),
+        id: "demo-dungeon-v18".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -1673,7 +1673,7 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         DemoDungeonRoom::AnnealingSpire => vec![(49, Rect::new(214, 20, 8, 10))],
         DemoDungeonRoom::CrystalBridge => vec![(50, Rect::new(274, 30, 8, 10))],
         DemoDungeonRoom::GlassSeal => vec![(51, Rect::new(214, 50, 8, 10))],
-        DemoDungeonRoom::StarThreshold => vec![(52, Rect::new(264, 120, 8, 10))],
+        DemoDungeonRoom::StarThreshold => vec![(52, Rect::new(144, 20, 8, 10))],
         DemoDungeonRoom::CometRun => vec![(53, Rect::new(294, 60, 8, 10))],
         DemoDungeonRoom::MoonVault => vec![(54, Rect::new(274, 40, 8, 10))],
         DemoDungeonRoom::ConstellationHall => vec![(55, Rect::new(284, 30, 8, 10))],
@@ -3398,6 +3398,113 @@ mod tests {
             !matches!(outcome, TargetSolveOutcome::Solved(_)),
             "no-Dash search unexpectedly reached the Comet Run coin: {outcome:?}"
         );
+    }
+
+    #[test]
+    fn star_threshold_demonstrates_dash_then_wall_jump_and_can_continue() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::StarThreshold)
+            .expect("Star Threshold has route metadata");
+        assert!(spec.inventory.climbing_gloves && spec.inventory.winged_boots);
+        let room = demo_dungeon_room(spec.room, spec.inventory);
+        let mut replayed = Simulation::enter_via_door(
+            room,
+            spec.inventory.abilities(),
+            spec.entry_door.expect("Star Threshold has a west entry"),
+        )
+        .unwrap();
+        replayed.enable_current_player_movement();
+        let mut dashes = 0;
+        let mut wall_jumps = 0;
+        let mut first_wall_jump_tick = None;
+        let mut dash_ticks = Vec::new();
+        for (tick, action) in crate::demo_dungeon_witness_actions(spec.room)
+            .into_iter()
+            .enumerate()
+        {
+            for event in replayed.step(action).events {
+                assert!(
+                    !matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset),
+                    "the checked Star Threshold demonstration must remain clean: {event:?}"
+                );
+                if matches!(event, SimulationEvent::Dashed { .. }) {
+                    dashes += 1;
+                    dash_ticks.push(tick);
+                }
+                if matches!(event, SimulationEvent::Jumped(JumpKind::Wall { .. })) {
+                    wall_jumps += 1;
+                    first_wall_jump_tick.get_or_insert(tick);
+                }
+            }
+        }
+        assert!(
+            replayed
+                .collected_pickups()
+                .any(|pickup| pickup.id() == spec.target.id())
+        );
+        assert_eq!(
+            dashes, 1,
+            "the demonstration should commit one entrance Dash"
+        );
+        assert!(
+            wall_jumps >= 4,
+            "the demonstration bypassed the alternating wall rhythm"
+        );
+        assert!(
+            dash_ticks[0] < first_wall_jump_tick.expect("wall rhythm is represented"),
+            "Star Threshold no longer demonstrates Dash before Wall Jump"
+        );
+
+        let exit_outcome = solve_target(
+            &replayed,
+            SearchTarget::door("east"),
+            &SolverConfig::for_abilities(spec.inventory.abilities()),
+        )
+        .unwrap();
+        let TargetSolveOutcome::Solved(exit_solution) = exit_outcome else {
+            panic!("Star Threshold cannot continue after its coin: {exit_outcome:?}");
+        };
+        for action in exit_solution.replay.actions() {
+            replayed.step(action);
+        }
+        assert_eq!(replayed.reached_exit(), Some("east"));
+
+        for (label, inventory) in [
+            (
+                "Wall-Jump-only",
+                DemoDungeonInventory {
+                    winged_boots: false,
+                    ..spec.inventory
+                },
+            ),
+            (
+                "Dash-only",
+                DemoDungeonInventory {
+                    climbing_gloves: false,
+                    ..spec.inventory
+                },
+            ),
+        ] {
+            let room = demo_dungeon_room(spec.room, inventory);
+            let mut initial = Simulation::enter_via_door(
+                room,
+                inventory.abilities(),
+                spec.entry_door.expect("Star Threshold has a west entry"),
+            )
+            .unwrap();
+            initial.enable_current_player_movement();
+            let outcome = solve_target(
+                &initial,
+                route_spec_target(spec.target),
+                &SolverConfig::for_abilities(inventory.abilities()),
+            )
+            .unwrap();
+            assert!(
+                !matches!(outcome, TargetSolveOutcome::Solved(_)),
+                "{label} search unexpectedly reached the Star Threshold coin: {outcome:?}"
+            );
+        }
     }
 
     #[test]

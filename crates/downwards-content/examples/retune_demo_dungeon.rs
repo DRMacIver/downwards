@@ -304,7 +304,9 @@ fn compare_routes(
         (
             if matches!(
                 spec.room,
-                DemoDungeonRoom::VacuumGallery | DemoDungeonRoom::LunarCache
+                DemoDungeonRoom::VacuumGallery
+                    | DemoDungeonRoom::LunarCache
+                    | DemoDungeonRoom::StarThreshold
             ) {
                 observation.accepted_dashes_before_first_wall_jump
             } else {
@@ -463,6 +465,9 @@ fn segmented_candidate(
     if spec.room == DemoDungeonRoom::MeteorRun {
         return readable_meteor_run_candidate(initial, target);
     }
+    if spec.room == DemoDungeonRoom::StarThreshold {
+        return segmented_star_threshold_candidate(initial, target);
+    }
     let (waypoint, first_config, second_config) = match spec.room {
         DemoDungeonRoom::VoidPass => (
             GroundedSupportTarget::new(
@@ -537,6 +542,61 @@ fn segmented_candidate(
         reached: second.reached,
         replay: Replay::record(initial, actions),
         stats: second.stats,
+    })
+}
+
+fn segmented_star_threshold_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    // Keep the first half deliberately legible: accelerate from the west door, commit exactly
+    // one horizontal Dash through the low aperture, and coast to a grounded stop inside the
+    // shaft. The suffix search receives a Wall-Jump-only controller vocabulary, so its witness
+    // cannot silently replace the alternating climb with vertical Dashes.
+    let mut candidates = Vec::new();
+    for approach_ticks in 4..=10 {
+        for settle_ticks in 8..=28 {
+            let mut intermediate = initial.clone();
+            let mut actions = vec![right_action(false, false); approach_ticks];
+            actions.push(right_action(false, true));
+            actions.extend(std::iter::repeat_n(Action::default(), settle_ticks));
+            if actions
+                .iter()
+                .copied()
+                .any(|action| !clean_step(&mut intermediate, action))
+            {
+                continue;
+            }
+            let player = intermediate.player();
+            let bounds = player.bounds();
+            if !player.grounded()
+                || player.dash_ticks_remaining() != 0
+                || !(60..=102).contains(&bounds.x)
+            {
+                continue;
+            }
+            let outcome = solve_target(
+                &intermediate,
+                target.clone(),
+                &SolverConfig::for_abilities(AbilitySet::new(true, false)),
+            )
+            .ok()?;
+            let TargetSolveOutcome::Solved(suffix) = outcome else {
+                continue;
+            };
+            actions.extend(suffix.replay.actions());
+            candidates.push(TargetSolution {
+                target: suffix.target,
+                reached: suffix.reached,
+                replay: Replay::record(initial, actions),
+                stats: suffix.stats,
+            });
+        }
+    }
+    candidates.into_iter().min_by(|left, right| {
+        static_route_key(&left.replay.actions().collect::<Vec<_>>()).cmp(&static_route_key(
+            &right.replay.actions().collect::<Vec<_>>(),
+        ))
     })
 }
 

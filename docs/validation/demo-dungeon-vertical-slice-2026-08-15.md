@@ -95,7 +95,7 @@ returns the player to its validated interior arrival without resetting room-loca
 Crown similarly persists and is the only terminal goal. Ordinary door exits change rooms and are
 deliberately not counted as whole-level victories.
 
-Palette generation v17 contains seven evidence-driven room replacements. Persistent history recorded
+Palette generation v18 contains eight evidence-driven room replacements. Persistent history recorded
 24 Gale Chasm attempts, all ending on spikes, while its old AI witness used 43 action spans and 11
 horizontal reversals. As the first post-Boots room, it now teaches the action as two readable
 sixty-pixel Dash gaps separated by a three-tile full-recovery island. Its mechanically selected
@@ -158,6 +158,18 @@ authoring. The staged route exact-replays in 111 ticks with 17 spans, three acce
 final Wall Jump, no horizontal reversals, and at least 40/64 successes in every strength-one family.
 A same-budget no-Dash search has no positive; Dash-only remains possible and is not misrepresented
 as a two-method gate. A separate exact solve returns from the collected coin to the ceiling door.
+
+Star Threshold is the eighth replacement in v18. Its old mandatory coin route was a generic shelf
+staircase: four accepted ordinary jumps, no Wall Jumps, and no Dashes. The replacement serializes a
+single low Dash aperture through a full-height backing wall immediately followed by a broad cap-safe
+alternating shaft. The route authoring tool deliberately separates those acts: it searches a
+one-Dash grounded entry and then disables Dash in the suffix vocabulary so the displayed route
+cannot substitute vertical Dashes for the wall rhythm. The retained 94-tick replay uses one Dash
+before six accepted Wall Jumps and four horizontal reversals. It cleanly collects the coin, a
+separate exact solve reaches the east door afterward, and every strength-one perturbation family
+retains at least 28/64 successes. Same-budget Wall-Jump-only and Dash-only searches have no positive.
+Those bounded misses certify no known bypass in the current vocabulary; they do not prove physical
+impossibility or human difficulty.
 
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
