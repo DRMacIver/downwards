@@ -7912,9 +7912,11 @@ mod tests {
             Some((&save_path, false)),
         )
         .unwrap();
-        for _ in 0..400 {
+        // The tutorial exit needs a hop, so hold right and jump periodically.
+        for tick in 0..600 {
             client.step_human(Action {
                 move_x: 1,
+                jump: tick % 30 < 8,
                 ..Action::default()
             });
             if client.dungeon_run.unwrap().room == DemoDungeonRoom::MossWalk {
