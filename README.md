@@ -234,7 +234,7 @@ methods as well as the coins. Deaths and restarts return to the door used to ent
 without discarding gloves, boots, Crown, or coins. `V` demonstrates the next intended room-local
 objective; it is not a whole-dungeon route.
 
-Palette generation v14 includes four evidence-driven replacements. The first post-Boots Gale Chasm
+Palette generation v15 includes five evidence-driven replacements. The first post-Boots Gale Chasm
 was implicated by 24 recorded human deaths and an AI witness with 43 action spans and 11 reversals;
 it now presents two readable sixty-pixel Dash gaps separated by a three-tile full-recovery island.
 The mechanically selected route uses nine spans, two jumps, two Dashes, and no reversals, while a
@@ -258,6 +258,14 @@ cap-safe ascent. Equivalent Wall-Jump-only and Dash-only searches have no positi
 exact solve returns from the collected coin to the ceiling door, and all strength-one perturbation
 families retain successes. The authoring tool stages fall, tunnel, and climb separately so it selects
 this legible route instead of the faster candidate that spends a diagonal Dash at spawn.
+
+Comet Run is the fifth replacement. The former mandatory Astral coin was reached by a broad,
+monotone staircase whose two Dashes were not physically required. The v15 route now follows a
+visible up-up-down-up contour over lethal floor using three two-tile recovery platforms. Its staged
+witness has three ordinary launch jumps, four useful Dashes, and only four short braking reversals;
+the unconstrained global solve's retry-heavy route is retained only as a rejected comparison. A
+same-budget no-Dash search has no positive, the collected route can continue to the east door, and
+all strength-one perturbation families retain at least 44 of 64 successes.
 
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 

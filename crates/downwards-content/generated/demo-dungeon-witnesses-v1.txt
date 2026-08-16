@@ -1,5 +1,5 @@
 schema downwards-demo-dungeon-witnesses-v1
-palette-generation 14
+palette-generation 15
 player-movement-policy 4
 tuning 110 72 203 50 50 250
 shaky-policy 64 18 2 2
@@ -2114,24 +2114,32 @@ entry west
 target pickup dungeon-coin-53
 abilities 1 1
 ticks 131
-observation 13 4 4 0 2 0
-shaky BoundaryTiming 31 64 39
-shaky CorrelatedTiming 19 64 75
-shaky HoldRelease 32 64 38
-shaky DropRepeatFrame 32 64 48
+observation 21 3 3 0 4 4
+shaky BoundaryTiming 47 64 36
+shaky CorrelatedTiming 52 64 16
+shaky HoldRelease 46 64 38
+shaky DropRepeatFrame 44 64 60
+span 1 0 0 0 0 23
+span 1 0 1 0 0 7
+span 0 1 0 0 0 4
+span 1 -1 0 1 0 1
+span 0 -1 0 0 0 12
+span 0 0 0 0 0 3
+span 1 0 0 0 0 7
+span 1 0 1 0 0 5
+span 1 -1 0 0 0 8
+span 1 -1 0 1 0 1
 span 1 -1 0 0 0 7
-span 1 -1 1 0 0 10
-span 1 -1 0 0 0 11
-span 1 -1 1 0 0 4
-span 1 -1 0 0 0 30
-span 1 -1 1 0 0 7
-span 1 -1 0 0 0 12
+span -1 0 0 0 0 2
+span 0 0 0 0 0 5
+span 1 0 0 0 0 3
+span 0 0 0 1 0 1
+span 1 0 0 0 0 9
+span 1 -1 0 0 0 10
+span -1 1 0 0 0 6
+span 1 -1 1 0 0 8
 span 1 -1 0 1 0 1
-span 1 -1 0 0 0 19
-span 1 -1 1 0 0 9
-span 1 -1 0 0 0 11
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 9
+span 1 -1 0 0 0 8
 end
 route demo-dungeon.orbit-fork
 room demo-dungeon.orbit-fork

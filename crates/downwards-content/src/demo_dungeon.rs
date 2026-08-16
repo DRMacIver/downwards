@@ -1521,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v14".to_owned(),
+        id: "demo-dungeon-v15".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -1656,7 +1656,7 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         DemoDungeonRoom::CrystalBridge => vec![(50, Rect::new(274, 30, 8, 10))],
         DemoDungeonRoom::GlassSeal => vec![(51, Rect::new(214, 50, 8, 10))],
         DemoDungeonRoom::StarThreshold => vec![(52, Rect::new(264, 120, 8, 10))],
-        DemoDungeonRoom::CometRun => vec![(53, Rect::new(274, 60, 8, 10))],
+        DemoDungeonRoom::CometRun => vec![(53, Rect::new(294, 60, 8, 10))],
         DemoDungeonRoom::MoonVault => vec![(54, Rect::new(224, 30, 8, 10))],
         DemoDungeonRoom::ConstellationHall => vec![(55, Rect::new(284, 30, 8, 10))],
         DemoDungeonRoom::ShadowDuct => vec![(56, Rect::new(224, 30, 8, 10))],
@@ -3315,6 +3315,71 @@ mod tests {
                 "{label} search unexpectedly reached the Lunar Cache coin: {outcome:?}"
             );
         }
+    }
+
+    #[test]
+    fn comet_run_requires_dash_and_can_continue_after_its_coin() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::CometRun)
+            .expect("Comet Run has route metadata");
+        assert!(spec.inventory.winged_boots);
+        let (initial, solution) = solve_route(
+            spec.room,
+            spec.entry_door,
+            spec.inventory,
+            route_spec_target(spec.target),
+        );
+        let mut replayed = initial;
+        let mut dashes = 0;
+        for action in solution.replay.actions() {
+            for event in replayed.step(action).events {
+                dashes += usize::from(matches!(event, SimulationEvent::Dashed { .. }));
+            }
+        }
+        assert!(
+            replayed
+                .collected_pickups()
+                .any(|pickup| pickup.id() == spec.target.id())
+        );
+        assert!(dashes >= 3, "Comet Run bypassed its Dash contour");
+
+        let exit_outcome = solve_target(
+            &replayed,
+            SearchTarget::door("east"),
+            &SolverConfig::for_abilities(spec.inventory.abilities()),
+        )
+        .unwrap();
+        let TargetSolveOutcome::Solved(exit_solution) = exit_outcome else {
+            panic!("Comet Run coin route cannot continue to its east door: {exit_outcome:?}");
+        };
+        for action in exit_solution.replay.actions() {
+            replayed.step(action);
+        }
+        assert_eq!(replayed.reached_exit(), Some("east"));
+
+        let no_dash = DemoDungeonInventory {
+            winged_boots: false,
+            ..spec.inventory
+        };
+        let room = demo_dungeon_room(spec.room, no_dash);
+        let mut initial = Simulation::enter_via_door(
+            room,
+            no_dash.abilities(),
+            spec.entry_door.expect("Comet Run has a west entry"),
+        )
+        .unwrap();
+        initial.enable_current_player_movement();
+        let outcome = solve_target(
+            &initial,
+            route_spec_target(spec.target),
+            &SolverConfig::for_abilities(no_dash.abilities()),
+        )
+        .unwrap();
+        assert!(
+            !matches!(outcome, TargetSolveOutcome::Solved(_)),
+            "no-Dash search unexpectedly reached the Comet Run coin: {outcome:?}"
+        );
     }
 
     #[test]

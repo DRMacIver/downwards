@@ -451,6 +451,9 @@ fn segmented_candidate(
     if spec.room == DemoDungeonRoom::DashChasm {
         return readable_dash_chasm_candidate(initial, target);
     }
+    if spec.room == DemoDungeonRoom::CometRun {
+        return segmented_comet_run_candidate(initial, target);
+    }
     if spec.room == DemoDungeonRoom::LunarCache {
         return segmented_lunar_cache_candidate(initial, target);
     }
@@ -528,6 +531,103 @@ fn segmented_candidate(
         reached: second.reached,
         replay: Replay::record(initial, actions),
         stats: second.stats,
+    })
+}
+
+fn segmented_comet_run_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    // Bind the route to the three visible recovery platforms. This is not a hidden authored
+    // action script: every leg is independently solved with the ordinary Dash vocabulary, while
+    // the waypoints prevent a global beam from spending hundreds of ticks retrying old platforms.
+    let waypoints = [
+        GroundedSupportTarget::new(
+            110,
+            130,
+            110,
+            [GroundedStandingRegion::new(110, 122).expect("valid first Comet platform")],
+        )
+        .expect("valid first Comet waypoint"),
+        GroundedSupportTarget::new(
+            180,
+            200,
+            70,
+            [GroundedStandingRegion::new(180, 192).expect("valid second Comet platform")],
+        )
+        .expect("valid second Comet waypoint"),
+        GroundedSupportTarget::new(
+            240,
+            260,
+            120,
+            [GroundedStandingRegion::new(240, 252).expect("valid third Comet platform")],
+        )
+        .expect("valid third Comet waypoint"),
+    ];
+    let config = SolverConfig::for_abilities(AbilitySet::new(false, true));
+    let mut intermediate = initial.clone();
+    let mut actions = Vec::new();
+    let approach = right_action(false, false);
+    for _ in 0..80 {
+        if intermediate.player().grounded() && intermediate.player().bounds().x >= 50 {
+            break;
+        }
+        if !clean_step(&mut intermediate, approach) {
+            return None;
+        }
+        actions.push(approach);
+    }
+    if !intermediate.player().grounded() || intermediate.player().bounds().x < 50 {
+        eprintln!("  segmented Comet Run approach did not reach its launch edge");
+        return None;
+    }
+    let launch_edges = [115, 185, 245];
+    for (index, waypoint) in waypoints.iter().enumerate() {
+        let outcome = solve_grounded_support(&intermediate, waypoint, &config).ok()?;
+        let GroundedSupportSolveOutcome::Solved(solution) = outcome else {
+            eprintln!(
+                "  segmented Comet Run leg {} failed: {outcome:?}",
+                index + 1
+            );
+            return None;
+        };
+        let leg = solution.replay.actions().collect::<Vec<_>>();
+        for &action in &leg {
+            intermediate.step(action);
+        }
+        actions.extend(leg);
+        for _ in 0..24 {
+            if intermediate.player().grounded()
+                && intermediate.player().bounds().x >= launch_edges[index]
+            {
+                break;
+            }
+            if !clean_step(&mut intermediate, approach) {
+                return None;
+            }
+            actions.push(approach);
+        }
+        if !intermediate.player().grounded()
+            || intermediate.player().bounds().x < launch_edges[index]
+        {
+            eprintln!(
+                "  segmented Comet Run checkpoint {} has no readable launch edge",
+                index + 1
+            );
+            return None;
+        }
+    }
+    let outcome = solve_target(&intermediate, target.clone(), &config).ok()?;
+    let TargetSolveOutcome::Solved(solution) = outcome else {
+        eprintln!("  segmented Comet Run final leg failed: {outcome:?}");
+        return None;
+    };
+    actions.extend(solution.replay.actions());
+    Some(TargetSolution {
+        target: solution.target,
+        reached: solution.reached,
+        replay: Replay::record(initial, actions),
+        stats: solution.stats,
     })
 }
 

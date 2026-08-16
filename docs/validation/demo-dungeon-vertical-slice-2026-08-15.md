@@ -95,7 +95,7 @@ returns the player to its validated interior arrival without resetting room-loca
 Crown similarly persists and is the only terminal goal. Ordinary door exits change rooms and are
 deliberately not counted as whole-level victories.
 
-Palette generation v14 contains four evidence-driven room replacements. Persistent history recorded
+Palette generation v15 contains five evidence-driven room replacements. Persistent history recorded
 24 Gale Chasm attempts, all ending on spikes, while its old AI witness used 43 action spans and 11
 horizontal reversals. As the first post-Boots room, it now teaches the action as two readable
 sixty-pixel Dash gaps separated by a three-tile full-recovery island. Its mechanically selected
@@ -125,6 +125,17 @@ reversals in the climb. Same-budget Wall-Jump-only and Dash-only searches have n
 separate exact solve returns from the collected coin to the ceiling exit, and all four strength-one
 perturbation families retain observed successes. These bounded misses and noisy-controller results
 remain descriptive evidence, not impossibility or human-difficulty claims.
+
+Comet Run is the fifth replacement in v15. The old mandatory coin route was a monotone broad-shelf
+staircase with four ordinary jumps and two incidental Dashes. The replacement exposes an
+up-up-down-up contour over lethal floor with three two-tile recovery platforms and a ceiling hazard
+that punishes an unbroken upward line. The route authoring tool solves each visible platform leg
+with the ordinary Dash vocabulary, walks to the next launch edge, and exact-replays the combined
+result; it does not prescribe per-tick actions. The retained behavior has three launch jumps, four
+accepted Dashes, four short braking reversals, and no failed jump or Wall-Jump-grace events. The
+unconstrained global solve is behaviorally busier and is rejected. A same-budget no-Dash search has
+no positive, a post-coin solve reaches the east door, and all four strength-one perturbation
+families retain at least 44/64 observed successes.
 
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,

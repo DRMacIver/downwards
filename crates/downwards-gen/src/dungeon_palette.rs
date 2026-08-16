@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 14;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 15;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1513,17 +1513,17 @@ impl PaletteDraft<'_> {
                 }
             }
             DungeonPaletteCourse::CometRun => {
-                self.horizontal(14, 3, 7, Tile::OneWay);
-                self.horizontal(10, 10, 14, Tile::OneWay);
-                self.horizontal(13, 17, 21, Tile::OneWay);
-                self.horizontal(8, 24, 28, Tile::OneWay);
-                self.horizontal(16, 7, 10, Tile::HazardUp);
-                self.horizontal(17, 7, 10, Tile::Solid);
-                self.horizontal(16, 14, 17, Tile::HazardUp);
-                self.horizontal(17, 14, 17, Tile::Solid);
-                self.horizontal(16, 21, 24, Tile::HazardUp);
-                self.horizontal(17, 21, 24, Tile::Solid);
-                self.horizontal(5, 12, 21, Tile::HazardDown);
+                // A late precision-Dash contour rather than another monotone bridge staircase.
+                // The route rises twice, descends beneath the ceiling bank, then rises once more
+                // to the coin. Thirty-pixel recovery platforms leave useful braking margin while
+                // remaining materially smaller than the early game's broad shelves.
+                self.horizontal(16, 1, 6, Tile::OneWay);
+                self.horizontal(16, 6, 28, Tile::HazardUp);
+                self.horizontal(11, 11, 13, Tile::OneWay);
+                self.horizontal(7, 18, 20, Tile::OneWay);
+                self.horizontal(12, 24, 26, Tile::OneWay);
+                self.horizontal(7, 28, 31, Tile::OneWay);
+                self.horizontal(4, 21, 28, Tile::HazardDown);
             }
             DungeonPaletteCourse::OrbitFork => {
                 self.horizontal(14, 3, 8, Tile::OneWay);
@@ -1950,6 +1950,25 @@ mod tests {
                 .clone()
                 .all(|column| course_row[column] == Tile::OneWay)
         );
+    }
+
+    #[test]
+    fn comet_run_serializes_an_up_then_down_dash_slalom() {
+        let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::CometRun).generate();
+        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
+
+        for column in 6..28 {
+            assert_eq!(tile(column, 16), Tile::HazardUp);
+            assert_eq!(tile(column, 17), Tile::Solid);
+        }
+        for (row, range) in [(11, 11..13), (7, 18..20), (12, 24..26), (7, 28..31)] {
+            for column in range {
+                assert_eq!(tile(column, row), Tile::OneWay);
+            }
+        }
+        for column in 21..28 {
+            assert_eq!(tile(column, 4), Tile::HazardDown);
+        }
     }
 
     #[test]
