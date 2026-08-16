@@ -16,7 +16,8 @@ use downwards_content::{
     demo_dungeon_route_specs,
 };
 use downwards_core::{
-    AbilitySet, Action, MovementTuning, PLAYER_MOVEMENT_POLICY_VERSION, Simulation, SimulationEvent,
+    AbilitySet, Action, MovementTuning, PLAYER_MOVEMENT_POLICY_VERSION, Simulation,
+    SimulationEvent, WallSide,
 };
 use downwards_gen::DUNGEON_PALETTE_GENERATION_VERSION;
 
@@ -310,6 +311,7 @@ fn compare_routes(
                     | DemoDungeonRoom::ShadowDuct
                     | DemoDungeonRoom::Observatory
                     | DemoDungeonRoom::AuroraSpire
+                    | DemoDungeonRoom::Gatehouse
                     | DemoDungeonRoom::CrownSanctum
             ) {
                 observation.accepted_dashes_before_first_wall_jump
@@ -489,6 +491,9 @@ fn segmented_candidate(
     }
     if spec.room == DemoDungeonRoom::Skybridge {
         return segmented_skybridge_candidate(initial, target);
+    }
+    if spec.room == DemoDungeonRoom::Gatehouse {
+        return segmented_gatehouse_candidate(initial, target);
     }
     if spec.room == DemoDungeonRoom::CrownSanctum {
         return segmented_crown_sanctum_candidate(initial, target);
@@ -1326,6 +1331,105 @@ fn segmented_crown_sanctum_candidate(
         replay: Replay::record(initial, actions),
         stats: solution.stats,
     })
+}
+
+fn segmented_gatehouse_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    let (intermediate, climb) = readable_gatehouse_climb(initial)?;
+
+    let mut candidates = Vec::new();
+    for takeoff_x in 120..=132 {
+        let Some((takeoff, approach)) = approach_x(&intermediate, takeoff_x) else {
+            continue;
+        };
+        let mut simulation = takeoff;
+        let mut suffix = approach;
+        for action in std::iter::once(right_action(false, true))
+            .chain(std::iter::repeat_n(right_action(false, false), 160))
+        {
+            if !clean_step(&mut simulation, action) {
+                break;
+            }
+            suffix.push(action);
+            if simulation.reached_exit() == Some("east") {
+                let mut full_actions = climb.clone();
+                full_actions.extend(suffix);
+                candidates.push(full_actions);
+                break;
+            }
+        }
+    }
+    let actions = candidates
+        .into_iter()
+        .min_by(|left, right| static_route_key(left).cmp(&static_route_key(right)))?;
+    Some(TargetSolution {
+        target: target.clone(),
+        reached: ReachedTarget::Door("east".to_owned()),
+        replay: Replay::record(initial, actions),
+        stats: SearchStats::default(),
+    })
+}
+
+fn readable_gatehouse_climb(initial: &Simulation) -> Option<(Simulation, Vec<Action>)> {
+    let mut candidates = Vec::new();
+    for takeoff_x in 84..=104 {
+        let Some((takeoff, approach)) = approach_x(initial, takeoff_x) else {
+            continue;
+        };
+        for ground_hold in 1_u8..=10 {
+            for wall_hold in 1_u8..=10 {
+                let mut simulation = takeoff.clone();
+                let mut actions = approach.clone();
+                let mut direction = 1;
+                let mut jump_ticks = ground_hold;
+                let mut last_wall = None;
+                for _ in 0..240 {
+                    let bounds = simulation.player().bounds();
+                    if simulation.player().grounded()
+                        && bounds.y == 48
+                        && (120..=132).contains(&bounds.x)
+                    {
+                        candidates.push((simulation.clone(), actions));
+                        break;
+                    }
+                    if jump_ticks == 0
+                        && let Some(side) = simulation.player().wall_contact()
+                        && Some(side) != last_wall
+                    {
+                        last_wall = Some(side);
+                        direction = match side {
+                            WallSide::Left => 1,
+                            WallSide::Right => -1,
+                        };
+                        jump_ticks = wall_hold;
+                    }
+                    let action = Action {
+                        move_x: direction,
+                        move_y: 0,
+                        jump: jump_ticks > 0,
+                        dash: false,
+                        restart: false,
+                    };
+                    if !clean_step(&mut simulation, action) {
+                        break;
+                    }
+                    actions.push(action);
+                    jump_ticks = jump_ticks.saturating_sub(1);
+                    if simulation.player().grounded()
+                        && simulation.player().bounds().y > 48
+                        && actions.len() > approach.len() + 2
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    candidates
+        .into_iter()
+        .min_by(|(_, left), (_, right)| static_route_key(left).cmp(&static_route_key(right)))
 }
 
 fn readable_crown_descent(initial: &Simulation) -> Option<(Simulation, Vec<Action>)> {

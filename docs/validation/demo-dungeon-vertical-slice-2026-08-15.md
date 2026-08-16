@@ -267,6 +267,16 @@ Same-budget Wall-Jump-only and Dash-only searches both have no positive. Those b
 support the physical two-method contract; the independent all-64-coin/all-method door and dungeon
 audits remain authoritative for progression.
 
+The Crown Gate is the seventeenth replacement in v27. The previous route used seven Dash presses,
+no accepted jump, and no reversal before the final door. The replacement has a visibly open bottom
+entrance into a paired-wall shaft, a full upper staging cap, and a ceiling-anchored lintel whose
+ten-pixel passage cannot be bypassed over the top. The composed witness exact-replays in 212 ticks
+and 12 spans with four accepted jump presses, three strictly alternating Wall Jumps, one horizontal
+Dash through the keyhole, and four reversals. Its four strength-one families retain 25, 21, 40, and
+62 successes out of 64 with no deaths. Same-budget Wall-Jump-only and Dash-only searches both have
+no positive. This room-local evidence complements rather than replaces the independent 64-coin and
+all-method ingress gate.
+
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
 persistent item omission, additive mid-run Wall Jump and Dash state, gate rejection without room reset, client

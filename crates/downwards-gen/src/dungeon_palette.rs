@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 26;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 27;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1977,15 +1977,21 @@ impl PaletteDraft<'_> {
                 self.horizontal(16, 20, 23, Tile::HazardUp);
             }
             DungeonPaletteCourse::Gatehouse => {
-                self.horizontal(14, 4, 10, Tile::OneWay);
-                self.horizontal(11, 12, 19, Tile::OneWay);
-                self.horizontal(8, 21, 28, Tile::OneWay);
-                self.horizontal(14, 23, 29, Tile::OneWay);
-                // The partition seals ceiling to within one tile of the floor. The standing
-                // player cannot enter the approach under row 15; a horizontal Dash adopts the
-                // low posture and carries through the ten-pixel passage.
-                self.horizontal(15, 8, 20, Tile::Solid);
-                self.vertical(20, 1, 16, Tile::Solid);
+                // The final lock is physical as well as inventory-gated. The west bay is sealed
+                // by a tall chimney, whose cap is a full recovery before a ten-pixel horizontal
+                // keyhole. Only low Dash posture fits beneath the lintel; the far side opens into
+                // a safe descent to the Crown door rather than asking for a blind landing.
+                self.horizontal(16, 1, 8, Tile::Solid);
+                self.vertical(7, 6, 14, Tile::Solid);
+                self.vertical(12, 6, 17, Tile::Solid);
+
+                self.horizontal(6, 12, 24, Tile::Solid);
+                for row in 1..5 {
+                    self.horizontal(row, 14, 24, Tile::Solid);
+                }
+
+                self.horizontal(16, 24, 31, Tile::Solid);
+                self.horizontal(17, 1, 31, Tile::Solid);
             }
             DungeonPaletteCourse::CrownSanctum => {
                 // The Crown sits beyond a final W-shaped movement proof: climb the west core,
@@ -2545,6 +2551,52 @@ mod tests {
         }
         for column in 21..28 {
             assert_eq!(tile(column, 13), Tile::Solid, "far recovery is incomplete");
+        }
+    }
+
+    #[test]
+    fn gatehouse_serializes_a_wall_climb_and_low_dash_keyhole() {
+        let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::Gatehouse).generate();
+        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
+
+        for column in 1..8 {
+            assert_eq!(tile(column, 16), Tile::Solid, "west sill is incomplete");
+        }
+        for row in 6..14 {
+            assert_eq!(tile(7, row), Tile::Solid, "west climb face is open");
+        }
+        for row in 14..16 {
+            assert_eq!(tile(7, row), Tile::Empty, "shaft entrance is obstructed");
+        }
+        for row in 6..17 {
+            assert_eq!(tile(12, row), Tile::Solid, "east climb face is open");
+        }
+        for column in 12..24 {
+            assert_eq!(tile(column, 6), Tile::Solid, "keyhole floor is open");
+        }
+        for column in 14..24 {
+            for row in 1..5 {
+                assert_eq!(tile(column, row), Tile::Solid, "keyhole lintel is open");
+            }
+            assert_eq!(
+                tile(column, 5),
+                Tile::Empty,
+                "keyhole passage is obstructed"
+            );
+        }
+        for column in 24..31 {
+            assert_eq!(
+                tile(column, 16),
+                Tile::Solid,
+                "east landing bay is incomplete"
+            );
+        }
+        for column in 1..31 {
+            assert_eq!(
+                tile(column, 17),
+                Tile::Solid,
+                "gatehouse lacks floor backing"
+            );
         }
     }
 

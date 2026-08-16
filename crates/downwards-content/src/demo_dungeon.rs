@@ -1521,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v26".to_owned(),
+        id: "demo-dungeon-v27".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -5017,34 +5017,105 @@ mod tests {
     }
 
     #[test]
-    fn gatehouse_known_positive_uses_the_low_dash_passage() {
+    fn gatehouse_checked_route_alternates_up_the_shaft_then_uses_one_low_dash() {
         let inventory = DemoDungeonInventory {
             climbing_gloves: true,
             winged_boots: true,
             ..DemoDungeonInventory::default()
         };
         let room = demo_dungeon_room(DemoDungeonRoom::Gatehouse, inventory);
-        let mut initial = Simulation::enter_via_door(room, inventory.abilities(), "west").unwrap();
-        initial.enable_current_player_movement();
-        let outcome = solve_target(
-            &initial,
-            SearchTarget::door("east"),
-            &SolverConfig::for_abilities(inventory.abilities()),
-        )
-        .unwrap();
-        let TargetSolveOutcome::Solved(solution) = outcome else {
-            panic!("Dash-squeeze gatehouse lost its known positive: {outcome:?}");
-        };
-        let mut replayed = initial;
+        let mut replayed = Simulation::enter_via_door(room, inventory.abilities(), "west").unwrap();
+        replayed.enable_current_player_movement();
+        let actions = crate::demo_dungeon_witness_actions(DemoDungeonRoom::Gatehouse);
+        let mut previous = downwards_core::Action::default();
+        let mut jump_presses = 0;
+        let mut accepted_jumps = 0;
+        let mut wall_sides = Vec::new();
+        let mut dash_positions = Vec::new();
         let mut observed_low_posture = false;
-        for action in solution.replay.actions() {
-            replayed.step(action);
+        for action in actions {
+            jump_presses += usize::from(action.jump && !previous.jump);
+            previous = action;
+            let report = replayed.step(action);
             observed_low_posture |= replayed.player().dash_compressed();
+            for event in report.events {
+                assert!(
+                    !matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset),
+                    "the checked Gatehouse route must remain clean: {event:?}"
+                );
+                match event {
+                    SimulationEvent::Jumped(kind) => {
+                        accepted_jumps += 1;
+                        if let JumpKind::Wall { side } = kind {
+                            wall_sides.push(side);
+                        }
+                    }
+                    SimulationEvent::Dashed { .. } => {
+                        dash_positions.push(replayed.player().bounds());
+                    }
+                    _ => {}
+                }
+            }
         }
         assert_eq!(replayed.reached_exit(), Some("east"));
+        assert_eq!(
+            jump_presses, accepted_jumps,
+            "Gatehouse witness has jump spam"
+        );
+        assert!(
+            wall_sides.len() >= 3 && wall_sides.windows(2).all(|pair| pair[0] != pair[1]),
+            "Gatehouse climb no longer alternates across the shaft: {wall_sides:?}"
+        );
+        assert_eq!(
+            dash_positions.len(),
+            1,
+            "Gatehouse should use one deliberate Dash: {dash_positions:?}"
+        );
+        assert!(
+            (130..=140).contains(&dash_positions[0].x) && (50..=54).contains(&dash_positions[0].y),
+            "Gatehouse Dash no longer enters the upper keyhole: {:?}",
+            dash_positions[0]
+        );
         assert!(
             observed_low_posture,
             "the gatehouse route must traverse its one-tile passage in low Dash posture"
         );
+    }
+
+    #[test]
+    fn gatehouse_refuses_each_incomplete_traversal_loadout() {
+        for (label, inventory) in [
+            (
+                "Wall-Jump-only",
+                DemoDungeonInventory {
+                    climbing_gloves: true,
+                    winged_boots: false,
+                    ..DemoDungeonInventory::default()
+                },
+            ),
+            (
+                "Dash-only",
+                DemoDungeonInventory {
+                    climbing_gloves: false,
+                    winged_boots: true,
+                    ..DemoDungeonInventory::default()
+                },
+            ),
+        ] {
+            let room = demo_dungeon_room(DemoDungeonRoom::Gatehouse, inventory);
+            let mut initial =
+                Simulation::enter_via_door(room, inventory.abilities(), "west").unwrap();
+            initial.enable_current_player_movement();
+            let outcome = solve_target(
+                &initial,
+                SearchTarget::door("east"),
+                &SolverConfig::for_abilities(inventory.abilities()),
+            )
+            .unwrap();
+            assert!(
+                !matches!(outcome, TargetSolveOutcome::Solved(_)),
+                "{label} search unexpectedly crossed the Gatehouse: {outcome:?}"
+            );
+        }
     }
 }

@@ -1,5 +1,5 @@
 schema downwards-demo-dungeon-witnesses-v1
-palette-generation 26
+palette-generation 27
 player-movement-policy 4
 tuning 110 72 203 50 50 250
 shaky-policy 64 18 2 2
@@ -2782,27 +2782,24 @@ room demo-dungeon.gatehouse
 entry west
 target door east
 abilities 1 1
-ticks 78
-observation 15 1 0 0 7 0
-shaky BoundaryTiming 21 64 0
-shaky CorrelatedTiming 5 64 0
-shaky HoldRelease 49 64 0
-shaky DropRepeatFrame 42 64 0
+ticks 212
+observation 12 4 4 3 1 4
+shaky BoundaryTiming 25 64 0
+shaky CorrelatedTiming 21 64 0
+shaky HoldRelease 40 64 0
+shaky DropRepeatFrame 62 64 0
+span 1 0 0 0 0 50
+span 1 0 1 0 0 7
+span -1 0 1 0 0 5
+span -1 0 0 0 0 15
+span 0 0 1 0 0 1
+span 1 0 0 0 0 13
+span -1 0 1 0 0 1
+span -1 0 0 0 0 13
+span 0 0 1 0 0 1
+span 1 0 0 0 0 23
 span 0 0 0 1 0 1
-span 1 0 0 0 0 16
-span 0 0 0 1 0 1
-span 1 0 0 0 0 9
-span 0 0 0 1 0 1
-span 1 0 0 0 0 9
-span 0 0 0 1 0 1
-span 1 0 0 0 0 9
-span 0 0 0 1 0 1
-span 1 0 1 0 0 8
-span 0 0 0 0 0 1
-span 0 0 0 1 0 1
-span 1 0 0 0 0 9
-span 0 0 0 1 0 1
-span 0 0 0 0 0 10
+span 1 0 0 0 0 82
 end
 route demo-dungeon.crown-sanctum
 room demo-dungeon.crown-sanctum

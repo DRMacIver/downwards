@@ -372,6 +372,16 @@ Strength-one perturbations retain 20–58/64 successes with no recorded deaths, 
 Wall-Jump-only and Dash-only bounded searches both have no positive. The outer door still requires
 all 64 coins and both traversal methods; the physical room independently exercises both methods.
 
+The Crown Gate is the seventeenth replacement. Its v26 route was an inventory-gated corridor that
+pressed Dash seven times, never jumped, and never reversed, so it did not earn its position before
+the capstone. The v27 room exposes a standing-height entrance into an alternating shaft, provides a
+full staging cap, then forces one low Dash through a ceiling-anchored ten-pixel keyhole before a
+safe descent to the Crown door. The retained route takes 212 ticks and 12 spans, accepts all four
+jump presses (three alternating Wall Jumps), uses exactly one Dash, and reverses four times.
+Strength-one perturbations retain 21–62/64 successes with no recorded deaths. Separate
+Wall-Jump-only and Dash-only bounded searches both have no positive, while the existing door still
+independently requires all 64 coins and both unlocks.
+
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 
 ```sh
