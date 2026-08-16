@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 27;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 28;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1936,15 +1936,19 @@ impl PaletteDraft<'_> {
                 self.horizontal(13, 21, 28, Tile::Solid);
             }
             DungeonPaletteCourse::AstralSeal => {
-                self.horizontal(14, 3, 7, Tile::OneWay);
-                self.vertical(10, 3, 14, Tile::Solid);
-                self.vertical(17, 4, 17, Tile::Solid);
-                self.horizontal(16, 10, 18, Tile::Solid);
-                self.horizontal(6, 18, 24, Tile::OneWay);
-                self.horizontal(14, 26, 30, Tile::OneWay);
-                self.horizontal(15, 19, 27, Tile::Solid);
-                self.vertical(27, 1, 16, Tile::Solid);
-                self.horizontal(9, 19, 26, Tile::HazardDown);
+                // The last regional coin is an exposed two-method relay rather than a tangled
+                // shelf maze. Enter the broad shaft through its standing-height opening, climb
+                // to the small launch deck, then commit one airborne Dash across the starwell.
+                self.horizontal(16, 1, 15, Tile::Solid);
+                self.horizontal(16, 15, 29, Tile::HazardUp);
+                self.horizontal(16, 29, 31, Tile::Solid);
+                self.horizontal(17, 1, 31, Tile::Solid);
+
+                self.vertical(9, 6, 14, Tile::Solid);
+                self.vertical(14, 6, 17, Tile::Solid);
+                self.horizontal(6, 14, 17, Tile::Solid);
+
+                self.horizontal(6, 24, 29, Tile::Solid);
             }
             DungeonPaletteCourse::CoinLoft => {
                 self.horizontal(14, 3, 10, Tile::OneWay);
@@ -2551,6 +2555,52 @@ mod tests {
         }
         for column in 21..28 {
             assert_eq!(tile(column, 13), Tile::Solid, "far recovery is incomplete");
+        }
+    }
+
+    #[test]
+    fn astral_seal_serializes_a_broad_climb_and_exposed_dash_relay() {
+        let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::AstralSeal).generate();
+        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
+
+        for column in 1..15 {
+            assert_eq!(tile(column, 16), Tile::Solid, "west sill is incomplete");
+        }
+        for column in 15..29 {
+            assert_eq!(
+                tile(column, 16),
+                Tile::HazardUp,
+                "starwell has a floor bypass"
+            );
+        }
+        for row in 6..14 {
+            assert_eq!(tile(9, row), Tile::Solid, "west climb face is open");
+        }
+        for row in 14..16 {
+            assert_eq!(tile(9, row), Tile::Empty, "shaft entrance is obstructed");
+        }
+        for row in 6..17 {
+            assert_eq!(tile(14, row), Tile::Solid, "east climb face is open");
+        }
+        for column in 14..17 {
+            assert_eq!(tile(column, 6), Tile::Solid, "launch deck is incomplete");
+        }
+        for column in 17..24 {
+            assert_eq!(
+                tile(column, 6),
+                Tile::Empty,
+                "airborne relay gap is obstructed"
+            );
+        }
+        for column in 24..29 {
+            assert_eq!(tile(column, 6), Tile::Solid, "coin deck is incomplete");
+        }
+        for column in 1..31 {
+            assert_eq!(
+                tile(column, 17),
+                Tile::Solid,
+                "starwell lacks floor backing"
+            );
         }
     }
 

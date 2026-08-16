@@ -311,6 +311,7 @@ fn compare_routes(
                     | DemoDungeonRoom::ShadowDuct
                     | DemoDungeonRoom::Observatory
                     | DemoDungeonRoom::AuroraSpire
+                    | DemoDungeonRoom::AstralSeal
                     | DemoDungeonRoom::Gatehouse
                     | DemoDungeonRoom::CrownSanctum
             ) {
@@ -491,6 +492,9 @@ fn segmented_candidate(
     }
     if spec.room == DemoDungeonRoom::Skybridge {
         return segmented_skybridge_candidate(initial, target);
+    }
+    if spec.room == DemoDungeonRoom::AstralSeal {
+        return segmented_astral_seal_candidate(initial, target);
     }
     if spec.room == DemoDungeonRoom::Gatehouse {
         return segmented_gatehouse_candidate(initial, target);
@@ -1337,7 +1341,7 @@ fn segmented_gatehouse_candidate(
     initial: &Simulation,
     target: &SearchTarget,
 ) -> Option<TargetSolution> {
-    let (intermediate, climb) = readable_gatehouse_climb(initial)?;
+    let (intermediate, climb) = readable_alternating_climb(initial, 84, 104, 48, 120, 132, 0)?;
 
     let mut candidates = Vec::new();
     for takeoff_x in 120..=132 {
@@ -1372,9 +1376,64 @@ fn segmented_gatehouse_candidate(
     })
 }
 
-fn readable_gatehouse_climb(initial: &Simulation) -> Option<(Simulation, Vec<Action>)> {
+fn segmented_astral_seal_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    let (intermediate, climb) = readable_alternating_climb(initial, 104, 124, 48, 140, 162, 3)?;
     let mut candidates = Vec::new();
-    for takeoff_x in 84..=104 {
+    for takeoff_x in 140..=162 {
+        let Some((takeoff, approach)) = approach_x(&intermediate, takeoff_x) else {
+            continue;
+        };
+        for jump_hold in 1..=10 {
+            for dash_delay in 0..=12 {
+                let mut simulation = takeoff.clone();
+                let mut suffix = approach.clone();
+                let relay = std::iter::repeat_n(right_action(true, false), jump_hold)
+                    .chain(std::iter::repeat_n(right_action(false, false), dash_delay))
+                    .chain(std::iter::once(right_action(false, true)))
+                    .chain(std::iter::repeat_n(right_action(false, false), 120));
+                for action in relay {
+                    if !clean_step(&mut simulation, action) {
+                        break;
+                    }
+                    suffix.push(action);
+                    if simulation
+                        .collected_pickups()
+                        .any(|pickup| pickup.id() == "dungeon-coin-63")
+                    {
+                        let mut full_actions = climb.clone();
+                        full_actions.extend(suffix);
+                        candidates.push(full_actions);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    let actions = candidates
+        .into_iter()
+        .min_by(|left, right| static_route_key(left).cmp(&static_route_key(right)))?;
+    Some(TargetSolution {
+        target: target.clone(),
+        reached: ReachedTarget::Pickup("dungeon-coin-63".to_owned()),
+        replay: Replay::record(initial, actions),
+        stats: SearchStats::default(),
+    })
+}
+
+fn readable_alternating_climb(
+    initial: &Simulation,
+    takeoff_min_x: i32,
+    takeoff_max_x: i32,
+    staging_y: i32,
+    staging_min_x: i32,
+    staging_max_x: i32,
+    wall_settle_ticks: u8,
+) -> Option<(Simulation, Vec<Action>)> {
+    let mut candidates = Vec::new();
+    for takeoff_x in takeoff_min_x..=takeoff_max_x {
         let Some((takeoff, approach)) = approach_x(initial, takeoff_x) else {
             continue;
         };
@@ -1385,25 +1444,41 @@ fn readable_gatehouse_climb(initial: &Simulation) -> Option<(Simulation, Vec<Act
                 let mut direction = 1;
                 let mut jump_ticks = ground_hold;
                 let mut last_wall = None;
+                let mut pending_wall = None;
+                let mut settle_ticks_remaining = 0_u8;
                 for _ in 0..240 {
                     let bounds = simulation.player().bounds();
                     if simulation.player().grounded()
-                        && bounds.y == 48
-                        && (120..=132).contains(&bounds.x)
+                        && bounds.y == staging_y
+                        && (staging_min_x..=staging_max_x).contains(&bounds.x)
                     {
                         candidates.push((simulation.clone(), actions));
                         break;
                     }
-                    if jump_ticks == 0
-                        && let Some(side) = simulation.player().wall_contact()
-                        && Some(side) != last_wall
-                    {
-                        last_wall = Some(side);
-                        direction = match side {
-                            WallSide::Left => 1,
-                            WallSide::Right => -1,
-                        };
-                        jump_ticks = wall_hold;
+                    if jump_ticks == 0 {
+                        if let Some(side) = pending_wall {
+                            if settle_ticks_remaining > 1 {
+                                settle_ticks_remaining -= 1;
+                                direction = wall_direction(side);
+                            } else {
+                                pending_wall = None;
+                                last_wall = Some(side);
+                                direction = -wall_direction(side);
+                                jump_ticks = wall_hold;
+                            }
+                        } else if let Some(side) = simulation.player().wall_contact()
+                            && Some(side) != last_wall
+                        {
+                            if wall_settle_ticks == 0 {
+                                last_wall = Some(side);
+                                direction = -wall_direction(side);
+                                jump_ticks = wall_hold;
+                            } else {
+                                pending_wall = Some(side);
+                                settle_ticks_remaining = wall_settle_ticks;
+                                direction = wall_direction(side);
+                            }
+                        }
                     }
                     let action = Action {
                         move_x: direction,
@@ -1418,7 +1493,7 @@ fn readable_gatehouse_climb(initial: &Simulation) -> Option<(Simulation, Vec<Act
                     actions.push(action);
                     jump_ticks = jump_ticks.saturating_sub(1);
                     if simulation.player().grounded()
-                        && simulation.player().bounds().y > 48
+                        && simulation.player().bounds().y > staging_y
                         && actions.len() > approach.len() + 2
                     {
                         break;
@@ -1430,6 +1505,13 @@ fn readable_gatehouse_climb(initial: &Simulation) -> Option<(Simulation, Vec<Act
     candidates
         .into_iter()
         .min_by(|(_, left), (_, right)| static_route_key(left).cmp(&static_route_key(right)))
+}
+
+const fn wall_direction(side: WallSide) -> i8 {
+    match side {
+        WallSide::Left => -1,
+        WallSide::Right => 1,
+    }
 }
 
 fn readable_crown_descent(initial: &Simulation) -> Option<(Simulation, Vec<Action>)> {
@@ -2038,8 +2120,10 @@ fn main() {
         let direct =
             audit_direct_controller_probes(&initial, std::slice::from_ref(&target), &solver_config)
                 .unwrap_or_else(|error| panic!("{} direct audit failed: {error}", spec.id()));
-        candidates
-            .extend(segmented_candidate(&initial, spec, &target).map(|solution| (solution, true)));
+        candidates.extend(
+            segmented_candidate(&initial, spec, &target)
+                .map(|solution| (solution, spec.room != DemoDungeonRoom::AstralSeal)),
+        );
         candidates.extend(direct.witnesses.into_iter().map(|witness| {
             (
                 TargetSolution {

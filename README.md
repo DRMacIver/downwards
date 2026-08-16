@@ -382,6 +382,16 @@ Strength-one perturbations retain 21–62/64 successes with no recorded deaths. 
 Wall-Jump-only and Dash-only bounded searches both have no positive, while the existing door still
 independently requires all 64 coins and both unlocks.
 
+The Astral Seal is the eighteenth replacement. Its former coin route used five Dashes, including
+three before the first Wall Jump, repeated a same-wall hop, and retained only 3/64 Drop/Repeat
+successes. The v28 seal has a safe standing-height shaft entrance, broad alternating contacts, a
+small launch deck, and an exposed upper starwell ending at the final regional coin. Its authored
+controller visibly settles on each wall rather than jumping on the first contact tick. The route
+takes 182 ticks and 14 spans, accepts six clean jump presses (four strictly alternating Wall
+Jumps), then uses one airborne Dash. Strength-one perturbations retain 23–58/64 successes.
+Wall-Jump-only and Dash-only bounded searches both have no coin positive, and the full-loadout
+route can continue east through the independently coin-gated door.
+
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 
 ```sh

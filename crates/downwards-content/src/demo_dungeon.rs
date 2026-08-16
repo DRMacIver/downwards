@@ -1521,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v27".to_owned(),
+        id: "demo-dungeon-v28".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -1684,7 +1684,7 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         DemoDungeonRoom::LunarCache => vec![(60, Rect::new(294, 20, 8, 10))],
         DemoDungeonRoom::AuroraSpire => vec![(61, Rect::new(294, 50, 8, 10))],
         DemoDungeonRoom::Skybridge => vec![(62, Rect::new(264, 110, 8, 10))],
-        DemoDungeonRoom::AstralSeal => vec![(63, Rect::new(224, 50, 8, 10))],
+        DemoDungeonRoom::AstralSeal => vec![(63, Rect::new(245, 50, 8, 10))],
         DemoDungeonRoom::SplitRoot
         | DemoDungeonRoom::OldLift
         | DemoDungeonRoom::LanternGallery
@@ -3173,6 +3173,119 @@ mod tests {
             !matches!(outcome, TargetSolveOutcome::Solved(_)),
             "Wall-Jump-only search unexpectedly crossed the mixed Astral Seal: {outcome:?}"
         );
+    }
+
+    #[test]
+    fn astral_seal_checked_coin_route_alternates_then_commits_one_airborne_dash() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::AstralSeal)
+            .expect("Astral Seal has route metadata");
+        let room = demo_dungeon_room(spec.room, spec.inventory);
+        let mut replayed =
+            Simulation::enter_via_door(room, spec.inventory.abilities(), "west").unwrap();
+        replayed.enable_current_player_movement();
+        let actions = crate::demo_dungeon_witness_actions(spec.room);
+        let mut previous = downwards_core::Action::default();
+        let mut jump_presses = 0;
+        let mut accepted_jumps = 0;
+        let mut wall_sides = Vec::new();
+        let mut wall_jump_ticks = Vec::new();
+        let mut dash_positions = Vec::new();
+        let mut dash_ticks = Vec::new();
+        for (tick, action) in actions.into_iter().enumerate() {
+            jump_presses += usize::from(action.jump && !previous.jump);
+            previous = action;
+            let report = replayed.step(action);
+            for event in report.events {
+                assert!(
+                    !matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset),
+                    "the checked Astral Seal route must remain clean: {event:?}"
+                );
+                match event {
+                    SimulationEvent::Jumped(kind) => {
+                        accepted_jumps += 1;
+                        if let JumpKind::Wall { side } = kind {
+                            wall_sides.push(side);
+                            wall_jump_ticks.push(tick);
+                        }
+                    }
+                    SimulationEvent::Dashed { .. } => {
+                        dash_positions.push(replayed.player().bounds());
+                        dash_ticks.push(tick);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        assert!(
+            replayed
+                .collected_pickups()
+                .any(|pickup| pickup.id() == "dungeon-coin-63")
+        );
+        assert_eq!(
+            jump_presses, accepted_jumps,
+            "Astral Seal witness has jump spam"
+        );
+        assert!(
+            wall_sides.len() >= 4 && wall_sides.windows(2).all(|pair| pair[0] != pair[1]),
+            "Astral climb no longer alternates across the shaft: {wall_sides:?}"
+        );
+        assert_eq!(
+            dash_positions.len(),
+            1,
+            "Astral relay should use one deliberate Dash: {dash_positions:?}"
+        );
+        assert!(
+            dash_ticks[0] > *wall_jump_ticks.last().expect("wall ascent occurs"),
+            "Astral relay used Dash to assist its climb"
+        );
+        assert!(
+            (170..=185).contains(&dash_positions[0].x) && (25..=36).contains(&dash_positions[0].y),
+            "Astral Dash no longer commits across the upper starwell: {:?}",
+            dash_positions[0]
+        );
+    }
+
+    #[test]
+    fn astral_seal_coin_refuses_each_incomplete_traversal_loadout() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::AstralSeal)
+            .expect("Astral Seal has route metadata");
+        for (label, inventory) in [
+            (
+                "Wall-Jump-only",
+                DemoDungeonInventory {
+                    climbing_gloves: true,
+                    winged_boots: false,
+                    ..spec.inventory
+                },
+            ),
+            (
+                "Dash-only",
+                DemoDungeonInventory {
+                    climbing_gloves: false,
+                    winged_boots: true,
+                    ..spec.inventory
+                },
+            ),
+        ] {
+            let room = demo_dungeon_room(spec.room, inventory);
+            let mut initial = Simulation::enter_via_door(room, inventory.abilities(), "west")
+                .expect("Astral Seal west entry is valid");
+            initial.enable_current_player_movement();
+            let outcome = solve_target(
+                &initial,
+                SearchTarget::pickup("dungeon-coin-63"),
+                &SolverConfig::for_abilities(inventory.abilities()),
+            )
+            .unwrap();
+            assert!(
+                !matches!(outcome, TargetSolveOutcome::Solved(_)),
+                "{label} search unexpectedly collected the Astral coin: {outcome:?}"
+            );
+        }
     }
 
     #[test]

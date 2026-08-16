@@ -277,6 +277,16 @@ Dash through the keyhole, and four reversals. Its four strength-one families ret
 no positive. This room-local evidence complements rather than replaces the independent 64-coin and
 all-method ingress gate.
 
+The Astral Seal is the eighteenth replacement in v28. The old coin route took 137 ticks and 25
+spans, fired three of its five Dashes before the first Wall Jump, repeated a same-wall jump, and
+retained only 3/64 successes under strength-one Drop/Repeat noise. The replacement opens into a
+safe broad shaft, alternates four wall contacts with an explicit three-tick settle interval, lands
+on a small launch deck, and makes one airborne Dash over the backed hazard starwell to the coin
+deck. Its exact route takes 182 ticks and 14 spans with six accepted jump presses, four Wall Jumps,
+one Dash, and four reversals. The four strength-one families retain 23, 33, 39, and 58 successes out
+of 64. Same-budget Wall-Jump-only and Dash-only searches both have no coin positive; an independent
+full-loadout solve reaches the east door after collection.
+
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
 persistent item omission, additive mid-run Wall Jump and Dash state, gate rejection without room reset, client

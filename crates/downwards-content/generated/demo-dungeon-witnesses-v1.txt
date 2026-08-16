@@ -1,5 +1,5 @@
 schema downwards-demo-dungeon-witnesses-v1
-palette-generation 27
+palette-generation 28
 player-movement-policy 4
 tuning 110 72 203 50 50 250
 shaky-policy 64 18 2 2
@@ -2685,37 +2685,26 @@ room demo-dungeon.astral-seal
 entry west
 target pickup dungeon-coin-63
 abilities 1 1
-ticks 137
-observation 25 5 5 3 5 4
-shaky BoundaryTiming 33 64 0
-shaky CorrelatedTiming 24 64 0
-shaky HoldRelease 51 64 0
-shaky DropRepeatFrame 3 64 0
-span 1 1 0 1 0 1
-span 1 1 0 0 0 9
-span 1 0 1 0 0 4
-span 0 0 0 1 0 1
+ticks 182
+observation 14 6 6 4 1 4
+shaky BoundaryTiming 23 64 4
+shaky CorrelatedTiming 33 64 0
+shaky HoldRelease 39 64 4
+shaky DropRepeatFrame 58 64 0
+span 1 0 0 0 0 61
+span 1 0 1 0 0 1
 span 1 0 0 0 0 9
-span 1 -1 0 0 0 8
-span 0 1 0 0 0 3
-span 0 0 1 0 0 4
-span -1 -1 0 1 0 1
-span -1 -1 0 0 0 9
-span -1 0 1 0 0 4
-span 0 -1 0 0 0 10
-span 1 0 0 0 0 4
-span 0 0 0 0 0 4
-span -1 0 1 0 0 3
-span 1 -1 0 0 0 10
-span 0 0 1 0 0 1
-span 1 -1 0 0 0 12
-span 1 1 0 0 0 2
-span 0 0 0 1 0 1
-span 1 0 0 0 0 9
-span 1 -1 0 0 0 10
-span 0 0 0 1 0 1
-span 1 0 0 0 0 9
-span 0 -1 0 0 0 8
+span -1 0 1 0 0 1
+span -1 0 0 0 0 16
+span 1 0 1 0 0 1
+span 1 0 0 0 0 16
+span -1 0 1 0 0 1
+span -1 0 0 0 0 16
+span 1 0 1 0 0 1
+span 1 0 0 0 0 29
+span 1 0 1 0 0 6
+span 1 0 0 1 0 1
+span 1 0 0 0 0 23
 end
 route demo-dungeon.coin-loft
 room demo-dungeon.coin-loft
