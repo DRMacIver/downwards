@@ -1,0 +1,1783 @@
+[
+ {
+  "slug": "alloy-threshold",
+  "one_line": "A short left-to-right ground-level transit where you trot along a solid floor, hopping three small spike beds, with a couple of floating platforms overhead that mostly serve to lift you to the coin and the raised east doorway.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "hop over spikes",
+   "dash",
+   "precise-landing on one-way platform",
+   "drop-through"
+  ],
+  "structure": "Horizontal corridor, west-to-east, 32x18 with an almost entirely empty upper two-thirds; both doors are mid-height gaps (rows 14-16) reached via short one-way platforms at row 15 on each side; the traversal itself happens on the bottom floor.",
+  "hazards": "Three short spike beds (up-pointing, 3/3/2 tiles wide) sitting on the floor at roughly x=9-11, 17-19, 25-26; nothing else \u2014 no ceiling spikes, no shutters, no timing element. Each bed is a single jump or a dash to clear, with generous safe floor between them.",
+  "distinctive": "The huge empty vertical space: 8 rows of nothing above the action, with two isolated one-way platforms (row 12 mid, row 9 right) that lead nowhere and give the room a half-drawn feel. The one genuine beat is the coin tucked two tiles above the eastern exit platform.",
+  "sameyness_risk": "high",
+  "archetype_guess": "spike-floor hop corridor (horizontal transit room)",
+  "quality": 2
+ },
+ {
+  "slug": "annealing-spire",
+  "one_line": "You jog in along a bare basement corridor, then climb a narrow spiked chimney where the safe wall keeps flipping under you, top out over the divider, grab a coin tucked into the ceiling corner, and pick your way down an open right-hand hall past two spike beds to the east door.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "wall-jump chain",
+   "precise-landing",
+   "drop",
+   "dash"
+  ],
+  "structure": "Split by a full-height wall at column 18, joined only by a low open corridor across the floor (rows 14-16) and over the top (row 1). Travel: west door (low left) -> east along the basement -> vertical wall-jump chimney (cols 13-17, rows 2-13) -> across the ceiling rightward -> descending open arena on the right -> east door (low right). Net shape: a tall U with a mandatory ascent in the middle.",
+  "hazards": "No timed elements. Static spike walls line the chimney: right-facing spikes on its left wall at rows 8-9 and 12-13, left-facing spikes on its right wall at rows 10-11, so the clingable side alternates as you rise. Two up-facing spike beds on the right-hand floor (cols 21-22, 27-28) punish sloppy descents. One-way platforms (rows 4, 7, 10, 15) give bail-out ledges.",
+  "distinctive": "The chimney's safe cling side alternates three times on the way up, so the wall-jump chain is a read-ahead puzzle rather than a rhythm \u2014 you must commit to the correct wall before each kick instead of ping-ponging freely.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "alternating-spike wall-jump chimney with open descent arena",
+  "quality": 4
+ },
+ {
+  "slug": "ash-cache",
+  "one_line": "You drop in through a hole in the ceiling into a mostly-empty vault, hop up a scattered staircase of one-way platforms to snag the coin tucked above a small spike bed, then climb back out the same hole \u2014 a short, low-pressure detour with a lot of dead air around it.",
+  "movement_verbs": [
+   "drop",
+   "fall",
+   "run",
+   "jump",
+   "precise-landing",
+   "platform-hop",
+   "up-through one-way platform",
+   "wall-jump (optional, to re-exit)"
+  ],
+  "structure": "Dead-end pocket entered from the ceiling: a 32x18 box split by two full-height pillars (col 10 and col 17). The player enters via the ceiling gap at cols 14-17, falls into the narrow middle chute, then travels right/up through a loose diagonal of one-way platforms in the wide right chamber; the whole left third (cols 1-9) is an empty unused shaft. Net travel is down-then-back-up, ending where it began.",
+  "hazards": "Minimal: a single 3-tile up-spike bed on the floor at the bottom-right (row 17, cols 23-25), directly under the coin approach, so a missed landing off the small \"--\" ledge punishes you. No spike walls, no timing hazards, no shutters.",
+  "distinctive": "It is a true ceiling-entry dead-end vault \u2014 the only way in is also the only way out, so the room is a there-and-back coin errand rather than a traversal \u2014 but the layout itself (scattered one-way platforms plus one spike bed) is generic.",
+  "sameyness_risk": "high",
+  "archetype_guess": "ceiling-drop dead-end coin vault with one-way-platform re-ascent",
+  "quality": 2
+ },
+ {
+  "slug": "astral-seal",
+  "one_line": "You duck under a hanging pillar, wall-jump a narrow chimney all the way to the open ceiling, dash across the top of a full-height partition to snag a coin on a high ledge, then commit to a long drop into a spike-floored chamber, aiming for the one safe corner beside the gated east door.",
+  "movement_verbs": [
+   "run",
+   "crawl/duck under overhang",
+   "wall-jump chain",
+   "alternating left-right wall-jumps",
+   "airborne dash",
+   "precise-landing",
+   "controlled drop"
+  ],
+  "structure": "Left-to-right traversal built around a vertical detour: a low west corridor, a 4-tile-wide chimney shaft (between the hanging pillar at col 9 and the floor-to-y60 partition at col 14) that you climb ~7 tiles to the open upper third of the room, an overhead crossing eastward across ledge stubs, and then a tall open east chamber you must descend to the far-right corner. Effectively a U/n-shaped route: east low, up, east high, down.",
+  "hazards": "A single spike bed: 14 tiles of upward spikes filling the entire floor of the east chamber (cols 15-28), leaving only a 2-tile solid ledge at the far right by the exit door. No spike walls, no timed elements. All danger is in the descent-and-landing, not the climb.",
+  "distinctive": "The room is a lock in disguise: it demands *both* wall-jump and dash (a wall-only loadout is provably unable to cross), and its east door is coin-gated at 55, so the geometry, the ability check and the progression gate all coincide in one room. Mechanically the standout beat is that the reward for the climb is a one-way commitment \u2014 once you cross the partition roof the only way out is a drop over a full spike floor onto a two-tile ledge.",
+  "sameyness_risk": "low",
+  "archetype_guess": "chimney-ascent gate room (wall-jump shaft + overhead dash crossing + spike-floor descent)",
+  "quality": 4
+ },
+ {
+  "slug": "aurora-spire",
+  "one_line": "You jog across an empty entry hall, then climb a narrow four-tile chimney whose two walls are studded with anti-phased spikes so you must wall-jump on alternating safe bands, pop out on a top ledge, dash one clean gap right to the coin, and drop back down through a stack of one-way platforms over a long spike bed to the east door.",
+  "movement_verbs": [
+   "run",
+   "wall-jump chain",
+   "alternating wall-swap",
+   "dash",
+   "drop-through one-way platform",
+   "precise-landing"
+  ],
+  "structure": "Three-part left-to-right room: a wide empty west approach chamber (cols 1-11, west door at floor level), a tall 4-tile-wide vertical chimney in the middle (cols 14-17, climbed bottom-to-top), then a right-hand descent chamber (cols 20-30) where you work back down through stacked one-way platforms to the east door at floor level. Net travel: east, up, then east and back down.",
+  "hazards": "Spike-lined chimney: the left face (col 13) is spiked at rows 2-4, 8-10 and 14 with safe stone only at rows 6-7 and 12-13; the right face (col 18) is spiked at rows 6-7 and 11-13 with safe stone at rows 4-5 and 8-10. The two faces are deliberately anti-phased, so a continuous same-wall climb is fatal and you must swap sides at each band. In the right chamber a ten-tile upward spike bed (row 8, cols 18-27) sits under the descent line, with a single up-spike at the right end of the lower platform (row 11, col 30) punishing a sloppy landing. No timed/shutter hazards.",
+  "distinctive": "The anti-phased spike chimney: the safe stone on the two facing walls never overlaps vertically, so the climb reads as a forced left-right-left rhythm rather than a free wall-jump shaft \u2014 and the coin is gated behind exactly one horizontal dash off the top ledge, giving the room a clear two-beat identity (rhythm climb, then one committed dash).",
+  "sameyness_risk": "low",
+  "archetype_guess": "alternating spike-wall chimney ascent with a dash-gated top pickup and platform descent",
+  "quality": 4
+ },
+ {
+  "slug": "bell-niche",
+  "one_line": "You drop through the ceiling into a narrow stone chimney, fall twelve tiles to snatch coin 18 off the floor, then wall-jump the whole way back up the same shaft to leave the way you came \u2014 with two thirds of the room being empty hall you never touch.",
+  "movement_verbs": [
+   "drop",
+   "controlled fall",
+   "wall-jump chain",
+   "jump",
+   "precise-landing on one-way platform",
+   "run"
+  ],
+  "structure": "Dead-end cul-de-sac hanging off bell-switchback: a single ceiling door (cols 14-17) feeds a 5-tile-wide, 15-tile-deep vertical shaft walled by col 11 and col 17, sealed at row 17. Travel is down-then-back-up through the same throat. To the right of col 17 sits a large 13x16 empty hall with one stray one-way platform at row 9, and to the left of col 11 another 10-wide empty column; neither is on any route.",
+  "hazards": "None whatsoever \u2014 no spikes, no shutters, no moving parts. The only failure mode is a botched wall-jump chain that drops you back to the shaft floor for a retry, which costs nothing.",
+  "distinctive": "The shaft-bottom coin placement forces the ascent to be the real content: the exit is the door you entered by, so the room is a pure \"climb back out of the hole you jumped into\" test that hard-gates on the wall glove. The one-way platform at row 5 is a mid-shaft breather that quietly makes that climb safe.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "dead-end coin cache in a wall-jump chimney (drop-and-reclimb niche)",
+  "quality": 2
+ },
+ {
+  "slug": "bell-switchback",
+  "one_line": "You jog in along a wide open mid-height band, thread a narrow spike-flanked one-way gap in the floor down to the Bell Niche, then jog back out east \u2014 the tall half of the room above you never gets touched.",
+  "movement_verbs": [
+   "run",
+   "drop",
+   "drop-through one-way platform",
+   "precise-landing",
+   "jump",
+   "optional wall-jump chain"
+  ],
+  "structure": "Wide east-west corridor band across the lower-middle (row 14) of a 32x18 room, with a vertical branch down through the floor at cols 14-17; the upper two-thirds is tall dead space split by two full-height pillars (cols 10 and 13) forming a 2-tile chimney, plus a solid ledge and one-way shelf in the upper right. Travel is west-to-east, with a there-and-back detour downward.",
+  "hazards": "Two lone up-facing spikes (row 16, cols 13 and 18) bracket the floor exit; the one-way platform strip between them is the only safe drop lane. No spike walls, no timed elements. Density is very low and purely a framing device for the floor door.",
+  "distinctive": "The floor exit is a spike-bracketed slot you must line up on before committing to the drop. Otherwise almost everything in the room \u2014 the whole chimney and the upper-right platforms \u2014 is scenery you never interact with, and the room holds no coins of its own.",
+  "sameyness_risk": "high",
+  "archetype_guess": "three-way junction / fork hub with a gated floor drop",
+  "quality": 2
+ },
+ {
+  "slug": "blast-gallery",
+  "one_line": "A wide, airy hall where you enter mid-height from the west, hop a scattered zig-zag of one-way platforms up to a coin tucked under the top-right ledge, then fall back down to the east door \u2014 with a patch of ceiling spikes that quietly forbids the obvious straight-up jump.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "precise-landing",
+   "drop-through",
+   "dash"
+  ],
+  "structure": "Mostly empty 32x18 arena; nominal travel is west-to-east through mid-height doors (side-wall gaps at rows 14-16), with an optional vertical detour: five short one-way platforms staircasing left-right-left-right up to the top-right ledge, then a long free-fall back to the east exit platform.",
+  "hazards": "Two upward spike beds on the floor (cols 9-12 and 17-20) punishing missed drops in the lower middle, plus a 4-tile downward spike strip on the ceiling directly above the mid-right platform, which blocks the direct vertical continuation of the climb and forces a leftward hop to the row-7 platform before swinging right to the coin ledge.",
+  "distinctive": "The ceiling spikes sit exactly above the platform you'd instinctively jump straight up from, turning a plain staircase into a small S-shaped reroute; coin 35 at the top right is only reachable through that detour.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "open-arena one-way-platform climb with a coin detour (gallery/hall family)",
+  "quality": 3
+ },
+ {
+  "slug": "boots-vault",
+  "one_line": "You drop in from Crossroads below, then grind up a narrow three-tile spiked chute in a wall-jump chain, threading a band where spikes jut from both walls at once, to pop out at the top and claim the winged boots (dash) plus a coin before dropping into the right-hand chamber and leaving east.",
+  "movement_verbs": [
+   "drop",
+   "run",
+   "jump",
+   "wall-jump chain",
+   "precise-landing",
+   "hop across gap",
+   "controlled descent",
+   "dash (after pickup)"
+  ],
+  "structure": "Three vertical bays sharing a full-width bottom corridor (row 17): a large sealed empty box on the left (cols 1-12, unreachable dead volume), a tall 3-wide ascent chute in the centre (cols 15-17, rows 2-16), and an open right chamber (cols 19-30) with a ceiling shelf at row 5. Direction of travel is up the centre chute, then right and down; entry is the floor gap at cols 14-17 (from Crossroads), exit is the east opening at rows 14-16 (to Underpass).",
+  "hazards": "Spike walls only, no floor beds and no timers: right-pointing spikes stud the left wall of the chute at rows 2-5, 9-10 and 15-16, left-pointing spikes face them at rows 9-10, plus a downward spike in the ceiling at col 14. The rows 9-10 double-sided pinch is the crux \u2014 both walls are lethal simultaneously, so you must clear that band in one airborne beat rather than continuing the wall-jump chain through it.",
+  "distinctive": "The dash ability is locked behind a wall-jump-only spiked chimney: you earn the movement upgrade with the movement tool you already have, and the room is authored to be unenterable/unrewarding until the boots are taken (room gating on winged_boots).",
+  "sameyness_risk": "low",
+  "archetype_guess": "spiked wall-jump chimney ability vault (ascent chute + reward alcove)",
+  "quality": 4
+ },
+ {
+  "slug": "brake-tower",
+  "one_line": "A west-to-east ground transit interrupted by a single tall pillar you must ladder over on staggered one-way platforms, with an optional platform climb up the right side to a coin tucked near the ceiling.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "drop",
+   "precise-landing"
+  ],
+  "structure": "Wide open hall, primary travel west\u2192east along the floor, bisected by a 7-tile-tall solid pillar at column 18 that forces a short up-and-over; a secondary vertical ladder of platforms rises on the east half to a ceiling-level coin. Effectively an L: cross low, then climb.",
+  "hazards": "Almost none. One 3-tile up-spike patch on the floor immediately east of the pillar (cols 19-21), which only bites if you drop straight down off the pillar instead of carrying momentum east. Everything else is empty air with a solid floor to catch failed jumps.",
+  "distinctive": "The pillar-plus-spike-shadow pinch: the only moment with a real fail state is the landing choice coming off the pillar top, where the safe pad is a couple of tiles further east than the lazy drop.",
+  "sameyness_risk": "high",
+  "archetype_guess": "open-air platform ladder with an optional ceiling coin (dash-ladder / coin tower family)",
+  "quality": 2
+ },
+ {
+  "slug": "broad-chimney",
+  "one_line": "You walk in low from the west, run into a tall unbroken wall, and grind your way up a wide two-walled chimney to the ceiling before hopping down a staircase of one-way platforms to the east exit.",
+  "movement_verbs": [
+   "run",
+   "wall-jump chain",
+   "jump",
+   "drop-through",
+   "precise-landing"
+  ],
+  "structure": "Left-to-right transit with a big vertical detour: a low west corridor (rows 14-16) dead-ends against a full-height wall at col 17; between the col-10 and col-17 walls sits a 6-tile-wide open chimney you climb ~11 tiles to the open ceiling band (rows 1-2), cross east above the wall, then descend the right-hand chamber on six staggered one-way platforms to the east door at rows 14-16. Cols 1-9 are a large empty dead-space chamber with nothing in it.",
+  "hazards": "None at all \u2014 no spikes, no shutters. The only failure is losing a wall-jump chain and falling back to the floor for a free retry.",
+  "distinctive": "The 6-tile-wide chimney with two facing climbable walls \u2014 too wide to alternate comfortably, so it reads as a sustained single-wall ascent and is the room's one real ask; the coin (dungeon-coin-17, at 204,30) is parked high on the right, rewarding you for actually reaching the top rather than shortcutting.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "wall-jump ascent + platform-staircase descent transit room",
+  "quality": 3
+ },
+ {
+  "slug": "broken-aqueduct",
+  "one_line": "A wide, almost entirely empty hall you sprint straight through west-to-east, with one small step-up-and-hop over a short spike bed and a coin dangling above a floating platform as the only reason to slow down.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "one-way platform hop",
+   "precise-landing (optional, for the coin)"
+  ],
+  "structure": "Horizontal ground-level corridor/hall, 32x18, travelled west to east (doors are full 3-tile gaps in both side walls at floor level). The bottom wall is a single unbroken floor; the entire upper two-thirds is open air with five short one-way platforms scattered in a loose rising right-ward staircase (cols 5-8 and 14-21 low, 10-13, 15-18, 20-23 higher) that no route requires.",
+  "hazards": "A single up-facing spike bed, 5 tiles wide, sitting on a 1-tile-high block near mid-room (cols 14-18). Nothing else. It is clearable with an ordinary running jump, and the platform two tiles above it offers a second free line over the top, so the hazard is nearly optional.",
+  "distinctive": "The vertical emptiness: three-quarters of the room is unused air with decorative platforms leading nowhere, while the actual route is a flat floor run. The one coin (col ~20, above the long low platform) is the only thing that uses that space.",
+  "sameyness_risk": "high",
+  "archetype_guess": "flat-floor connector corridor with a token spike hop",
+  "quality": 1
+ },
+ {
+  "slug": "cinder-bridge",
+  "one_line": "A wide open hall you cross at floor level, but the coin bait pulls you into a rising staircase of tiny one-way platforms under a spiked ceiling, where each gap is too far to jump and must be dashed.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "precise-landing",
+   "drop",
+   "dash-to-platform-edge"
+  ],
+  "structure": "Wide 32x18 arena traversed west-to-east at the bottom (both doors are 2-tile gaps at rows 13-14), with an optional diagonal ascending relay of three short one-way platforms climbing left-to-right (cols 12-15 @ row 11, cols 20-23 @ row 8, cols 27-29 @ row 5) toward a coin in the top-right corner.",
+  "hazards": "Floor spike beds in three separated patches (cols 8-11, 16-19, 24-26) with a small 3-tile solid pillar between the first two; a band of downward spikes across the upper middle (cols 17-25, row 3) caps the arc over the second relay hop. No timed elements.",
+  "distinctive": "The coin sits tucked between the down-spike ceiling band and the topmost platform, so the last hop must be a flat dash rather than a jump \u2014 you can't arc into it.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "open arena with optional ascending dash-relay to a corner collectible",
+  "quality": 4
+ },
+ {
+  "slug": "climber-vault",
+  "one_line": "A calm, hazard-free open hall where you hop up a staircase of one-way platforms past a lone stone pillar to claim the climbing gloves tucked in the high-right alcove, then drop back down and stroll out east.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "drop-through one-way platform",
+   "precise-landing",
+   "wall-jump (first taste, on the central pillar)"
+  ],
+  "structure": "Wide 32x18 open cavern, west-to-east traversal with a rightward-and-upward staircase: a low platform at (3-8, r15), a mid platform at (11-15, r13), a 4-tile solid pillar at x=17 (r11-14), a platform at (18-22, r10), and the reward ledge at (24-28, r7); a ground-level ledge at (24-29, r15) catches the descent. Doors are floor-level gaps in both side walls (rows 14-15).",
+  "hazards": "None whatsoever \u2014 no spikes, no shutters, no pits. Failure means falling to the empty floor and re-climbing, with zero damage.",
+  "distinctive": "It is the glove vault: the climbing-gloves pickup sits at (254,44) on the top-right ledge, and the room is deliberately toothless so acquiring the ability is the whole event. The lone free-standing pillar at x=17 is the only vertical face in the room and reads as a \"try the new toy here\" surface.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "ability-pickup vault / ascending one-way-platform staircase",
+  "quality": 3
+ },
+ {
+  "slug": "coin-duct",
+  "one_line": "A wide, airy dead-end larder: you drop in through the ceiling, zigzag down a staircase of one-way platforms into a pocket under a right-hand overhang to grab a coin, then hop the same platforms straight back out.",
+  "movement_verbs": [
+   "drop",
+   "fall-through one-way platform",
+   "run",
+   "jump",
+   "precise-landing"
+  ],
+  "structure": "Single 32x18 open box entered through a ceiling gap (cols 14-17) with no other exit \u2014 a there-and-back vertical detour. Interior is a loose alternating-left/right staircase of five 4-5 tile one-way platforms (rows 4, 6, 8, 10, 12) spaced 2 tiles apart, opening into a large empty lower chamber; a solid overhang at row 15 covers the right third, with one more platform at row 16 leading into the pocket beneath it where the coin sits (tile ~29,16).",
+  "hazards": "Almost none: a single 2-tile up-spike bed on the floor at row 17, cols 14-15, directly under the entry column \u2014 a token punishment for falling straight down without steering, and easily avoided.",
+  "distinctive": "The room is essentially all air: the coin's pocket under the row-15 overhang is the only piece of real geometry, and it isn't defended by anything.",
+  "sameyness_risk": "high",
+  "archetype_guess": "optional coin cul-de-sac / drop-shaft with one-way platform staircase",
+  "quality": 2
+ },
+ {
+  "slug": "coin-loft",
+  "one_line": "You drop in through a ceiling chute into a big, mostly empty box, float down a scatter of one-way platforms to scoop coin 8, wander up the open left side for coin 9, then climb back out the way you came \u2014 nothing can hurt you and nothing can go wrong.",
+  "movement_verbs": [
+   "drop",
+   "drop-through one-way platform",
+   "run",
+   "jump",
+   "wall-jump (glove) to re-ascend",
+   "precise-landing (optional only)"
+  ],
+  "structure": "Dead-end 32x18 open hall entered from a narrow ceiling chute (cols 14-16, walled by col 13 and col 17 for the top 3 rows) that opens out into a single undivided room; travel is down-then-back-up, with a loose right-to-left descending staircase of one-way platforms (rows 7, 9, 11, 13, 15) and a lone 7-tile solid block at row 5 left. Same ceiling door in and out \u2014 it is a pocket off Crossroads, not a through-route.",
+  "hazards": "None. Zero spikes, no pits, no shutters; the floor is plain solid and every fall is survivable, so no failure state exists.",
+  "distinctive": "The entry chute with its one-way platform lid \u2014 the only committed geometry \u2014 is over in three seconds, after which the room is a large empty vault holding two unguarded coins (8 mid-air above the row-13 platform, 9 tucked beside the row-5 solid block).",
+  "sameyness_risk": "high",
+  "archetype_guess": "unguarded coin-cache pocket / open one-way-platform vault",
+  "quality": 1
+ },
+ {
+  "slug": "comet-run",
+  "one_line": "A flat west-to-east sprint over a 22-tile bed of upward spikes, where the only respite is a handful of scattered one-way platforms floating well overhead, so it plays as one long committed dash-and-jump gauntlet with almost nowhere safe to stop.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "precise-landing",
+   "drop-through"
+  ],
+  "structure": "Wide flat corridor, horizontal left-to-right travel; west and east doors both sit at the floor band (rows 14-17), with a mostly empty tall airspace above and sparse floating one-way platforms as the only footholds.",
+  "hazards": "A near-continuous upward spike bed across the floor (cols 6-27 of the bottom traversable row), plus a short downward-spike ceiling cluster (cols 21-27, high up) that punishes over-jumping on the right side. No timed elements.",
+  "distinctive": "The spike floor spans virtually the entire room while the safe platforms are 4-5 tiles above it and unevenly spaced (cols 11-12, 17-18, 24-25, 28-30), so the crossing is airborne and dash-dependent rather than a rhythmic hop chain \u2014 and the short one-way strip at the far west (cols 1-5) is the only real staging ground.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "spike-floor horizontal run / dash gauntlet",
+  "quality": 3
+ },
+ {
+  "structure": "Left-to-right (west door row 14 \u2192 east door row 14) horizontal traverse across a spike-bed floor, interrupted by a full-height pillar at column 17 that forces a vertical detour: a ~30px-wide wall-jump chimney between the col-13 wall and the pillar (rows 7-13), then a run along the top of a 5-tile ceiling shelf (row 8, cols 17-21), then a drop back down to the platform hops on the east side. Coin 55 hangs in a tall right-hand shaft (cols 25-30) just above the last platform.",
+  "hazards": "A near-continuous bed of upward spikes forms the floor (row 17, cols 7-16 and 18-28), leaving only a safe one-way platform strip on the far left (cols 1-6) and a solid ledge at cols 29-30. No spike walls, no timed elements \u2014 all danger is \"don't touch the ground\".",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "precise-landing",
+   "wall-jump chain",
+   "dash",
+   "drop"
+  ],
+  "one_line": "A spike-floor crossing that suddenly turns vertical: you hop one-way platforms east until a floor-to-ceiling pillar stops you, wall-jump chain up a narrow chimney to run along an overhead shelf, then drop back onto the platform chain and pop up a side shaft for the coin.",
+  "distinctive": "The col-17 pillar welded to the row-8 ceiling shelf: it makes a horizontal room briefly become a climbing room, and the 30px chimney beside it is the only way through, so the wall-jump is mandatory rather than optional.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "spike-floor platform-hop corridor with a mandatory mid-room wall-jump chimney",
+  "quality": 4,
+  "slug": "constellation-hall"
+ },
+ {
+  "slug": "cooling-duct",
+  "one_line": "A short dead-end side-pocket: you pop up through a one-way platform in the floor and zigzag left-right up three staggered ledges between two spike-faced pillars to grab coin 32 in the top-right corner, then drop back out the way you came.",
+  "movement_verbs": [
+   "jump",
+   "one-way pop-through",
+   "short horizontal hop",
+   "precise-landing",
+   "optional wall-jump (spiked faces punish it)",
+   "drop"
+  ],
+  "structure": "Roughly 32x18 chamber entered and exited through the same floor gap (cols ~14-17) \u2014 a bottom-up zigzag switchback climb, then a reversal back down. Two full-height pillars (col 10 rows 9-17, col 17 rows 4-14) split the space into a left alley, a central duct, and a right bay; three one-way ledges alternate sides (row 13 right, row 9 centre-left, row 5 right) so travel is up-and-alternating rather than a straight shaft. Dead end: only connection is floor to Foundry Fork's ceiling.",
+  "hazards": "Spike walls only, no floors or ceilings of spikes: right-pointing spikes on the left pillar's upper face (col 10, rows 5-8) and left-pointing spikes on the right pillar's inner face (col 17, rows 11-12). Both are on the inner walls of the duct, so they punish wall-grabbing or overshooting a hop but are entirely avoidable if you land cleanly on the one-ways. No timed elements. Effectively a zero-death room for a competent player \u2014 retry friction rather than threat, matching the assessment doc's \"light hazard / passable\" note.",
+  "distinctive": "Facing spike walls make the central duct a \"climb without touching the walls\" corridor \u2014 an inversion of wall-jump instinct \u2014 but the gaps are generous enough that the idea never bites.",
+  "sameyness_risk": "high",
+  "archetype_guess": "dead-end one-way-platform switchback coin closet with decorative wall spikes",
+  "quality": 2
+ },
+ {
+  "slug": "crossroads",
+  "one_line": "A calm, hazard-free four-way hub where you land in an open central chamber, pick a direction \u2014 walk out east or west, drop through the one-way floor hatch, or wall-jump up the narrow central chimney to the ceiling door \u2014 and grab a single coin on the way.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "drop-through one-way platform",
+   "wall-jump chain",
+   "climb"
+  ],
+  "structure": "Symmetric hub arena: a 4-tile-wide vertical chimney (cols 14-17) walled by pillars runs from the ceiling door down into an open lower chamber; left/right doors sit at mid-height (rows 14-16) with short one-way ledges leading to each, a central one-way platform bridges the middle, and the floor door is a one-way hatch directly below the chimney. Travel is omnidirectional.",
+  "hazards": "None \u2014 zero spikes, no timed elements, no fall danger.",
+  "distinctive": "It is a genuine 4-way junction (west/east/ceiling/floor) with mirror symmetry, and the ceiling route is a wall-jump chimney that gates progress on the glove; also advertises the 21-coin gate.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "symmetric four-way hub / junction breather room",
+  "quality": 3
+ },
+ {
+  "slug": "crosswind-chimney",
+  "one_line": "A west-to-east traverse that is really one big up-and-over: you run into a dead-end shaft, wall-jump your way ~13 tiles up a full-height divider, then pick your way back down the east side via two one-way platforms without dropping onto the spike bed at the bottom.",
+  "movement_verbs": [
+   "run",
+   "step-up",
+   "wall-jump chain",
+   "precise-landing",
+   "drop",
+   "jump"
+  ],
+  "structure": "Horizontal corridor (west door <-> east door, both at the low rows) interrupted by a vertical chimney: a full-height solid column at x=16 spanning rows 4-17 splits the room, with a shorter column at x=10 forming a ~5-tile-wide shaft on its west side. Travel is west -> up the shaft -> over the top (open rows 1-3) -> staged descent on the east half -> east door.",
+  "hazards": "A single spike bed on the floor of the east half (row 17, x=19-22, up-facing), positioned directly under the natural fall line from the top of the divider. No spike walls, no timed elements. It punishes a careless plummet rather than the climb itself.",
+  "distinctive": "The east descent is a designed staircase of one-way platforms (a long ledge at row 6, a shorter one at row 15 further east) that exists purely to steer you around the spikes below - the drop is a routing puzzle, not a freefall.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "up-and-over divider wall / chimney climb with staged platform descent",
+  "quality": 3
+ },
+ {
+  "slug": "crown-sanctum",
+  "one_line": "A big S-shaped victory lap: you wall-jump twelve tiles up a tight left shaft, run the ceiling gutter, drop down a blind chute, squeeze through a one-tile slot, then chimney back up over a full-width spike floor to the crown perched on a top-right shelf.",
+  "movement_verbs": [
+   "run",
+   "wall-jump chain",
+   "climb",
+   "controlled drop",
+   "dash",
+   "precise-landing",
+   "ledge hop"
+  ],
+  "structure": "Terminal single-door chamber, ~32x18, split by a full-height divider at col 18 into a left ascent shaft and a right chimney. Travel is a circuit: enter bottom-left (west door, rows 14-16), climb north up the col-1..6 shaft past the col-7 pillar, run east along the open ceiling band (rows 2-4) over the col-12 wall, drop south down the cols 13-17 chute to row 13, thread the single-tile slot under the col-18 divider, then ascend the right chamber's cols 19-27 chimney (col-23 pillar, col-28 wall) back to row 2 and hop east onto the crown shelf at cols 29-30.",
+  "hazards": "One hazard, used as the room's whole threat model: an unbroken spike bed along row 17 from col 13 to col 30 \u2014 the floor of the entire right half. Every mistake in the descent chute, the slot, or the final chimney drops you onto it. No timed shutters, no spike walls, and the left half is completely hazard-free.",
+  "distinctive": "It is the game's terminal room: no coins at all, one west door and no exit, and the only pickup is the crown (Rect 285,14) sitting on a small top-right shelf \u2014 so the whole space reads as a vertical lap of honour whose only failure state is the spike floor beneath it. The gating is authored (64 coins + both traversal abilities on the Gatehouse door), not geometric, so the geometry itself is a pure climbing gauntlet.",
+  "sameyness_risk": "low",
+  "archetype_guess": "divided twin-shaft ascent / finale climbing gauntlet over a spike floor",
+  "quality": 4
+ },
+ {
+  "slug": "crucible-climb",
+  "one_line": "You slip under a divider wall into a narrow 3-tile chimney whose two walls are spiked in alternating vertical bands, forcing a strict zig-zag wall-jump chain up ~14 tiles, then spill out into open air at the top and drop down the right-hand chamber onto one-way platforms to the east door.",
+  "movement_verbs": [
+   "run",
+   "crawl-under",
+   "wall-jump chain",
+   "alternating wall cling",
+   "jump",
+   "drop",
+   "precise-landing"
+  ],
+  "structure": "Three-zone left-to-right traverse with a vertical spine: a tall but empty left chamber (cols 1-9) at entry, a narrow enclosed chimney (cols 12-14) climbed bottom-to-top, and a large open right chamber descended to the east door. Net travel is east, but the path is up-then-down.",
+  "hazards": "Spike walls only, no floor spikes and no timed elements. Right-facing spikes on the chimney's left wall at rows 5-7 and 11-13; left-facing spikes on its right wall at rows 8-10 and 14-16. The safe wall therefore alternates in three-tile bands, so the ascent punishes clinging to the same side twice.",
+  "distinctive": "The staggered alternating spike bands inside the chimney: the geometry enforces a genuine left-right-left wall-jump rhythm rather than letting you hug one wall, and the safe side flips exactly at the cadence a natural chain wants \u2014 satisfying when read correctly, instantly fatal when mistimed.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "spike-lined wall-jump chimney (vertical glove-gated climb embedded in a horizontal traverse)",
+  "quality": 3
+ },
+ {
+  "slug": "crystal-bridge",
+  "one_line": "A wide-open hall you cross left-to-right by hopping three spike beds on the floor, with an optional diagonal staircase of five sparse one-way platforms climbing to a coin tucked under a row of ceiling spikes in the top right.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "precise-landing",
+   "drop"
+  ],
+  "structure": "Single-screen west-to-east corridor/arena: full-width open air, floor at the bottom, doors as tall gaps in both side walls at the bottom four rows. Layered above the floor is an ascending diagonal chain of one-way platforms (cols 3-6 @ y140, 11-13 @ y110, 18-20 @ y80, 25-27 @ y50, plus a stub at 28-29 @ y140), so the room reads as ground-level slalom + optional upward climb to the top-right corner.",
+  "hazards": "Three spike beds (up-facing, 4 tiles each) along the floor at cols 7-10, 14-17, 21-24, with safe gaps exactly beneath each platform; plus an 8-tile down-facing spike ceiling strip (cols 16-23) hanging in mid-air over the middle of the climb, which caps the airspace on the way to the coin.",
+  "distinctive": "The spike gaps in the floor sit directly under the platforms, so the ground route and the coin climb share the same rhythm of landing spots \u2014 and the floating down-spike bar forces the ascent to stay low and diagonal rather than jumping straight up.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "spike-floor hop corridor with an optional platform-staircase coin climb",
+  "quality": 3
+ },
+ {
+  "slug": "cullet-cache",
+  "one_line": "You drop in through the only door in the ceiling, steer past a bank of side-facing spikes on the way down, and then have to earn the whole descent back with wall-jumps and one-way platforms because the way in is also the only way out.",
+  "movement_verbs": [
+   "drop",
+   "air-steer",
+   "run",
+   "jump",
+   "wall-jump chain",
+   "one-way platform pop-up",
+   "precise-landing",
+   "dash"
+  ],
+  "structure": "Dead-end vault, 32x18, entered from the ceiling (gap at cols 14-17). Two full-height interior walls (col 10 rows 5-17, col 17 rows 3-13) split it into three vertical bands: a narrow middle shaft (cols 11-16) directly under the door, a wide right chamber (cols 18-30) laddered by one-way platforms at row 5 and row 13, and a tall sealed left pit (cols 1-9) reachable only by going over the col-10 wall at rows 2-4. Travel is down then back up the same room.",
+  "hazards": "Sparse: three left-facing spikes on the col-16 wall face at rows 8-10, positioned to punish hugging the right side of the middle shaft during the fall and the climb-out. No spike beds, no timed elements; the real hazard is geometry (the 12-tile left pit and the 8-tile gap between the row-13 and row-5 platforms).",
+  "distinctive": "It is a true one-door cache: the ceiling gap is entrance and exit, so the room is a there-and-back where the climb out is the actual challenge, and the col-17 wall exists mainly as a wall-jump ladder between the two one-way shelves.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "one-door dead-end coin vault / drop-in-and-climb-out chamber",
+  "quality": 3
+ },
+ {
+  "slug": "cullet-fork",
+  "one_line": "You walk in from the west, cross a short ledge, and either drop through a one-way slot in the floor to the Cullet Cache or hop a two-tile spike pair and keep walking east \u2014 the whole upper two-thirds of the room, with its platforms and ceiling spikes, is scenery you never touch.",
+  "movement_verbs": [
+   "run",
+   "single jump (one spike hop)",
+   "drop-through a one-way platform"
+  ],
+  "structure": "Wide horizontal junction box, 32x18, but only the bottom three rows are live: west door (rows 14-16) \u2192 floor ledge \u2192 east door (rows 14-16), with a third exit straight down through a 4-tile gap in the bottom wall. Travel is left-to-right with an optional downward branch.",
+  "hazards": "Essentially none in play: one 2-tile up-spike pair (^^) mid-floor that a normal jump clears, plus a 5-tile ceiling spike cluster (vvvvv) at row 6 that sits in dead airspace. The drop slot's lips are unspiked, so committing to the descent costs nothing.",
+  "distinctive": "The three-way branch itself (west/east/floor to a coin cache) \u2014 but it is presented as a free choice with no cost on any arm, so mechanically nothing distinguishes it.",
+  "sameyness_risk": "high",
+  "archetype_guess": "flat-floor three-way junction with drop-through slot and decorative upper story",
+  "quality": 1
+ },
+ {
+  "slug": "current-fork",
+  "one_line": "A wide, mostly empty hall you walk straight across from the west door to the east door in a couple of seconds, unless you choose to sidestep into the narrow central floor slot and drop to the Coin Duct below.",
+  "movement_verbs": [
+   "run",
+   "drop",
+   "short hop",
+   "precise-landing (only for the drop slot)"
+  ],
+  "structure": "A 32x18 open arena crossed horizontally: a full-width open band at rows 14-16 links the west and east side doors, with a 4-tile floor gap (cols 14-17) in the bottom wall as a third, downward exit. Everything above row 13 is empty air with two orphan one-way platforms (row 8 right side, row 12 centre) that the main route never needs.",
+  "hazards": "Two single up-facing spikes embedded in the floor lips immediately flanking the drop slot (row 17, cols 12 and 19). They only matter if you approach the hole badly or try to climb back out onto the ledge; the horizontal route never touches them. No spike beds, walls, or shutters.",
+  "distinctive": "The three-way branch (west / east / straight down) with the spiked lips making the descent the one committed choice \u2014 but the branch is the entire content, and there is no coin or pickup anywhere to reward exploring it.",
+  "sameyness_risk": "high",
+  "archetype_guess": "three-way junction / traversal hub with a spiked floor-drop slot",
+  "quality": 2
+ },
+ {
+  "slug": "dash-chasm",
+  "one_line": "A wide, mostly empty hall whose floor is a spike bed: you sprint off the west ledge, dash a 60px gap onto a three-tile island in the middle, then repeat the same dash to the east ledge, with a spike bank overhead keeping the arc flat.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "precise-landing"
+  ],
+  "structure": "Wide flat west-to-east corridor along the bottom of a 32x18 box; safe ground on the solid bottom row at x0-8 and x24-31, a 15-tile spike bed between them broken only by a 3-tile one-way platform island at x15-17. West and east doors both sit at floor level (rows 13-16). The upper two thirds of the room is completely empty, unused space.",
+  "hazards": "Up-spikes fill the floor either side of the mid island (x9-14 and x18-23); a matching bank of down-spikes hangs at row 6 over the same span, capping the arc height. No shutters, no moving parts.",
+  "distinctive": "It is a pure dash gate rather than a puzzle \u2014 two identical 60px spike gaps that a jump alone cannot clear, existing to prove you have the dash. demo_dungeon.rs even carries a test asserting no wall-jump-only route exists under the same search budget. No coins, no pickups; only west (Climbers' Gallery) and east (Gale Landing) doors.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "flat spike-bed dash-gap crossing (dash-gate corridor)",
+  "quality": 2
+ },
+ {
+  "slug": "dash-seal",
+  "one_line": "A short west-to-east ground run that ends at a narrow, fully spike-lined pit you must dash across to reach the gated east door \u2014 one committed leap under a big, mostly empty ceiling.",
+  "movement_verbs": [
+   "run",
+   "dash",
+   "jump",
+   "precise-landing",
+   "drop"
+  ],
+  "structure": "Wide horizontal corridor along the bottom (rows 14-17) travelling west to east, with a large empty two-chamber hall above it split by a vertical wall at col 21 and a couple of one-way platforms on the right; the only real play is the floor-level ledge-gap-ledge sequence.",
+  "hazards": "One three-tile gap between the two floor ledges, lined on every surface: right-facing spikes on the left wall of the pit, left-facing spikes on the right wall, up-spikes on its floor. A row of down-spikes hangs in the left upper chamber but sits far above the travel line and is easy to ignore. No timed hazards.",
+  "distinctive": "The pit is a mouth of spikes \u2014 walls and floor all hostile \u2014 so there is no \"clip the edge and recover\" outcome; combined with the east door needing 24 coins and the dash itself, it reads as a deliberate skill-check seal for the dash region.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "gate/seal room: single spike-pit dash gap guarding a region door",
+  "quality": 3
+ },
+ {
+  "slug": "eclipse-fork",
+  "one_line": "You walk in from the west onto a completely flat, hazard-free floor, jog straight to the east door in a couple of seconds, and the only other thing to do is wall-jump up a short 4-tile chimney into a huge empty box of dead air where the ceiling door hangs unreachably far above you.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "wall-jump chain"
+  ],
+  "structure": "Wide rectangular box, 32x18. Travel is primarily horizontal west\u2192east along an open 3-tile-tall floor strip (rows 14-16) that spans the whole width unobstructed. Two short vertical pillars (col 11 and col 16, rows 8-14) hang down from mid-height, forming a 4-tile-wide (40px) chimney between them plus a small ledge (row 8, cols 16-19); above row 8 the entire upper two-thirds of the room is one empty 30x7 hall with the ceiling door gap at cols 14-17.",
+  "hazards": "None whatsoever \u2014 not a single spike tile, no shutters, nothing that can kill you.",
+  "distinctive": "The vertical \"fork\" branch is broken/vestigial: the chimney tops out at row 8 and the ceiling door is ~70px above open, featureless air with jump rise ~40px and no walls to chain off, so the advertised third exit reads as unreachable from the grid.",
+  "sameyness_risk": "high",
+  "archetype_guess": "flat horizontal transit hall with a token wall-jump chimney (three-door junction room)",
+  "quality": 1
+ },
+ {
+  "archetype_guess": "dead-end coin vault: descend-and-return shaft hugging a spike wall",
+  "distinctive": "A full-height (rows 6-17) right-facing spike wall on column 24 that forms one side of the narrow platform-ladder shaft holding the coin \u2014 every drop and every climb-out is taken with spikes at your shoulder.",
+  "hazards": "A single continuous vertical spike wall (12 tiles of '>' on col 24) facing east into the right-hand shaft; no spike beds, ceilings or shutters. All danger is lateral proximity while dropping through and re-climbing the one-way platform ladder.",
+  "movement_verbs": [
+   "drop",
+   "run",
+   "jump",
+   "precise-landing",
+   "drop-through one-way platforms",
+   "wall-jump chain",
+   "dash"
+  ],
+  "one_line": "You fall in through the ceiling into a big empty hall, sprint right, then thread down a narrow platform ladder pinned against a tall spike wall to grab the coin at the bottom \u2014 and have to climb the same spiked shaft back out, since this room is a dead end.",
+  "quality": 2,
+  "sameyness_risk": "high",
+  "slug": "ember-vault",
+  "structure": "Two-part room: a wide, near-empty 22-tile-wide left hall (only a few short floating '#' ledges at rows 8, 11, 14, 17 that nothing forces you to use) and a narrow 6-tile-wide right shaft running the full height, rungs of one-way platforms alternating left/right. Travel is down-then-right-then-down, and back up the same way. Single opening: a ceiling gap at cols 14-17 leading to Split Furnace; no floor or side doors."
+ },
+ {
+  "slug": "foundry-fork",
+  "one_line": "A wide, empty hall where you drift in from one open side, hop up a lazy zigzag of three floating one-way platforms, and pop out the ceiling \u2014 never once threatened by anything.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "drop-through one-way platform",
+   "offset-landing jump",
+   "short dash to cover horizontal offset"
+  ],
+  "structure": "Wide 32x18 arena/junction: an open low corridor band (rows 14-16) crossing west-east with a one-way platform at each end, two low floor bumps, and above it an open sky with three staggered one-way ledges (row 12 centre-left, row 9 right, row 6 centre) forming a zigzag ascent to a ceiling door at cols 14-17. Travel is both lateral (W<->E) and upward.",
+  "hazards": "None whatsoever \u2014 no spikes of any kind, no shutters, no pits (the floor is fully solid). Zero fail states short of missing a ledge and falling back to the floor.",
+  "distinctive": "It is a three-way junction (west, east, ceiling) whose upward branch is a free-form zigzag over a huge empty vault \u2014 the emptiness is the identity, and it reads as breathing room rather than a challenge.",
+  "sameyness_risk": "high",
+  "archetype_guess": "hazardless three-way junction hub with staggered one-way platform ascent",
+  "quality": 2
+ },
+ {
+  "slug": "foundry-seal",
+  "one_line": "A left-to-right traverse that stalls at a narrow spiked chimney: you wall-jump up a five-tile-wide flue past spikes that alternate left and right wall, then pop into a tall vault to snag the gate coin before dropping out the east side.",
+  "movement_verbs": [
+   "run",
+   "drop",
+   "wall-jump chain",
+   "precise-landing",
+   "jump",
+   "dash"
+  ],
+  "structure": "Three vertical compartments separated by full-height walls, joined only along the open bottom two rows: a wide dead-ish left hall (cols 1-9) with a one-way ledge, a tall narrow wall-jump flue (cols 11-15) rising the whole room height, and a vault chamber (cols 17-24) holding the coin, then a plain right shaft to the east door. Travel is west-to-east at floor level with one mandatory-feeling vertical excursion up the flue and back down.",
+  "hazards": "Sparse and mostly decorative: two right-facing spikes on the flue's left wall (rows 6, 10) and two left-facing spikes on its right wall (rows 8, 12), forcing a staggered rather than metronomic wall-jump chain; a short up-spike bed (cols 12-14) in the floor pit below the flue; a row of down-spikes under the vault's ceiling that you pass beside, not through. Nothing sits on the actual through-route, so a fumble usually costs a re-climb rather than a life.",
+  "distinctive": "The alternating left/right wall spikes in the flue: they break the rhythm of the wall-jump chain so you must swap sides on a specific beat instead of hammering the same two walls. That, plus coin 39 being the gate key for the east door, is the room's whole identity.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "spiked wall-jump chimney with side-vault coin detour",
+  "quality": 3
+ },
+ {
+  "slug": "furnace-lift",
+  "one_line": "A wide, mostly empty hall you cross at floor level between two side doors, or \u2014 if you want the ceiling exit \u2014 zig-zag up six scattered one-way platforms over two spike beds, with each hop offset far enough sideways that a missed landing drops you all the way back to the spikes.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "drop-through",
+   "precise-landing",
+   "pop-up through one-way"
+  ],
+  "structure": "32x18 open arena with a solid floor, functioning as a three-way junction: west and east doors at row 14 (a flat, near-instant left-right traverse) plus a ceiling door at cols 14-17. The optional/route-target ascent is a right-then-left slalom up a staircase of one-way platforms (cols 4-8 @r15 \u2192 12-17 @r12 \u2192 21-26 @r9 \u2192 14-18 @r7 \u2192 14-18 @r4 \u2192 ceiling gap), with a second r15 platform at cols 26-29 giving an alternate start from the east door.",
+  "hazards": "Two short spike beds on the floor (row 17, cols 9-12 and 19-22), upward-pointing only. They sit directly under the middle of the climb, so they punish falls rather than gating any path \u2014 the horizontal traverse walks past them untouched.",
+  "distinctive": "The lateral offsets: the r12\u2192r9 and r9\u2192r7 hops swing you ~9 tiles right then ~7 back left, so the climb reads as a genuine zig-zag rather than a straight ladder, and the top two platforms stack directly under the ceiling gap for a clean finishing double-hop.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "one-way-platform ascent junction over a spike floor",
+  "quality": 3
+ },
+ {
+  "slug": "gale-landing",
+  "one_line": "A quick left-to-right hop across two one-way ledges and a single stepping-stone platform floating over a spike bed, all crammed into the bottom four rows of a room whose upper two-thirds is a vast, completely empty void.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "precise-landing",
+   "drop-through"
+  ],
+  "structure": "Wide horizontal corridor, west-to-east, played entirely in the bottom band (rows 14-17): left one-way platform (cols 3-9), a raised stepping-stone platform (row 12, cols 13-17) offset upward, then a right one-way platform (cols 23-29). Doors are full-height gaps in the west and east walls at rows 14-16. Rows 1-11 are entirely empty air with no content.",
+  "hazards": "A single upward spike bed on the floor (row 17, cols 10-22) sitting directly under the central gap \u2014 the only hazard, and the only thing making the two dashes matter.",
+  "distinctive": "The dramatic wasted space: ~two-thirds of the 32x18 grid is dead empty air, and the actual room is a thin ribbon along the bottom. The one real idea is the up-then-down rhythm of the offset middle platform.",
+  "sameyness_risk": "high",
+  "archetype_guess": "spike-pit gap-crossing corridor (one-way ledges + stepping stone)",
+  "quality": 2
+ },
+ {
+  "slug": "gatehouse",
+  "one_line": "A deliberate breather: you walk in from the west, hop up two broad stone steps onto the crest of a ziggurat beneath a hollow stone gate-block, then step down the far side to the 64-coin crown door \u2014 no hazards, no failure, just a processional approach to the finale.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "step-up",
+   "drop",
+   "optional one-way platform hop"
+  ],
+  "structure": "Symmetric west-to-east crossing over a three-tier stepped ziggurat/mound (rows 16-17 widest, 14-15 narrower, 12-13 crest), with doors as bottom-left and bottom-right wall gaps at the same height; a hollow 6x7 stone blockhouse floats above the crest like a gate arch, and a ladder of one-way platforms occupies the empty upper-left third entirely off-route.",
+  "hazards": "None whatsoever \u2014 zero spikes, zero pits, zero timing. The only \"gate\" is the authored 64-coin requirement on the east door (DEMO_DUNGEON_CROWN_GATE_REQUIREMENT), plus an ALL_CURRENT traversal-methods flag that the geometry itself never enforces.",
+  "distinctive": "The ziggurat-plus-floating-gatehouse silhouette: architecture doing the storytelling instead of mechanics, and a room whose test suite explicitly asserts the route cannot die and needs neither wall-jump nor dash.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "Ceremonial hazard-free gate antechamber / stepped processional approach",
+  "quality": 3
+ },
+ {
+  "slug": "gear-gallery",
+  "one_line": "You come in low on the west floor, jog east and hop a token spike pair onto a small ledge, then do the room's real work \u2014 an eleven-tile wall-jump climb up the face of a tall pillar inside a five-wide chimney \u2014 mantle over the top for a free coin, and then just fall down the wide-open east half, ticking two platforms on the way to the exit.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "precise-landing",
+   "wall-jump chain",
+   "mantle",
+   "drop",
+   "platform-tapping descent"
+  ],
+  "structure": "Left-to-right traversal with an up-and-over profile: low western floor run (cols 1-11, entirely empty), a 1-tile ledge step at col 12, a 5-tile-wide vertical chimney between the col-12 pillar (rows 3-13) and the col-18 pillar (rows 5-16) climbed to the ceiling, then a large open east chamber fallen down through to the east door. Both doors are 3-tile-tall openings at rows 14-16, so entry and exit are at the same low height while the path arcs to the top of the room.",
+  "hazards": "Minimal: a single pair of upward spikes (row 16, cols 14-15) sitting on the raised ledge in front of the climbing wall. One easy hop clears them. No spike walls, no shutters, and the entire east half and the whole climb are hazard-free \u2014 the danger is falling, not dying.",
+  "distinctive": "The tall enclosed chimney between two offset pillars: a ~110px climb that far exceeds a 40px jump and must be chained on the pillar face, with a mid-height rest platform (row 7) and a mantle onto the row-4 platform at the top. It's an unusually committed vertical section for a room whose doors are both at floor level.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "side-entry chimney climb with a free-fall return leg (up-and-over corridor)",
+  "quality": 3
+ },
+ {
+  "slug": "glass-gallery",
+  "one_line": "A long empty runway ends in a sealed wall you must wall-jump thirteen tiles up a narrow chimney, crest near the ceiling, and then pick your way back down an open east face past a small cluster of hanging spikes to the exit.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "wall-jump chain",
+   "precise-landing",
+   "drop",
+   "dash"
+  ],
+  "structure": "West-to-east traversal in three beats: flat run east, vertical 5-tile-wide chimney climb between two full-height walls (cols 12 and 18), then a descending platform staircase down the open east half to the east door. Effectively an up-and-over rather than a corridor.",
+  "hazards": "Minimal: a single floating bed of four downward spikes at y=11 under the upper east one-way platform, punishing a lazy straight drop. No spikes anywhere in the climb, no timed elements.",
+  "distinctive": "The room is a disguised wall: a full-height barrier forces a ceiling-height crossover, and the coin sits right at the crest so the \"optional\" prize is really just the apex of the mandatory route.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "wall-jump chimney crossover with staircase descent",
+  "quality": 3
+ },
+ {
+  "archetype_guess": "gated wall-jump climb chamber / vertical coin vault",
+  "distinctive": "A ceiling bed of downward spikes (row 10, cols 18-24) hangs across the tall right-hand bay with only narrow gaps at each side wall, so the climb to coin 51 must be threaded up one edge rather than straight up the middle.",
+  "hazards": "Single hazard: one horizontal row of downward-pointing spikes forming a partial ceiling mid-bay; no spike floors, no walls of spikes, no timed elements. Punishes drifting toward the centre of the shaft during a wall-jump chain.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "wall-jump chain",
+   "precise-landing",
+   "drop",
+   "dash"
+  ],
+  "one_line": "You run east along a low floor corridor, then break upward into a tall pillar-divided chamber and wall-jump a long chain up one side of a spike-fanged ceiling to snag the coin before dropping back to a coin-locked east gate.",
+  "quality": 3,
+  "sameyness_risk": "medium",
+  "slug": "glass-seal",
+  "structure": "Wide room split by three full-height solid pillars (cols 10, 16, 26) into a dead left block, a narrow 5-wide shaft, a tall 9-wide main bay, and a 4-wide right shaft; travel is west-to-east along the open bottom rows with a vertical detour up the main bay. Small sub-floor pockets under the bottom corridor and a couple of one-way platforms (row 15 left, row 15 right, row 7 in the bay)."
+ },
+ {
+  "slug": "glass-threshold",
+  "one_line": "A short, mostly flat left-to-right sprint along the bottom strip of a mostly empty room, hopping three beds of floor spikes via a couple of one-way platforms and popping up onto a small ledge stack near the east wall to snag a coin before the exit.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "drop-through one-way platform",
+   "precise-landing",
+   "short hop over spike bed"
+  ],
+  "structure": "Horizontal corridor, travelling west to east; doors are gaps in both side walls in the lower band (rows 14-17). The upper two-thirds is a large open cavern with scattered floating blocks and two one-way platforms that the route never touches.",
+  "hazards": "Three short upward-spike beds on the floor row (cols 8-10, 16-19, 25-27) with generous safe gaps between them; no ceiling spikes, no side spikes, no timed elements.",
+  "distinctive": "The coin-40 detour: a two-tile solid nub at col 25-26 plus the one-way platform at cols 27-29 form a tiny staircase against the east wall column, letting you hop up over the last spike bed to the coin instead of running straight past it.",
+  "sameyness_risk": "high",
+  "archetype_guess": "spike-floor hop corridor with an optional low-height coin perch",
+  "quality": 2
+ },
+ {
+  "slug": "gravity-lift",
+  "one_line": "A calm, hazard-free zig-zag climb: sprint the length of each shelf, then dash-and-wall-kick up through a narrow slot at the alternating end, three times, before stepping out the ceiling hatch.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "wall-jump",
+   "precise-landing",
+   "drop"
+  ],
+  "structure": "Vertical switchback ascent: three near-full-width horizontal shelves (rows 6, 10, 14) stacked 4 tiles apart, each with its opening at the opposite end (right, left, right), so travel alternates east-west while the net direction is upward from the bottom corridor to a ceiling exit gap at the top centre.",
+  "hazards": "None at all \u2014 no spikes of any kind anywhere in the grid. The only failure mode is missing a rise and falling back a tier, which costs time rather than a life.",
+  "distinctive": "Single-tile nubs hanging above each shelf opening (row 5 col 27, row 9 col 4, row 13 col 27) turn each switchback into a tight slot: the 4-tile rise is right at the ceiling of a plain jump, so you must dash into the gap and kick off the end wall to clear the lip. That repeated dash+kick-through-a-letterbox is the room's whole identity.",
+  "sameyness_risk": "high",
+  "archetype_guess": "switchback lift shaft (alternating-end shelf climb)",
+  "quality": 3
+ },
+ {
+  "slug": "hammer-hall",
+  "one_line": "A wide west-to-east dash crossing over a spike bed, hopping off a single tiny mid-air platform, with a tall empty hall above hiding a coin you must wall-climb the right wall to reach.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "precise-landing",
+   "wall-jump chain",
+   "drop"
+  ],
+  "structure": "Wide horizontal corridor traversed west to east across the lower fifth of the room; the upper two-thirds is one large empty vault used only for the optional vertical detour up the east wall.",
+  "hazards": "A single 13-tile upward spike bed (row 17, cols 10-22) covering the whole floor between the two entry ledges; no spike walls, no timed elements. Failure is a fall into it, not a mistimed hazard.",
+  "distinctive": "The lone 5-tile one-way platform (row 12) is the only foothold across the spike bed and sits above the ledges, so the crossing is an up-then-down dash rhythm rather than a flat hop; the coin at (264,60) sits ~90px above the east ledge in otherwise wholly empty air, making it a pure wall-jump-chain reward gated on the glove.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "spike-floor gap crossing with a single mid-air stepping stone",
+  "quality": 3
+ },
+ {
+  "slug": "hollow-landing",
+  "one_line": "A wide empty spawn hall where you land, stroll right, optionally hop a four-step staircase of floating platforms for the game's first coin, and step out the east door \u2014 nothing can go wrong.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "drop",
+   "step-up"
+  ],
+  "structure": "A single 32x18 open box, essentially an empty rectangle, with left-to-right travel: solid floor along the bottom, one solid 4x2 block near the right wall acting as a step, and the only exit a 2-tile east door gap at mid-low height. Nine-tenths of the volume (the entire upper two-thirds) is unused air.",
+  "hazards": "None whatsoever \u2014 no spikes of any kind, no shutters, no pits. The floor is unbroken wall-to-wall.",
+  "distinctive": "It is the game's opening screen and the coin-0 platform staircase is a genuinely optional detour off the exit path \u2014 the room can be beaten by walking right and never leaving the floor.",
+  "sameyness_risk": "high",
+  "archetype_guess": "empty walk-through connector / spawn antechamber",
+  "quality": 1
+ },
+ {
+  "slug": "hot-glass",
+  "one_line": "A wide-open east-west transit room whose real content is an optional-feeling but route-critical zigzag dash climb up four staggered one-way platforms to a coin tucked in the top-right corner, with a spike floor waiting for every miss.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "dash-chain",
+   "drop-through one-way platform",
+   "precise-landing",
+   "direction-reversal mid-climb"
+  ],
+  "structure": "Wide 32x18 hall, primary travel west-to-east along the bottom (door gaps in both side walls at rows 14-16); secondary vertical zigzag staircase climbing from the bottom-left platform up-right, back-left, then up-right again to the top-right corner. The middle-left two-thirds of the volume is empty air.",
+  "hazards": "Two spike beds on the floor (x8-11 and x16-19, upward-facing) covering roughly a quarter of the ground, plus a 5-tile bed of downward spikes hanging at row 7 (x17-21) directly above the mid one-way platform, so the climb has a ceiling threat as well as a floor threat.",
+  "distinctive": "The overhead spike bed sitting right over the platform you must land on mid-climb: it forces you to land and immediately exit sideways rather than jump straight up, turning a routine platform ladder into a committed direction-reversal.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "dash-chain platform ascent over a spike floor (coin-in-the-corner detour room)",
+  "quality": 4
+ },
+ {
+  "slug": "landing-chain",
+  "one_line": "A left-to-right ground-floor walk where a ten-tile spike bed forces a couple of easy hops across two one-way platforms before you stroll out the east door, with a whole cathedral of unreachable pillars and ledges hanging decoratively overhead.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "short hop",
+   "platform landing",
+   "drop"
+  ],
+  "structure": "Wide horizontal corridor, west door to east door, played entirely in the bottom 4 rows (13-16) of an 18-row room; upper 12 rows are open but functionally dead space with hanging pillars (cols 9, 15) and three floating one-way ledges.",
+  "hazards": "A single upward spike bed on the floor, row 16, columns 17-26. No spike walls, no timing hazards. The west platform strip (cols 3-7) sits over bare floor and guards nothing.",
+  "distinctive": "The mismatch between the tiny gameplay strip and the elaborate, entirely unreachable upper structure \u2014 the room is built like a hall and played like a hallway.",
+  "sameyness_risk": "high",
+  "archetype_guess": "spike-bed hop corridor (flat transit room)",
+  "quality": 2
+ },
+ {
+  "slug": "lantern-gallery",
+  "one_line": "A calm, hazard-free junction hall where you either stroll straight through the wide-open bottom corridor or peel off upward and hop a zigzag ladder of one-way platforms to the ceiling exit.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "jump-through one-way platform",
+   "short hop",
+   "landing on narrow ledges"
+  ],
+  "structure": "Wide open arena/hall, 32x18. The bottom four rows (14-17) are entirely wall-free, forming a tall west-east through-corridor across the floor. Above it floats a staggered zigzag of one-way platforms \u2014 left low (r15 c4-9), centre (r12 c12-18), right (r9 c21-26), back left-centre (r7 c14-18), then directly above (r4 c14-18) \u2014 leading to a 4-tile ceiling gap at c14-17. A second one-way at r15 c25-29 is decorative/off-route. Travel is west-east horizontally and a switchbacking ascent vertically.",
+  "hazards": "None whatsoever. No spikes, no pits, no shutters, no timing elements. Failure means falling back to the floor and re-climbing, never death.",
+  "distinctive": "The bottom band has no side walls at all \u2014 the west and east doors are a full four tiles tall \u2014 so the \"room\" reads as an open gallery you pass through, with the climb sitting overhead as an optional branch to the Watchpost above.",
+  "sameyness_risk": "high",
+  "archetype_guess": "three-way junction hall with a one-way-platform zigzag ascent",
+  "quality": 2
+ },
+ {
+  "slug": "lattice-climb",
+  "one_line": "A left-to-right room whose only path is a narrow 4-tile chimney whose two walls are spiked in alternating vertical bands, so the ascent is a forced rhythm of switching wall-jump sides at exactly the right heights, followed by a relaxed run east along the ceiling gallery and a free drop to the exit.",
+  "movement_verbs": [
+   "run",
+   "wall-jump chain",
+   "side-switch wall-jump",
+   "precise-landing",
+   "drop",
+   "jump"
+  ],
+  "structure": "Three-beat left-to-right room: enter west into a low open floor chamber (cols 0-15, rows 14-16), climb the vertical shaft between the col-12 pillar and the col-17 wall (cols 13-16, rows 5-13), exit over the top into an open upper band (rows 2-3) that runs east, then descend the tall right-hand chamber (cols 18-30) past one-way platforms at row 15 to the east door. Net travel east, with a big U-shaped up-over-down detour.",
+  "hazards": "Two facing spike walls only, arranged in interlocking bands: right-facing spikes on the left wall at rows 5-7 and 11-13, left-facing spikes on the right wall at rows 8-10 and 14-16. No floor spikes, no ceiling spikes, no timed elements. The spikes never block progress outright; they dictate which wall is legal to touch at each altitude.",
+  "distinctive": "The alternating spike banding turns a generic chimney into a read-ahead puzzle: you cannot spam one wall or ping-pong freely, you must grip left-clean/right-clean/left-clean in sequence, and the band boundaries fall roughly one jump-rise apart so each transition is a committed swap rather than a recovery.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "spike-banded wall-jump chimney (mandatory vertical gate on a horizontal route)",
+  "quality": 4
+ },
+ {
+  "slug": "lens-niche",
+  "one_line": "A dead-end cul-de-sac entered from below: you pop up through a one-way platform, then wall-jump/dash your way up a tall right-hand chamber over two sparse ledges to snag coin 46, and drop back down carefully because a spike bed sits right beside the exit hole.",
+  "movement_verbs": [
+   "jump",
+   "wall-jump chain",
+   "dash",
+   "drop-through one-way platform",
+   "precise-landing",
+   "controlled fall"
+  ],
+  "structure": "Dead-end pocket, ~15 tiles wide of usable space, travelled up-and-back-down. Entry is a floor door (cols 14-17 of the bottom wall) with a one-way platform directly over it. A full-height wall at col 17 splits the room: to its right is a tall open chamber (cols 18-30, 16 tiles high) with two widely spaced one-way ledges (row 12 and row 4); to its left is a narrow blind shaft (cols 11-16) walled by a pillar at col 10, holding a single platform at row 8 and nothing else. Only one door, so the route is a there-and-back.",
+  "hazards": "One up-facing spike bed on the floor at cols 23-26, sitting between the coin column and the exit \u2014 the only hazard. It punishes a sloppy descent from the upper ledge rather than gating the climb itself.",
+  "distinctive": "The 8-tile (~80px) gap between the two ledges, which forces a wall-jump chain up the central col-17 wall face \u2014 no single jump or dash covers it. The lower-left shaft is dead space with no reward or exit.",
+  "sameyness_risk": "high",
+  "archetype_guess": "floor-entry dead-end coin niche (vertical climb-and-return cache)",
+  "quality": 3
+ },
+ {
+  "slug": "lift-shaft",
+  "one_line": "You skip across a spiked floor between two side doors, then peel off upward through a loose ladder of scattered one-way platforms toward a ceiling hatch, drifting sideways each hop to line up the next plank.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "hop over spike bed",
+   "drop through one-way platform",
+   "air-drift/dash to offset landing",
+   "precise-landing"
+  ],
+  "structure": "Wide open 32x18 shaft with a T-junction plan: flat floor corridor running west-to-east at the bottom (doors in both side walls at row 14), plus a vertical ascent up the middle-left of the chamber to a ceiling gap at columns 14-17. Very little solid geometry \u2014 just a spread of short one-way planks stacked at rows 15, 12, 9, 7, 4.",
+  "hazards": "Two short upward spike beds embedded in the floor surface (cols 10-12 and 20-22), each 3 tiles wide. They only threaten the horizontal transit and any missed landing off the low planks; no walls, ceilings, or moving hazards.",
+  "distinctive": "It is a genuine three-way hub (west, east, ceiling) whose upward route is optional \u2014 the same floor doubles as a fast east-west sprint and as the launch pad for a staggered platform climb, so the room reads differently depending on which exit you want.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "junction hub with one-way-platform ascent over a spiked floor",
+  "quality": 3
+ },
+ {
+  "slug": "low-passage",
+  "one_line": "A near-empty east-west transit room split by a full-height wall, where the only way through is a floor-level crawl-gap guarded by a two-tile spike patch, with an optional four-step platform staircase on the far side to reach the coin.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "precise-landing",
+   "drop",
+   "dash (optional, to clear spikes)",
+   "short hop chain"
+  ],
+  "structure": "Horizontal corridor, west-to-east. A solid wall at column 20 spans rows 2-13, leaving only rows 14-17 open as a low gap at the bottom \u2014 everything above is two disconnected empty chambers. West chamber is a bare floor with one cosmetic one-way platform (row 15, cols 5-10). East chamber is a tall empty volume with three staggered one-way platforms (row 16 cols 21-25, row 15 cols 26-29, row 12 cols 21-26) forming a short ascent to a coin hanging at row 9. Doors are floor-level gaps in both side walls (rows 14-16).",
+  "hazards": "A single upward spike bed of two tiles (row 18, cols 18-19) set in the floor directly at the mouth of the low gap. No spike walls, no timed shutters, nothing else in the room.",
+  "distinctive": "The full-height dividing wall that forces all traversal through a four-tile-high slot at floor level, with the spikes placed exactly where you'd want to land before ducking through \u2014 the room's whole identity is that one pinch point.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "low-gap squeeze corridor with a spike-hop pinch and an optional platform-staircase coin alcove",
+  "quality": 2
+ },
+ {
+  "slug": "lunar-cache",
+  "one_line": "A long empty drop-in hall that funnels you into one tall spike-lined chimney where the safe wall alternates side every few tiles, climbed once for a single coin and then re-descended the same way.",
+  "movement_verbs": [
+   "drop",
+   "run",
+   "jump",
+   "wall-jump chain",
+   "alternating wall swap",
+   "dash",
+   "precise-landing",
+   "controlled descent"
+  ],
+  "structure": "Dead-end pocket: a wide open left hall (entered from a ceiling gap at cols 14-17, descending via three staggered one-way platforms), a floor run rightward, then a single ~14-tile vertical chimney (cols 22-26) climbed upward, topping out into an open shelf at rows 2-3 that leads to a narrow 2-tile coin alcove at cols 29-30. Travel is down, right, up, then fully back down and out the ceiling.",
+  "hazards": "Spike walls only, no floor beds and no timed elements. Both chimney walls (col 21 and col 27) carry inward-facing spikes plus a few upward spikes, and the safe segments on the two walls are deliberately offset (left safe ~rows 4-7 and 10-13; right safe ~rows 2-5, 9-10, 15-16), so the wall-jump chain must switch sides at specific heights. The 5-tile (50px) gap means a mistimed jump has no midair recovery beyond a dash.",
+  "distinctive": "The offset spike pattern that forces the wall-jump chain to alternate walls at scripted heights, turning the climb into a memorized rhythm rather than a free chain.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "alternating-wall spike chimney (dead-end coin vault)",
+  "quality": 3
+ },
+ {
+  "slug": "meteor-run",
+  "one_line": "A short flat west-to-east sprint where you read the rhythm of three full-height timed shutters, wait in narrow safe bays, and commit a dash through each gap while hopping small spike beds on the floor.",
+  "movement_verbs": [
+   "run",
+   "dash",
+   "jump",
+   "wait-and-read-timing",
+   "brake",
+   "precise-landing"
+  ],
+  "structure": "Single-screen horizontal corridor travelled left to right; west and east doors are 4-tile-tall gaps (rows 14-17), and the entire upper 12 rows of the 32x18 box are unused empty air, so play is confined to a thin strip along the floor.",
+  "hazards": "Tile grid carries only three short floor spike beds (cols 4-7, 14-16, 21-23) plus one pair of downward ceiling spikes near mid-room. The real hazard is code-side: three timed shutters (52px wide, full 170px height, period 96 ticks, active 70, phases 45/13/77) at x=52/134/216, staggered west-to-east, with roughly 3-tile safe bays between them.",
+  "distinctive": "It is the only room in the dungeon with timed hazards at all \u2014 a pure shutter-timing gauntlet rather than a geometry puzzle \u2014 and the staggered phases forbid a blind uninterrupted run: you must stop, read the next gate from the preceding bay, and commit.",
+  "sameyness_risk": "low",
+  "archetype_guess": "timed-shutter dash gauntlet (horizontal gate corridor)",
+  "quality": 4
+ },
+ {
+  "slug": "mirror-duct",
+  "one_line": "A dead-end coin pocket entered from below: you pop up through a one-way platform, clear a four-tile spike bed with a dash or long jump, then hop two staggered ledges up the right-hand shaft to a coin and drop back out the way you came.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "up-through one-way platform",
+   "drop-through platform",
+   "precise-landing"
+  ],
+  "structure": "Tall dead-end chamber, travel up-then-right-then-up-then-back-down. Entry is a floor gap (cols 14-17) under a one-way platform strip. A full-height pillar at col 9 walls off the left third; a second pillar (col 16, rows 3-13) splits the upper space into a narrow blind duct on the left (with one stray platform at row 8) and the real route, an open shaft on the right (cols 17-30) with ledges at row 12 and row 4.",
+  "hazards": "A single upward spike bed on the floor, four tiles wide (row 17, cols 22-25), sitting immediately right of the only solid landing ledge. It is exactly one dash-length across, so it reads as a one-shot commitment gate rather than a hazard you thread. No other spikes, no walls of spikes, no timed elements.",
+  "distinctive": "The col-16 pillar creates a wholly vestigial left-hand duct with a platform in it that leads nowhere \u2014 the room's namesake shape is dead space, and the actual play is a short climb happening entirely on the other side of it.",
+  "sameyness_risk": "high",
+  "archetype_guess": "floor-entry dead-end coin niche (vault/cache/duct family): enter from below, short spike-gated climb, single coin, backtrack out",
+  "quality": 2
+ },
+ {
+  "slug": "mirror-fork",
+  "one_line": "A big, mostly empty hall where you enter from either side door, hop a sparse zig-zag of five floating one-way platforms up through a lot of dead air, and pop out the ceiling gap \u2014 with a small spike bed on the center floor as the only thing punishing a miss.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "drop-through one-way platform",
+   "precise-landing"
+  ],
+  "structure": "Wide open 32x18 arena/junction with three exits: west and east door gaps at mid-height (rows 14-16) and a ceiling gap at cols 14-17. Travel is either straight lateral west<->east across open floor, or an upward staircase: low side platforms (row 15, cols 3-7 and 26-29, mirrored) -> row 12 platform (cols 11-16) -> row 9 platform (cols 21-26) -> row 6 platform (cols 14-18) -> ceiling door. The mirrored low platforms are what give the room its \"fork\" name; the upper chain zig-zags right then back left.",
+  "hazards": "A single 4-tile up-spike bed on the floor at cols 14-17, flanked by solid floor blocks; the outer thirds of the floor row are open air down to the bottom wall. No spike walls, no timed elements. The spikes sit directly under the climb line, so a whiffed platform jump near the middle is the only real punish \u2014 and the platforms are so far apart horizontally that most misses land you safely on solid ground instead.",
+  "distinctive": "The left-right mirrored pair of low platforms framing the central spike bed \u2014 a visual \"fork\" that reads as a choice but functionally isn't one, since both sides feed the same upward chain.",
+  "sameyness_risk": "high",
+  "archetype_guess": "open-air three-door junction with floating-platform ascent",
+  "quality": 2
+ },
+ {
+  "slug": "moon-vault",
+  "one_line": "A dead-end treasure vault you drop into from the ceiling onto a lethal spike floor you can never touch, hopping a sparse ladder of one-way platforms down and across to a coin tucked behind a spike sandwich, then climbing all the way back out the same hole.",
+  "movement_verbs": [
+   "drop",
+   "precise-landing",
+   "jump",
+   "run",
+   "dash",
+   "wall-jump chain",
+   "platform-drop-through"
+  ],
+  "structure": "Wide 32x18 open box entered through a ceiling gap (cols 14-17) with no other exit \u2014 an in-and-out dead-end. A solid pillar (col 20, rows 6-12) splits the upper half into left and right chambers; the only crossing is low, under the pillar's base through rows 13-16, because the high crossing is sealed. Traversal is a counter-clockwise loop: fall left, descend to the low platforms, cross right, climb the right chamber, take the coin, then re-cross and climb back to the ceiling.",
+  "hazards": "Two uses. (1) The entire floor row is up-spikes wall-to-wall \u2014 there is no safe ground anywhere in the room, so every landing must be on a one-way platform and a missed jump is death rather than a retry. (2) A spike sandwich across the top-right (up-spikes on row 4 directly over down-spikes on row 5, cols 18-25) seals the high route over the pillar, forcing the low crossing. No timed or moving hazards.",
+  "distinctive": "The floorless design: a room with zero safe ground where the sparse one-way platforms are the only real geometry, combined with a double-sided spike band that exists purely to forbid the obvious shortcut over the divider.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "lethal-floor platform-hop vault (dead-end coin room, same-door in/out)",
+  "quality": 4
+ },
+ {
+  "slug": "moss-walk",
+  "one_line": "A relaxed west-to-east stroll where you hop a short staircase of one-way platforms over a single floor-to-ceiling pillar, with a two-hop detour up to a coin tucked under an overhanging slab \u2014 no danger anywhere.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "hop onto one-way platform",
+   "drop through/off platform",
+   "short precise landing on pillar top"
+  ],
+  "structure": "Wide horizontal corridor traversed west\u2192east (door gaps in both side walls at y=13), bisected by a 2-tile-wide pillar (x15-16) running from the floor up to y=12; staggered one-way platforms form a low staircase up the left side and back down the right. The upper half of the 32x18 room is entirely empty air except one solid slab (x13-21, y7-8).",
+  "hazards": "None at all \u2014 no spikes, no timed elements, no pits. Failure means at worst re-doing a small hop.",
+  "distinctive": "The central pillar as the room's only real obstacle, plus the single coin (tile ~17,9) hanging in open air directly beneath the ceiling slab, reached by a one-jump detour from the topmost platform.",
+  "sameyness_risk": "high",
+  "archetype_guess": "hazard-free connective platform-staircase corridor (breather room)",
+  "quality": 2
+ },
+ {
+  "slug": "needle-room",
+  "one_line": "A dead-end spike belfry you enter through the floor, thread upward between two inward-facing walls of needles to snatch a single coin off the top ledge, then retrace the same thin gaps back down to the only door.",
+  "movement_verbs": [
+   "jump",
+   "precise-landing",
+   "one-way platform hop",
+   "wall-jump chain",
+   "dash",
+   "drop",
+   "controlled fall"
+  ],
+  "structure": "Tall single-chamber shaft, 32x18, travelled up-then-back-down through the same floor gap (x=14-17). The interior is split by a solid pillar at x=11 (rows 5-13) into a narrow left chimney and a wider right ascent; the right side is a two-rung one-way-platform ladder (row 13 and row 7, x=17-22) climbing to a ceiling ledge (row 3-4, x=17-22) where the coin sits at the top-centre.",
+  "hazards": "Two facing spike walls dominate: a right-pointing column at x=8 running rows 5-15, and a left-pointing column at x=23 running rows 4-13, plus stray spikes at x=11 row 10 and x=14 rows 12-13. No timed elements, no floor spike beds \u2014 every hazard is a vertical wall you brush past, so danger comes from horizontal overshoot, not from landing.",
+  "distinctive": "The one-way platforms dead-end directly into the left-pointing spike wall at x=23, so each hop up must be braked mid-platform rather than carried to the edge \u2014 the room punishes momentum instead of imprecision.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "spike-lined vertical shaft / dead-end coin belfry",
+  "quality": 3
+ },
+ {
+  "slug": "needle-turn",
+  "one_line": "You skip east along a low floor past a couple of stub pillars, then zig-zag up a staircase of one-way platforms on the right wall to snag a coin near the ceiling \u2014 while a tight, spike-lined chimney on the left glares at you from a part of the room you never actually have to enter.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "precise-landing",
+   "drop-through platform",
+   "wall-jump chain (optional, in the spike chute)"
+  ],
+  "structure": "Wide single-screen hall, travel west-to-east along the bottom (both doors are tall bottom-corner gaps, rows 14-17). Two distinct sub-spaces: a narrow 4-tile-wide vertical chute on the left between pillars at col 10 and col 16 (rows 9-13), and an open right half whose only structure is five short one-way platforms staggered two rows apart, forming a left-right zig-zag ladder up to a wide ledge at row 8.",
+  "hazards": "Spikes only, and only inside the left chute: two right-facing spikes on the left pillar (rows 9-10) and two left-facing spikes on the right pillar (rows 11-12) \u2014 an offset \"needle\" gauntlet punishing a sloppy wall-jump chain. The entire east half and the traversal floor are hazard-free. No timed elements.",
+  "distinctive": "The offset facing-spike chimney is the room's namesake and its only real teeth \u2014 but it is off the critical path and leads nowhere (it opens into empty air at row 8), so the danger is entirely optional flavour while the actual play is a gentle platform staircase.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "staggered one-way-platform ascent with an adjacent optional spike chimney",
+  "quality": 3
+ },
+ {
+  "slug": "nova-niche",
+  "one_line": "A tense alternating-face spike chimney: you wall-jump ~160px up a 4-tile-wide shaft whose left and right walls trade off between safe stone and outward-facing spikes, then pop out into a top corridor and dash a gap over a spike-lined pit to snag the coin \u2014 before doing it all again in reverse to leave.",
+  "movement_verbs": [
+   "wall-jump chain",
+   "alternating wall-jump",
+   "precise-landing",
+   "dash",
+   "jump",
+   "run",
+   "controlled drop"
+  ],
+  "structure": "Vertical chimney (cols 14-17) climbed from a floor door at the bottom, opening at the top into a short left-to-right corridor along rows 2-3 over a spike-floored right-hand chamber. It is a dead end \u2014 the floor door to GravityLift is the only connection \u2014 so the room is an up-and-back-down detour. Roughly a third of the grid (the sealed 11-wide left chamber, cols 1-11) is inert dead space the player can never enter.",
+  "hazards": "Spike walls are the core: the shaft's left face (col 13) and right face (col 18) alternate in bands of 2-3 tiles between solid stone and inward-pointing spikes, and the bands are offset so exactly one wall is safe at each height. The right chamber's whole floor (row 17, cols 20-30) is upward spikes, punishing any fall from the top corridor. No timed or moving hazards.",
+  "distinctive": "The offset spike banding that forces the wall-jump chain to alternate sides on a fixed rhythm \u2014 the climb reads as a puzzle with one correct cadence rather than free wall-jumping.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "alternating-face spike chimney (dead-end coin niche)",
+  "quality": 4
+ },
+ {
+  "slug": "observatory",
+  "one_line": "You enter at the bottom-left, sprint right into a narrow spike-lined chimney and wall-jump up it choosing safe faces, pop out into an attic corridor above the room's own ceiling, dash across two holes in that ceiling to grab the coin perched at the top-left, then return and take a clean vertical drop shaft down the far east wall to the exit.",
+  "movement_verbs": [
+   "run",
+   "wall-jump chain",
+   "dash",
+   "precise-landing",
+   "drop",
+   "jump"
+  ],
+  "structure": "Three-stage loop over a 32x18 room: a low entry corridor running west-to-east along the floor, a tight vertical spiked chimney (cols ~22-25) climbing the full height on the right-centre, a horizontal attic corridor (rows 1-2) running back east-to-west above the main chamber's roof, and a separate clean drop shaft (cols 28-30) on the far east returning to the east door at row 14. Net travel: up, back left, then straight down.",
+  "hazards": "Heavy and structural. A full-width up-spike bed (row 8, cols 1-20) is the floor of the big upper chamber, so any fall from the attic through a roof gap that misses the small mid-air ledge (row 7, cols 10-12) kills. The climbing chimney is spiked on its left face for four consecutive rows (right-pointing spikes, rows 10-13) plus a left-pointing spike on the opposite face at row 13 and again at row 7, creating a pinch where both walls are momentarily hostile, and an up-spike at its base (row 14). No timed elements \u2014 all static geometry you must read.",
+  "distinctive": "The coin sits on top of the room: you climb past the playable chamber entirely and traverse an attic corridor whose floor is the chamber's own ceiling, dashing over two gaps that would drop you onto the spike bed. Reading the room from above, with the earlier space visible below as a hazard, is a genuinely novel framing, and the east drop shaft gives the loop a clean, non-repetitive return leg.",
+  "sameyness_risk": "low",
+  "archetype_guess": "spiked wall-jump chimney into an over-the-roof dash traverse (climb-and-return coin loop)",
+  "quality": 4
+ },
+ {
+  "one_line": "You walk west-to-east along an empty floor while a decorative staircase of one-way platforms floats overhead leading nowhere.",
+  "slug": "old-lift",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "drop"
+  ],
+  "structure": "Wide open 32x18 hall, horizontal west-to-east travel; both doors are low (rows 14-17, floor level) so the critical path is a flat ground run. A loose zig-zag of short one-way platforms (rows 13, 10, 7, 4, alternating left-of-centre and right-of-centre) climbs toward the ceiling, plus two low platforms at row 15 flanking the doorways, but the ceiling is solid \u2014 the \"lift\" ascent is a dead end.",
+  "hazards": "None. No spikes of any kind, no shutters, nothing that can kill you.",
+  "distinctive": "The vertical ladder of platforms implies a lift shaft you're meant to ride, but there is no ceiling exit and no pickup up there, so the room's only real content is a flat walk underneath its own scenery.",
+  "sameyness_risk": "high",
+  "archetype_guess": "empty transit hall / flat side-door connector with ornamental platforms",
+  "quality": 1
+ },
+ {
+  "slug": "orbit-fork",
+  "one_line": "You walk in from one side of a wide-open box, stroll along a flat floor past two lone decorative spikes, and either keep walking out the other side or step onto a one-way slot and drop through \u2014 no jump, no hazard, no decision that costs anything.",
+  "movement_verbs": [
+   "run",
+   "drop"
+  ],
+  "structure": "Three-way horizontal hub: a full-width walkable floor band (rows 13-16) with west and east door gaps at the same height and a 4-tile drop-through slot in the floor at columns 14-17 leading down to Moon Vault. Roughly the top two-thirds of the 32x18 grid is empty air with scattered, unreachable-and-unneeded one-way platform strips and a ceiling spike row.",
+  "hazards": "Effectively none in the played space. Two isolated up-spikes at row 15 (cols 11 and 20) sit beside the floor line and can be walked around without slowing down; the vvvvv down-spikes and vv pair high in the room decorate airspace the player never enters.",
+  "distinctive": "Nothing \u2014 it is a flat crossroads whose entire built vocabulary (upper platform strips, ceiling spikes) is scenery; the only real content is choosing a door.",
+  "sameyness_risk": "high",
+  "archetype_guess": "flat junction / routing hub with decorative spikes",
+  "quality": 1
+ },
+ {
+  "slug": "piston-pass",
+  "one_line": "A short, breezy west-to-east ground run where you hop three evenly spaced spike triplets on the floor and step up onto a one-way platform to reach the east door, with a large empty upper half you never touch.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "precise-landing",
+   "drop",
+   "dash"
+  ],
+  "structure": "Horizontal corridor, west to east, played almost entirely in the bottom four rows; the upper two-thirds of the 32x18 box is empty air with a couple of stray one-way platforms the route never needs.",
+  "hazards": "Floor spikes only in practice: three up-spike triplets on the bottom row (~x=8-10, 15-17, 22-24) separated by safe gaps wide enough to land in. A band of nine down-pointing ceiling spikes sits ~10 tiles above the play line and is effectively decorative. No timed shutters, no spike walls.",
+  "distinctive": "Almost nothing; the only character is the metronomic rhythm of three equal spike triplets with a one-way platform offset above, which half-justifies the \"piston\" name. No coins, no pickups, just west/east doors.",
+  "sameyness_risk": "high",
+  "archetype_guess": "spike-floor hop corridor (flat east-west traverse)",
+  "quality": 2
+ },
+ {
+  "archetype_guess": "three-door hub / drop-through fork room",
+  "distinctive": "The upper two-thirds of the room is empty air with three orphaned one-way platforms and a 4-tile down-spike cluster no route ever passes near \u2014 all the actual play happens in the bottom four rows.",
+  "hazards": "Essentially none in practice: a single bed of four down-pointing ceiling spikes (row 6, cols 19-22) floats in dead space well away from any platform you'd use. No spike walls, no timed shutters. Only real failure is the open floor gap, which is itself a door.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "drop-through",
+   "short hop",
+   "precise-landing"
+  ],
+  "one_line": "You walk in from the side into a cavernous mostly-empty chamber, take two easy hops along low one-way ledges to the middle, and drop through a platform into the floor door \u2014 over in about four seconds with nothing asked of you.",
+  "quality": 2,
+  "sameyness_risk": "high",
+  "slug": "pressure-fork",
+  "structure": "Wide horizontal hub, travel primarily west-to-east along the bottom with a downward branch: side doors are gaps in both walls at row 14, and a floor gap (cols 14-17) sits under a solid shelf whose centre is one-way platform. The lower band (rows 15-18) is a shallow stepped basin; rows 1-13 are a tall empty void with three isolated floating one-way ledges."
+ },
+ {
+  "slug": "prism-run",
+  "one_line": "A left-to-right dash-and-hop climb: you leap from one tiny one-way platform to the next up a rising diagonal, tag a coin tucked under the ceiling on the right, then drop back to the east door.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "drop-through",
+   "precise-landing"
+  ],
+  "structure": "Wide open horizontal hall (32x18) travelled west-to-east; doors are three-tile gaps in both side walls at the bottom (rows 14-16). The interior is mostly empty air with four small one-way platforms forming an ascending staircase from low-left to high-right, plus a landing pad beside the east door.",
+  "hazards": "Spike beds cover most of the floor (three up-spike clusters at cols 7-10, 14-17, 21-24), so a missed platform kills. A band of down-spikes on the ceiling (cols 15-23) caps the middle of the ascent and punishes over-jumping.",
+  "distinctive": "The ceiling down-spikes sit directly above the mid-climb platforms, squeezing the ascent into a height-limited channel; the coin (dungeon-coin-41) sits high and right, just past the end of that spike band.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "spike-floor platform-hop corridor (ascending staircase variant)",
+  "quality": 3
+ },
+ {
+  "slug": "pulse-gallery",
+  "one_line": "A quick, low-stakes east-west skip along the bottom fifth of an otherwise empty hall: two spike beds on the ground force you onto three one-way platforms, and the only moment of tension is a short pop off the centre platform to grab a coin tucked just under an overhead spike ceiling.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "gap-jump over spike bed",
+   "drop-through one-way platform",
+   "precise-landing",
+   "short vertical hop under ceiling spikes",
+   "dash (optional, for the 5-tile gaps)"
+  ],
+  "structure": "Wide horizontal corridor traversed west-to-east (both side walls open across the lower four rows). All playable content is compressed into the bottom 4-5 rows: left one-way platform (cols 3-8, row 15), centre one-way platform raised one tile (cols 14-17, row 14), right one-way platform (cols 23-29, row 15), with solid floor below. The top ~11 rows are completely empty dead space.",
+  "hazards": "Two up-spike beds on the floor (cols 9-13 and 18-22) sitting exactly under the gaps between platforms, so the ground route is punished and the platform route is the intended line. One 10-tile down-spike band floating at row 9 far overhead; it is out of reach from the floor and only matters as a ceiling on the jump from the centre platform, where the coin sits ~2 tiles up. No timed or moving hazards.",
+  "distinctive": "The floating down-spike band acting as a low ceiling over the coin hop off the centre platform \u2014 a single \"jump, but not too high\" beat. Everything else is stock.",
+  "sameyness_risk": "high",
+  "archetype_guess": "spike-bed hop corridor with staggered one-way platforms (flat horizontal connector room)",
+  "quality": 2
+ },
+ {
+  "slug": "rafter-shrine",
+  "one_line": "A quiet, hazard-free dead-end cache: you pop up through the floor door, cross right, and climb a two-tier stack of long wooden rafters (with a wall-jump off the central pillar to reach the first one) to snag coin 20 in the top-right corner, then drop straight back out the way you came.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "one-way platform pop-through",
+   "wall-jump chain",
+   "precise-landing",
+   "drop"
+  ],
+  "structure": "Dead-end chamber entered from below (only door is \"floor\", cols 14-17); a short one-way lip above the door leads right into a tall vertical shaft (cols 17-30) bounded left by a solid pillar at col 16, with two long horizontal rafters at row 11 and row 4; travel is up-and-back-down. A second, entirely separate left chamber (cols 1-9) is walled off by the col-10 pillar and reachable only across the open ceiling band \u2014 pure dead space.",
+  "hazards": "None. Zero spikes anywhere in the grid; the only failure is a missed jump costing height, and even that is a soft reset since there is nothing to land on that hurts.",
+  "distinctive": "The stacked 7-tile one-way rafters read as an actual shrine loft \u2014 you pass up through them and can drop back through, so the climb and the exit reuse the same geometry in opposite directions. Less flattering: roughly a third of the room (the whole left chamber and its stub ledge at row 7) is unreachable-by-need scenery you never touch.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "one-way-platform coin cache / dead-end vault loft",
+  "quality": 2
+ },
+ {
+  "slug": "razor-pass",
+  "one_line": "A straight-line west-to-east ground sprint where you clear three identical 40px spike beds with three identical dash-jumps, in a room whose entire upper two-thirds you never touch.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "precise-landing"
+  ],
+  "structure": "Single-height horizontal corridor along the floor, travelling left to right; doors are edge gaps at rows 14-15 on both the west and east walls, so you enter and exit at the same low level. The room is 18 tiles tall but the playable line occupies only the bottom four rows.",
+  "hazards": "Three floor-level spike beds (up-spikes) on row 17, each exactly 4 tiles / 40px wide, at x7-10, x14-17 and x21-24, separated by 3-4 tile safe landing strips. A 10-tile band of down-pointing spikes hangs at row 7, roughly 70px above head height on the travel line \u2014 pure decoration, never a threat. No shutters, no timing elements.",
+  "distinctive": "The spike beds are all the same width with the same gaps, so the room is one dash-jump repeated three times with no escalation, variation or choice; the four scattered one-way platforms (rows 9, 11, 14, 15) sit off the line and lead nowhere.",
+  "sameyness_risk": "high",
+  "archetype_guess": "spike-bed dash gauntlet corridor",
+  "quality": 2
+ },
+ {
+  "slug": "refraction-shaft",
+  "one_line": "You sprint east along an open floor into a dead-end wall, then wall-jump ~13 tiles up a narrow chimney whose two faces are spiked in alternating bands, so every jump must land on the one side that is safe at that height, before topping out and dropping down a wide open right-hand hall onto platforms to the east exit.",
+  "movement_verbs": [
+   "run",
+   "wall-jump chain",
+   "side-alternating precise-landing",
+   "drop",
+   "jump"
+  ],
+  "structure": "Left-to-right corridor entered at the west wall (rows 14-16), blocked by a full-height wall at x=16; a 4-5 tile wide vertical chimney between the x=10 pillar and that wall carries you up ~13 tiles to an open ceiling band (rows 1-3), which you cross east and then descend through a large empty right-hand hall to the east door at rows 14-16, cushioned by a one-way platform run at x=24-29.",
+  "hazards": "Only spike walls, no floors or timed elements: right-facing spikes on the chimney's left face at rows 4-6 and 11-13, left-facing spikes on its right face at rows 7-10 and 14-16, deliberately interleaved so the safe grab side flips twice during the climb.",
+  "distinctive": "The spike bands on the two chimney faces are offset rather than mirrored, turning the climb into a read-ahead puzzle about which wall to be on at each height instead of a pure wall-jump chain.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "alternating-face spiked wall-jump chimney (shared with nova-niche, zenith-shaft, lattice-climb)",
+  "quality": 3
+ },
+ {
+  "slug": "relay-chasm",
+  "one_line": "A flat left-to-right sprint across three one-way platforms, dash-jumping twice over identical six-tile spike beds, under an enormous empty void of unused air.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "dash-jump",
+   "precise-landing",
+   "drop-through platform"
+  ],
+  "structure": "Wide horizontal corridor, west-to-east, with all play compressed into the bottom four rows: door gaps at row 14 in both side walls, a one-way platform strip at row 15 broken into three segments (cols 3-9, 16-19, 26-29), spikes at row 17, solid floor at row 18. Rows 1-13 are completely empty air the player never touches.",
+  "hazards": "Two up-spike beds on the floor (cols 10-15 and 20-25), directly under the two platform gaps. Pure fall-punishment for a missed dash-jump; no timed, moving, wall, or ceiling hazards.",
+  "distinctive": "Almost nothing: the two crossings are the same 6-tile gap over the same 6-tile spike bed twice in a row, and the middle platform is only 4 tiles wide so a fast landing can skid you into the second pit. No coins or pickups. The 13 rows of empty sky read as a design void rather than a feature.",
+  "sameyness_risk": "high",
+  "archetype_guess": "flat spike-pit dash-gap corridor",
+  "quality": 2
+ },
+ {
+  "slug": "rivet-run",
+  "one_line": "A flat left-to-right sprint where you dash or jump over three identical three-tile spike beds with generous flat landings between them, and never once look up.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "precise-landing"
+  ],
+  "structure": "Single-lane horizontal corridor, west door to east door, played entirely in the bottom three rows; the upper two-thirds of the 32x18 grid is empty air with three stranded one-way platforms (rows 6, 9, 12) that no route ever touches.",
+  "hazards": "Three upward spike beds on the floor (cols 8-10, 15-17, 22-24), each 3 tiles / 30px wide, separated by 4-tile flat safe ground. No ceiling spikes, no walls, no timing elements \u2014 every hazard is static and identically sized.",
+  "distinctive": "Nothing \u2014 the only mild texture is the short one-way platform strips at the two door mouths (cols 3-7 and 27-29), which change nothing about how you cross.",
+  "sameyness_risk": "high",
+  "archetype_guess": "flat spike-bed hop/dash corridor",
+  "quality": 2
+ },
+ {
+  "slug": "root-cellar",
+  "one_line": "You drop through the ceiling into a wide empty cellar, stroll left to scoop two coins off the floor, then hop back up a generously spaced zigzag ladder of one-way platforms and leave the way you came.",
+  "movement_verbs": [
+   "drop",
+   "run",
+   "jump"
+  ],
+  "structure": "Single 32x18 chamber, dead-end. The only opening is a 4-tile ceiling gap at cols 14-17 (to/from Split Root), so travel is down-then-back-up the same shaft. Interior is a staggered stack of one-way platforms alternating left (cols 8-13) and right (cols 14-19) every 2 rows from row 14 up to row 4, plus a long left ledge at rows 14-15. Vertical gaps are ~20px against a ~40px jump rise, so every hop has huge margin.",
+  "hazards": "One vestigial 2-tile up-spike bed on the floor at cols 5-6 (row 17), positioned away from both coins and the climb; it can be walked around without thought. Effectively hazard-free.",
+  "distinctive": "Nothing \u2014 it is an unguarded coin cache (coins 2 and 3 at x=20, y=126/158 on the left floor/ledge) whose built platform ladder the coins never force you to use.",
+  "sameyness_risk": "high",
+  "archetype_guess": "dead-end coin-cache chamber with a zigzag one-way-platform climb",
+  "quality": 1
+ },
+ {
+  "slug": "shadow-duct",
+  "one_line": "You pop up through a one-way floor hatch into a big empty right-hand box, walk left, then thread a tall spike-lined chimney whose safe wall alternates sides every three tiles, grab the coin on the top ledge, and free-fall back down onto the platforms while dodging the spike floor.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "wall-jump chain",
+   "alternating wall-swap",
+   "drop-through one-way platform",
+   "long fall",
+   "precise-landing",
+   "drift-steer"
+  ],
+  "structure": "Two-part dead-end: a wide open ~16x15 chamber on the right (entered from a floor door at cols 14-17 via one-way platforms), and a narrow 3-tile-wide vertical chimney on the left (cols 6-8, rows 2-16) that is the only way up. Travel is up the left chimney, right along the top corridor to the coin, then a straight fall back down the right chamber to the same floor door. Out-and-back, no through-route.",
+  "hazards": "Dense spike walls define the chimney: right-facing spikes on col 5 (rows 2-4, 8-10, 14-15) and left-facing spikes on col 9 (rows 6-7, 11-13), arranged so the safe wall alternates left/right in ~3-tile bands \u2014 you cannot chain wall-jumps on one side. Plus an 11-tile up-spike bed on the chamber floor (row 17, cols 20-30) that punishes a lazy descent. No timed/moving hazards.",
+  "distinctive": "The alternating spike-banding of the chimney: safe purchase swaps walls every three rows, forcing a rhythmic left-right wall-jump chain up ~110px rather than a single-wall grind.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "spike-lined wall-jump chimney + open drop-back cache room",
+  "quality": 3
+ },
+ {
+  "slug": "shard-vault",
+  "one_line": "A ceiling-entry dead-end vault: you drop down a narrow chute with spikes lining its right wall, duck under a pillar into a bright right-hand chamber, hop two one-way ledges up to coin 42 near the ceiling, then have to climb the spiked chute back out the way you came.",
+  "movement_verbs": [
+   "drop",
+   "controlled fall (hugging the safe wall)",
+   "run",
+   "jump",
+   "one-way platform hop",
+   "wall-jump chain",
+   "precise-landing"
+  ],
+  "structure": "Single-entry dead-end pocket entered from a ceiling gap (cols 14-17). Two full-height pillars (col 10 rows 5-17, col 17 rows 3-13) split the 32x18 box into three: a large empty left pocket (cols 1-9, only reachable over the col-10 pillar top), a narrow vertical descent chute (cols 11-16) under the entrance, and an open right chamber (cols 18-30) with a stacked pair of one-way ledges (row 13 cols 18-22, row 5 cols 18-23). Travel is down-then-right-then-up, and the return is the exact reverse \u2014 an out-and-back, not a through-route.",
+  "hazards": "One short spike wall only: three left-facing spikes at col 16, rows 9-11, set into the left face of the right pillar so they bite into the descent chute. They force the fall to hug the left (col-10) wall and, more painfully, constrain the wall-jump chain on the way back up. No spike beds, no timed elements.",
+  "distinctive": "The chute is entrance and exit both, so the spikes are paid for twice with different demands: descending you just steer away from them, ascending you must wall-jump up a 6-tile-wide slot whose right wall is lethal for three tiles, using the row-9 one-way as the only rest. The coin (col 22, row 3) is also teasingly near the ceiling you entered through but walled off from it by the col-17 pillar.",
+  "sameyness_risk": "low",
+  "archetype_guess": "dead-end ceiling-drop treasure vault with a spiked re-ascent chute",
+  "quality": 4
+ },
+ {
+  "slug": "skybridge",
+  "one_line": "A west-to-east traverse over a near-continuous spike floor where you first wall-jump a three-tile chute up a full-height pillar and run its roof, then immediately dive back under a hanging mast to snake into the open eastern chamber and grab the coin off a suspended platform.",
+  "movement_verbs": [
+   "run",
+   "one-way platform hop",
+   "wall-jump chain (alternating faces)",
+   "precise-landing on pillar top",
+   "roof run",
+   "controlled drop",
+   "dash",
+   "duck-under gap traverse"
+  ],
+  "structure": "Horizontal west-to-east corridor at rows 14-16 interrupted by a vertical detour: entry (west door rows 14-16) \u2192 one-way platform run cols 5-10 \u2192 narrow 3-tile chute between the col-7 stub and the full-height col-11 pillar (rows 6-16) \u2192 over the pillar top and east along the row-6 shelf (cols 11-17) \u2192 forced descent in the cols 18-19 slot to pass beneath the ceiling-hung mast at col 20 (rows 2-10) \u2192 open eastern chamber (cols 21-30) with a floating roof at row 14 (cols 21-27) holding coin 62 above it \u2192 drop off its east lip and out the east door. Up-then-across-then-down profile; net travel eastward.",
+  "hazards": "One long bed of upward spikes covering essentially the whole floor (row 17, cols 6-28), leaving only a five-tile safe ledge at the far west and a three-tile ledge at the far east. No spike walls, no timed elements \u2014 every mistake is the same failure: a fall onto the floor. That makes the whole room a no-touch-down traverse rather than a puzzle of reading which surface is safe.",
+  "distinctive": "The over-then-under beat: the pillar forces you high, and the ceiling-hung mast immediately forces you back low through a two-tile slot, so the \"bridge\" you build across the spikes has to change altitude mid-crossing instead of being one flat run.",
+  "sameyness_risk": "low",
+  "archetype_guess": "spike-floor traverse with a vertical wall-jump detour (\"bridge over a pit\" family, with a ceiling-obstacle twist)",
+  "quality": 4
+ },
+ {
+  "slug": "sliver-run",
+  "one_line": "A short, flat west-to-east sprint along the floor where you hop three evenly spaced spike beds in a rhythm, under a big empty hall whose upper platforms you never touch.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "precise-landing"
+  ],
+  "structure": "Wide horizontal corridor, travelling east (or west on the return); all real play happens on the bottom two rows, with the top ~11 rows an unused open hall containing three isolated 3-tile platforms in an ascending staircase.",
+  "hazards": "Three 4-tile (40px) upward spike beds set into the floor at cols 7-10, 14-17, 21-24, separated by 3-4 tile safe gaps. No spike walls, no ceiling spikes, no timed elements.",
+  "distinctive": "The metronomic evenness: three identical spike beds at identical spacing, so the room is one jump input repeated three times. Its only other feature \u2014 the staircase of platforms at rows 12/9/6 \u2014 sits 50px+ above the floor with no wall-jump surfaces or lower steps to reach it, so it is effectively unreachable scenery rather than an optional high line.",
+  "sameyness_risk": "high",
+  "archetype_guess": "spike-floor hop corridor (flat side-scrolling connector)",
+  "quality": 2
+ },
+ {
+  "slug": "sluice",
+  "one_line": "A wide, mostly empty flat hall you jog straight through west-to-east, hopping one small three-tile spike strip and a couple of decorative one-way ledges before reaching a coin-gated door.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "drop"
+  ],
+  "structure": "Single-storey horizontal corridor, west-to-east travel: tall 3-tile door gaps in both side walls at rows 14-16, a continuous solid floor along the bottom, and roughly 11 rows of entirely unused dead air above.",
+  "hazards": "One 3-tile spike bed (up-facing, cols 11-13) sitting on the floor mid-room; 30px wide against a 40px jump, so it is cleared by a casual jump. No other hazards, no shutters, no walls of spikes.",
+  "distinctive": "Its east door is the coin-gated entrance to the glove region (DEMO_DUNGEON_GLOVE_GATE_REQUIREMENT) \u2014 the gate, not the geometry, is the only thing that makes this room matter.",
+  "sameyness_risk": "high",
+  "archetype_guess": "flat spike-hop transit corridor / gate antechamber",
+  "quality": 2
+ },
+ {
+  "slug": "spark-niche",
+  "one_line": "A dead-end detour room entered from below: you pop up through one-way platforms, hop a short spike bed to the right, then wall-jump up a tall pillar past two thin ledges to snatch coin 34 near the ceiling and drop back out the way you came.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "one-way platform pop-through",
+   "spike hop",
+   "wall-jump chain",
+   "precise-landing on thin platform",
+   "drop"
+  ],
+  "structure": "Single-door pocket: the only opening is a 4-tile floor gap at bottom-centre (to Lift Shaft), so travel is up-and-back. A full-height pillar at column 16 splits the space; the right half is a ~15-tile shaft with two 5-6 tile one-way ledges (row 12 and row 4) staggered off the pillar's right face, and the coin sits above the upper ledge. The left third is a tall sealed pocket behind another pillar (col 9) with a single platform, essentially unused dead space.",
+  "hazards": "One small upward spike bed (3 tiles, ~30px) on the right-hand floor between the entrance platforms and the base of the climb \u2014 clearable with a running jump or dash. No spike walls, no timed elements. Falling off the upper ledges costs only re-climb time, not death, unless you land on the spikes.",
+  "distinctive": "The 5-tile (50px) gap from floor to the first ledge is deliberately above jump height, so the pillar face forces a genuine wall-jump chain rather than a stair-step climb; the coin is placed one tile past the ledge edge so the last hop is a committed reach.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "dead-end coin alcove / wall-jump ascent side room",
+  "quality": 3
+ },
+ {
+  "slug": "split-furnace",
+  "one_line": "You walk in one side door, jog across a flat floor, and either walk out the far side or step through a one-way slot in the middle of the floor \u2014 almost nothing resists you.",
+  "movement_verbs": [
+   "run",
+   "drop",
+   "short hop",
+   "precise-landing (minor, near the slot lips)"
+  ],
+  "structure": "Wide 32x18 horizontal hall with a solid floor along the bottom and three-tile door bands cut into both side walls (rows 14-16), plus a downward branch through a 4-tile one-way slot at mid-floor. Travel is straight west-east, with an optional vertical exit. The upper two-thirds is empty air.",
+  "hazards": "Two up-spikes on the floor row flanking the central solid block, and a 4-tile down-spike cluster hanging near the ceiling that no route ever approaches. Effectively zero hazard pressure; the floor spikes are not close enough to the one-way lips to make committing to the descent feel like a decision.",
+  "distinctive": "Nothing meaningful \u2014 the one-way floor slot is the only structural idea and it costs no skill to use; the ceiling spikes and the three stacked mid-air platforms (rows 9, 11, 13) are pure decoration on a route nobody flies. No coins or pickups in the room.",
+  "sameyness_risk": "high",
+  "archetype_guess": "flat-floor three-way junction room (Split Root / Cullet Fork / Pressure Fork family)",
+  "quality": 1
+ },
+ {
+  "slug": "split-kiln",
+  "one_line": "A wide, almost empty hall you jog straight across at floor level, stepping over two token spike pips on each side, with the only real decision being whether to drop through the central one-way platform into Shard Vault.",
+  "movement_verbs": [
+   "run",
+   "small hop",
+   "drop-through one-way platform"
+  ],
+  "structure": "Wide horizontal 3-way junction: west door (rows 14-16) to east door (rows 14-16) along a single floor lane on row 17, plus a floor door straight down through a 4-tile one-way platform at the horizontal centre. The upper two-thirds of the room is open air containing a symmetric lattice of one-way platforms that no route uses.",
+  "hazards": "Four single up-spike pips embedded in the floor in mirrored `^#^` pairs (cols 9/11 and 20/22), trivially stepped over at running speed; a 5-tile down-spike cluster near the ceiling (row 6) that is decoration only, far above anything reachable. No timed elements, no spike walls.",
+  "distinctive": "Its perfect left-right mirror symmetry around the central drop slot \u2014 the room reads as a signpost rather than a challenge, and its whole built structure (platform lattice, ceiling spikes) is inert.",
+  "sameyness_risk": "high",
+  "archetype_guess": "decorative symmetric 3-way junction hall (walk-through fork with drop slot)",
+  "quality": 2
+ },
+ {
+  "slug": "split-root",
+  "one_line": "A three-second walk across a flat shelf near the floor of a mostly-empty box: step in from the west, hop one lone spike, and either keep walking east or tap down through the one-way slot to the Root Cellar.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "drop-through"
+  ],
+  "structure": "Wide horizontal junction, travelled left-to-right along the bottom four rows of a 32x18 box; west and east doors sit at the same height (rows 14-15) with a third exit straight down through a 4-tile one-way slot in the floor at cols 14-17. The upper two-thirds of the room (rows 1-13) is entirely empty air with one unreachable decorative platform at row 12.",
+  "hazards": "Two single up-spikes on row 16 (cols 12 and 19), one flanking each side of the central ####----#### block. Both are trivially cleared by a normal jump and neither guards anything; there are no spike walls, no timed elements, and effectively no death risk.",
+  "distinctive": "The floor-drop slot to the Root Cellar is the only real feature \u2014 this is the game's first branching choice (room 3) \u2014 but nothing makes the choice cost anything.",
+  "sameyness_risk": "high",
+  "archetype_guess": "flat three-way junction with drop-through floor slot",
+  "quality": 2
+ },
+ {
+  "slug": "split-spire",
+  "one_line": "A calm three-lane junction room: you walk in low from the west, chimney up a narrow one-way-assisted shaft between two tall pillars, and then either pop out the ceiling door or vault over the right-hand pillar and pick your way down a staggered platform staircase to the east exit.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "wall-jump chain",
+   "drop",
+   "precise-landing",
+   "one-way platform pop-through"
+  ],
+  "structure": "Wide hall split by two full-height pillars (col 12, rows 3-13; col 18, rows 6-16) into three vertical lanes. Travel is west\u2192up\u2192(ceiling exit) or west\u2192up\u2192over the top\u2192east\u2192down. Lane 1 (cols 1-11) is an open entry corridor along the bottom; lane 2 (cols 13-17) is a 5-tile-wide chimney with two offset one-way platforms (row 7 left, row 4 right) leading to the ceiling gap at cols 14-17; lane 3 (cols 19-30) is a descending slalom of six short one-way ledges plus one long shelf (row 10) down to the east door at rows 14-16.",
+  "hazards": "None at all \u2014 no spikes anywhere. All difficulty is geometry and fall-recovery; a missed climb just costs you a re-run up the chimney.",
+  "distinctive": "The right-hand pillar seals rows 6-16, so the east route is only reachable by climbing the central chimney to near the ceiling and crossing right along the open roof band \u2014 the room forces the vertical detour before it lets you continue horizontally, and the ceiling door sits right where that climb tops out, making the ascent do double duty as the fork.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "hub fork / wall-jump chimney with branching one-way descent",
+  "quality": 3
+ },
+ {
+  "slug": "star-threshold",
+  "one_line": "A lazy zigzag climb up staggered one-way platforms on the east side, capped by a coin grab at the summit, then a tense controlled descent down a narrow chimney whose two walls alternate spike beds so you must keep swapping which side is safe.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "drop-through one-way platform",
+   "wall-slide",
+   "wall-jump chain",
+   "dash",
+   "precise-landing",
+   "controlled fall"
+  ],
+  "structure": "Two-part room, travel east-to-west (reversible). East two-thirds is a tall open hall (cols 13-30) with six one-way platforms staggered left/right every 2 rows, forming an ascending switchback ladder from the east door (rows 14-17) to the ceiling. At the top you traverse left over a solid shelf (row 4, cols 11-17) past coin 52 (col ~14, rows 2-3), then enter a 4-tile-wide vertical chimney (cols 7-10) running the full height down to the bottom, which spills west onto a small ledge and the west door (rows 14-15). A dead-ended 4-wide left corridor (cols 1-4) sits behind the spiked wall and is pure backdrop.",
+  "hazards": "Spike beds mounted on both chimney walls in alternating vertical bands: right-facing spikes on the left wall at rows 2-3, 8-10, 14-15; left-facing spikes on the right wall at rows 5-6, 11-13. No spikes at all in the east hall; no timed shutters or moving hazards. Clear channel is 40px wide, shrinking to ~30px wherever a band bites in \u2014 exactly a dash's width, so a mistimed dash buries you.",
+  "distinctive": "The alternating spike chimney: safe wall flips three times on the way down, so a wall-jump chain must be deliberately broken and re-established on the opposite face rather than machine-gunned. It also cleanly juxtaposes a relaxed climb against a nervous descent in one room.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "staggered one-way-platform ascent feeding a spiked wall-jump chimney descent",
+  "quality": 3
+ },
+ {
+  "slug": "starwell-climb",
+  "one_line": "A left-to-right traverse that funnels you off a solid floor onto a 12-tile spike bed you can only cross by wall-jumping up the face of one pillar, committing to a dash across open air, and catching the far pillar before the spikes catch you.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "wall-jump chain",
+   "dash",
+   "air-catch onto wall",
+   "precise-landing",
+   "drop"
+  ],
+  "structure": "Wide horizontal traverse west\u2192east across a 32x18 box: a tall empty left shaft (walled by a full-height pillar at col 7 and a second at col 12), then the main event \u2014 an open bay whose only floor is spikes, spanned between the right face of the col-12 pillar and the left face of the col-25 pillar \u2014 then a short two-tile spike hop to a solid landing and the east door. Vertically it is a shallow chimney-then-gap hybrid rather than a true climb, despite the name.",
+  "hazards": "One long upward-facing spike bed (cols 13\u201324, ~120px) forming the entire floor of the central bay, plus a two-tile spike patch (cols 26\u201327) just past the far pillar. No spike walls, no timed elements \u2014 all hazard pressure is a single uninterrupted floor of death you must never touch.",
+  "distinctive": "The crossing is longer than a single dash (12 tiles vs ~4 tiles of dash), so you must gain height off the col-12 wall first and then spend the dash mid-fall as a committed, unrecoverable reach for the col-25 wall \u2014 a \"bank altitude, then commit\" beat rather than a rhythm chain.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "spike-bed gap crossing / wall-to-wall dash relay",
+  "quality": 4
+ },
+ {
+  "slug": "storm-cache",
+  "one_line": "You pop up through a hole in the floor into a big, empty, hazard-free hall and zig-zag up five widely-staggered one-way platforms to snag coin 26 tucked under the ceiling at top-right, then drop back out the way you came.",
+  "movement_verbs": [
+   "jump",
+   "dash",
+   "drop-through one-way platform",
+   "precise-landing",
+   "fall"
+  ],
+  "structure": "A single 30x16 open box, no interior solids except a small floor plinth; the only opening is the 4-tile gap in the bottom wall, so it is a dead-end pocket entered and exited from below. Net travel is up-and-back: bottom-left platform (r15) -> mid-left (r12) -> upper-left (r6) -> right side (r9) -> top-right (r3) -> coin at the ceiling, col ~23.",
+  "hazards": "None whatsoever. No spikes, no shutters, no pits; a missed jump just dumps you onto the floor for a free retry.",
+  "distinctive": "It is a cul-de-sac treasure pocket rather than a route room \u2014 the same floor gap is both entrance and exit, and the whole space is negative air with five islands hanging in it.",
+  "sameyness_risk": "high",
+  "archetype_guess": "hazard-free staggered-platform dash climb / coin alcove",
+  "quality": 2
+ },
+ {
+  "slug": "storm-split",
+  "one_line": "You drop in from the west onto a low ledge, and the room immediately asks a question: hop right along the ground past a short spike bed to the east door, or turn and climb a wide, airy zigzag of one-way platforms up to the ceiling hatch \u2014 the traversal is easy either way, the interest is entirely in the choice.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "drop-through one-way platform",
+   "diagonal hop",
+   "dash (optional, to shorten the widest platform gap)",
+   "precise-landing"
+  ],
+  "structure": "Wide open 32x18 hall, effectively empty in the middle, with travel in two directions at once: a flat west-to-east ground corridor along the bottom three rows, and a staircase of four/five one-way platforms zigzagging up-left/up-right from the low-left ledge (row 15) through rows 13, 10, 7 to a final platform at row 4 directly under the ceiling door. Split-path / vertical-branch off a horizontal corridor.",
+  "hazards": "Minimal: one four-tile upward spike bed on the floor (cols 17-20, row 17) sitting in the middle of the ground route between the west and east doors. Nothing threatens the climb at all \u2014 a fall from the top just costs you the re-climb, not a death.",
+  "distinctive": "The room is a genuine three-door junction (west to Pulse Gallery, east to Relay Chasm, ceiling to the Storm Cache coin room) where the optional coin branch is the vertical one \u2014 the climb is visibly a detour off the main horizontal line, so the fork reads instantly without a sign.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "open-hall platform staircase with a side-exit fork (junction room)",
+  "quality": 3
+ },
+ {
+  "slug": "temper-hall",
+  "one_line": "A wide-open east-west floor sprint where you hop two spike beds and snag a coin mid-jump over the second one, while three-quarters of the room's architecture hangs overhead doing nothing.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "precise-landing",
+   "dash",
+   "wall-jump chain (optional, off-route)",
+   "drop"
+  ],
+  "structure": "Left-to-right corridor along the very bottom of a 32x18 room: the west and east door gaps span rows 14-17, so travel is confined to a ~4-tile-tall floor lane. Two one-way platforms (cols 3-7 and cols 23-29 at row 15) act as stepping shelves at either end. Everything above row 13 is a separate, largely vestigial upper hall: a narrow 2-tile wall-jump chimney between the col-2 and col-5 pillars, a solid shelf at row 10 (cols 5-11), a slab at row 11 (cols 17-24), a one-way at row 12 (cols 12-16), and a right-side ledge near col 28 \u2014 none of it on the route.",
+  "hazards": "Two floor spike beds (up-spikes at row 17, cols 8-11 and cols 17-22) forcing two clean jumps; a run of down-spikes at row 8 (cols 14-21) hangs in open air ~6 tiles above the floor and threatens nothing on the main path. No shutters or moving hazards.",
+  "distinctive": "The coin (200,148) floats directly above the second, wider spike bed, so the one memorable beat is committing to a jump/dash over spikes to collect mid-flight rather than landing safely past them.",
+  "sameyness_risk": "high",
+  "archetype_guess": "spike-bed hop corridor with a decorative unused upper hall",
+  "quality": 2
+ },
+ {
+  "slug": "tempo-hall",
+  "one_line": "You can hold right along an open ground-floor hall and leave in seconds, or detour up a narrow spiked chimney, alternating wall-jumps around spikes that switch walls partway up, to pop out on a rooftop ledge and grab coin 19 before dropping down the open right-hand shaft to the east door.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "jump through one-way platform",
+   "wall-jump chain",
+   "alternating-side wall-jump",
+   "precise-landing",
+   "drop"
+  ],
+  "structure": "Wide east-west hall on the bottom band (west door to east door, two small floor pillars to hop), with an upper storey split into three vertical cells by two full-height wall slabs: a large empty left box (cols 1-9, dead space), a 3-tile-wide central chimney (cols 12-14, ~9 tiles tall, entered from below through a one-way platform), and an open right shaft (cols 25-30) that drops back to the hall. A flat roof (row 5, cols 15-24) carries the coin ledge linking chimney top to right shaft. Primary travel is horizontal; the optional detour is a climb-then-descend loop.",
+  "hazards": "Only spikes, and only inside the chimney: right-facing spikes on the left wall at the upper-middle (rows 6-7) and left-facing spikes on the right wall lower down (rows 9-10). They are offset so you must switch cling walls mid-chain rather than pogo one face \u2014 a rhythm/timing gate rather than a damage trap. No timed elements; the whole bottom route is hazard-free.",
+  "distinctive": "The staggered spike placement in the chimney, forcing an alternating-wall climb whose contact points are dictated rather than free \u2014 that plus the fact the entire hazard content is skippable optional coin routing.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "optional spiked-chimney wall-jump detour off a flat transit hall",
+  "quality": 3
+ },
+ {
+  "findings": "[]",
+  "slug": "threshold",
+  "one_line": "A wide, almost entirely empty hall you jog straight through west-to-east in a couple of seconds, with an optional two-hop climb onto a lonely mid-air platform for the coin.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "precise-landing",
+   "drop"
+  ],
+  "structure": "Horizontal corridor, west to east, but only the bottom ~4 rows are used for travel; the upper two-thirds of the 32x18 box is open air with a single floating platform. Door gaps are unusually tall (rows 14-17 on both side walls), so entry and exit are near-floor and very forgiving.",
+  "hazards": "None whatsoever \u2014 no spikes, no shutters, no pits. The only failure state is missing a jump and landing harmlessly on the floor.",
+  "distinctive": "The negative space: roughly 70% of the room is untouched air, and the coin platform (row 12, cols 14-19) floats alone above the two low one-ways, reachable only by a committed running jump from a platform edge. It reads as a deliberate breather/gateway between the Wall Gate wing and the Crossroads hub.",
+  "sameyness_risk": "high",
+  "archetype_guess": "flat one-way-platform transit hall / breather room with an optional floating-coin perch",
+  "quality": 2
+ },
+ {
+  "slug": "tidal-fork",
+  "one_line": "A wide, mostly empty three-way junction where you jog east along an open mid-height band and, if you want the side room, hop down onto a broad spike-flanked one-way platform and drop through the floor slot \u2014 a signpost more than a challenge.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "drop-through one-way platform",
+   "precise-landing (mild)"
+  ],
+  "structure": "32x18 open arena/hub, primary travel horizontal west-to-east across the unwalled rows 14-16 band, with a secondary vertical branch dropping through a floor slot at cols 14-17 into Lunar Cache. Doors: west (Vacuum Gallery), east (Aurora Spire), floor (Lunar Cache).",
+  "hazards": "Two spike groups, both effectively decorative. Six down-pointing spikes (row 5, cols 19-24) hang in open air roughly 9 tiles above any surface you'd traverse and are trivially avoided. Two pairs of up-spikes on the floor band (row 17, cols 11-12 and 17-18) flank the one-way drop slot, but the slot's landing platform is 4 tiles wide, so the descent has essentially no precision cost. No timed elements, no shutters.",
+  "distinctive": "The floor-drop slot is genuinely readable \u2014 spikes on both lips visually mark the branch \u2014 but the entire upper two-thirds of the room (eight scattered one-way platforms across rows 6-13, plus the ceiling spike cluster) is unreachable-by-need decoration that no route touches and no pickup rewards. The room has no coins at all.",
+  "sameyness_risk": "high",
+  "archetype_guess": "open-arena three-way fork / hub junction with decorative spike dressing",
+  "quality": 2
+ },
+ {
+  "slug": "treasury",
+  "one_line": "A wide open vault where you hop up a zig-zagging staircase of one-way platforms to snag two coins, with a spiked floor making a missed landing a real, if brief, punishment before you drop back out the way you came.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "precise-landing",
+   "drop-through one-way",
+   "short dash gap-cross",
+   "backtrack descent"
+  ],
+  "structure": "Single 32x18 open arena, essentially empty of solids except four staggered one-way platforms forming an ascending left-to-right-to-left switchback; entry is the west door low on the left wall (rows 14-16), and it is a dead end \u2014 you climb up-right for the coins and return to the same door.",
+  "hazards": "Two short spike beds on the floor (cols 10-12 and 20-22, up-pointing) directly under the climb line; no walls, ceilings, or timed elements. Punishment is positional rather than continuous \u2014 the rest of the floor is safe, so a fall usually just costs a re-climb.",
+  "distinctive": "It is a reward chamber rather than a challenge: two coins (one mid-height at 144,100, one high-right at 244,70) staged as a low-risk victory lap gated behind the Underpass coin requirement (16 coins to open). The airy, mostly-empty volume reads as \"vault\" and contrasts with the tight corridors that lead here.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "dead-end coin vault / one-way-platform ascent staircase",
+  "quality": 3
+ },
+ {
+  "slug": "underpass",
+  "one_line": "A wide, empty hall you can simply stroll through along the bottom west-to-east, unless you want the coin, in which case you hop up a loose zig-zag of one-way platforms to the ceiling exit.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "drop-through",
+   "precise-landing",
+   "optional wall-jump on boundary walls"
+  ],
+  "structure": "Wide open 32x18 hall: an unobstructed floor corridor (rows 14-17) runs west door to east door, while a sparse staircase of short one-way platforms zig-zags up through the upper 12 rows to a ceiling door at top centre. Horizontal for transit, vertical for the coin.",
+  "hazards": "None at all \u2014 no spikes, no shutters, no moving threats. Failure just means dropping back to the floor and re-climbing, with no cost.",
+  "distinctive": "Its layered function rather than its geometry: the bottom is a pure pass-through underpass (west door to the Winged Vault, east door to the Treasury, both coin-gated), while coin 13 and the ceiling link up to Wall Gallery live on a separate airy platform ladder overhead. The coin at (224,80) hangs just under the row-7 platform, so it is grabbed on the rise rather than by landing.",
+  "sameyness_risk": "high",
+  "archetype_guess": "open one-way-platform ascent hub / transit junction",
+  "quality": 2
+ },
+ {
+  "slug": "vacuum-gallery",
+  "one_line": "You cross a big empty west hall to a dead end, then wall-jump up a narrow spike-lined chimney where the safe wall keeps swapping sides, pop over the top, and coast back down a zig-zag of one-way platforms to the east door.",
+  "movement_verbs": [
+   "run",
+   "wall-jump chain",
+   "side-swap jump",
+   "dash",
+   "precise-landing",
+   "drop-through one-way",
+   "hop"
+  ],
+  "structure": "Left-to-right room in three bands: a large open west chamber (cols 1-15) that dead-ends at a full-height pillar; a mandatory 4-tile-wide vertical chimney (cols 12-15) climbed ~14 tiles to the ceiling; then an eastward/downward staircase of alternating one-way platforms (cols 19-27) ending in a narrow outer shaft (cols 29-30) with the east door 3 tiles above the floor. Up-then-over-then-down.",
+  "hazards": "Spike walls only, and used cleverly: the chimney's left face (col 11, right-pointing) and right face (col 16, left-pointing) are exact complements \u2014 at every height exactly one wall is spiked, so the safe wall alternates in blocks of 3-4 tiles. No spike floors, no timed elements. The descent half is completely hazard-free.",
+  "distinctive": "The perfectly complementary spike faces in the chimney: you can never climb one wall, you must fling across the 40px gap to the opposite wall each time the spikes switch sides \u2014 a read-and-commit rhythm rather than a mash-wall-jump climb.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "alternating-face spiked chimney climb with one-way-platform descent",
+  "quality": 3
+ },
+ {
+  "slug": "vent-spire",
+  "one_line": "You enter at floor level on the left, find the way east blocked by a full-height pillar, and have to ladder up a narrow one-way-platform shaft over a small spike bed, tip over the pillar's top, grab a coin tucked in the ceiling on the right, then drop down the open right-hand half to the east door.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "precise-landing",
+   "drop-through one-ways",
+   "wall-jump (optional, off the central pillar)",
+   "controlled fall"
+  ],
+  "structure": "Two-chamber room split by a tall solid pillar (col 18, rows 5-17): a west approach at floor level, a ~5-tile-wide vertical shaft between two pillars climbed via staggered one-way platforms (row 7 then row 4), a crossover at the pillar's top, and a large open right chamber you descend through to the east door at floor level. Net travel west-to-east with a mandatory up-and-over.",
+  "hazards": "One short upward spike bed (3 tiles) on the shaft floor beside the pillar base; nothing else. It only bites if you fall the full height of the climb, and the ladder rungs are wide, so most players never touch it.",
+  "distinctive": "The up-and-over silhouette: a solid pillar forces a vertical detour in what is otherwise a horizontal transit, and the only real hazard sits directly under the climb.",
+  "sameyness_risk": "high",
+  "archetype_guess": "one-way-platform ascent shaft with an over-the-wall crossover",
+  "quality": 2
+ },
+ {
+  "slug": "void-pass",
+  "one_line": "You enter low on the west, jog under a spike-lined chimney, then are forced into a tight alternating wall-jump climb where the safe wall swaps every few tiles, before spilling out onto a relaxed one-way-platform zigzag down to the east door.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "wall-jump chain",
+   "alternating wall-jump",
+   "dash",
+   "precise-landing",
+   "drop through one-way platforms"
+  ],
+  "structure": "Three-part left-to-right room: a flat west approach (cols 1-15, rows 14-17), a narrow ~4-tile-wide vertical chimney between the col-10 pillar and the col-16/17 double pillar that must be climbed the full room height, then a top corridor east and an open east half descended via scattered one-way platforms to the east door at rows 14-15. Net travel is west -> up -> east -> down.",
+  "hazards": "Spike beds on both chimney walls, banded so they alternate: right-pointing spikes on the left wall at rows 2-3, 8-10 and 14-15; left-pointing spikes on the right wall at rows 5-7 and 11-13. A single downward spike caps the chimney's right lip at the top. All static and readable; no timed elements. East descent is hazard-free.",
+  "distinctive": "The alternating spike banding turns the chimney into a forced rhythm: only one wall is grabbable at any given height, so the climb is a metronome of side-swapping wall-jumps, and the glove requirement is enforced (a dash-only bypass is proven not to exist by test).",
+  "sameyness_risk": "low",
+  "archetype_guess": "alternating-spike chimney climb with platform-zigzag descent",
+  "quality": 4
+ },
+ {
+  "slug": "wall-antechamber",
+  "one_line": "A big, calm, hazard-free hall where you hop up staggered one-way platforms on either side of a lone central pillar and wall-jump its face to pluck a coin from the empty air above it, then drop back down and stroll out the far low door.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "drop-through one-way platform",
+   "wall-slide",
+   "wall-jump chain",
+   "precise-landing"
+  ],
+  "structure": "Wide open arena (32x18, mostly empty air) with west and east door gaps low on the side walls at rows 14-17, so the through-route is a flat left-right traverse; a single 1-tile-wide solid pillar (col 16, rows 9-15) divides the middle, and two mirrored staircases of 5-tile one-way platforms fan up the left and right halves. The interesting travel direction is the optional vertical detour up the pillar.",
+  "hazards": "None whatsoever \u2014 no spikes, no shutters, no pits. The only failure is missing a wall-jump and falling harmlessly to the floor to retry.",
+  "distinctive": "The lone central pillar used as a wall-glove tutor: the coin (dungeon-coin-16, ~x161 y50) floats about three tiles above the pillar's top with no platform under it, so it can only be reached by climbing the pillar's face and jumping off the tip \u2014 a clean, safe demonstration of the wall-jump in an otherwise consequence-free room.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "hazard-free wide hall with staggered one-way platform stairs plus a single wall-jump pillar \u2014 a mechanic-teaching antechamber",
+  "quality": 3
+ },
+ {
+  "slug": "wall-gallery",
+  "one_line": "A big airy four-door hub where you zigzag up a staircase of one-way platforms between two tall interior pillars, grabbing a single coin on the way, with nothing anywhere trying to hurt you.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "drop-through one-way platform",
+   "wall-jump (optional, on the two interior pillars)",
+   "dash (required only for the east exit)",
+   "precise-landing"
+  ],
+  "structure": "32x18 open chamber acting as a 4-way hub: doors on all four sides (ceiling gap cols 14-17, floor gap cols 14-17, west and east gaps at row 14). Two tall solid pillars frame the interior \u2014 col 7 spanning rows 8-16 and col 24 spanning rows 5-14 \u2014 leaving a wide vertical gallery between them. Inside that gallery a loose zigzag of one-way platforms (row 13 cols 10-14, row 10 cols 17-21, row 7 cols 10-14, row 4 cols 18-24) forms an alternating left-right ascent from floor to ceiling; the middle of the room is otherwise empty air. A short stub platform at row 15 cols 4-8 bridges the west door past the left pillar.",
+  "hazards": "None. Zero spike tiles of any kind; no shutters, no timed elements. The only failure state is a missed jump, and a missed jump just drops you to the flat floor to retry.",
+  "distinctive": "It is the dungeon's crossing point \u2014 four doors, each leading somewhere different, with the ceiling route to Needle Room, a dash-gated east exit to Dash Chasm, and a coin-gated floor exit down to Underpass \u2014 so the room's real identity is navigational rather than mechanical. Coin 10 hangs at (188, 80), just above the mid-height right-hand platform, tempting you off the direct line.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "open hub chamber with staggered-platform vertical ascent",
+  "quality": 3
+ },
+ {
+  "slug": "wall-gate",
+  "one_line": "You stroll in from the west, hit a floor-to-ceiling wall that blocks the whole room, and have to turn a 5-tile-wide slot into a ~130px wall-jump chimney, cresting the barrier and then stepping down a ladder of one-way platforms to the east door.",
+  "movement_verbs": [
+   "run",
+   "duck under overhang",
+   "jump",
+   "wall-jump chain (both walls, 4+ alternating kicks)",
+   "crest and mantle",
+   "drop through one-way platforms",
+   "precise-landing"
+  ],
+  "structure": "West-to-east transit split by a full-height divider at column 16 (rows 4-17): flat west approach under a hanging pillar (col 10, rows 4-12), a narrow vertical chimney between pillar and divider, an open crossing corridor along the top three rows, then a staged descent on the east side via one-way shelves at rows 6, 10 and 15 to the east door.",
+  "hazards": "None \u2014 no spikes anywhere. All difficulty is geometric/technical: the only failure is falling back down the chimney and re-climbing.",
+  "distinctive": "It is an explicit ability gate rather than a hazard room: the east door is locked behind the climbing gloves and a 10-coin requirement, and the layout physically cannot be crossed without a sustained left-right wall-jump chain \u2014 the room is the proficiency exam for the glove.",
+  "sameyness_risk": "low",
+  "archetype_guess": "gated wall-jump chimney (ability-check barrier room)",
+  "quality": 4
+ },
+ {
+  "slug": "watch-post",
+  "one_line": "A calm, hazard-free cul-de-sac where you hop up a wide zigzag ladder of one-way platforms to grab a single coin tucked under the top-right ledge, then drop straight back out the floor you came in by.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "jump-through one-way platform",
+   "drop",
+   "fall"
+  ],
+  "structure": "Single-door dead-end chamber (32x18) entered and exited through a floor gap at bottom-centre; travel is up-and-back-down a staircase of one-way platforms that alternate centre / left / centre / right / centre / far-right, ending at the coin near the top-right.",
+  "hazards": "None at all \u2014 no spikes of any kind, no timed elements, no pits. The only failure mode is a mistimed hop that costs you a few seconds.",
+  "distinctive": "Every surface in the room is a one-way platform, so the ascent is completely reversible and the return trip is a single uninterrupted free-fall down the middle of the room \u2014 a deliberate \"pause and breathe\" beat before the Sluice.",
+  "sameyness_risk": "high",
+  "archetype_guess": "no-hazard one-way-platform zigzag coin cul-de-sac (side-room treasure alcove)",
+  "quality": 2
+ },
+ {
+  "slug": "windshaft",
+  "one_line": "A wide-open airy room you can stroll straight through in three seconds, unless you take the optional zig-zag ladder of one-way platforms up to the coin tucked at the top right, which asks for a dash-plus-jump on nearly every rung.",
+  "movement_verbs": [
+   "run",
+   "jump",
+   "dash",
+   "drop-through",
+   "precise-landing"
+  ],
+  "structure": "32x18 open hall with door gaps in both side walls at floor level (west and east, rows 14-16); the interior is empty air furnished only with five staggered one-way platforms forming a left-right-left-right ascent toward the top-right corner. Travel is horizontal for the mandatory route, vertical for the optional one.",
+  "hazards": "Almost none: a single 2-tile up-spike bed on the floor at columns 17-18, easy to walk around or hop. No spike walls, no timed elements. Falling off the climb costs nothing but time.",
+  "distinctive": "The vertical gaps (~30px) are comfortably within jump height but the horizontal offsets between consecutive rungs (~60-70px) exceed a plain jump, so the whole climb is a rhythm of dash-extended jumps in alternating directions \u2014 a dash ladder rather than a wall-jump chimney.",
+  "sameyness_risk": "medium",
+  "archetype_guess": "optional dash-ladder coin climb over a trivial floor corridor",
+  "quality": 3
+ },
+ {
+  "slug": "zenith-shaft",
+  "one_line": "A tall, tense two-stage climb: you wall-jump out of a narrow chimney on the left, mantle a roof, throw a single mid-air dash rightward onto a hanging shelf, then wall-jump a second, narrower chimney to the ceiling ledge before dropping down a spike-mouthed shaft to the east door.",
+  "movement_verbs": [
+   "run",
+   "duck-under/low-ceiling squeeze",
+   "wall-jump chain (6 alternating kicks)",
+   "mantle onto ledge",
+   "precise-landing",
+   "mid-air dash (single, load-bearing)",
+   "controlled drop with air-steer"
+  ],
+  "structure": "A 32x18 vertical shaft complex read left-to-right but travelled up-over-down: west door and east door sit at the same low height (rows 13-15) but the entire floor between them is a spike bed, and a full-height pillar at column 24 walls the ground route off, so the only connection is over the top. Two stacked chimneys offset from each other \u2014 a wide one at cols 5-8 (between the col-4 wall and the col-9 pillar) on the left, a narrow 3-wide one at cols 21-23 (between the hanging col-20 pillar and the col-24 pillar) on the right \u2014 joined by a horizontal dash transfer at mid-height, and terminated by a 5-wide drop shaft (cols 25-29) down to the exit.",
+  "hazards": "One continuous spike bed forms almost the whole floor: 14 tiles of upward spikes at cols 10-23 and another 3 at cols 25-27, split by the col-24 pillar. There are no timed or directional hazards \u2014 the spikes are pure consequence, punishing any missed wall-kick, short mantle, or an exit drop that isn't steered right onto the cols 28-30 landing strip. Nothing else in the room can kill you.",
+  "distinctive": "The two climbing chimneys are deliberately offset rather than stacked, so a single dash is the only thing that connects them \u2014 the room can't be beaten with wall-jump alone or dash alone (the content tests assert both incomplete loadouts fail), and the dash lands mid-sequence between the fourth and fifth wall-kick, which makes it feel like a rung in the climb rather than a separate move.",
+  "sameyness_risk": "low",
+  "archetype_guess": "offset twin-chimney wall-jump ascent with a mandatory dash transfer, over a spike-floor void",
+  "quality": 4
+ }
+]

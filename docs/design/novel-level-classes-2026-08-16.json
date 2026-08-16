@@ -1,0 +1,868 @@
+{
+ "proposals": [
+  {
+   "name": "Tide Shaft (rising/falling hazard tide, descent-as-challenge)",
+   "concept": "A tall shaft the player must descend (or ascend) while a horizontal hazard band \"tide\" sweeps the full width of the room, stepping level by level. Instead of one shutter you place a stack of full-width TimedHazard rects, one per two-tile band, sharing a period but with monotonically increasing phase, so the active band visibly travels up or down the shaft like water. The player rides just ahead of or just behind the tide, dropping between ledges in the gap the tide leaves behind. Falling is fast and free, so descent-with-a-tide converts gravity from a gift into a metronome: drop too early and you land in the next band as it lights; drop too late and the band behind you catches up. Coins sit on ledges that are only safely occupied during a specific window, so banking a coin (which needs standing still) means committing to a full tide cycle on that ledge.",
+   "core_verbs": [
+    "drop",
+    "wait-in-bay",
+    "read-the-cadence",
+    "short-hop",
+    "bank-on-beat"
+   ],
+   "why_novel": "The dungeon has ~3 descent-as-challenge rooms and 1 timed-hazard room, and nothing that makes falling itself the timed act. This is not a spiked wall-jump chimney: the walls are plain, there is no wall-jump chain, and the vertical axis is governed by a clock rather than by stamina/geometry.",
+   "sketch": "32x18, solid boundary. Ceiling door at cols 14-17, floor door at cols 14-17. Interior is a stack of staggered one-way platform ledges (-) 4-6 tiles wide alternating left-biased and right-biased at rows 4, 7, 10, 13 \u2014 each pair 3 rows apart, comfortably inside the ~20px comfortable jump and always survivable as a drop. Five full-width TimedHazard rects of Rect::new(0, row*10, 320, 20) at rows 2, 5, 8, 11, 14, all period 120, active 45, phases 0/24/48/72/96 so the lit band marches downward at one band per 24 ticks. Safe pocket is always the band directly below the lit one, which is exactly one ledge-drop away. Spikes (^) on the floor between cols 2-12 and 20-30 punish a straight uninterrupted plummet, forcing use of the ledges. Coins at ledge ends (col 3 row 6, col 28 row 9) sit two tiles from the ledge edge so the bank-stand costs one tide beat.",
+   "difficulty_range": "Easy-to-hard. Easy: 3 ledges, period 150/active 40, tide slow and one-directional. Hard: period 80/active 50, ledges narrowed to 2 tiles, spike-tipped ledge ends.",
+   "variant_axes": "Tide direction (descending vs rising, forcing ascent ahead of it); tide speed vs. player fall speed (ride-ahead vs. chase-behind); parity (alternate bands lit simultaneously, so the safe pocket ping-pongs); breaking the ledge stagger so some drops need a mid-air dash to reach the next safe pocket; a 'double tide' with two bands travelling in opposite directions that cross mid-room once per cycle."
+  },
+  {
+   "name": "Metronome Gallery (safe-bay hopping across a phase-marching corridor)",
+   "concept": "A long horizontal corridor divided into narrow alcoves by vertical TimedHazard curtains. Each curtain is a 1-2 tile wide, floor-to-ceiling rect; phases march steadily along the corridor so the safe opening travels like a wave. The player learns the cadence from the first bay (where they can stand still, watch two full cycles, and bank coins), then rides the wave: each hop must launch on the beat and land in the next alcove before the following curtain lights. The floor is flat and unspiked \u2014 the danger is entirely temporal, which is exactly the inversion the dungeon lacks. Some alcoves are deep enough for a full pause; others are one-tile perches where the player must arrive already committed to the next hop.",
+   "core_verbs": [
+    "read-cadence",
+    "time-launch",
+    "hop",
+    "pause-in-bay",
+    "chain-on-beat"
+   ],
+   "why_novel": "The over-represented flat spike-floor hop corridor makes distance the obstacle; here spacing is trivially clearable and *when* is the entire challenge. It is the closest structural cousin to an existing archetype and deliberately so \u2014 it lets the player feel the dungeon's most common shape re-authored under a clock.",
+   "sketch": "32x18, flat solid floor rows 16-17, side doors at rows 13-16 both sides. Curtains: TimedHazard::new(Rect::new(x, 60, 20, 100), 96, 34, phase) at x = 60, 110, 160, 210, 260 with phases 0, 19, 38, 57, 76 \u2014 a curtain lights 19 ticks after its western neighbour, which is a comfortable single-hop travel time for a 5-tile alcove. Alcoves are 3-4 tiles wide, well inside the 40px dash and reachable by a flat run, so no alcove crossing is ever a physics problem. Ceiling drops one-way platforms (-) at row 8 over alcoves 2 and 4 as optional high perches. Coins one per alcove, centred, so each bank is a deliberate one-cycle stop.",
+   "difficulty_range": "Easy-to-medium at slow phase march and wide alcoves; hard when active window exceeds half the period and the alcove is one tile wide.",
+   "variant_axes": "March direction (with the player vs. against them, the latter demanding a full-speed dash run); non-uniform phase spacing so the cadence syncopates mid-room; every-other-curtain sharing a phase so two alcoves must be crossed in one window; a coin placed in the fastest-moving alcove so greed costs a full re-sync; ceiling perches offering a slower alternate line."
+  },
+  {
+   "name": "Two-Clock Fork (one crossing, two honest routes)",
+   "concept": "The room presents a single crossing \u2014 left door to right door \u2014 served by two visibly different lanes that both work. The low lane is short but governed by a fast, tight-window hazard; the high lane is longer, requires a dash and a couple of hops, but its hazard is slow and generous. Both lanes are always solvable; the choice is a real one, and crucially the two lanes have coprime-feeling periods, so which lane is *currently* cheaper depends on when the player arrives. A player who dithers at the entry bay is choosing, not stalling. The reconvergence bay before the exit lets both lanes bank coins on equal terms.",
+   "core_verbs": [
+    "choose",
+    "commit",
+    "dash",
+    "read-two-cadences",
+    "reconverge"
+   ],
+   "why_novel": "Fills the flat-zero multi-route gap: no existing room offers two distinct solutions to one crossing. It is also not a drop-slot junction \u2014 junctions there branch to different destinations, whereas this branches and rejoins, making the branch a genuine strategic choice rather than a navigational one.",
+   "sketch": "32x18, doors left and right at rows 13-16. Entry bay cols 1-5, floor row 16, deep enough to stand and watch. Low lane: flat floor rows 16-17 from col 6 to col 26, with two TimedHazard rects Rect::new(110, 130, 30, 40) and Rect::new(190, 130, 30, 40), period 70, active 30, phases 0 and 35 \u2014 a fast alternating one-two that must be threaded at a run. High lane: solid ledge at row 9 spanning cols 8-25, reached from the entry bay by a wall-hug jump to a one-way platform at (col 6, row 12) then a jump to row 9 \u2014 each step 3 rows, inside the 40px jump. Its single hazard is a wide Rect::new(150, 80, 60, 30), period 200, active 70, i.e. one long unmistakable window, but the 6-tile lit span demands a dash entry from a run-up, so the high lane is gated on the boots ability while the low lane is not. Reconvergence bay cols 26-30 at row 16, with a one-way platform staircase down from the row-9 ledge at cols 26 and 28. Coin in the reconvergence bay; a second, greedier coin sits on the high ledge at col 12.",
+   "difficulty_range": "Medium overall, but self-scaling: the low lane is the harder execution, the high lane the harder commitment. Easy variants widen the low-lane gaps; hard variants shorten the high lane's window so both routes demand precision.",
+   "variant_axes": "Ability asymmetry (one route needs boots, the other gloves, the other neither); route length vs. window generosity trade; adding a third crawl-height route under the high ledge; making one route coin-rich and the other fast; a variant where the two lanes' hazards share a period so the choice is fixed rather than arrival-dependent."
+  },
+  {
+   "name": "Shutter Crawl (timed one-tile squeezes)",
+   "concept": "A low, wide room threaded by one-tile-high crawl tunnels whose mouths are covered by TimedHazard shutters. The player dash-compresses to slide in, and must be through before the shutter relights \u2014 a crawl-slide is a committed, uninterruptible move, so entry timing is everything and mid-tunnel hesitation is impossible. Between tunnels are standing bays where the player recovers a dash, reads the next shutter, and banks. Multiple short tunnels in series build a stuttering rhythm quite unlike a single squeeze beat.",
+   "core_verbs": [
+    "dash-compress",
+    "slide",
+    "commit",
+    "recover-dash",
+    "read-shutter"
+   ],
+   "why_novel": "Crawl/squeeze exists in 8 rooms but always as a single isolated beat with no clock. Turning the squeeze into a repeated, timed, irreversible commitment makes it a rhythm instrument rather than a gate, and combines the two most under-explored tags in the dungeon.",
+   "sketch": "32x18. Floor rows 16-17 solid; a solid slab at rows 13-14 spanning most of the width, leaving a one-tile crawl gap at row 15. Break the slab into three segments (cols 5-11, 13-19, 21-27) so there are standing bays at cols 12, 20 and 28 where the ceiling opens to row 8. Each tunnel is 6-7 tiles long, comfortably inside a 40px dash-slide plus carried momentum. Shutter at each tunnel mouth: Rect::new(50,150,20,10), Rect::new(130,150,20,10), Rect::new(210,150,20,10), period 110, active 45, phases 0, 37, 74 \u2014 staggered so the player who exits one tunnel and immediately re-dashes hits the next mouth mid-window and must instead wait one bay-beat. Downward spikes (v) on the slab underside at the far mouth of tunnel 2 narrow the exit, punishing an over-long slide. Coins in the bays only, so banking always happens standing between commitments.",
+   "difficulty_range": "Medium-to-hard; gated on the boots ability throughout. Easy variants use one tunnel with a very long inactive window and no exit spikes.",
+   "variant_axes": "Tunnel length vs. dash reach (some tunnels short enough to walk-crawl, others needing full dash momentum); shutters at the entry vs. the exit mouth (exit shutters mean committing blind and are the nastiest variant); vertical crawl-drop tunnels through the floor; a branch where a slow surface route parallels the crawl route; phase stagger that rewards immediate re-entry instead of punishing it."
+  },
+  {
+   "name": "Rotary Bank (loop circuit with a sweeping hazard and standing-still coin banking)",
+   "concept": "A closed rectangular circuit \u2014 a ring corridor around a solid central block \u2014 with hazard segments that light in sequence around the ring, so the safe arc rotates like a lighthouse beam. Coins are strewn around the circuit, but coins only bank while standing still or on leaving the room, so the player must keep moving to survive the sweep and then find a moment in the rotating safe arc to stop and cash in. That tension \u2014 the hazard demanding motion, the economy demanding stillness \u2014 is the class's whole engine. A greedy player laps the ring several times; a cautious one takes the exit with an unbanked pocketful.",
+   "core_verbs": [
+    "circulate",
+    "stay-ahead",
+    "find-stillness",
+    "bank",
+    "decide-to-lap"
+   ],
+   "why_novel": "Loop layouts exist in only 4 rooms and none of them are timed; nothing in the dungeon uses the standing-still banking rule as a mechanical pressure. It is emphatically not a dead-end coin vault: the coins are on the main circuit, collectable in passing, and the risk is in stopping rather than in detouring.",
+   "sketch": "32x18, boundary solid, entry door left rows 13-16, exit door ceiling cols 14-17. Central solid block cols 9-22, rows 5-12, leaving a ring corridor 4 tiles wide on all sides \u2014 the lower run at rows 13-15, the upper run at rows 2-4, verticals at cols 5-8 and 23-26. The verticals are climbed by one-way platform steps every 3 rows (rows 13, 10, 7, 4), each within a plain jump, so no wall-jump chain is needed. Four TimedHazard rects, one per side of the ring: bottom Rect::new(50,130,220,30), right Rect::new(230,20,40,140), top Rect::new(50,20,220,30), left Rect::new(50,20,40,140); all period 160, active 50, phases 0/40/80/120, so exactly one side is lit at a time and the safe region is the three-quarter arc behind it. One 3-tile dead spot per side (a notch in the central block at cols 15-17 row 13, and mirrors) sits outside every hazard rect and is the only place a player can legitimately stand still \u2014 these are the banking bays, and each is reachable once per rotation. Coins at ring corners and mid-runs; the exit is directly above the top run's banking notch.",
+   "difficulty_range": "Easy at 160/50 with four banking notches; hard at 140/70 with one notch, forcing a full lap between banks.",
+   "variant_axes": "Number and placement of banking notches (four = relaxed, one = a full-lap commitment); sweep direction relative to the ring's easier travel direction; figure-eight rings with a shared crossing tile that is lit by two hazards at once; a ring where the exit only clears during one specific phase, making the last lap a timing puzzle; an inner and outer concentric ring sweeping at different rates."
+  },
+  {
+   "name": "Braided Crossing (two-lane room)",
+   "concept": "A single left-to-right (or bottom-to-top) crossing that is split by a long horizontal solid spine into two parallel lanes that both start at the entry door and both terminate at the exit door. The high lane is an exposed run of one-way platforms over open air with spike-tipped gaps that demand dash or committed jump timing; the low lane is a floor-hugging gutter with a 1-tile crawl squeeze and a spike ceiling that demands the slow, precise, no-ability option. Neither lane is a bonus branch: both are complete solutions to the same crossing, and the player picks based on which ability they trust. Coins are placed one per lane so the completionist has to cross twice, once each way, which is where the room's second life comes from.",
+   "core_verbs": [
+    "choose",
+    "commit",
+    "crawl-slide",
+    "dash-gap",
+    "re-cross"
+   ],
+   "why_novel": "The dungeon has ~0 rooms with two distinct solutions to one crossing. This is the plainest possible statement of that idea and therefore the foundation class: it converts the existing corridor vocabulary (spike hops, squeezes) into a choice rather than a sequence. It is not a coin vault because both branches exit; it is not a drop-slot junction because the lanes rejoin.",
+   "sketch": "32x18. Left door rows 13-16, right door rows 13-16 \u2014 note both doors sit low, so the high lane needs a climb at both ends. Solid spine: row 9, cols 4..28, one tile thick. Entry alcove cols 1..4 open from row 8 to row 16 so the player can either walk forward into the low lane or wall-jump/stair up the left stub (short solid steps at (3,12),(4,10)) onto the spine's top surface at row 8. Low lane: floor row 17 solid, ceiling is the spine underside at row 9, so the lane is 7 tiles tall \u2014 drop it to 1 tile at cols 14..17 by hanging solid down to row 16 with a v-spike at row 15 above the gap, forcing a dash-compressed crawl-slide. Two ^-spikes on the low floor at cols 8 and 22, single tiles, 5+ tiles apart so each is a comfortable 20px hop. High lane: one-way platforms (-) at row 8 spanning cols 6..10, 14..18, 22..26, leaving 3-tile gaps at cols 11..13 and 19..21 \u2014 30px, inside the 40px dash and just past a comfortable jump, so dash trivialises them and a running jump barely clears. >-spikes on the right face of the platform at col 10 punish an undershoot without killing a good jump. Right stub mirrors the left so the high lane drops back to the door. Coins at (16,7) on the high lane over a gap and (16,16) inside the crawl squeeze, both requiring a stand-still bank at the far alcove.",
+   "difficulty_range": "Easy to mid. Early rooms make both lanes forgiving and the choice cosmetic; later rooms sharpen one lane into a real risk and shrink the other's squeeze so the safe option costs time.",
+   "variant_axes": "Which lane is the fast one; vertical instead of horizontal braid (two chimneys sharing a spine); asymmetric ability gates (high lane needs boots, low lane needs nothing but patience); three lanes; lanes that swap heights at midpoint via a shared crossing slot so the choice is made twice; a timed hazard on the fast lane so the choice becomes 'wait or risk'."
+  },
+  {
+   "name": "One-Way Loop (asymmetric circuit)",
+   "concept": "A closed ring of corridor around a solid central island, entered at one point and exited at another, where the ring is traversable in both directions but the two directions are physically different problems. Clockwise is a descent \u2014 drops the player can always take \u2014 while counter-clockwise is an ascent that needs wall-jump or dash to climb the same ledges. The room therefore reads as a shortcut on the way down and a wall on the way back up, and the player learns its geometry as a map rather than as a sequence of jumps. One-way platforms (-) do the heavy lifting: they are the engine's only genuinely directional tile, and the class is built entirely on the fact that you can rise through one and not fall through it.",
+   "core_verbs": [
+    "circle",
+    "drop-through",
+    "climb-back",
+    "route-plan",
+    "backtrack"
+   ],
+   "why_novel": "Only 4 loop rooms exist and none are directionally asymmetric; the dungeon has no room that is traversed differently coming back. It also lands squarely in the 'descent-as-challenge' gap (~3 rooms) because the clockwise half is a controlled fall with consequences, not a free one.",
+   "sketch": "32x18. Central island: solid block cols 10..21, rows 5..13. Ring corridor 3 tiles wide all round: top run row 3-4 above the island, bottom run rows 14-16 below, left run cols 6..9, right run cols 22..25. Outer boundary solid. Left door rows 13-16 opens into the bottom-left of the ring; ceiling door cols 14-17 opens onto the top run. Descent side (right column, cols 22..25): three one-way platforms at rows 6, 9, 12 spanning the full column width \u2014 falling from the top run you land, walk, and drop through each in turn, but each is 3 tiles (30px) below the last, inside jump range only if you have a standing spot, which the class denies by putting a ^-spike at the platform's landing edge (col 25, on each platform's left end) so a blind re-climb costs blood. Ascent side (left column, cols 6..9): no platforms at all, just two facing walls 4 tiles apart \u2014 wall-jump chain with gloves, or dash-up-diagonal off the island face with boots, so the ascent is ability-gated while the descent is free. Bottom run is flat and safe so the loop always closes. Coin at (15,4) on the top run, above the island, forcing at least one full lap if the player entered from the left door.",
+   "difficulty_range": "Mid. Easy as a one-way descent, hard the moment the player wants something back at the top.",
+   "variant_axes": "Which direction is gated (gloves vs boots vs pure timing); island hollowed into a vault with its own door so the ring becomes a figure-eight; a spike-lined ring segment that makes one arc a commitment; a timed hazard occupying one arc so the loop must be entered on a beat; doors placed both on the ring and inside the island so the room serves three different traversals depending on approach."
+  },
+  {
+   "name": "Shutter Interchange (timed-gate junction)",
+   "concept": "A junction where several routes cross one central chamber and rectangular TimedHazard shutters, offset in phase, decide which route is open right now. Nothing here is a reflex test: the shutters have long periods and short active windows, so the room is about reading the rhythm and standing in the right safe pocket until your lane opens. Because two shutters are out of phase, the room always has an open route \u2014 the choice is which one, and the player who waits for the fast lane pays time while the player who takes the open lane pays distance. Safe pockets are alcoves recessed out of every hazard rectangle, and the room teaches itself by letting the player watch a full period from inside one.",
+   "core_verbs": [
+    "read-rhythm",
+    "wait",
+    "time-entry",
+    "reroute",
+    "commit-through"
+   ],
+   "why_novel": "Exactly one timed-hazard room exists in 101. This class makes the hazard the routing mechanism rather than an obstacle, which no existing archetype does: it produces a multi-route room whose route set changes over time, so it fills both the timed gap and the multi-route gap at once.",
+   "sketch": "32x18. Central chamber cols 8..24, rows 4..16, floor row 17. Three horizontal corridors leave the chamber rightwards at rows 5-7 (high), 9-11 (mid), 15-16 (low, the entry level from the left door rows 13-16). Two TimedHazard rects: A covers cols 12..15, rows 4..11 (period 240 frames, active 60, phase 0) \u2014 a vertical curtain cutting the high and mid corridors; B covers cols 18..21, rows 9..16 (period 240, active 60, phase 120) \u2014 cutting the mid and low. Because A and B are 180 degrees apart, the mid corridor is the only one both touch, so mid is the fast-but-narrow-window route and high/low are each open exactly when the other is shut. Safe pockets: alcove cols 16..17 rows 12..14, recessed from both rects, big enough to stand and bank a coin, with a solid lip so the player cannot be nudged out. Climb from low to high inside the chamber: solid ledges at (9,14),(10,11),(11,8) \u2014 3-tile (30px) rises, jumpable without abilities, so the routing choice never becomes an ability gate. Coin at (13,5) inside rect A's footprint, so the greedy line is to enter high during A's off-window and bank in the pocket.",
+   "difficulty_range": "Mid to hard, but hard through patience and planning rather than execution.",
+   "variant_axes": "Number of shutters and their phase relationship (in-phase = a single global heartbeat, three-way offset = a rotating door); shutters as vertical curtains vs horizontal ceilings that force ducking; a shutter that gates the exit door itself so the room becomes an airlock; period long enough that the room is a puzzle vs short enough that it is a groove; combining with the Braided Crossing so one lane is timed and the other is spatial."
+  },
+  {
+   "name": "Keyhole Vault (one-way-in, earn-your-way-out)",
+   "concept": "A treasure chamber the player falls into for free and must climb out of, where the descent seals behind them not with a door but with geometry \u2014 the entry drop is a spike-lined funnel that cannot be reversed. The room's whole tension is that entering is a decision, and the exit is a different, harder room than the entrance was. Crucially, unlike a dead-end vault, there are two ways out at different prices: a long safe stair that costs a full circuit of the chamber, and a short vertical shaft that needs a dash or a glove chain. The player who grabbed the coin greedily and has no boots is not trapped, only slowed.",
+   "core_verbs": [
+    "commit-drop",
+    "survey",
+    "choose-exit",
+    "climb-out",
+    "circuit"
+   ],
+   "why_novel": "18 dead-end coin vaults exist and all of them are enter-and-leave-the-same-way. This inverts the vault into a topology object: irreversible entry plus branching exit. It also supplies descent-as-challenge, since the fall itself must be steered between spikes rather than merely survived.",
+   "sketch": "32x18. Ceiling door cols 14-17. Funnel: solid walls converging from (11,1) and (20,1) to a 2-tile throat at cols 15..16, row 6, with >-spikes on the left throat wall at (14,4),(14,5) and <-spikes on the right at (17,4),(17,5) \u2014 the throat is passable falling straight but a wall-jump chain back up puts the player's 8px-wide body inside a side spike, so the funnel is one-way without any special tile. Chamber below: cols 2..29, rows 7..17, floor row 17 solid, coin at (16,16) dead centre under the throat so the reward is free and the exit is the cost. Safe stair (long route): ledges rising rightwards at (24,15),(26,13),(28,11) then a shelf cols 26..29 rows 9..10, then leftwards along a one-way platform run at row 8, cols 18..25, back to a side door at right rows 13-16 \u2014 every rise is 2 tiles (20px), comfortable, no ability needed, but it is a ~40-tile walk. Fast shaft (short route): cols 4..7, rows 8..16, two bare facing walls 4 tiles (40px) apart topped by an opening into the same row-8 platform run \u2014 glove wall-jump chain or a single dash-up-diagonal off the left wall clears it in three moves. Neither route touches the funnel, so the entry stays sealed.",
+   "difficulty_range": "Easy to mid on entry, mid on exit; the difficulty knob is how long the safe route is and how tight the fast shaft is.",
+   "variant_axes": "Funnel geometry (single throat, double throat, a spike-lined chute the fall must be steered through with air control); how many exits and their ability profile; a variant where the safe exit leads to a different room than the fast one so the choice changes the dungeon route, not just the time cost; a shutter over the fast shaft turning it into a timed option; a version entered from the side and exited through the ceiling."
+  },
+  {
+   "name": "Switchback Spine (same corridor, three times, differently)",
+   "concept": "A tall room folded into three stacked horizontal runs joined at alternating ends, so the player traverses roughly the same horizontal distance three times \u2014 but each run has a different rule. The bottom run is a walk, the middle run is a low crawl under a spike ceiling, the top run is a hop across one-way platforms with holes that drop you back to the bottom run. The folding means a mistake on the top run does not kill, it demotes: you fall two floors and walk the whole thing again. That soft failure is the class's identity, and it lets the top run be genuinely demanding without a checkpoint.",
+   "core_verbs": [
+    "switchback",
+    "crawl",
+    "hop",
+    "fall-back",
+    "re-run"
+   ],
+   "why_novel": "Fills descent-as-challenge inverted (failure is descent), gives crawl/squeeze a second beat inside a larger structure instead of the usual one-and-done, and creates a room whose shape is the puzzle: the player must hold a 3-floor mental map to know where a fall lands them. No existing archetype has soft, positional failure.",
+   "sketch": "32x18. Three runs: bottom rows 15-16 (floor row 17), middle rows 10-11 (floor row 12 solid, cols 3..29), top rows 5-6 (floor row 7). Left door rows 13-16 enters the bottom run at the left. Bottom run: clear walk right to cols 27..29, where a stair of solids at (28,14),(27,13) lifts 2 tiles at a time up to the middle floor \u2014 20px rises, no ability. Middle run travels leftwards, cols 4..28, with the ceiling dropped to row 10 by solid at row 9 across cols 12..20 and v-spikes hung at row 10 on cols 14 and 18, leaving a 1-tile channel that must be crawl-slid \u2014 dash-compressed, so it also gates on boots or on the earlier version having a taller channel. At the left end, wall-jump column cols 3..4 rises from row 11 to the top floor row 7 (40px, one glove chain or a dash-up). Top run travels rightwards again on one-way platforms at row 6: segments cols 5..9, 13..16, 20..23, 26..29, with holes at 10..12, 17..19, 24..25 \u2014 the holes are 3 and 2 tiles wide, so 30px and 20px, clearable by a comfortable jump but unforgiving of a short hop, and a miss drops the player through row 7's gaps straight past the middle run's open sections onto row 16. Ceiling door cols 14-17 sits above the top run, reachable only from the platform at cols 13..16, i.e. immediately after the first and widest hole. Coin at (11,6) hovering over the first hole, banked only at the top-right shelf.",
+   "difficulty_range": "Mid to hard, tunable by hole width and channel height; forgiving because death is rare and repetition is the punishment.",
+   "variant_axes": "Number of folds (2 vs 3 vs 4); which run is hardest and therefore how far a fall sets you back; a version where falling is the intended route down and the switchback is only climbed on the return; a shutter on the middle crawl so the demotion becomes a timing loss; a variant where each run has a coin so the room must be run cleanly once rather than three times sloppily; reversing the door pair so the room is climbed instead of crossed."
+  },
+  {
+   "name": "The Flue (steered terminal-velocity dive)",
+   "concept": "The room is one tall shaft the player enters through the ceiling door and exits through the floor door, and the whole crossing is a single uninterrupted fall of 12-16 tiles. There is no platforming in the usual sense: once you commit, gravity is the clock and your only inputs are air-steering and (with boots) one or two horizontal dashes. The shaft is divided by spike-tipped baffles that alternate sides, so the safe channel snakes left-right as you descend. The skill is reading the whole column before you drop and pre-loading the correct drift, then making micro-corrections at speed. Failure is instant and legible: you clip a baffle tip. Because the fall is unrecoverable upward (4-tile jump cannot climb back out), the room is genuinely one-way and the tension is commitment rather than execution-per-beat.",
+   "core_verbs": [
+    "commit-drop",
+    "air-steer",
+    "mid-fall dash",
+    "read-ahead"
+   ],
+   "why_novel": "Fills descent-as-challenge (~3 rooms) and treats falling itself as the obstacle rather than as transit between hop corridors. It is not a wall-jump chimney: there is no wall contact at all, and the vertical direction is inverted (down, not up). It is not a spike-floor hop corridor: no floor, no hops.",
+   "sketch": "32x18. Ceiling door at cols 14-17, floor door at cols 14-17. Solid '#' side walls cols 0-2 and 29-31. Baffles are 6-8 tile wide solid slabs anchored alternately to the left and right wall at rows 4, 7, 10, 13, each capped with '^' on top and '>' or '<' on its free end. Safe gap between a baffle's free end and the opposite wall is 4-5 tiles wide, and consecutive gaps sit on opposite sides, so each baffle costs the player about 5-8 tiles of horizontal travel. At fall speed the player covers roughly a tile of drop per frame-tick band, so 3 tiles of vertical spacing between baffles gives enough time for air-drift alone at 4-5 tile offsets; wider offsets (7-8) require one dash, which is exactly 4 tiles horizontal and legal mid-air. Coins sit tucked one tile inside each gap on the inside line, rewarding the tight line rather than the safe one, and bank only at the bottom landing pad, so a greedy run risks everything it collected.",
+   "difficulty_range": "Easy (2 baffles, 4-tile gaps, drift only) to hard (5 baffles, alternating 7-tile offsets requiring two dashes and a wall-graze).",
+   "variant_axes": "Number and spacing of baffles; gap width; whether offsets are drift-reachable or dash-mandatory; adding down-pointing 'v' spikes on baffle undersides so you cannot hug the ceiling of a gap; making the shaft dogleg with a full-width one-way '-' partway down that must be dropped through in a specific column; a no-boots variant where all offsets are drift-only but gaps narrow to 3 tiles."
+  },
+  {
+   "name": "Strata Sort (one-way stack with landing-zone choice)",
+   "concept": "A tall room filled with horizontal layers of one-way platforms, each layer holed in two or three different columns. The player falls from the ceiling and must choose, layer by layer, which hole to drop through. Different columns lead to different sub-routes: a fast lane that is spike-fringed and coin-poor, a slow lane that costs a rebuild of height, and a coin lane that dead-ends unless you can dash back across. Crucially, more than one column reaches the exit, so this is a genuine multi-route room: the same crossing has two valid solutions with different risk and reward. Drop-through on one-way platforms means downward motion is free and reversible-ish (you can jump back up through '-' from below if you have 4 tiles of clearance), so the player can experiment, which makes route choice a real decision rather than a coin flip.",
+   "core_verbs": [
+    "drop-through",
+    "lane choice",
+    "re-ascend through one-way",
+    "commit to a lane"
+   ],
+   "why_novel": "There are ~0 genuine multi-route rooms and only 4 loop/circuit rooms. Existing drop-slot junctions are flat, single-slot, and offer no choice; this class makes the slot a decision and stacks it five times. It also uses one-way platforms structurally rather than decoratively.",
+   "sketch": "32x18, ceiling door cols 14-17, floor door cols 14-17. Five full-width '-' strata at rows 3, 6, 9, 12, 15. Each stratum is solid '-' except two 2-tile holes; hole columns shift between strata so lanes braid (e.g. row 3 holes at cols 7-8 and 20-21; row 6 at 5-6 and 22-23; row 9 at 12-13 and 25-26). Vertical spacing of 3 tiles is under the 4-tile jump rise, so a player who lands on a stratum can jump back up through the one above \u2014 recovery exists but costs time. Spikes: '^' studs on the top face of a stratum immediately beside the left hole on rows 6 and 12, punishing sloppy landings on the fast lane. Short solid '#' pillars (2 tiles) between strata force lateral commitment before the next hole. Coin cluster of 4 sits on the row-12 stratum in the right lane, 6 tiles from the nearest hole, so collecting it costs a dash out and a jump back; coins bank only on standing still, so the greedy player must pause on a spiked stratum.",
+   "difficulty_range": "Easy (3 strata, wide holes, aligned lanes) through medium (braided lanes, spike studs) to hard (holes 1 tile wide, strata 4 tiles apart so re-ascent is a max jump).",
+   "variant_axes": "Stratum count and spacing; hole width and braiding pattern; whether one lane is a true dead-end requiring backtrack; mixing solid '#' strata with '-' strata so some layers are one-directional only; a version where the floor door sits under only one lane so lane choice is a routing puzzle, versus a version where all lanes converge and the choice is pure risk/reward."
+  },
+  {
+   "name": "Shutter Chute (timed hazard bands across a fall)",
+   "concept": "A descent shaft crossed by rectangular TimedHazard bands that pulse on and off like meteor shutters. The bands are wide enough that there is no way around them \u2014 only a way through them in time. Because a fall has a fixed, predictable speed, the room becomes a rhythm instrument: you wait on a ledge, watch two or three shutters cycle, and release at the one moment where the whole chain is passable in a single unbroken drop. Skilled players learn to enter early and use a mid-fall dash to compress the trip between two bands; cautious players break the descent into stages, landing on intermediate ledges between shutters and re-timing each.",
+   "core_verbs": [
+    "observe cycle",
+    "release on beat",
+    "stage the descent",
+    "dash to beat a closing shutter"
+   ],
+   "why_novel": "Timed/dynamic hazards exist in exactly 1 room of 101; this class is built entirely around them, and combines them with the under-used descent lens so the timing dimension and the gravity dimension multiply. Nothing about it resembles a hop corridor or a coin vault.",
+   "sketch": "32x18. Ceiling door cols 14-17; floor door cols 14-17. Shaft interior cols 3-28. Three TimedHazard zones as full-width bands 1 tile tall at rows 5, 9, 13, each period 120 ticks, active window 50 ticks, with phases offset (0, 40, 80) so a continuous fall threads them only in a narrow launch window. Ledges: 4-tile '#' shelves jutting from the left wall at row 7 and the right wall at row 11, each a safe staging post directly under the previous band and directly above the next, positioned so the drop from shelf to shelf is 4 tiles (safe) and the horizontal offset is 6 tiles \u2014 drift plus one dash, or two hops. The shelves make a two-stage solution possible and a one-shot straight drop the expert line. Spikes '^' on the floor either side of the exit door punish overshooting the door column. Coins sit inside band rows, collectable only during a shutter's off phase.",
+   "difficulty_range": "Easy (two bands, generous off-windows, both shelves present) to hard (four bands, phases nearly anti-aligned so only the single-drop line works, shelves reduced to 1-tile nubs).",
+   "variant_axes": "Band count, period, duty cycle and phase relationships (in-phase = simple gate; anti-phase = must stage; near-resonant = long wait then one window); whether staging shelves exist at all; vertical bands used as side gates so the room needs horizontal timing during the fall; a version where a band sits over the exit door so the last beat is the tightest."
+  },
+  {
+   "name": "Catch Ladder (fall-arrest budget and banking stops)",
+   "concept": "A descent where the danger is not the spikes you pass but the ground you land on. The floor of the shaft is entirely spiked; the only safe footholds are narrow one-way nubs cantilevered off the walls, spaced so you must arrest your fall on them rather than ride to the bottom. Each nub is 1-2 tiles wide, so landing is a precision act after a multi-tile drop. Layering the coin-banking rule on top gives the class its identity: coins bank only when you stand still, so the player who has just picked up a cluster must choose a nub, stop dead on it, and hold \u2014 turning a safe-looking pause into the tensest moment of the room. A greedy player who chains drops without stopping carries an unbanked pile all the way to the exit.",
+   "core_verbs": [
+    "arrest fall on a nub",
+    "precision landing",
+    "stand still to bank",
+    "choose when to stop"
+   ],
+   "why_novel": "Uses the banking rule as a level-design mechanic rather than as loot decoration, which no coin-vault room does \u2014 vaults are dead-end reward pockets, this is banking-under-pressure integrated into a crossing. It also inverts the descent lens: the fall is easy, the stop is hard.",
+   "sketch": "32x18. Ceiling door cols 14-17; exit is a side door on the right wall rows 13-16, so the very bottom is reachable but the floor row 17 is solid '#' topped entirely with '^'. Nubs are 2-tile '-' platforms alternating off the left wall (rows 4, 8, 12) and right wall (rows 6, 10, 14), giving a zigzag with 2-tile vertical drops and roughly 20-24 tiles... rather, horizontal offsets of about 8 tiles between opposite nubs, which is one dash (4 tiles) plus fall drift, or a hop off the wall with glove. Because nubs are one-way, an over-shot landing drops you straight to the next tier instead of stopping you, so mistakes cascade rather than kill \u2014 until the last tier, where a miss lands on the spiked floor. Coin clusters of 3 sit in the air between nubs, grabbed mid-fall, forcing a stop on the next nub to bank. Side walls carry '<' and '>' spikes in the bands between nubs so slack air-drift is punished and the fall lines are narrow.",
+   "difficulty_range": "Easy (3 wide nubs, no side spikes, floor safe) to hard (6 one-tile nubs, spiked side bands, spiked floor, coins placed so every bank must happen on the narrowest nub).",
+   "variant_axes": "Nub width and count; whether the floor is lethal or merely a restart of the tier; solid '#' nubs (stoppable from below, allowing recovery) versus one-way '-' nubs (pure catch); coin density and placement relative to the hardest nub; a variant with a TimedHazard sweeping one nub so the banking pause has a deadline; a no-boots variant where offsets are jump-and-drift only."
+  },
+  {
+   "name": "Needle Drop (dive into a crawl-slide slot)",
+   "concept": "Each beat of the room is the same compound move: fall, then thread a 1-tile horizontal slot by arriving dash-compressed. The player must be dashing at the instant of entry, which means the dash has to be spent in the air at a specific height, not on the ground before the gap. The room stacks three or four of these needles vertically, each offset horizontally, so between needles you fall, reposition, and re-arm. Where existing squeeze rooms use a crawl as a single flat beat, here the squeeze is the landing of a dive and the exit of the squeeze is another drop, chaining compression into gravity.",
+   "core_verbs": [
+    "air-dash into compression",
+    "thread 1-tile slot",
+    "reposition between needles",
+    "re-arm dash"
+   ],
+   "why_novel": "Crawl/squeeze appears in 8 rooms but always as one isolated flat beat; this makes squeezing a rhythm and couples it to descent. It is neither a chimney, a hop corridor, a vault, nor a flat drop-slot junction, because the slot is horizontal-through-a-slab rather than a hole you fall through.",
+   "sketch": "32x18. Ceiling door cols 14-17; floor door cols 14-17. Four full-width solid '#' slabs at rows 4, 8, 11, 15, each 2 tiles thick. Each slab is pierced not by a vertical hole but by a 1-tile-tall horizontal tunnel running through its lower course, open at one end to a vertical chute and at the other to the next chute over: e.g. the row-4 slab has a tunnel along its lower course from col 10 to col 18, so the player falls down the chute at cols 8-11, lands in the tunnel mouth, and must be dash-compressed to slide the 8 tiles through \u2014 two dash lengths, so a mid-tunnel dash refresh is needed unless the tunnel is shortened to 4 tiles for easier variants. Tunnel mouths are guarded with '^' on the approach lip so a non-compressed arrival is punished. Chutes between slabs are 3-4 tiles wide and 3-4 tiles tall, enough to fall, turn, and re-arm. Coins sit inside the tunnels at the midpoint, so the greedy line is also the committed line; banking happens only in a chute where you can stand still, and one chute has a spiked floor so you must bank in the other.",
+   "difficulty_range": "Easy (two 4-tile tunnels, wide chutes, no lip spikes) to hard (four tunnels, 8-tile lengths needing a refresh, lip spikes, chutes narrowed to 2 tiles so the turn-and-re-arm is tight).",
+   "variant_axes": "Tunnel length (4 tiles = one dash, 8 tiles = dash chain) and direction alternation; chute width; whether the tunnel exits over a spiked landing so the slide must end in a controlled drop; adding a TimedHazard inside one tunnel so the squeeze is also timed; a mirrored version where one slab has two tunnels at different heights, giving a route choice into different lower chutes."
+  },
+  {
+   "name": "Well and Winch (descend-to-arm, ascend-to-escape circuit)",
+   "concept": "A loop room where the fall and the climb are different paths around the same shaft. The player enters at the top, must descend a fast lethal chute to reach coins or a low passage, and then escape by a separate ascending route on the far side \u2014 a wall-jump-free climb built from staggered one-way ledges and dash-gaps. The two halves face each other across a central pillar so the player watching the ascent route on the way down is learning their escape. A TimedHazard gate at the bottom of the descent means the descent is worth doing only on a certain beat, and the ascent route is slower than the descent, so the loop has an inherent asymmetry: cheap down, expensive up. Some variants make it a true circuit \u2014 you must lap it twice, once for coins and once to bank them, because the only still-standing safe tile is on the far side.",
+   "core_verbs": [
+    "commit-descend",
+    "circuit",
+    "re-ascend by a different route",
+    "bank on the far side"
+   ],
+   "why_novel": "Loop/circuit layouts are only 4 rooms, and none couple a descent lens to them. It also creates a second genuine multi-route case: the descent chute and a slow safe stair both reach the bottom, so the player picks speed versus safety. It avoids the spiked-chimney archetype by making the ascent a ledge-and-dash puzzle rather than a wall-jump chain.",
+   "sketch": "32x18. Entry door in ceiling cols 14-17; exit door in right wall rows 13-16 near the top? \u2014 place exit on the left wall rows 4-7 equivalent by convention as a ceiling door at cols 14-17 is taken, so use the right-wall door rows 13-16 with the room mirrored so 'up' ends at the right-wall door. Central pillar of '#' cols 15-17 running rows 4-15 splits the room. Left half is the descent: a 5-tile-wide chute with '<' spikes along the outer wall in two bands and a TimedHazard 1-tile band at row 12 (period 100, active 45) gating the bottom. Bottom cavern rows 15-16 spans under the pillar, holding a 5-coin cluster and one safe standing tile at col 22 for banking. Right half is the ascent: '-' ledges at rows 14, 11, 8, 5 alternating between the pillar face and the right wall, each 3 tiles wide with 3-tile vertical rises (inside the 4-tile jump) and 4-tile horizontal offsets (exactly one dash, or a running jump). '^' spikes on the pillar base punish a failed first hop. Exit door sits at the top of the ascent.",
+   "difficulty_range": "Easy (no timed gate, wide chute, 2-tile ledge rises) to hard (timed gate with short window, spiked descent bands, ledge rises at the full 4-tile jump with dash-mandatory offsets, two required laps).",
+   "variant_axes": "Whether the loop must be run once or twice; timed gate present or absent and where in the loop it sits; descent offering a slow safe stair alongside the fast chute; ascent built from '-' ledges (droppable, forgiving) versus '#' ledges (must be cleared); mirroring so descent and ascent swap sides; a version where the bottom cavern connects to a second, deeper loop and the exit is the floor door instead of the top."
+  },
+  {
+   "name": "Duct Junction (branching crawlspace network)",
+   "concept": "The whole room is a maze of 1-tile-high horizontal ducts stacked at different heights, joined by 1-tile-wide vertical risers. The player enters at the left door, dash-compresses into a duct, and immediately faces a fork: the low duct is a long uninterrupted slide straight to the exit but is studded with floor spikes that force precise re-dashes; the high duct is safe but demands a chain of riser climbs (short hops and a wall-jump) to reach, plus a re-compression at each mouth. Both routes cross the same span. The room reads as plumbing rather than platforming: the player is almost never standing upright, and the moment-to-moment skill is choosing which pipe to commit to and re-entering compression before the ceiling clips you.",
+   "core_verbs": [
+    "dash-compress into a slot",
+    "crawl-slide",
+    "re-dash mid-duct to sustain compression",
+    "short hop between duct mouths",
+    "wall-jump a 1-tile riser",
+    "choose a branch"
+   ],
+   "why_novel": "The dungeon has ~0 genuine multi-route rooms and treats crawling as a single beat in 8 rooms. This class makes squeeze the entire room AND makes the two solutions to one crossing structurally different (speed/precision vs. climbing/patience), hitting both the multi-route and sustained-crawl gaps at once. It is not a chimney (movement is horizontal), not a spike-floor hop corridor (the ceiling, not the floor, is the constraint), and not a coin vault (it is a through-route).",
+   "sketch": "32x18. Solid fill everywhere except carved ducts. Left door rows 13-16, right door rows 13-16. Low duct: row 15 empty from col 1 to col 30, ceiling solid at row 14, floor solid at row 16, with up-spikes (^) on the row-15 floor at cols 8, 9, 16, 22, 23 \u2014 each spike cluster is <=2 tiles so a 4-tile dash clears it from a standstill slide. High duct: row 9 empty cols 6-28, ceiling row 8, floor row 10. Risers: 1-tile-wide vertical shafts at col 4 (rows 10-15) and col 27 (rows 10-15) connecting low to high; riser walls are opposing solids so glove wall-jumps chain \u2014 5 tiles of climb needs two wall-jumps (each ~20px comfortable rise), well inside budget. A third short duct at row 12, cols 12-20, links the two risers midway so the branches re-merge, giving a third hybrid line. Exit alcove at rows 13-16 cols 29-31 is 4 tiles tall so the player can finally stand.",
+   "difficulty_range": "Early-mid (a two-branch, spike-free version teaches compression) through late (four branches, spikes in both, risers narrowed to single-wall-jump timing).",
+   "variant_axes": "Number of branches (2/3/4); whether branches merge midway or stay disjoint; horizontal vs. vertical dominant orientation (a duct network can run top-to-bottom with 1-tile side ducts); whether the fast branch is the spiked one or the long one; whether risers are wall-jump chains or dash-up-diagonals; door placement (left-right crossing vs. ceiling-to-floor)."
+  },
+  {
+   "name": "Shutter Ducts (timed crawlspace)",
+   "concept": "A single long low corridor is chopped by rectangular TimedHazard zones that occupy one duct segment each and pulse on staggered phases \u2014 a peristaltic wave. The player must slide into a segment during its dead window, stop in a safe pocket, then commit to the next segment as its window opens. Because banking coins requires standing still and the pockets are the only places to pause, the rhythm of the room is dash-hold-dash rather than continuous flight. The tension is that compression is a commitment: once you are sliding into a segment you cannot jump out, only continue or stop short.",
+   "core_verbs": [
+    "read a hazard phase",
+    "dash-compress on a beat",
+    "slide-and-stop in a pocket",
+    "hold position under a low ceiling",
+    "chain segments when phases align"
+   ],
+   "why_novel": "Timed/dynamic hazards appear in exactly 1 room of 101, and never combined with squeeze. Crawl-slide is the perfect partner for timed zones because compression removes the player's escape options (no jump, no vertical dodge), converting a simple shutter into a genuine commitment gate. Nothing in the flat spike-floor hop corridors or chimneys is time-gated.",
+   "sketch": "32x18. Corridor at row 14 empty, cols 1-30; ceiling solid row 13 except at pocket columns; floor solid row 15. Four TimedHazard zones, each 4 tiles wide x 1 tall, at cols 3-6, 10-13, 17-20, 24-27, all on the row-14 corridor. Period 120 frames, active window 60, phases 0/30/60/90 so a wave travels left-to-right; a player who matches the wave's speed can flow through, a player who mistimes must wait. Between zones, pockets: cols 7-9 and 14-16 and 21-23 are carved up to row 12 (3 tiles tall) so the player can stand, breathe, and bank. Coins (3) sit inside the hazard zones at cols 5, 12, 19 so grabbing them costs a tighter window, and they only bank once the player reaches the next pocket and stands still. Dash covers 4 tiles = exactly one zone width, so a single clean dash crosses a zone with no margin for error; a slide from a running start covers more but slower.",
+   "difficulty_range": "Mid (two zones, generous 50% dead windows, wide pockets) to very hard (five zones, 25% dead windows, phases counter-travelling so the wave runs against the player).",
+   "variant_axes": "Wave direction (with the player vs. against); phase pattern (travelling wave, alternating checkerboard, all-synchronised requiring one long committed run); pocket generosity (stand-height vs. 2-tile crouch pockets that don't allow banking); whether coins force detours into hazard cells; vertical version where the ducts are stacked and the wave runs downward, merging with descent-as-challenge."
+  },
+  {
+   "name": "Low-Ceiling Arena (geometry under a lid)",
+   "concept": "An open, wide room whose ceiling is only two tiles above the floor across most of its area, with a lid of down-spikes (v) hanging in patches. The player has full horizontal freedom but almost no vertical freedom: a normal jump would impale them, so movement is all dashes, ground runs, and micro-hops between spike patches. Scattered 1-tile pinch points force compression, and a few tall wells punched through the lid are the only places you can jump, wall-jump, or bank coins. It plays like navigating a car park: fast, flowing, constantly threatened from above rather than below.",
+   "core_verbs": [
+    "ground dash",
+    "micro-hop between overhead spike gaps",
+    "duck into a pinch",
+    "surface into a well to reset height",
+    "route around the lid"
+   ],
+   "why_novel": "Every over-represented archetype threatens from below (spike floors) or from the sides (chimney walls). Nothing in the dungeon inverts this into a ceiling-dominant open space, and the dungeon's 19 spike-floor corridors are all narrow single-lane. This gives an open room where the constraint is headroom, which is the direct expression of the squeeze lens without being a duct.",
+   "sketch": "32x18. Floor solid rows 16-17. Ceiling lid solid at row 12 spanning cols 1-30, with down-spikes (v) hung at row 13 in runs of 2-4 tiles at cols 3-5, 9-12, 17-19, 24-27. Playable band is rows 13-15 (3 tiles) \u2014 a full 4-tile jump would clip the lid, so only short hops between spike runs are safe. Two pinch points: at cols 14-16 the floor rises to row 15 and the lid drops to row 14, leaving a 1-tile slot that must be dash-compressed. Three wells punched through the lid: cols 7-8 (rows 6-12), cols 21-22 (rows 4-12), col 29-30 (rows 8-12), each with opposing solid walls for wall-jump chains and a stand-height ledge at the top holding a coin. Doors left rows 13-16, ceiling cols 14-17 so the true exit is up through the tallest well \u2014 reaching it requires crossing the lidded arena to the correct well.",
+   "difficulty_range": "Early (sparse spike patches, one pinch, exit at floor level) to late (dense lid leaving 1-tile gaps, floor spikes added so the band is squeezed from both sides, exit only through the far well).",
+   "variant_axes": "Lid density and gap rhythm; number and height of wells; whether the exit is a ceiling door (forcing a well climb) or a far side door; adding a second lid layer to make a two-storey car park connected by wells; symmetric layouts that read as a loop/circuit so the player laps the arena collecting coins before surfacing to bank."
+  },
+  {
+   "name": "Commitment Slot (one-way dash-compression gates)",
+   "concept": "A room built from slots you can only pass in one direction: a 1-tile gap entered at speed with a dash, where the far side drops into a pocket you cannot climb back out of. Each slot is a point of no return, so the room is a sequence of irreversible decisions \u2014 and some slots lead to dead pockets containing coins, with the only escape being a harder second slot deeper in. The player must read ahead and judge whether they can afford the detour before compressing, because once through, the choice is made.",
+   "core_verbs": [
+    "read ahead before committing",
+    "dash-compress through a one-way slot",
+    "fall into a pocket",
+    "judge whether a coin detour is escapable",
+    "chain a recovery dash out of a low pocket"
+   ],
+   "why_novel": "The 18 dead-end coin vaults are dead ends you simply back out of \u2014 no cost, no decision. This class turns the vault into a real wager by making entry irreversible and exit non-trivial, and it uses compression as the gating mechanism rather than as a decoration. It also creates route choice (take the coin pocket or skip it) without the room ever branching into two full corridors.",
+   "sketch": "32x18. Descending staircase of chambers, each 6-8 cols wide. Chamber A: cols 1-9, floor row 15, stand height rows 10-15, left door rows 13-16. Its right wall is solid col 10 rows 1-13 and 15-17, leaving a 1-tile slot at row 14, cols 10-11 \u2014 enterable only with a dash from a run. Beyond the slot the floor immediately drops: chamber B floor is row 17, so you land 3 tiles below the slot lip and cannot jump the 3-tile rise back through a 1-tile hole (a 4-tile jump exists but not while needing to arrive compressed and horizontal). Chamber B, cols 12-20, holds 3 coins on a ledge at row 14 and a stand-height column at cols 19-20 rows 12-17 where they bank. Its exit is a second slot at row 16, cols 21-22, tighter because up-spikes sit at row 17 cols 18 and 23 punishing a short dash. Chamber C, cols 23-31, is the exit chamber with the right door rows 13-16 and a wall-jump pair (cols 23 and 25) to climb the 4 tiles back up to door height. A bypass exists: from chamber A, a wall-jump up cols 9-10 to a high duct at row 5 skips B entirely and drops into C \u2014 faster, coinless, and the second genuine solution to the same crossing.",
+   "difficulty_range": "Mid (two slots, bypass obvious, pockets shallow) to hard (four slots, the bypass itself gated by a blind commitment, pockets with spiked floors so a mistimed entry is fatal rather than merely costly).",
+   "variant_axes": "Number of chambers; whether the coin pocket is escapable at all or must be exited by a harder slot; whether the bypass is visible from the entry (information design); vertical arrangement so the slots are floor holes and the room is a descent; a version where the slot is timed (TimedHazard on the slot mouth) so commitment is temporal as well as spatial."
+  },
+  {
+   "name": "Bank Run (crawl-hoard, stand-to-cash)",
+   "concept": "Coins are strewn deep inside a duct network where the player can never stand, and banking requires standing still. The room therefore has a hoard phase and a cash-out phase: slide through the ducts vacuuming coins with no way to secure them, then find your way back to one of a few stand-height vaults to bank the run. Longer hoard loops are worth more but risk more, because a death or a missed vault loses the lot. The geometry is a circuit \u2014 the ducts loop back on themselves \u2014 so the player is choosing lap length, not path.",
+   "core_verbs": [
+    "crawl-slide a loop",
+    "hoard without banking",
+    "navigate back to a stand pocket",
+    "commit to a longer lap",
+    "bank"
+   ],
+   "why_novel": "Uses the banking rule as a level-design mechanic rather than a bookkeeping detail \u2014 no existing room does this, and it is uniquely enabled by squeeze because crawl posture is precisely the posture in which you cannot bank. It also directly fills the loop/circuit gap (4 rooms) and the coin-vault monotony: the coins are on the route, not at the end of a cul-de-sac.",
+   "sketch": "32x18. A rectangular ring duct: row 4 empty cols 4-27, row 14 empty cols 4-27, joined by 1-tile-wide vertical shafts at col 4 (rows 4-14) and col 27 (rows 4-14), all 1 tile of clearance so the player is compressed on the horizontals and wall-jumping in the shafts (10 tiles of climb = about five wall-jumps, comfortable with glove). Coins at row 4 cols 7, 12, 18, 24 and row 14 cols 8, 15, 21 \u2014 seven total, none bankable in place. Two vaults: cols 14-17 rows 8-11 carved 4 tiles tall, reachable by a spur duct at row 9 off the col-4 shaft, and a second vault at cols 29-31 rows 13-16 adjacent to the right door. Reaching the mid vault costs a detour that abandons the rest of the lap; reaching the exit vault means completing the full ring. Add up-spikes at row 14 cols 10-11 and down-spikes at row 4 cols 20-21 so each horizontal has one forced re-dash. Left door rows 13-16 feeds directly into the lower duct.",
+   "difficulty_range": "Early (short ring, one vault, no spikes \u2014 teaches the banking pressure) to late (figure-eight ring with a crossing shaft, spikes on both horizontals, a single vault reachable only after a full lap, optional TimedHazard on one horizontal making the greedy lap a race).",
+   "variant_axes": "Ring size and shape (rectangle, figure-eight, nested double ring); number and placement of vaults (one distant vault vs. several cheap ones); whether the ring is traversable in both directions (spike orientation can make it one-way); coin density front-loaded vs. back-loaded on the lap; whether the exit door itself is the only bank, forcing an all-or-nothing decision."
+  },
+  {
+   "name": "Metronome Bank",
+   "concept": "A room whose only safe standing surfaces are periodically swept by TimedHazard zones, so the act of banking \u2014 standing still \u2014 becomes the timed challenge rather than the traversal. The player can collect three or four coins in a loose figure-eight through easy terrain, but every ledge wide enough to stop on lies under a shutter zone that is active for part of its period. Banking means parking on a ledge during its inactive window and holding still long enough for the bank to register; mistiming kills you and drops the whole unbanked stack. Skilled players learn to read the phase offsets and chain a full circuit into a single well-timed stop; cautious players bank one coin at a time and pay for it in extra shutter crossings. The tension is entirely in the pause, which no existing room in the dungeon uses.",
+   "core_verbs": [
+    "wait",
+    "time a stop",
+    "short hop",
+    "re-cross a shutter",
+    "bank under pressure"
+   ],
+   "why_novel": "Fills the timed/dynamic-hazard gap (currently 1 room) and is the only class that makes standing still the skill check. Spiked chimneys, hop corridors and coin vaults all treat rest as free; here rest is the hazard. Not a vault because coins are not the terminus \u2014 the bank point is.",
+   "sketch": "Floor of solid at row 17, three staggered platforms: solid run cols 4-9 at row 13, cols 13-18 at row 10, cols 22-27 at row 13. Gaps of 3 tiles between shelves, all reachable with a 2-tile comfortable jump from a 1-tile step below (add single solid tiles as stepping stones at cols 11 and 20, row 15). Coins sit in the air one tile above each shelf edge, grabbed in passing \u2014 no stopping needed to take them. Three TimedHazard rects, each covering its shelf plus one tile of headroom (e.g. Rect cols 4-9, rows 11-13), period 180 ticks, active window 100, phases 0 / 60 / 120 so the three shelves are safe in rotation. Only shelf-free tile in the room is the 1-tile stepping stones \u2014 too narrow to be a comfortable idle spot but usable by an expert, giving a hidden hard bank point. Player is 8x12 so a single 10px tile does hold them. Exit door in the right wall at rows 13-16, level with the third shelf, so leaving also banks: the greedy line is to skip banking entirely and sprint the exit, which requires crossing shelf three during its active window from below.",
+   "difficulty_range": "Easy to hard. Easy variants use long inactive windows (active 60 of 180) and one shutter; hard variants use three antiphase shutters with active 120 of 180 and place the exit behind the worst-phased shelf.",
+   "variant_axes": "Number of shuttered shelves (1-4); phase relationship (rotating vs antiphase pairs vs all-synchronised, which creates a single global safe beat); whether the exit door is inside or outside a shutter zone; whether the only unshuttered tile is a 1-tile perch, a spike-flanked notch, or absent entirely (forcing bank-on-exit); vertical vs horizontal shelf arrangement."
+  },
+  {
+   "name": "Ratchet Descent",
+   "concept": "A one-way downward room built from one-way platforms, where every drop is irreversible: you can fall through a '-' row but a 40px jump cannot climb back out of a 5-tile well. Coins are placed in side pockets at successive depths, and bank shelves are placed at the top of the room and nowhere else until the bottom. The moment the player takes the first coin they are carrying an unbanked stack that they cannot bank until they either commit all the way to the floor exit or reach the single mid-depth safe shelf. Descent becomes the challenge because you are constantly asked 'is this the level I stop at?' and the answer cannot be revised. Falling past a pocket loses the coin route, not your life; falling onto spikes loses the stack.",
+   "core_verbs": [
+    "drop through",
+    "commit",
+    "read ahead before falling",
+    "refuse a coin",
+    "bank at the floor"
+   ],
+   "why_novel": "Directly fills descent-as-challenge (~3 rooms) and uses irreversibility, which the flat drop-slot junctions never do \u2014 those drop you into a choice you can walk back from. The coin-banking rule supplies the stakes the geometry alone can't: descent is only scary if you're carrying something.",
+   "sketch": "Full 32x18 with solid left/right walls. Five one-way platform rows at rows 3, 6, 9, 12, 15, each spanning cols 2-29 but with a 2-tile hole at a different column each level (cols 6, 20, 9, 24, 15). Under three of the holes, put a 3-tile spike run (^) on the platform row below, offset by two tiles so a straight uncontrolled fall lands on spikes and a steered fall does not \u2014 3-tile drops give ample air control. Coin pockets are 3x2 alcoves cut into the side walls just above each platform row (e.g. cols 27-29, rows 10-11), entered by a 2-tile hop from the platform, so entering a pocket costs the time to climb back out; you can always still fall onward. Between levels the vertical gap is 3 tiles: falling is free, climbing is impossible without gloves (walls are flush solid, no chimney). Mid-room bank shelf: a wide spike-free ledge at row 9 cols 12-18 with no hazard, the one place to stand. Floor exit is a 4-col gap at cols 14-17 in row 17.",
+   "difficulty_range": "Medium to hard. Easy variants give 4-tile drops with generous landing zones and two bank shelves; hard variants make every landing a 2-tile island between spike runs and remove the mid shelf so the only bank is the exit.",
+   "variant_axes": "Number of tiers (3-6); hole alignment (stacked = fast free-fall lane vs alternating = every drop needs a lateral traverse); pocket depth and whether a pocket is a trap that requires a dash to escape; presence and height of the mid-room bank shelf; whether a one-way platform ceiling lets a wall-jump player re-enter the tier above, turning it into a partial ratchet."
+  },
+  {
+   "name": "Forked Toll Crossing",
+   "concept": "One crossing, two genuinely different solutions, made asymmetric by the banking rule rather than by difficulty alone. A single gap between entrance and exit is spanned by an upper lane and a lower lane. The upper lane is a fast dash-and-hop line with a coin on it and no place to stand; the lower lane is a slow crawl-slide squeeze with no coin but a wide safe pocket midway that banks. A player carrying nothing takes the top for the coin. A player who already holds unbanked coins from earlier in the room faces a real decision: risk the top again, or go low, bank, and come back up for the coin on a second pass. Both lanes are complete solutions to the crossing; neither is strictly dominant.",
+   "core_verbs": [
+    "choose a lane",
+    "dash",
+    "crawl-slide",
+    "backtrack deliberately",
+    "weigh a carried stack"
+   ],
+   "why_novel": "The dungeon has effectively zero rooms offering two distinct solutions to one crossing. Making the routes differ in bank availability rather than only in difficulty is what stops one lane collapsing into 'the good one'. Also adds a second crawl beat to the squeeze vocabulary.",
+   "sketch": "Entrance door left wall rows 13-16, exit door right wall rows 13-16. Central column of solid, cols 14-17, rows 0-12, hanging from the ceiling, splits the two lanes at its base. Upper lane: platform run at row 8, cols 6-11 and cols 20-25, with a 8-tile void between them at rows 8-12 \u2014 too far to jump (4 tiles max), so this lane requires the dash: dash 4 tiles from col 11 onto a single one-way platform tile at col 16 row 8, then a hop to col 20. Coin floats at col 16, row 7, grabbed mid-dash. No tile on the upper lane is more than 1 wide at the midpoint and the flanks are 6-tile runs with spikes (^) on rows 9 under the gap, so a missed dash is fatal to the stack. Lower lane: floor at row 17, ceiling of solid at row 15 over cols 9-13 and cols 19-23 leaving a 1-tile-high gap at row 16 \u2014 crawl-slide territory, requiring the player to arrive dash-compressed. Between the two squeezes, cols 14-18 rows 14-16 is an open pocket, spike-free and 5 wide: the bank point. Getting from lower lane back to upper is a 4-tile climb at cols 26-27 using stacked one-way platforms at rows 14 and 11, so the double-pass route is possible but costs a full re-run of the upper dash.",
+   "difficulty_range": "Medium throughout; the interesting difficulty is decision difficulty, not execution. Hard variants tighten the dash landing to a single tile flanked by down-spikes and make the lower squeeze two consecutive crawls with a spike floor between.",
+   "variant_axes": "Which lane holds the coin and which holds the bank (swapping them inverts the whole calculus); ability gating (dash-only top vs glove-only top via a wall-jump chimney rather than a dash); adding a TimedHazard over the bank pocket so the safe lane is only conditionally safe; making the two lanes vertical (left/right of a central pillar) rather than upper/lower; a three-way version where the third lane is a spike-tightrope with neither coin nor bank but is the fastest."
+  },
+  {
+   "name": "Greed Loop",
+   "concept": "A closed circuit \u2014 the room's exit is next to its entrance and the whole room is one lap \u2014 where each lap around collects one coin and returns you to a single bank tile at the start. Coins deeper into the lap are worth more but the lap that reaches them is longer and passes more hazards, and crucially you cannot bank until you complete the lap. The player chooses how many coins to chain before returning: an aborted lap loses everything picked up on it. Because coins sit at increasing lap-depth, the room self-balances \u2014 the greedy player takes a long single lap, the cautious one takes several short ones and pays in repetition and exposure.",
+   "core_verbs": [
+    "circuit",
+    "chain pickups",
+    "abort and return",
+    "commit to a longer lap",
+    "return to the bank tile"
+   ],
+   "why_novel": "Loop/circuit layouts are only 4 rooms and none of them use the return trip as an economic decision. Unlike a dead-end coin vault, which is a there-and-back with a guaranteed bank, here the vault is the whole room and the exit is the treasury door. The class is defined by the topology plus the bank rule, not by a hazard gimmick.",
+   "sketch": "A ring: solid outer walls; a solid island block at cols 10-21, rows 6-12 forming the donut hole. The corridor is the ring around it \u2014 floor row 16 across the bottom, a ledge run at rows 4-5 across the top (reached at the right side by a 3-tile stack of one-way platforms at col 27 rows 13, 10, 7, each a 3-tile jump apart), and returning down the left side by a plain drop at cols 2-4 onto a spike-free landing. Entrance and bank tile: cols 2-4 row 16, immediately under the drop-return, spike-free and wide \u2014 the only such surface in the room. Exit door in the left wall rows 13-16, adjacent to the bank tile. Coin 1 sits at col 8 row 15, a few steps in. Coin 2 at col 27 row 9, on the climbing stack, requiring a mid-climb grab. Coin 3 at col 15 row 3, above the top run, needing an upward-diagonal dash from row 5. Coin 4 in a spike-lined notch at cols 22-23 row 15 on the far side of a 4-tile spike run (^ at cols 18-21, row 16) that must be dash-cleared. The ring is one-directional in practice because the right-side climb is a one-way platform stack that is easy up and awkward down.",
+   "difficulty_range": "Easy to hard depending on how far into the lap the hard coin sits. Easy variants make the whole ring walkable with one dash; hard variants add a TimedHazard over the top run so a long lap must also beat a shutter, and put spikes on the return drop's landing so an aborted lap is not free.",
+   "variant_axes": "Lap length and number of coins (2-5); whether the ring is traversable in both directions (bidirectional rings let the player pick the cheap side first); position of the single bank tile (at the entrance vs diametrically opposite, which makes the second half of the lap the tense half); hazard density front-loaded vs back-loaded on the lap; a figure-eight variant with two rings sharing the bank tile, so the player chooses which ring to run and can combine them into one long lap."
+  },
+  {
+   "name": "Antiphase Airlock",
+   "concept": "A linear chain of small chambers separated by shutter gates \u2014 narrow TimedHazard columns in doorways \u2014 running in antiphase, so an open gate ahead means the gate behind you is closed. Each chamber holds a coin and a floor you can stand on, so each chamber is a bank point, but progress means being inside a chamber at the right beat. The player either moves one chamber per cycle, banking safely each time, or rides a single wave through two or three gates in one cycle to save time and risk arriving mid-gate. Retreat is symmetric to advance, which makes the whole room breathable rather than a commitment \u2014 the pressure is rhythmic rather than one-shot.",
+   "core_verbs": [
+    "read the beat",
+    "step through a gate",
+    "hold in a chamber",
+    "bank on the beat",
+    "ride a wave"
+   ],
+   "why_novel": "The second and larger piece of the timed-hazard gap, and structurally the opposite of Metronome Bank: there the rest spots are shuttered and the paths are free; here the paths are shuttered and the rest spots are free. Nothing in the current dungeon has multi-beat rhythmic pacing, and the chamber-per-beat structure is not a corridor of spike hops because the hazard is temporal, not spatial.",
+   "sketch": "Room divided by four full-height solid partitions at cols 7, 13, 19, 25, each pierced by a 3-tile doorway at rows 14-16 (floor at row 17 runs unbroken beneath). Each doorway carries a TimedHazard rect exactly covering it (e.g. Rect col 13, rows 14-16), period 120 ticks, active window 60, with phases alternating 0, 60, 0, 60. Chambers are cols 1-6, 8-12, 14-18, 20-24, 26-31, each ~5 wide with a clear floor \u2014 ample standing room to bank. One coin per chamber, resting at row 16 so it is taken by walking. The doorways are at floor level and 3 tiles high, so passage is a run, not a jump: timing is pure movement, no execution tax. Entrance is the left wall rows 13-16 into chamber one, exit the right wall rows 13-16 from chamber five. A harder overhead lane: a one-way platform run at row 10 across the whole room with 4-tile gaps above each partition, jumpable, entirely unshuttered but with down-spikes (v) hung from the ceiling at row 8 over the gaps so the jump arc must be shallow \u2014 this gives an alternate untimed but tighter route, and it has no floor to stand on, so the overhead route cannot bank at all.",
+   "difficulty_range": "Easy to medium-hard. Easy variants: 3 chambers, period 180 with active 60, so gates are mostly open. Hard variants: 5 chambers, active 90 of 120, plus a doorway with two stacked hazards in different phases so only a narrow overlap is passable.",
+   "variant_axes": "Chamber count and width (narrow chambers make banking itself tense because you must stop near a gate); phase pattern (strict alternation vs a travelling wave that rewards running the whole room in one continuous sprint vs all-synchronised, which makes it a single global go-signal); gate placement (floor-level run-throughs vs elevated gaps requiring a jump vs a crawl-height squeeze under a shutter); whether the coin in a chamber sits inside the doorway hazard footprint, forcing a grab-and-retreat; presence and hazard-freedom of the overhead bypass lane."
+  },
+  {
+   "name": "Phase-Offset Shutter Suite (the metronome room)",
+   "concept": "A room whose whole geometry is trivially walkable but is sliced by three or four rectangular TimedHazard curtains with the same period and staggered phases, so the room reads as a slow-turning machine. Act 1 teaches one curtain in a wide safe pocket where the player can wait, watch it blink, and step through on the off-beat. Act 2 puts two curtains one tile apart with opposite phases, so there is no moment when both are clear from a standing start \u2014 the player must enter curtain A's window and be committed to crossing curtain B on the following beat, converting a safety-first player into a rhythm player. Act 3 is the visible twist: the final curtain is wide enough (4-5 tiles) that walking cannot clear it in one window, so the crossing must be a dash, and the dash must start from inside a previously-hazardous pocket. The narrative arc is watch, commit, commit blind.",
+   "core_verbs": [
+    "wait/observe",
+    "time a walk-through",
+    "chain two off-beat steps",
+    "dash a wide window",
+    "dash-jump on a beat"
+   ],
+   "why_novel": "Timed hazards exist in exactly one room in the entire dungeon. This class makes the hazard the room's grammar rather than a garnish, and it produces difficulty from timing rather than from spike geometry, which is what the 19 hop-corridors and 18 chimneys already exhaust. Nothing here is a wall-jump chain or a dead-end vault.",
+   "sketch": "Floor solid along row 17, west door rows 13-16, east door rows 13-16, so a flat 30-tile run. Split it with three full-height 1-tile-wide TimedHazard columns at x=8, x=15, x=16 and a 5-tile zone x=23..27 spanning rows 13-17. Period 90 ticks, active 45. Phases: x=8 at 0; x=15 at 0 and x=16 at 45 (the opposite-phase pair, one tile apart, so no standing solution \u2014 you must be moving through the gap between them on the flip); the wide zone at phase 20 with a 40-tick clear window. Walking 5 tiles at run speed does not fit 40 ticks, a 4-tile dash from a ledge at x=22 does, so the last act is dash-gated. Put a coin in the safe pocket at x=17..22 so the player must stand still to bank it between acts, which is exactly the beat where they can read the last curtain's rhythm. Add solid pillars at x=9 rows 15-17 to create standing pockets rather than open floor, so waiting is a positional choice.",
+   "difficulty_range": "Early-mid through late; a two-curtain version with a generous 60% clear window is tutorial-grade, and a version with three staggered curtains over a spike floor is late-game.",
+   "variant_axes": "Curtain orientation (vertical columns vs horizontal bands you must fall through); period ratio (all-same-period metronome vs 2:3 polyrhythm that only fully opens rarely); whether the safe pockets are floor tiles, one-way platforms, or wall-jump surfaces; whether the final act is dash-gated or crawl-gated; descending versions where the curtains are horizontal and the player is falling through them."
+  },
+  {
+   "name": "Committed Fork (one crossing, two honest solutions)",
+   "concept": "A single room presenting a visible high road and a low road that both connect the entry door to the exit door, chosen at a fork the player can see from the entrance, with a one-way platform or a spike lip making the choice irreversible once taken. The high road is an airborne route: sparse one-way platforms spaced at the edge of jump range, demanding rhythm and no mistakes, short but unforgiving. The low road is a ground route: longer, safe footing, but gated by a crawl-slide squeeze and a timed hazard, so it costs patience and a dash charge. The twist is the coin ledger: the high road holds two coins that cannot be banked mid-flight (banking needs standing still), so a greedy high-road player must land somewhere to bank and the only landing pad is a 2-tile ledge that also happens to be the safest read of the exit approach. The room therefore has a route decision and a within-route risk decision.",
+   "core_verbs": [
+    "choose a route from a readable vantage",
+    "chain edge-of-range jumps",
+    "crawl-slide",
+    "bank under pressure",
+    "commit past a one-way"
+   ],
+   "why_novel": "The dungeon has approximately zero rooms with two distinct solutions to the same crossing; every junction is a flat drop-slot that merely distributes traffic. This class makes route choice the content, and it also gives the crawl/squeeze mechanic a second beat by embedding it in a route rather than as a one-off gate.",
+   "sketch": "Entry west door rows 13-16 onto a landing platform x=1..5 rows 15-17. A solid divider wall at x=6..7 spanning rows 8-12 forms the fork's spine, visible from the landing. High road: one-way platforms ('-') at (x=8,y=10), (x=12,y=8), (x=16,y=8), (x=20,y=6), each 2 tiles wide, gaps of 3-4 tiles horizontally and 2 tiles vertically, inside the 4-tile jump ceiling and the 4-tile dash reach; coins sit above platforms 2 and 3; landing/bank pad is the 2-wide ledge at x=24,y=6. Low road: floor corridor rows 16-17 from x=8 to x=26 with a 1-tile-high squeeze at x=13..15 (solid at row 16, floor at 17) requiring dash-compressed crawl, and a TimedHazard band over x=18..21 rows 16-17, period 80/active 40. Both roads terminate at a shared shaft x=27..29 leading to the east door rows 13-16, with up-spikes on row 15 at x=27 so the high road must land on the ledge rather than drop straight down. The one-way platform at (8,10) is the commitment: once the player drops through it they are on the low road.",
+   "difficulty_range": "Mid to late; difficulty is tuned by how much harder the two roads are relative to each other, and the easiest variants make the roads near-equal so the room reads as a genuine choice rather than a trap.",
+   "variant_axes": "Which abilities each road assumes (a glove road vs a boots road, so inventory changes the answer); route asymmetry (equal difficulty vs safe-but-slow against fast-but-lethal); whether the roads merge before or after the exit; three-way forks; forks where the coin payload rather than the exit is the thing being contested; mirrored vertical forks where entry is the ceiling door."
+  },
+  {
+   "name": "Controlled Fall (descent as the challenge)",
+   "concept": "A tall room entered by the ceiling door and exited by the floor door, where gravity is doing the moving and the player's only job is steering. The room is a vertical shaft whose walls alternate spiked bays and clean wall-jump strips, with one-way platforms acting as optional brakes. Falling straight is fatal; the player must convert vertical speed into lateral placement using air-dashes and brief wall contacts, arresting the descent exactly enough to line up the next slot. Act 1 is a wide shaft with generous slots teaching that a brake is available. Act 2 narrows and offsets the slots so a straight drop always lands on spikes and each slot needs one lateral dash. Act 3 is the twist: the last stretch has no brakes at all, only offset slot after offset slot, so the player must fall the full height in one committed sequence to the floor door.",
+   "core_verbs": [
+    "fall deliberately",
+    "air-dash laterally",
+    "brake on a one-way",
+    "touch-and-release a wall",
+    "thread offset slots"
+   ],
+   "why_novel": "Only about three rooms treat descent as content; the dungeon's verticality is almost entirely upward wall-jump chimneys, and this class is their exact inverse in feel even though it reuses walls. It also puts dash to a use the flat corridors never do: dash as a mid-fall steering input rather than a gap-crossing input.",
+   "sketch": "Ceiling door cols 14-17, floor door cols 14-17. Build the shaft as five stacked baffles: solid rows at y=3, 6, 9, 12, 15 spanning the full width except for one 3-tile slot each, at x=4, x=20, x=6, x=22, x=15 respectively. Line each baffle's top surface with up-spikes ('^') except for a 2-tile clean landing next to each slot; put down-spikes ('v') under a couple of baffle undersides so hugging the ceiling after a slot is punished. Successive slots are 14-16 tiles apart horizontally, which is far more than one 4-tile dash, so each descent leg is a fall plus a dash plus a wall contact on the side wall (x=0 or x=31) that redirects the player back inward; that is exactly why the walls must be clean strips at rows 4-5, 7-8, 10-11 and spiked elsewhere. Give the top two legs one-way platforms mid-fall at (x=10,y=5) and (x=18,y=8) as brakes, and give the bottom leg none. Coins sit just inside each slot so the greedy line is the tight line.",
+   "difficulty_range": "Mid to very hard; the number of unbraked legs is the difficulty dial, and a two-baffle version with wide slots is approachable.",
+   "variant_axes": "Slot alignment (near-vertical vs full-width zigzag); brake density; whether side walls are wall-jumpable or spiked so the redirect must come from a dash alone; adding one horizontal TimedHazard band that periodically seals a slot, so the fall must also be timed; a version with a 1-tile crawl slot at the bottom that requires arriving dash-compressed."
+  },
+  {
+   "name": "Banking Circuit (the loop with a ledger)",
+   "concept": "A closed circular track around a central island, where the exit needs a coin count that cannot be gathered in one lap. Coins are scattered around the loop, but coins only bank when the player stands still or leaves the room, and the only standing-safe tiles are on the central island, reachable at two specific crossing points. So the room becomes: run a lap arc, collect, cross to the island, stand and bank, and go back out on a different arc for the coins you skipped. The twist is that the safe island is progressively contested \u2014 a TimedHazard covers half of it on a long period, so late laps must bank on the shrinking half, and the final coin sits on a spur that only connects back to the island via a dash the player must save.",
+   "core_verbs": [
+    "circulate",
+    "collect",
+    "cross to the hub",
+    "stand still under pressure",
+    "plan lap order"
+   ],
+   "why_novel": "Loop layouts are only four rooms and none of them use the banking rule as a mechanic; the 18 dead-end coin vaults treat coins as a static payload behind one obstacle. This makes the banking rule itself the puzzle and gives the room a route-planning layer that no existing archetype has.",
+   "sketch": "Central island: solid block x=12..19, rows 8..10, with a walkable top surface at row 7. Outer track: floor row 16-17 all the way across, ceiling ledge row 4-5 across, and both side walls climbable at x=1 and x=30 (clean tiles rows 5-15) so the lap is a real circuit \u2014 up the wall, along the ceiling ledge, down the far wall. Crossings to the island: a one-way platform bridge at (x=9..11, y=7) reachable from the west wall, and a 4-tile dash gap from x=24 to the island's east lip at x=20, y=7 (exactly at dash range, so the east crossing is boots-gated). Spikes on the outer floor at x=6..8 and x=22..25 (up-spikes row 17) make standing still on the lower track lethal, which enforces the island-as-bank rule. TimedHazard over island tiles x=16..19 row 7, period 200, active 100, so half the bank blinks. Final coin on a spur ledge at (x=26..27, y=11) with no floor beneath, so leaving it requires a saved dash back to the east crossing. Exit door east rows 13-16, gated on the full coin count.",
+   "difficulty_range": "Early-mid for a plain two-arc version, late for the contested-bank version with a boots-gated crossing.",
+   "variant_axes": "Number of crossings and whether they are one-way; whether the loop is horizontal (ring) or a figure-eight with a shared central corridor; how many coins exceed one lap's carry-safety; whether the hazard shrinks the bank over time or moves it; a variant where the island is the entrance and the loop must be run outward-and-back; a punishing variant where the only bank is a single tile."
+  },
+  {
+   "name": "Airlock Cascade (chambers that invert)",
+   "concept": "Three or four small sealed chambers in a row, connected by narrow apertures, where each chamber restates the previous chamber's mechanic with one parameter inverted, and the aperture between them is a one-way commitment. Chamber 1: a squeeze under a low ceiling with a hazard above. Chamber 2: the same squeeze geometry rotated so the low gap is vertical and must be entered by a falling dash rather than a running one. Chamber 3: the geometry is identical to chamber 1 but the hazard is now a timed curtain instead of static spikes, so the same movement must now be scheduled rather than merely executed. The room teaches a motion and then re-asks it three times under changed conditions; the visible twist is that the player can see all chambers through the apertures from the entrance and recognises the shape of chamber 3 before reaching it.",
+   "core_verbs": [
+    "crawl-slide",
+    "dash-compress into a vertical slot",
+    "re-execute a learned motion under a new constraint",
+    "read ahead through apertures"
+   ],
+   "why_novel": "Crawl/squeeze is eight rooms and always exactly one beat \u2014 never developed, never varied, never combined. This class is the theme-and-variations treatment of it, and the chambered structure gives the multi-act narrative arc the lens asks for without reusing chimney or hop-corridor geometry.",
+   "sketch": "Divide the room with two full-height solid walls at x=10 and x=21. Chamber 1 (x=1..9): floor row 17, ceiling slab at row 15 over x=4..8 leaving a 1-tile crawl channel at row 16 with down-spikes on the slab's underside at x=6..7 so an uncompressed player is killed; aperture through the x=10 wall at row 16 only. Chamber 2 (x=11..20): the aperture drops the player onto a ledge at y=13; a solid column pair leaves a 1-tile vertical slot at x=15, rows 9..13, entered from above, so the player must climb (wall strips at x=11 and x=20, clean, 4-tile spacing for jumps) to y=8 and then dash downward-through the slot compressed; spikes flank the slot mouth at (14,9) and (16,9). Chamber 3 (x=22..31): exactly chamber 1's slab-and-channel geometry mirrored, but the down-spikes are replaced by a TimedHazard filling rows 15-16 over x=25..29, period 100, active 50 \u2014 a 50-tick window, and a compressed crawl of 5 tiles fits in roughly that, so the act is a timed crawl with no slack. Exit east door rows 13-16 just past it. Coins one per chamber, banked at each aperture ledge where the player naturally stops.",
+   "difficulty_range": "Mid; scales to hard by shortening the timed window in the final chamber or adding a fourth chamber that combines timing and vertical entry.",
+   "variant_axes": "Which mechanic is the theme (squeeze, dash-length, wall-contact count, coin banking) \u2014 each gives a different room of the same class; number of chambers; whether the inversion axis is orientation, hazard type, or ability requirement; whether apertures are one-way or allow backtracking, which turns the room from a cascade into a comparison; a descending cascade where chambers stack vertically and apertures are floor slots."
+  }
+ ],
+ "ranked": [
+  {
+   "name": "Switchback Spine",
+   "novelty": 15,
+   "fun": 15,
+   "buildable": 12,
+   "notes": [
+    "Soft positional failure is the single most valuable idea in the whole list: lets the top run be brutal without a checkpoint and gives the room a mental map. Demotion loop must be short or the re-walk becomes the filler it's replacing \u2014 keep the bottom run a 4-second sprint.",
+    "Soft positional failure \u2014 you fall two floors and walk it again instead of dying \u2014 is the single most first-timer-friendly idea in the whole set, and no existing archetype has it. Lets the top run be genuinely hard without unfair deaths. Only check: the fall path must actually be clear of the middle run's spikes so demotion never becomes death.",
+    "Soft positional failure is genuinely absent from the dungeon and costs nothing to implement. The build burden is alignment: top-run holes must line up with middle-run open sections for the demotion to reach row 16, which constrains all three floors at once. Also the middle crawl channel plus v-spikes at row 10 needs careful clearance checking."
+   ],
+   "votes": 3,
+   "score": 23
+  },
+  {
+   "name": "Strata Sort",
+   "novelty": 12,
+   "fun": 12,
+   "buildable": 15,
+   "notes": [
+    "Turns the flat drop-slot junction into an actual decision and stacks it five times. Recovery-by-jumping-back-up keeps experimentation cheap, which is right. Braided hole columns need care or one lane is obviously optimal.",
+    "Excellent newcomer property: 3-tile spacing under the 4-tile jump means a wrong lane costs time, not a life, so route choice can be explored rather than memorised. Real multi-route content built from the most under-used tile. Coin cluster forcing a stand-still bank on a spiked stratum is the one place the risk turns lethal \u2014 soften it.",
+    "Five one-way strata with braided holes is trivially buildable and the 3-tile spacing versus 40px jump correctly makes recovery possible-but-costly. Genuinely multi-route with a real risk/reward lane split. My favourite low-risk pick alongside Braided Crossing."
+   ],
+   "votes": 3,
+   "score": 22
+  },
+  {
+   "name": "Shutter Chute",
+   "novelty": 11,
+   "fun": 12,
+   "buildable": 15,
+   "notes": [
+    "Solid, but substantially Tide Shaft with fewer bands \u2014 pick one of the two as the class and make the other a variant. The one-shot-drop-vs-stage split is a good expert/cautious skill ladder.",
+    "Overlaps Tide Shaft heavily but is more forgiving: staging shelves mean the cautious two-stage solution always exists alongside the expert one-shot, which is exactly the difficulty gradient a first-timer needs. Bands are readable from a ledge before committing. Novelty docked for redundancy with the tide/band family.",
+    "Three full-width bands with staggered phases plus staging shelves \u2014 the two-stage/one-shot split gives skill expression for free. Only check: 6-tile horizontal shelf offset is 60px, described as 'drift plus one dash'; a 4-tile dash plus unquantified drift may not cover it. Make the offset 4 tiles or add an intermediate."
+   ],
+   "votes": 3,
+   "score": 21.666666666666668
+  },
+  {
+   "name": "Low-Ceiling Arena",
+   "novelty": 15,
+   "fun": 12,
+   "buildable": 13,
+   "notes": [
+    "Threat from above in an open room is a direction the dungeon has literally never faced, and the flow-state car-park feel is a real change of texture. Wells as the only vertical relief is a great structural payoff. Watch that a 3-tile band doesn't just feel like a corridor drawn wide.",
+    "Threat from above in an open space is the one axis every over-represented archetype ignores, and it is instantly legible \u2014 you can see the whole lid. Punishing the reflex jump is a teaching moment rather than a gotcha because the spikes are visible. Wells as the only vertical release give the room a clear shape.",
+    "Inverting the threat axis to the ceiling is the cheapest genuine novelty on the list \u2014 pure static tiles, no timing, no new primitive. A 3-tile playable band under a v-spike lid works against a 12px player, and the wells give legitimate vertical relief. Strong recommend."
+   ],
+   "votes": 3,
+   "score": 21.666666666666668
+  },
+  {
+   "name": "Braided Crossing",
+   "novelty": 12,
+   "fun": 11,
+   "buildable": 15,
+   "notes": [
+    "The foundational statement of multi-route, built from tiles that already exist. Slightly dutiful \u2014 one coin per lane to force two crossings is padding, not design. Ship it as the class that teaches the idea, then do better rooms.",
+    "The plainest, most legible statement of the two-route idea, built entirely from vocabulary the player already knows. Both lanes visible from the entry alcove is exactly right for a newcomer. 3-tile gaps 'barely clearable by running jump' is the one unfair edge \u2014 make the no-dash line comfortably clearable, not marginal.",
+    "The plainest statement of the missing multi-route idea and entirely static tiles \u2014 lowest build risk on the list. Numbers check out: 30px gaps under the 40px dash, 1-tile squeeze for compression, 5-tile spike spacing. Foundation class; ship first."
+   ],
+   "votes": 3,
+   "score": 21.333333333333332
+  },
+  {
+   "name": "Tide Shaft",
+   "novelty": 15,
+   "fun": 12,
+   "buildable": 12,
+   "notes": [
+    "Falling-as-metronome is the best idea here; stacked full-width TimedHazards with marching phase is legit engine vocabulary. Risk: fall speed vs phase step must be tuned or it's a coin flip, and full-width bands mean zero agency on some beats. Cut the floor spikes, they're filler.",
+    "Marching band of stacked TimedHazards is a genuinely new axis and reads well because the lit band is visible before you drop. Fair-death worry: a first-timer entering through the ceiling door arrives mid-cycle with no chance to read the pattern \u2014 needs a safe entry ledge where the tide is guaranteed off. Falling is fast, so a 24-tick band step may outpace player reaction; verify drop time between ledges empirically.",
+    "Stacked full-width TimedHazard rects with marching phases is exactly the under-used primitive and needs nothing new. Two engineering nits: 3-row ledge spacing is 30px, not the '~20px comfortable' claimed (fine as drops, marginal as recovery jumps), and the safe-pocket invariant only holds if active window 45 < phase step 24 is reconsidered \u2014 with active 45 and step 24, two adjacent bands are lit simultaneously for ~21 ticks, so the 'exactly one band lit' story is wrong. Retune to active<24 or accept a two-band front."
+   ],
+   "votes": 3,
+   "score": 21
+  },
+  {
+   "name": "Metronome Gallery",
+   "novelty": 11,
+   "fun": 11,
+   "buildable": 15,
+   "notes": [
+    "Honest reskin of the 19 hop corridors under a clock. Trivially buildable, teaches the timing language. But 'wait for the beat' with no execution demand is exactly the dead time a speedrunner hates \u2014 needs the against-the-player march variant to be worth a room.",
+    "The best teaching room in the set: first bay lets you watch two cycles, flat floor means no compound execution tax, deaths are legible ('I left late'). Deliberately re-skinning the most common archetype under a clock is exactly the right on-ramp for a first-timer. Slightly low novelty precisely because it is familiar, which here is a virtue.",
+    "Pure rect hazards on a flat floor; trivially expressible. Deliberate re-authoring of the most over-used archetype under a clock is a smart, cheap win. Phase step 19 vs active 34 again means overlapping lit curtains \u2014 check that the travelling gap is actually open; otherwise geometry is unimpeachable."
+   ],
+   "votes": 3,
+   "score": 21
+  },
+  {
+   "name": "Metronome Bank",
+   "novelty": 15,
+   "fun": 12,
+   "buildable": 12,
+   "notes": [
+    "Making rest the hazard is a genuine inversion and the rotating-shelf phase design is clean. The 1-tile expert perch as a hidden bank point is exactly the detail a runner will optimise toward. Small room, big idea.",
+    "'Rest is the hazard' is the sharpest one-line concept in the set and nothing in the dungeon does it. Rotating phases mean a safe shelf always exists, so it stays fair. Docked slightly because the 1-tile stepping-stone 'hidden hard bank point' is exactly the kind of pixel-precise secret that frustrates rather than rewards a newcomer.",
+    "Making the pause the skill check is the sharpest single inversion proposed, and three shelf rects at 120-degree phase offsets is trivial to author. The author correctly checks that an 8x12 player fits a 10px stepping stone. Only risk: active 100 of period 180 means shelves are unsafe most of the time and the rotation overlaps \u2014 retune duty cycle so a full safe rotation exists."
+   ],
+   "votes": 3,
+   "score": 21
+  },
+  {
+   "name": "Forked Toll Crossing",
+   "novelty": 15,
+   "fun": 12,
+   "buildable": 12,
+   "notes": [
+    "Differentiating routes by bank availability rather than difficulty is the sharpest anti-dominance trick proposed \u2014 that is what stops a fork collapsing. The double-pass return costing a full re-run of the dash is a great deterrent. Best of the fork family.",
+    "Differentiating the two lanes by bank availability rather than difficulty is the cleverest solution here to 'one lane collapses into the good one'. The decision changes with what you are carrying, which is real content. Upper lane's single 1-wide platform at dash's exact limit is the unfair part \u2014 widen it, or the top road is boots-plus-perfection.",
+    "Differentiating lanes by bank availability rather than difficulty is the insight that stops one lane dominating \u2014 the best argument for a fork in this batch. Build risk is the single one-way tile at col 16 row 8 reached by a dash of exactly 4 tiles: zero margin at the engine's stated limit. Widen to 2 tiles or shorten to 3."
+   ],
+   "votes": 3,
+   "score": 21
+  },
+  {
+   "name": "Two-Clock Fork",
+   "novelty": 14,
+   "fun": 12,
+   "buildable": 12,
+   "notes": [
+    "Arrival-dependent route cost is a genuinely smart way to stop one lane dominating. Boots-gating the high lane undermines that though \u2014 an ability gate turns a choice into a lookup. Make both lanes ability-neutral and let the clocks do the work.",
+    "Fills the zero-multi-route gap in the clearest way. Concern: 'coprime-feeling periods' means the cheaper lane changes per attempt, which reads as randomness to a newcomer rather than choice \u2014 start with the fixed-period variant. Boots-gating only the high lane is good honest signposting.",
+    "Best-argued multi-route case: branch-and-rejoin, both lanes solvable, arrival-dependent cost. Ability gate on the high lane (boots) is legitimate since the low lane is ungated. 'Wall-hug jump to a one-way platform' is vague; specify the step heights, and note 3-row rises are 30px, near the 40px ceiling."
+   ],
+   "votes": 3,
+   "score": 20.666666666666668
+  },
+  {
+   "name": "Shutter Interchange",
+   "novelty": 14,
+   "fun": 11,
+   "buildable": 13,
+   "notes": [
+    "Hazard-as-router is a real idea, but period 240 with a 60 window means a lot of standing around reading. A jaded runner will find the one lane that is always fastest and never look at the others. Halve the period.",
+    "Hazard-as-router hits the timed and multi-route gaps at once, and the long period (240) with short window makes it a reading puzzle rather than a reflex test, which suits a newcomer. The alcove you can watch a full period from is exactly the right teaching affordance. Coin inside rect A's footprint is fair because the off-window is long.",
+    "Hazard as routing mechanism is the strongest single idea here and needs only two rects. Antiphase guarantee (period 240, active 60, phases 0/120) genuinely leaves a route open at all times \u2014 the arithmetic holds. Ledge rises of 3 tiles are within jump. Very low risk."
+   ],
+   "votes": 3,
+   "score": 20.666666666666668
+  },
+  {
+   "name": "Rotary Bank",
+   "novelty": 15,
+   "fun": 12,
+   "buildable": 11,
+   "notes": [
+    "Hazard demands motion, economy demands stillness \u2014 cleanest thesis in the set. But four ring-sized rects plus notch dead-spots is fiddly geometry and the 3-tile notches must be exactly outside every rect or the room lies to the player. High payoff, highest authoring risk.",
+    "Lighthouse sweep plus stand-to-bank is a strong, original engine. Readability risk is real: four large hazard rects and a ring mean the lit side is often off-screen behind the central block, so the player cannot see the threat coming. Needs the banking notches visually distinct and ideally the sweep telegraphed.",
+    "Four side rects with 90-degree phase offsets is clean and the motion/stillness tension is a genuine new axis. Ring corridor 4 tiles wide inside 32x18 plus a 14x8 island fits. The 'notch outside every hazard rect' requires the rects to be authored around the notches \u2014 doable but check the listed left rect (50,20,40,140) does not overlap the bottom run."
+   ],
+   "votes": 3,
+   "score": 20.333333333333332
+  },
+  {
+   "name": "Keyhole Vault",
+   "novelty": 13,
+   "fun": 12,
+   "buildable": 12,
+   "notes": [
+    "Irreversible entry plus branching exit finally makes a vault a decision. Spike-throat one-way seal is clever and uses no new tiles. Verify the 8px body actually clips the side spikes on a wall-jump \u2014 the whole class rests on that hitbox claim.",
+    "Irreversible entry plus two priced exits is a real topology idea and rescues 18 stale vaults. Fairness hinges on the funnel being visibly one-way from above; if the player only learns it is sealed after falling in, it reads as a trap. Two exits at different ability prices does mean nobody is stranded, which is the saving grace.",
+    "One-way entry built from side-facing spikes against an 8px-wide body is clever and needs no new tile, but it is a hitbox bet: verify a wall-jump chain in a 2-tile throat actually clips the side spikes rather than threading them. Two exits with different ability profiles is a good answer to the 18 dead-end vaults."
+   ],
+   "votes": 3,
+   "score": 20.333333333333332
+  },
+  {
+   "name": "Antiphase Airlock",
+   "novelty": 11,
+   "fun": 10,
+   "buildable": 15,
+   "notes": [
+    "Structurally tidy and the deliberate opposite of Metronome Bank, but walking through floor-level doorways on a beat is the definition of filler for this persona \u2014 no execution tax, by its own admission. The unshuttered overhead lane is the only part worth keeping.",
+    "The most fair-death-friendly timed room proposed: gates are floor-level run-throughs with no execution tax, retreat is symmetric to advance, every chamber has a safe floor to stand and bank. A newcomer can go one chamber per cycle and never die while an expert rides one wave through. This is the room that should teach the whole timed vocabulary.",
+    "Cleanest build on the list: four partitions, four doorway-sized rects, strict 0/60 alternation at period 120 active 60, floor-level run-throughs so there is no execution tax. The unshuttered overhead lane that cannot bank is a well-judged second route. Nothing here needs measurement."
+   ],
+   "votes": 3,
+   "score": 20.333333333333332
+  },
+  {
+   "name": "Shutter Crawl",
+   "novelty": 14,
+   "fun": 11,
+   "buildable": 12,
+   "notes": [
+    "Compression-as-commitment is the right marriage of the two thinnest tags. Exit-shutter variant is the actual room. Watch that bay waits don't stack into dead seconds; three tunnels is the max before it drags.",
+    "Combines the two most under-used tags, but crawl-slide is uninterruptible, so a shutter that lights mid-tunnel is a death the player could not have avoided after commitment. Only fair if the entry shutter is the gate and the window provably covers full tunnel length plus margin. The proposal's own 'exit shutter, commit blind' variant should be banned for early rooms.",
+    "Combines the two most under-used tags and respects the key physics fact that crawl-slide is uninterruptible. Risk: a 6-7 tile tunnel is 60-70px against a 40px dash; the design leans on 'carried momentum' that may not exist. Verify slide distance empirically or shorten tunnels to 4 tiles."
+   ],
+   "votes": 3,
+   "score": 20
+  },
+  {
+   "name": "Greed Loop",
+   "novelty": 12,
+   "fun": 12,
+   "buildable": 12,
+   "notes": [
+    "Lap-length-as-wager self-balances without any hazard gimmick, which is rare and good. Risk is repetition: laps 2 and 3 over the same tiles is the exact samey-ness complaint unless coin depth changes the route shape, not just its length.",
+    "Push-your-luck lap length is a clean economic engine and the single bank tile at the entrance is readable and honest \u2014 you always know what abandoning costs. Coin 4 behind a 4-tile dash-cleared spike run is the outlier in difficulty and will be the thing that eats first-timers' whole laps; consider making it the optional last one.",
+    "Lap-length-as-wager is a real economic layer and everything is static tiles plus one-way stacks. Checks out dimensionally. Watch coin 3 ('upward-diagonal dash from row 5' to row 3) \u2014 that is 2 tiles up and within dash, fine \u2014 and make sure the single bank tile is genuinely the only spike-free stand, which requires auditing every surface."
+   ],
+   "votes": 3,
+   "score": 20
+  },
+  {
+   "name": "One-Way Loop",
+   "novelty": 12,
+   "fun": 10,
+   "buildable": 13,
+   "notes": [
+    "Directional asymmetry from one-way platforms alone is elegant and costs nothing. Ability-gating the ascent is defensible here because the room is a map object, not a crossing. Best 'learned as geometry' room in the batch.",
+    "Directional asymmetry via one-way platforms is a clean idea and true to the engine. But the spike placed at each descent platform's landing edge specifically to punish a re-climb is a trap that teaches by killing rather than by reading \u2014 a first-timer discovers the loop's one-wayness only via blood. Signal it with geometry, not spikes.",
+    "Directional asymmetry via one-way platforms is a real use of the engine's only directional tile. Weakness: the ascent side is a 4-tile-wide facing-walls wall-jump climb, i.e. literally the over-represented chimney, just short. Make the ascent a dash-up-diagonal or ledge puzzle to avoid re-importing archetype #1."
+   ],
+   "votes": 3,
+   "score": 19.333333333333332
+  },
+  {
+   "name": "Shutter Ducts",
+   "novelty": 14,
+   "fun": 10,
+   "buildable": 12,
+   "notes": [
+    "Peristaltic wave is a nice image and the dash-equals-one-zone-width tuning is disciplined to the point of unforgiving. Too close to Shutter Crawl to justify both as separate classes; make it that class's wave variant.",
+    "Peristaltic wave is a great image, but 'dash covers exactly one zone width with no margin for error' plus compression removing all escape options is the definition of an unfair death for a first-timer. Widen the pockets or shorten the zones. Coins inside hazard cells make the greedy line the unreadable line.",
+    "Peristaltic wave over a crawl corridor is a strong pairing, and the honest 'dash covers exactly one zone width, no margin' note shows the author checked the numbers. Concern: with period 120 / active 60 / step 30, two adjacent zones are lit at once for half the cycle \u2014 verify the wave leaves a coherent travelling gap. Pockets carved to row 12 give proper standing height."
+   ],
+   "votes": 3,
+   "score": 19.333333333333332
+  },
+  {
+   "name": "Committed Fork",
+   "novelty": 11,
+   "fun": 11,
+   "buildable": 12,
+   "notes": [
+    "Competent but it is Two-Clock Fork and Forked Toll Crossing wearing a third hat; three near-identical fork classes is its own kind of samey. The unbankable-in-flight coin ledger is the only distinct wrinkle \u2014 fold it into Forked Toll.",
+    "Fork visible from the entrance landing is exactly the information design a newcomer needs, and the within-route bank decision adds depth without adding execution. The irreversible one-way platform commitment is acceptable because both roads complete the crossing. Overlaps Two-Clock Fork and Forked Toll Crossing; pick two of the three.",
+    "Solid multi-route room with a within-route greed decision layered on the banking rule. Spacings (3-4 tile gaps, 2-tile rises, 1-tile squeeze, one 80/40 hazard) are all inside budget. The 'irreversible via one-way platform' commitment is honest since dropping through is the only transition. Low risk."
+   ],
+   "votes": 3,
+   "score": 19
+  },
+  {
+   "name": "Airlock Cascade",
+   "novelty": 13,
+   "fun": 12,
+   "buildable": 10,
+   "notes": [
+    "Theme-and-variations is the correct medicine for a dungeon that repeats shapes without developing them, and letting the player see chamber 3 in advance is excellent information design. Chamber 3's timed crawl with 'no slack' is a tuning cliff \u2014 give it a few ticks.",
+    "Theme-and-variations is the right cure for a dungeon that feels samey, and letting the player see chamber 3's familiar shape through the apertures before arriving is superb readability. Chamber 3's timed crawl with 'no slack' should be given slack. Also the strongest argument in the set for backtrackable apertures over one-way ones.",
+    "Chamber 2 requires the player to 'dash downward-through' a vertical slot, but dashes are horizontal or up-diagonal only \u2014 there is no down-dash, so that beat cannot be authored. Fix by making it a fall into a horizontal compressed entry. The theme-and-variations structure is the right treatment for the eight one-beat squeeze rooms and worth salvaging."
+   ],
+   "votes": 3,
+   "score": 19
+  },
+  {
+   "name": "Catch Ladder",
+   "novelty": 12,
+   "fun": 11,
+   "buildable": 11,
+   "notes": [
+    "'The fall is easy, the stop is hard' is a sharp inversion, and cascading rather than killing mistakes is generous in the right way. The sketch's own numbers wobble (it corrects itself mid-sentence on offsets) \u2014 8-tile gaps at 4-tile dash plus drift needs verifying.",
+    "Good inversion (the stop is hard, not the fall) and mistakes cascade rather than kill on upper tiers. But the sketch's own numbers wobble \u2014 8-tile offsets between opposite nubs against a 4-tile dash plus drift is not clearly reachable, and 1-2 tile one-way landings after a multi-tile drop is a precision tax a newcomer will fail repeatedly. Verify the offsets before building.",
+    "Banking-under-pressure is a real new mechanic and one-way nubs cascading rather than killing is good design. But the sketch's own numbers wobble ('20-24 tiles... rather, 8 tiles'), and 8-tile (80px) offsets between opposite nubs are twice the dash. Halve the offsets or accept that every tier is glove-gated."
+   ],
+   "votes": 3,
+   "score": 18.666666666666668
+  },
+  {
+   "name": "Phase-Offset Shutter Suite",
+   "novelty": 12,
+   "fun": 11,
+   "buildable": 11,
+   "notes": [
+    "Best-structured act progression of the timed family: watch, commit, commit blind, ending dash-gated. The one-tile-apart antiphase pair with no standing solution is a genuinely nasty, memorable beat. Flat floor keeps it about time, which is the point.",
+    "Explicit watch/commit/commit-blind arc is good pedagogy and act 1 is a proper tutorial bay. But two curtains one tile apart in opposite phase with 'no standing solution' is a step change a first-timer will hit as a wall, and the author names the third act 'commit blind' approvingly. Front-load acts 1 and 2, park act 3 in a later room.",
+    "Act 2 as specified is broken: curtains one tile apart at phase 0 and 45 with period 90 / active 45 means one of the two is lethal at literally every tick, so the crossing demands a frame-perfect pass through the flip. That is not rhythm, it is a coin flip. Separate the pair by 3-4 tiles or shorten the duty cycle; the three-act teaching structure is otherwise excellent."
+   ],
+   "votes": 3,
+   "score": 18.666666666666668
+  },
+  {
+   "name": "Duct Junction",
+   "novelty": 13,
+   "fun": 11,
+   "buildable": 10,
+   "notes": [
+    "Crawling as the whole room rather than a beat, plus two structurally different solutions \u2014 hits both gaps at once. Constant compression risks a mushy, low-agency feel; the risers are what save it. Third merge duct is one branch too many.",
+    "Sustained crawl as the whole room, plus two structurally different solutions, is a big double fill. Readability is the risk: a solid-filled room carved into 1-tile ducts gives the player almost no sightlines, so the fork is chosen blind. The exit alcove where you can finally stand upright is a lovely release beat.",
+    "Sustained crawl plus two honest routes is the right target, but the risers are specified 1 tile wide with 'opposing solids so glove wall-jumps chain' \u2014 a 1-tile (10px) shaft around an 8px body leaves no room for a wall-jump arc. Widen risers to 3-4 tiles or replace them with one-way ledge stacks; otherwise the high lane is unreachable."
+   ],
+   "votes": 3,
+   "score": 18.333333333333332
+  },
+  {
+   "name": "Commitment Slot",
+   "novelty": 13,
+   "fun": 11,
+   "buildable": 10,
+   "notes": [
+    "Makes a coin detour an actual wager instead of a free back-out \u2014 the correct fix for 18 dead-end vaults. The hidden bypass duct is the good kind of speedrun secret. Verify the 3-tile-rise-through-1-tile-hole claim, the whole irreversibility rests on it.",
+    "Turning vaults into wagers is right, but it depends on the player judging a detour's cost before an irreversible slot, and the sketch admits the slot is one-way partly because arriving compressed through a 1-tile hole is awkward \u2014 that is a fuzzy physics claim, not a designed gate. First-timers will get pocketed. The visible bypass variant is the only version I would ship.",
+    "Turning vaults into wagers is the right fix for the 18 dead ends. But irreversibility is argued weakly: a 3-tile (30px) rise is inside the 40px jump, so the only thing stopping backtrack is needing to arrive compressed through a 1-tile hole. That is a hitbox bet, not geometry \u2014 test it, or deepen the drop to 5 tiles so the seal is unconditional."
+   ],
+   "votes": 3,
+   "score": 18.333333333333332
+  },
+  {
+   "name": "Ratchet Descent",
+   "novelty": 11,
+   "fun": 11,
+   "buildable": 11,
+   "notes": [
+    "Irreversibility plus an unbanked stack is the stakes descent has been missing, and 'is this the level I stop at' is a real recurring question. Overlaps Strata Sort structurally; differentiate by keeping this one strictly one-way.",
+    "Irreversibility plus a carried stack gives descent real stakes, and crucially most failures cost the coin route rather than a life \u2014 a fair pressure. The single mid-room bank shelf is a well-placed relief valve. Check the claim that a 3-tile gap is unclimbable while a 40px jump exists; that margin is thin and the whole ratchet rests on it.",
+    "The premise contradicts the stated physics: the sketch says 'between levels the vertical gap is 3 tiles: falling is free, climbing is impossible without gloves', but a 40px jump clears 3 tiles (30px) outright, so nothing ratchets. To make irreversibility real the tiers must be 5+ tiles apart, which does not fit five tiers in 18 rows. Rebuild with 3 tiers or accept it as a soft ratchet."
+   ],
+   "votes": 3,
+   "score": 18.333333333333332
+  },
+  {
+   "name": "The Flue",
+   "novelty": 12,
+   "fun": 11,
+   "buildable": 9,
+   "notes": [
+    "Pure commitment, zero filler, exactly the room a speedrunner replays. But it leans hard on air-drift authority and fall speed the spec doesn't pin down; 'about a tile per tick' is a guess. Prototype the physics before authoring baffles.",
+    "Vivid, but this is the least fair room here for a newcomer: instant death at fall speed, one-way commitment, and the whole column must be read before you drop even though you enter through the ceiling and cannot see the bottom. 'Failure is instant and legible' undersells the cost of a blind first attempt. Needs a pre-drop viewing ledge or much wider gaps.",
+    "The concept is legal tile-wise, but the physics claims are unsupported: 5-8 tiles of lateral travel per 3-tile drop relies on an air-drift speed the brief never states, and 'roughly a tile of drop per frame-tick band' is invented. Dash is 40px = 4 tiles, so the 7-8 tile offsets are strictly unreachable with one dash. Needs measurement before it is a class rather than a hypothesis."
+   ],
+   "votes": 3,
+   "score": 17.333333333333332
+  },
+  {
+   "name": "Bank Run",
+   "novelty": 13,
+   "fun": 10,
+   "buildable": 9,
+   "notes": [
+    "Hoard-and-cash-out because crawl posture cannot bank is the most mechanically inevitable idea in the list \u2014 the rule and the geometry imply each other. Ten-tile shafts of wall-jumping may drag; shorten the ring.",
+    "Hoard-then-cash is a genuinely fresh use of the banking rule and fills the loop gap. But ten tiles of 1-tile-wide shaft climbed by five wall-jumps is the spiked-chimney feeling under another name, and losing a seven-coin lap to one mistake is a punishment curve a new player will simply disengage from. Needs a cheap intermediate vault.",
+    "Same fatal detail as Duct Junction, worse: 1-tile-wide vertical shafts with '10 tiles of climb = about five wall-jumps'. Wall-jumping in a 10px-wide shaft is not plausible for an 8px body, and the whole ring depends on those two shafts. The hoard/cash-out economy is genuinely good \u2014 rebuild it around 4-tile shafts or one-way ledge stacks."
+   ],
+   "votes": 3,
+   "score": 17
+  },
+  {
+   "name": "Needle Drop",
+   "novelty": 12,
+   "fun": 10,
+   "buildable": 8,
+   "notes": [
+    "Dive-into-compression is a genuinely new compound move and the best expressive-movement idea after Switchback. But an 8-tile tunnel needing a mid-slide dash refresh may simply not be possible; spec doesn't say dash recharges without ground. Keep tunnels at 4.",
+    "Requires being dash-compressed at a specific mid-air height, then an 8-tile slide needing a mid-tunnel dash refresh \u2014 whether dash refreshes while compressed is unspecified and may not exist in this engine. Compound, unforgiving, and spikes on the approach lip punish the exact mistake a learner makes most. Build the 4-tile-tunnel easy variant first or not at all.",
+    "Chaining compression to descent is a good idea, but the flagship 8-tile tunnel needs a 'mid-tunnel dash refresh' \u2014 dashes normally recharge on ground contact, and whether a dash can even be re-issued while compressed is unstated. Four 2-tile slabs at rows 4,8,11,15 also leaves chutes of 2-3 tiles, tight for 'fall, turn and re-arm'. Buildable only in the 4-tile-tunnel variant."
+   ],
+   "votes": 3,
+   "score": 16
+  },
+  {
+   "name": "Controlled Fall",
+   "novelty": 12,
+   "fun": 10,
+   "buildable": 7,
+   "notes": [
+    "Great feel target, but the sketch requires 14-16 tile lateral moves per leg using wall-bounce redirects the engine may not support at fall speed, and one dash is only 4 tiles. As specified it does not work; it needs either far closer slots or physics that aren't in the vocabulary.",
+    "The three-act teaching structure is good but the geometry does not obviously work: slots 14-16 tiles apart require a fall plus a dash plus a bounce off a clean wall strip, chained at speed, and act 3 removes all brakes. That is a memorisation room. Better version of The Flue's idea, still the harsh end of the fair-death line.",
+    "Core traversal is unbuildable as specified: successive slots 14-16 tiles apart, explicitly 'far more than one 4-tile dash', resolved by an unspecified wall-bounce redirect mid-fall that the engine brief never promises. Also gates the whole room on gloves while calling itself the inverse of the chimney. Reduce offsets to 4-6 tiles and it becomes a good room."
+   ],
+   "votes": 3,
+   "score": 15.333333333333334
+  },
+  {
+   "name": "Banking Circuit",
+   "novelty": 12,
+   "fun": 9,
+   "buildable": 8,
+   "notes": [
+    "Route-planning layer is welcome but 'exit gated on a coin count' is a switch by another name and isn't in the stated vocabulary. Multi-lap forced backtracking is also exactly the repetition the player complained about. Fix the gate or cut.",
+    "Multi-lap ledger planning is genuinely new, but 'exit gated on coin count' is a lock-and-key mechanic nothing in the stated vocabulary supports \u2014 that is a new engine feature, not a level. Strip the gate and it becomes a good optional-greed loop. Shrinking-bank hazard on the island is the best part.",
+    "Fails on vocabulary: 'exit door gated on the full coin count' requires a lock/switch, and the brief states NO switches \u2014 doors are just gaps in walls. Strip the gate and the room still works as a lap-and-bank circuit, but the design's stated engine (must exceed one lap) evaporates. The blinking half-island is a nice touch worth keeping."
+   ],
+   "votes": 3,
+   "score": 15.333333333333334
+  },
+  {
+   "name": "Well and Winch",
+   "novelty": 9,
+   "fun": 9,
+   "buildable": 9,
+   "notes": [
+    "Good bones \u2014 cheap down, expensive up \u2014 but the sketch visibly flounders on door placement and mirrors itself into confusion. Overlaps One-Way Loop, which does asymmetry more cleanly. Merge or cut.",
+    "Strong idea (see your escape while you fall past it) but the sketch is visibly confused about door placement, mirroring and which wall the exit is on \u2014 it argues with itself mid-paragraph. Also overlaps Keyhole Vault and Greed Loop. Needs a clean re-spec before it can be judged as a layout.",
+    "Sound in outline, but the sketch visibly loses track of its own doors mid-sentence ('place exit on the left wall rows 4-7 ... so use the right-wall door with the room mirrored'), which signals the topology has not been worked out. Ascent ledges at 3-tile rise and 4-tile offset are legal. Needs a rewritten layout before it is authorable."
+   ],
+   "votes": 3,
+   "score": 15
+  }
+ ]
+}
