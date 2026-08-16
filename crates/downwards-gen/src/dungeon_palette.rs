@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 23;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 24;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1835,17 +1835,43 @@ impl PaletteDraft<'_> {
                 self.horizontal(3, 27, 31, Tile::Solid);
             }
             DungeonPaletteCourse::AuroraSpire => {
-                self.vertical(12, 2, 16, Tile::Solid);
-                self.vertical(19, 5, 17, Tile::Solid);
-                self.horizontal(16, 12, 20, Tile::Solid);
-                self.horizontal(10, 20, 26, Tile::OneWay);
-                self.horizontal(7, 13, 17, Tile::OneWay);
-                self.horizontal(3, 14, 18, Tile::OneWay);
-                self.horizontal(14, 26, 30, Tile::OneWay);
-                self.horizontal(16, 20, 23, Tile::HazardUp);
-                for row in 13..16 {
+                // Rise inside the left cap-safe core, cross the open crown of the spire, then
+                // descend a visible right-hand cascade to the coin and east corridor. The full
+                // backing wall prevents the old monotone diagonal shortcut; the descent turns a
+                // familiar climb into an out-and-over route with safe recovery after the Dash.
+                self.horizontal(16, 1, 31, Tile::Solid);
+                self.vertical(12, 1, 17, Tile::Solid);
+                self.vertical(13, 1, 4, Tile::HazardRight);
+                self.set(13, 4, Tile::HazardUp);
+                self.vertical(13, 5, 7, Tile::Solid);
+                self.vertical(13, 7, 10, Tile::HazardRight);
+                self.set(13, 10, Tile::HazardUp);
+                self.vertical(13, 11, 13, Tile::Solid);
+                self.vertical(13, 13, 16, Tile::HazardRight);
+
+                self.vertical(19, 1, 17, Tile::Solid);
+                self.vertical(18, 3, 5, Tile::Solid);
+                self.vertical(18, 5, 7, Tile::HazardLeft);
+                self.set(18, 7, Tile::HazardUp);
+                self.vertical(18, 8, 10, Tile::Solid);
+                self.vertical(18, 10, 13, Tile::HazardLeft);
+                self.set(18, 13, Tile::HazardUp);
+                self.vertical(18, 14, 17, Tile::Solid);
+
+                for row in 14..16 {
                     self.set(12, row, Tile::Empty);
+                    self.set(13, row, Tile::Empty);
                 }
+                for row in 1..3 {
+                    self.set(18, row, Tile::Empty);
+                    self.set(19, row, Tile::Empty);
+                }
+                self.horizontal(3, 18, 22, Tile::Solid);
+                self.horizontal(7, 19, 28, Tile::HazardUp);
+                self.horizontal(7, 28, 31, Tile::OneWay);
+                self.horizontal(10, 21, 30, Tile::OneWay);
+                self.set(30, 10, Tile::HazardUp);
+                self.horizontal(13, 24, 29, Tile::Solid);
             }
             DungeonPaletteCourse::VoidPass => {
                 // A late-game combination course rather than another copy of the horizontal
@@ -2394,6 +2420,70 @@ mod tests {
                     "Gravity Lift switchback opening is obstructed"
                 );
             }
+        }
+    }
+
+    #[test]
+    fn aurora_spire_serializes_a_cap_safe_core_and_recovery_cascade() {
+        let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::AuroraSpire).generate();
+        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
+
+        for column in 1..31 {
+            assert_eq!(tile(column, 16), Tile::Solid, "Aurora floor is open");
+        }
+        for row in 1..17 {
+            if !(14..16).contains(&row) {
+                assert_eq!(tile(12, row), Tile::Solid, "left shaft backing is open");
+            }
+            if !(1..3).contains(&row) {
+                let expected = if row == 7 {
+                    Tile::HazardUp
+                } else {
+                    Tile::Solid
+                };
+                assert_eq!(tile(19, row), expected, "right shaft backing is open");
+            }
+        }
+        for row in 14..16 {
+            assert_eq!(tile(12, row), Tile::Empty, "shaft entrance is sealed");
+            assert_eq!(tile(13, row), Tile::Empty, "shaft entrance is sealed");
+        }
+        for row in 1..3 {
+            assert_eq!(tile(18, row), Tile::Empty, "shaft crown is sealed");
+            assert_eq!(tile(19, row), Tile::Empty, "shaft crown is sealed");
+        }
+        for column in 19..28 {
+            assert_eq!(
+                tile(column, 7),
+                Tile::HazardUp,
+                "Aurora light sheet has a safe gap"
+            );
+        }
+        for column in 28..31 {
+            assert_eq!(
+                tile(column, 7),
+                Tile::OneWay,
+                "upper recovery is incomplete"
+            );
+        }
+        for column in 21..30 {
+            assert_eq!(
+                tile(column, 10),
+                Tile::OneWay,
+                "middle recovery is incomplete"
+            );
+        }
+        assert_eq!(
+            tile(30, 10),
+            Tile::HazardUp,
+            "middle recovery lacks its stop"
+        );
+        for column in 24..29 {
+            assert_eq!(
+                tile(column, 13),
+                Tile::Solid,
+                "lower recovery is incomplete"
+            );
         }
     }
 

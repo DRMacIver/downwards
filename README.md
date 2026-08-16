@@ -341,6 +341,16 @@ but has only 18 input spans, retains at least 20/64 successes in every strength-
 family, and an independent ceiling-entry solve descends to the east corridor. A baseline search
 has no positive; failure in this room costs height rather than a death.
 
+Aurora Spire is the fourteenth replacement. Its old mandatory coin sat above another loose
+diagonal staircase; the retained route took 143 ticks, used three Dashes and one incidental Wall
+Jump, and never reversed horizontally. The v24 room instead enters a cap-safe alternating core,
+recovers on a broad crown shelf, and crosses a lethal light sheet to an upper-right coin before
+descending a three-stage safe cascade toward the east corridor. The readable retained route takes
+200 ticks and 20 spans, accepts four Wall Jumps before exactly one Dash, and reverses eight times.
+Every strength-one perturbation family retains at least 31/64 successes. An independent solve
+continues east after collection. A harder Dash-free Wall-Jump route also exists, so Aurora is
+documented as a preferred mixed-method challenge rather than falsely labelled a strict Dash gate.
+
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 
 ```sh

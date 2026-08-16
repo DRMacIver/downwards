@@ -230,6 +230,18 @@ descends to the east corridor, while a same-budget baseline search has no positi
 strength-one blind-continuation family retains at least 20/64 successes. The duration records a
 long traversal, not a claim that time or solver effort equals human difficulty.
 
+Aurora Spire is the fourteenth replacement in v24. Its prior mandatory coin route was another
+loose diagonal staircase: 143 ticks, 15 spans, three Dashes, one incidental Wall Jump, and no
+horizontal reversal. The replacement uses an out-and-over silhouette. The player enters a
+cap-safe alternating core, reaches a broad crown shelf, then crosses a lethal horizontal light
+sheet to the upper-right coin; a three-height recovery cascade makes the onward descent safe and
+visually explicit. The staged route exact-replays in 200 ticks and 20 spans with four accepted Wall
+Jumps, one Dash after the climb, and eight horizontal reversals. Its four strength-one
+blind-continuation families retain 31, 42, 44, and 63 successes out of 64. An independent exact
+solve continues from the coin to the east door. Ordinary search also retains a clean Dash-free
+Wall-Jump route, so the evidence describes a readable preferred mixed route rather than a strict
+method gate.
+
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
 persistent item omission, additive mid-run Wall Jump and Dash state, gate rejection without room reset, client

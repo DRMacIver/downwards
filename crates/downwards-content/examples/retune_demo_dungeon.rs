@@ -309,6 +309,7 @@ fn compare_routes(
                     | DemoDungeonRoom::StarThreshold
                     | DemoDungeonRoom::ShadowDuct
                     | DemoDungeonRoom::Observatory
+                    | DemoDungeonRoom::AuroraSpire
             ) {
                 observation.accepted_dashes_before_first_wall_jump
             } else {
@@ -481,6 +482,9 @@ fn segmented_candidate(
     }
     if spec.room == DemoDungeonRoom::GravityLift {
         return segmented_gravity_lift_candidate(initial, target);
+    }
+    if spec.room == DemoDungeonRoom::AuroraSpire {
+        return segmented_aurora_spire_candidate(initial, target);
     }
     let (waypoint, first_config, second_config) = match spec.room {
         DemoDungeonRoom::VoidPass => (
@@ -861,10 +865,11 @@ fn segmented_observatory_candidate(
         return None;
     }
 
-    let (next, crossing) = readable_left_landing(&intermediate, 100..=122, 48, &[-1, 0, 1])?;
+    let (next, crossing) =
+        readable_directional_landing(&intermediate, 100..=122, 48, &[-1, 0, 1], -1)?;
     intermediate = next;
     actions.extend(crossing);
-    let (next, crossing) = readable_left_landing(&intermediate, 10..=42, 18, &[-1, 0])?;
+    let (next, crossing) = readable_directional_landing(&intermediate, 10..=42, 18, &[-1, 0], -1)?;
     intermediate = next;
     actions.extend(crossing);
     for _ in 0..40 {
@@ -901,11 +906,12 @@ fn segmented_observatory_candidate(
     })
 }
 
-fn readable_left_landing(
+fn readable_directional_landing(
     initial: &Simulation,
     target_x: std::ops::RangeInclusive<i32>,
     target_y: i32,
     dash_verticals: &[i8],
+    move_x: i8,
 ) -> Option<(Simulation, Vec<Action>)> {
     let mut candidates = Vec::new();
     for run_off_ticks in 0..=20 {
@@ -916,7 +922,7 @@ fn readable_left_landing(
                     let mut actions = Vec::new();
                     let suffix = std::iter::repeat_n(
                         Action {
-                            move_x: -1,
+                            move_x,
                             move_y: 0,
                             jump: false,
                             dash: false,
@@ -926,7 +932,7 @@ fn readable_left_landing(
                     )
                     .chain(std::iter::repeat_n(
                         Action {
-                            move_x: -1,
+                            move_x,
                             move_y: 0,
                             jump: true,
                             dash: false,
@@ -936,7 +942,7 @@ fn readable_left_landing(
                     ))
                     .chain(std::iter::repeat_n(
                         Action {
-                            move_x: -1,
+                            move_x,
                             move_y: 0,
                             jump: false,
                             dash: false,
@@ -945,7 +951,7 @@ fn readable_left_landing(
                         dash_delay,
                     ))
                     .chain(std::iter::once(Action {
-                        move_x: -1,
+                        move_x,
                         move_y,
                         jump: false,
                         dash: true,
@@ -953,7 +959,7 @@ fn readable_left_landing(
                     }))
                     .chain(std::iter::repeat_n(
                         Action {
-                            move_x: -1,
+                            move_x,
                             move_y: 0,
                             jump: false,
                             dash: false,
@@ -981,6 +987,58 @@ fn readable_left_landing(
     candidates
         .into_iter()
         .min_by(|(_, left), (_, right)| static_route_key(left).cmp(&static_route_key(right)))
+}
+
+fn segmented_aurora_spire_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    let Some((mut intermediate, mut actions)) = approach_x(initial, 145) else {
+        eprintln!("  segmented Aurora Spire could not enter its climb");
+        return None;
+    };
+    let top = GroundedSupportTarget::new(
+        180,
+        220,
+        30,
+        [GroundedStandingRegion::new(180, 212).expect("valid Aurora crown shelf")],
+    )
+    .expect("valid Aurora crown waypoint");
+    let climb_config = SolverConfig::for_abilities(AbilitySet::new(true, false));
+    let outcome = solve_grounded_support(&intermediate, &top, &climb_config).ok()?;
+    let GroundedSupportSolveOutcome::Solved(solution) = outcome else {
+        eprintln!("  segmented Aurora Spire climb failed: {outcome:?}");
+        return None;
+    };
+    let climb = solution.replay.actions().collect::<Vec<_>>();
+    for &action in &climb {
+        if !clean_step(&mut intermediate, action) {
+            return None;
+        }
+    }
+    actions.extend(climb);
+
+    let Some((next, crossing)) =
+        readable_directional_landing(&intermediate, 294..=294, 58, &[-1, 0, 1], 1)
+    else {
+        eprintln!("  segmented Aurora Spire could not cross its light sheet");
+        return None;
+    };
+    intermediate = next;
+    actions.extend(crossing);
+    if !intermediate
+        .collected_pickups()
+        .any(|pickup| pickup.id() == "dungeon-coin-61")
+    {
+        eprintln!("  segmented Aurora Spire upper landing did not collect its coin");
+        return None;
+    }
+    Some(TargetSolution {
+        target: target.clone(),
+        reached: ReachedTarget::Pickup("dungeon-coin-61".to_owned()),
+        replay: Replay::record(initial, actions),
+        stats: SearchStats::default(),
+    })
 }
 
 fn segmented_gravity_lift_candidate(
