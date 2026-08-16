@@ -234,7 +234,7 @@ methods as well as the coins. Deaths and restarts return to the door used to ent
 without discarding gloves, boots, Crown, or coins. `V` demonstrates the next intended room-local
 objective; it is not a whole-dungeon route.
 
-Palette generation v13 includes three evidence-driven replacements. The first post-Boots Gale Chasm
+Palette generation v14 includes four evidence-driven replacements. The first post-Boots Gale Chasm
 was implicated by 24 recorded human deaths and an AI witness with 43 action spans and 11 reversals;
 it now presents two readable sixty-pixel Dash gaps separated by a three-tile full-recovery island.
 The mechanically selected route uses nine spans, two jumps, two Dashes, and no reversals, while a
@@ -249,6 +249,15 @@ so its hazards were visual noise rather than a traversal test. The new room seri
 alternating wall shaft, a full-recovery shelf, and a one-tile Dash-posture tunnel. Its selected route
 uses six Wall Jumps before any Dash and four Dashes afterward. Same-budget searches with either
 method removed find no coin, and every recorded strength-one shaky-hand family retains successes.
+
+The fourth replacement is its required Lunar Cache branch. The former witness meandered through a
+generic cache shell with two incidental Wall Jumps and no Dash. The new ceiling-entry room exposes a
+non-lethal three-landing descent, then seals the coin chamber behind a standing-height barrier: the
+selected route makes three readable horizontal Dashes through the low passage before a five-Wall-Jump
+cap-safe ascent. Equivalent Wall-Jump-only and Dash-only searches have no positive, an independent
+exact solve returns from the collected coin to the ceiling door, and all strength-one perturbation
+families retain successes. The authoring tool stages fall, tunnel, and climb separately so it selects
+this legible route instead of the faster candidate that spends a diagonal Dash at spawn.
 
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 

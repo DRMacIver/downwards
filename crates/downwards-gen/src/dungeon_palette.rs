@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 13;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 14;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1687,14 +1687,41 @@ impl PaletteDraft<'_> {
                 self.horizontal(4, 19, 24, Tile::HazardDown);
             }
             DungeonPaletteCourse::LunarCache => {
-                self.vertical(10, 4, 16, Tile::Solid);
-                self.vertical(18, 2, 13, Tile::Solid);
-                self.horizontal(16, 10, 14, Tile::Solid);
-                self.horizontal(16, 20, 24, Tile::Solid);
-                self.horizontal(12, 19, 24, Tile::OneWay);
-                self.horizontal(8, 11, 16, Tile::OneWay);
-                self.horizontal(4, 19, 25, Tile::OneWay);
-                self.horizontal(16, 24, 28, Tile::HazardUp);
+                // The ceiling entrance drops into a broad, non-lethal return stair. The coin
+                // chamber on the right is sealed from the ceiling by column 21: its only ingress
+                // is the ten-pixel passage under row 15. Dash posture fits; the standing player
+                // does not. Beyond it, the same cap-safe alternating-wall primitive used by the
+                // late physical gates forces a Wall-Jump ascent instead of a chain of Dash-refill
+                // landings. The upper shelf is deliberately outside the separator so the coin
+                // cannot be reached directly from the entrance.
+                self.horizontal(14, 3, 9, Tile::OneWay);
+                self.horizontal(11, 11, 17, Tile::OneWay);
+                self.horizontal(8, 3, 9, Tile::OneWay);
+                self.horizontal(5, 11, 17, Tile::OneWay);
+
+                self.vertical(21, 1, 15, Tile::Solid);
+                self.vertical(22, 1, 4, Tile::HazardRight);
+                self.set(22, 4, Tile::HazardUp);
+                self.vertical(22, 5, 7, Tile::Solid);
+                self.vertical(22, 7, 10, Tile::HazardRight);
+                self.set(22, 10, Tile::HazardUp);
+                self.vertical(22, 11, 13, Tile::Solid);
+                self.vertical(22, 13, 15, Tile::HazardRight);
+
+                self.vertical(28, 3, 17, Tile::Solid);
+                // The topmost contact is the authored endpoint rather than an intermediate Dash
+                // refill. Keeping it safe gives the final Wall Jump a visible opposing face;
+                // the lethal band immediately below still prevents climbing to it by contact.
+                self.vertical(27, 3, 5, Tile::Solid);
+                self.vertical(27, 5, 7, Tile::HazardLeft);
+                self.set(27, 7, Tile::HazardUp);
+                self.vertical(27, 8, 10, Tile::Solid);
+                self.vertical(27, 10, 13, Tile::HazardLeft);
+                self.set(27, 13, Tile::HazardUp);
+                self.vertical(27, 14, 17, Tile::Solid);
+
+                self.horizontal(15, 18, 24, Tile::Solid);
+                self.horizontal(3, 27, 31, Tile::Solid);
             }
             DungeonPaletteCourse::AuroraSpire => {
                 self.vertical(12, 2, 16, Tile::Solid);
@@ -1962,6 +1989,39 @@ mod tests {
             Tile::Empty,
             "tunnel barrier lacks its Dash aperture"
         );
+    }
+
+    #[test]
+    fn lunar_cache_seals_its_coin_behind_a_low_tunnel_and_cap_safe_shaft() {
+        let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::LunarCache).generate();
+        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
+
+        for row in 1..15 {
+            assert_eq!(
+                tile(21, row),
+                Tile::Solid,
+                "coin chamber has an upper separator bypass"
+            );
+        }
+        for column in 18..24 {
+            assert_eq!(tile(column, 15), Tile::Solid, "low tunnel lacks a ceiling");
+            assert_eq!(tile(column, 16), Tile::Empty, "Dash aperture is obstructed");
+            assert_eq!(tile(column, 17), Tile::Solid, "low tunnel lacks a floor");
+        }
+        for row in [4, 10] {
+            assert_eq!(tile(22, row), Tile::HazardUp);
+        }
+        for row in [7, 13] {
+            assert_eq!(tile(27, row), Tile::HazardUp);
+        }
+        for (column, rows) in [(22, [5..7, 11..13]), (27, [8..10, 14..17])] {
+            for row in rows.into_iter().flatten() {
+                assert_eq!(tile(column, row), Tile::Solid);
+            }
+        }
+        for column in 27..31 {
+            assert_eq!(tile(column, 3), Tile::Solid, "coin shelf is incomplete");
+        }
     }
 
     #[test]

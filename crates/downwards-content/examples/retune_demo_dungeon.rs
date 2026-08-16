@@ -302,7 +302,10 @@ fn compare_routes(
     let right_observation = observe(initial, spec, right);
     let key = |observation: RouteObservation, actions: &[Action]| {
         (
-            if spec.room == DemoDungeonRoom::VacuumGallery {
+            if matches!(
+                spec.room,
+                DemoDungeonRoom::VacuumGallery | DemoDungeonRoom::LunarCache
+            ) {
                 observation.accepted_dashes_before_first_wall_jump
             } else {
                 0
@@ -448,6 +451,9 @@ fn segmented_candidate(
     if spec.room == DemoDungeonRoom::DashChasm {
         return readable_dash_chasm_candidate(initial, target);
     }
+    if spec.room == DemoDungeonRoom::LunarCache {
+        return segmented_lunar_cache_candidate(initial, target);
+    }
     let (waypoint, first_config, second_config) = match spec.room {
         DemoDungeonRoom::VoidPass => (
             GroundedSupportTarget::new(
@@ -522,6 +528,78 @@ fn segmented_candidate(
         reached: second.reached,
         replay: Replay::record(initial, actions),
         stats: second.stats,
+    })
+}
+
+fn segmented_lunar_cache_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    // Keep the three visible ideas separate while authoring the route: fall to the chamber floor
+    // without spending Dash, traverse the low passage with Dash, then climb the isolated shaft
+    // without substituting upward Dashes for its wall rhythm.
+    let mut intermediate = initial.clone();
+    let mut actions = Vec::new();
+    for _ in 0..120 {
+        if intermediate.player().grounded() && intermediate.player().bounds().y >= 158 {
+            break;
+        }
+        let drop_action = Action {
+            move_x: 0,
+            move_y: 1,
+            // One-way drop-through is intentionally an explicit Down+Jump edge. Press only once
+            // after each landing; the airborne ticks release Jump before the next platform.
+            jump: intermediate.player().grounded(),
+            dash: false,
+            restart: false,
+        };
+        intermediate.step(drop_action);
+        actions.push(drop_action);
+    }
+    if !intermediate.player().grounded() || intermediate.player().bounds().y < 158 {
+        eprintln!("  segmented Lunar Cache fall did not reach the chamber floor");
+        return None;
+    }
+
+    let shaft_floor = GroundedSupportTarget::new(
+        230,
+        280,
+        170,
+        [GroundedStandingRegion::new(230, 272).expect("valid shaft standing range")],
+    )
+    .expect("valid shaft floor waypoint");
+    let second_outcome = solve_grounded_support(
+        &intermediate,
+        &shaft_floor,
+        &SolverConfig::for_abilities(AbilitySet::new(false, true)),
+    )
+    .ok()?;
+    let GroundedSupportSolveOutcome::Solved(second) = second_outcome else {
+        eprintln!("  segmented Lunar Cache Dash did not cross the low tunnel: {second_outcome:?}");
+        return None;
+    };
+    let second_actions = second.replay.actions().collect::<Vec<_>>();
+    for &action in &second_actions {
+        intermediate.step(action);
+    }
+    actions.extend(second_actions);
+
+    let third_outcome = solve_target(
+        &intermediate,
+        target.clone(),
+        &SolverConfig::for_abilities(AbilitySet::new(true, false)),
+    )
+    .ok()?;
+    let TargetSolveOutcome::Solved(third) = third_outcome else {
+        eprintln!("  segmented Lunar Cache climb did not reach its coin: {third_outcome:?}");
+        return None;
+    };
+    actions.extend(third.replay.actions());
+    Some(TargetSolution {
+        target: third.target,
+        reached: third.reached,
+        replay: Replay::record(initial, actions),
+        stats: third.stats,
     })
 }
 

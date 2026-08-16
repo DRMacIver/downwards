@@ -95,7 +95,7 @@ returns the player to its validated interior arrival without resetting room-loca
 Crown similarly persists and is the only terminal goal. Ordinary door exits change rooms and are
 deliberately not counted as whole-level victories.
 
-Palette generation v13 contains three evidence-driven room replacements. Persistent history recorded
+Palette generation v14 contains four evidence-driven room replacements. Persistent history recorded
 24 Gale Chasm attempts, all ending on spikes, while its old AI witness used 43 action spans and 11
 horizontal reversals. As the first post-Boots room, it now teaches the action as two readable
 sixty-pixel Dash gaps separated by a three-tile full-recovery island. Its mechanically selected
@@ -114,6 +114,17 @@ retained trace performs six Wall Jumps before its first Dash, then four accepted
 strength-one shaky-hand families retain nonzero successes. Separate same-budget Wall-Jump-only and
 Dash-only searches find no coin. Targeted retuning prints exact events, positions, velocities, and
 inputs so this is inspected as behavior rather than inferred from a scalar score.
+
+Lunar Cache is the fourth replacement in v14. Its prior coin route contained two incidental Wall
+Jumps, no Dash, and a buffered-jump-heavy controller trace. The replacement preserves the ceiling
+branch socket but separates three visible acts: a three-landing non-lethal descent, three horizontal
+Dashes through a ten-pixel passage, and a cap-safe shaft ascent with five accepted Wall Jumps. The
+route tool evaluates both its staged candidate and the unconstrained faster solve, then retains the
+staged route because it does not spend a diagonal Dash before the descent and uses fewer Dashes and
+reversals in the climb. Same-budget Wall-Jump-only and Dash-only searches have no positive. A
+separate exact solve returns from the collected coin to the ceiling exit, and all four strength-one
+perturbation families retain observed successes. These bounded misses and noisy-controller results
+remain descriptive evidence, not impossibility or human-difficulty claims.
 
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
