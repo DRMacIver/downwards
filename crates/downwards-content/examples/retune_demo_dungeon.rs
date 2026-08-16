@@ -307,6 +307,7 @@ fn compare_routes(
                 DemoDungeonRoom::VacuumGallery
                     | DemoDungeonRoom::LunarCache
                     | DemoDungeonRoom::StarThreshold
+                    | DemoDungeonRoom::ShadowDuct
             ) {
                 observation.accepted_dashes_before_first_wall_jump
             } else {
@@ -470,6 +471,9 @@ fn segmented_candidate(
     }
     if spec.room == DemoDungeonRoom::ConstellationHall {
         return segmented_constellation_hall_candidate(initial, target);
+    }
+    if spec.room == DemoDungeonRoom::ShadowDuct {
+        return segmented_shadow_duct_candidate(initial, target);
     }
     let (waypoint, first_config, second_config) = match spec.room {
         DemoDungeonRoom::VoidPass => (
@@ -639,6 +643,157 @@ fn segmented_constellation_hall_candidate(
         reached: solution.reached,
         replay: Replay::record(initial, actions),
         stats: solution.stats,
+    })
+}
+
+fn segmented_shadow_duct_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    // Author each visible idea independently. Dash-only reaches the safe shaft floor through the
+    // standing-height-blocked entrance. The mixed climb may spend one visible upward Dash before
+    // settling into its alternating wall rhythm. A deliberately small controller vocabulary then
+    // makes the single exposed Dash commitment to the coin shelf. The concatenated replay, not any
+    // leg's scalar search effort, is the retained evidence.
+    let mut candidates = Vec::new();
+    for approach_ticks in 1..=20 {
+        for coast_ticks in 0..=10 {
+            for settle_ticks in 1..=20 {
+                let mut simulation = initial.clone();
+                let mut entry = vec![Action::default()];
+                entry.extend(std::iter::repeat_n(
+                    Action {
+                        move_x: -1,
+                        move_y: 0,
+                        jump: false,
+                        dash: false,
+                        restart: false,
+                    },
+                    approach_ticks,
+                ));
+                entry.push(Action {
+                    move_x: -1,
+                    move_y: 0,
+                    jump: false,
+                    dash: true,
+                    restart: false,
+                });
+                entry.extend(std::iter::repeat_n(
+                    Action {
+                        move_x: -1,
+                        move_y: 0,
+                        jump: false,
+                        dash: false,
+                        restart: false,
+                    },
+                    coast_ticks,
+                ));
+                entry.extend(std::iter::repeat_n(Action::default(), settle_ticks));
+                if entry
+                    .iter()
+                    .copied()
+                    .any(|action| !clean_step(&mut simulation, action))
+                {
+                    continue;
+                }
+                let player = simulation.player();
+                let bounds = player.bounds();
+                if player.grounded()
+                    && player.dash_ticks_remaining() == 0
+                    && (50..=92).contains(&bounds.x)
+                    && bounds.y == 148
+                {
+                    candidates.push((entry, simulation));
+                }
+            }
+        }
+    }
+    let Some((mut actions, mut intermediate)) = candidates
+        .into_iter()
+        .min_by(|(left, _), (right, _)| static_route_key(left).cmp(&static_route_key(right)))
+    else {
+        eprintln!("  segmented Shadow Duct could not enter the low aperture cleanly");
+        return None;
+    };
+
+    let upper_shelf = GroundedSupportTarget::new(
+        90,
+        150,
+        30,
+        [GroundedStandingRegion::new(90, 142).expect("valid Shadow upper shelf")],
+    )
+    .expect("valid Shadow upper-shelf waypoint");
+    let outcome = solve_grounded_support(
+        &intermediate,
+        &upper_shelf,
+        &SolverConfig::for_abilities(AbilitySet::new(true, true)),
+    )
+    .ok()?;
+    let GroundedSupportSolveOutcome::Solved(solution) = outcome else {
+        eprintln!("  segmented Shadow Duct climb missed the upper shelf: {outcome:?}");
+        return None;
+    };
+    for action in solution.replay.actions() {
+        intermediate.step(action);
+        actions.push(action);
+        let player = intermediate.player();
+        let bounds = player.bounds();
+        if player.grounded() && bounds.y == 18 && (90..=142).contains(&bounds.x) {
+            break;
+        }
+    }
+    if !intermediate.player().grounded()
+        || intermediate.player().bounds().y != 18
+        || !(90..=142).contains(&intermediate.player().bounds().x)
+    {
+        eprintln!("  segmented Shadow Duct climb replay lost its first upper-shelf arrival");
+        return None;
+    }
+    let mut crossings = Vec::new();
+    for takeoff_x in 96..=142 {
+        let Some((takeoff, approach)) = approach_x(&intermediate, takeoff_x) else {
+            continue;
+        };
+        for run_off_ticks in 0..=8 {
+            for jump_hold in 1..=10 {
+                for dash_delay in 0..=8 {
+                    let mut simulation = takeoff.clone();
+                    let mut crossing = approach.clone();
+                    let suffix = std::iter::repeat_n(right_action(false, false), run_off_ticks)
+                        .chain(std::iter::repeat_n(right_action(true, false), jump_hold))
+                        .chain(std::iter::repeat_n(right_action(false, false), dash_delay))
+                        .chain(std::iter::once(right_action(false, true)))
+                        .chain(std::iter::repeat_n(right_action(false, false), 80));
+                    for action in suffix {
+                        if !clean_step(&mut simulation, action) {
+                            break;
+                        }
+                        crossing.push(action);
+                        if simulation
+                            .collected_pickups()
+                            .any(|pickup| pickup.id() == "dungeon-coin-56")
+                        {
+                            crossings.push(crossing);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    let Some(crossing) = crossings
+        .into_iter()
+        .min_by(|left, right| static_route_key(left).cmp(&static_route_key(right)))
+    else {
+        eprintln!("  segmented Shadow Duct found no single-Dash reward crossing");
+        return None;
+    };
+    actions.extend(crossing);
+    Some(TargetSolution {
+        target: target.clone(),
+        reached: ReachedTarget::Pickup("dungeon-coin-56".to_owned()),
+        replay: Replay::record(initial, actions),
+        stats: SearchStats::default(),
     })
 }
 

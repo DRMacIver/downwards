@@ -1521,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v20".to_owned(),
+        id: "demo-dungeon-v21".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -1677,7 +1677,7 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         DemoDungeonRoom::CometRun => vec![(53, Rect::new(294, 60, 8, 10))],
         DemoDungeonRoom::MoonVault => vec![(54, Rect::new(274, 40, 8, 10))],
         DemoDungeonRoom::ConstellationHall => vec![(55, Rect::new(274, 120, 8, 10))],
-        DemoDungeonRoom::ShadowDuct => vec![(56, Rect::new(224, 30, 8, 10))],
+        DemoDungeonRoom::ShadowDuct => vec![(56, Rect::new(224, 10, 8, 10))],
         DemoDungeonRoom::Observatory => vec![(57, Rect::new(214, 20, 8, 10))],
         DemoDungeonRoom::NovaNiche => vec![(58, Rect::new(284, 20, 8, 10))],
         DemoDungeonRoom::VacuumGallery => vec![(59, Rect::new(294, 150, 8, 10))],
@@ -3717,6 +3717,155 @@ mod tests {
         assert!(
             !matches!(outcome, TargetSolveOutcome::Solved(_)),
             "baseline search unexpectedly crossed the Constellation slalom: {outcome:?}"
+        );
+    }
+
+    #[test]
+    fn shadow_duct_checked_route_uses_entry_climb_and_reward_dash_and_can_return() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::ShadowDuct)
+            .expect("Shadow Duct has route metadata");
+        let room = demo_dungeon_room(spec.room, spec.inventory);
+        let mut replayed = Simulation::enter_via_door(
+            room,
+            spec.inventory.abilities(),
+            spec.entry_door.expect("Shadow Duct has a floor entry"),
+        )
+        .unwrap();
+        replayed.enable_current_player_movement();
+        let mut dash_ticks = Vec::new();
+        let mut wall_jump_ticks = Vec::new();
+        let mut landings = Vec::new();
+        for (tick, action) in crate::demo_dungeon_witness_actions(spec.room)
+            .into_iter()
+            .enumerate()
+        {
+            for event in replayed.step(action).events {
+                assert!(
+                    !matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset),
+                    "the checked Shadow route must remain clean: {event:?}"
+                );
+                match event {
+                    SimulationEvent::Dashed { .. } => dash_ticks.push(tick),
+                    SimulationEvent::Jumped(JumpKind::Wall { .. }) => {
+                        wall_jump_ticks.push(tick);
+                    }
+                    SimulationEvent::Landed => {
+                        landings.push((replayed.player().bounds().x, replayed.player().bounds().y));
+                    }
+                    _ => {}
+                }
+            }
+        }
+        assert!(
+            replayed
+                .collected_pickups()
+                .any(|pickup| pickup.id() == spec.target.id())
+        );
+        assert_eq!(
+            dash_ticks.len(),
+            3,
+            "Shadow route should have three deliberate Dashes"
+        );
+        assert!(
+            wall_jump_ticks.len() >= 3,
+            "Shadow route bypassed its sustained climb"
+        );
+        assert!(
+            dash_ticks[0] < wall_jump_ticks[0]
+                && wall_jump_ticks.last().expect("wall climb exists")
+                    < dash_ticks.last().expect("reward Dash exists"),
+            "Shadow route lost its entry-Dash, climb, reward-Dash ordering"
+        );
+        assert!(
+            landings
+                .iter()
+                .any(|&(x, y)| (90..=142).contains(&x) && y == 18)
+                && landings
+                    .iter()
+                    .any(|&(x, y)| (212..=282).contains(&x) && y == 18),
+            "Shadow route lost its two broad recovery shelves: {landings:?}"
+        );
+
+        let return_outcome = solve_target(
+            &replayed,
+            SearchTarget::door("floor"),
+            &SolverConfig::for_abilities(spec.inventory.abilities()),
+        )
+        .unwrap();
+        let TargetSolveOutcome::Solved(return_solution) = return_outcome else {
+            panic!("Shadow Duct cannot return after its coin: {return_outcome:?}");
+        };
+        for action in return_solution.replay.actions() {
+            replayed.step(action);
+        }
+        assert_eq!(replayed.reached_exit(), Some("floor"));
+
+        let wall_only = DemoDungeonInventory {
+            climbing_gloves: true,
+            winged_boots: false,
+            ..spec.inventory
+        };
+        let room = demo_dungeon_room(spec.room, wall_only);
+        let mut initial = Simulation::enter_via_door(
+            room,
+            wall_only.abilities(),
+            spec.entry_door.expect("Shadow Duct has a floor entry"),
+        )
+        .unwrap();
+        initial.enable_current_player_movement();
+        let outcome = solve_target(
+            &initial,
+            route_spec_target(spec.target),
+            &SolverConfig::for_abilities(wall_only.abilities()),
+        )
+        .unwrap();
+        assert!(
+            !matches!(outcome, TargetSolveOutcome::Solved(_)),
+            "Wall-Jump-only search unexpectedly crossed the low Shadow aperture: {outcome:?}"
+        );
+
+        let dash_only = DemoDungeonInventory {
+            climbing_gloves: false,
+            winged_boots: true,
+            ..spec.inventory
+        };
+        let room = demo_dungeon_room(spec.room, dash_only);
+        let mut initial = Simulation::enter_via_door(
+            room,
+            dash_only.abilities(),
+            spec.entry_door.expect("Shadow Duct has a floor entry"),
+        )
+        .unwrap();
+        initial.enable_current_player_movement();
+        let outcome = solve_target(
+            &initial,
+            route_spec_target(spec.target),
+            &SolverConfig::for_abilities(dash_only.abilities()),
+        )
+        .unwrap();
+        let TargetSolveOutcome::Solved(solution) = outcome else {
+            panic!("the retained Dash-only wall-carry alternative disappeared: {outcome:?}");
+        };
+        let mut dashes = 0;
+        for action in solution.replay.actions() {
+            for event in initial.step(action).events {
+                assert!(
+                    !matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset),
+                    "Dash-only Shadow alternative is not a clean replay: {event:?}"
+                );
+                dashes += usize::from(matches!(event, SimulationEvent::Dashed { .. }));
+            }
+        }
+        assert!(
+            initial
+                .collected_pickups()
+                .any(|pickup| pickup.id() == spec.target.id())
+        );
+        assert!(
+            dashes >= dash_ticks.len() * 2,
+            "Dash-only wall-carry alternate became comparable to the intended mixed route"
         );
     }
 

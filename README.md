@@ -234,7 +234,7 @@ methods as well as the coins. Deaths and restarts return to the door used to ent
 without discarding gloves, boots, Crown, or coins. `V` demonstrates the next intended room-local
 objective; it is not a whole-dungeon route.
 
-Palette generation v20 includes ten evidence-driven replacements. The first post-Boots Gale Chasm
+Palette generation v21 includes eleven evidence-driven replacements. The first post-Boots Gale Chasm
 was implicated by 24 recorded human deaths and an AI witness with 43 action spans and 11 reversals;
 it now presents two readable sixty-pixel Dash gaps separated by a three-tile full-recovery island.
 The mechanically selected route uses nine spans, two jumps, two Dashes, and no reversals, while a
@@ -310,6 +310,17 @@ recoveries and is preferred over the first solver positive: four Dashes, two Wal
 direction changes tied to the slalom rather than 12 in the unconstrained trace. It can continue
 east after the coin, baseline search has no positive, and every strength-one perturbation family
 retains at least 27/64 successes.
+
+Shadow Duct is the eleventh replacement. Its former mandatory branch was three broad shelves: an
+85-tick route with one incidental Wall Jump, no Dash, and five solver braking reversals. The v21
+room starts with a ten-pixel Dash aperture, rises through a tall cap-safe alternating shaft, then
+crosses a seventy-pixel lethal gap to the coin shelf. Its authored route uses one entry Dash, one
+climb-assist Dash, three alternating Wall Jumps, and one reward Dash; all strength-one families
+retain at least 40/64 successes. A separate exact return reaches the one-way start bay and exits
+through its floor door, preventing the branch from becoming a one-way trap.
+Wall-Jump-only search has no positive. Dash-only wall-ascent carry does admit a much longer
+ten-Dash alternate, so Shadow is recorded as a readable mixed route rather than falsely claimed as
+a strict two-method gate.
 
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 

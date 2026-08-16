@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 20;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 21;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1624,14 +1624,47 @@ impl PaletteDraft<'_> {
                 self.horizontal(5, 19, 24, Tile::HazardDown);
             }
             DungeonPaletteCourse::ShadowDuct => {
-                self.vertical(10, 4, 16, Tile::Solid);
-                self.vertical(18, 2, 13, Tile::Solid);
-                self.horizontal(16, 10, 14, Tile::Solid);
-                self.horizontal(16, 20, 24, Tile::Solid);
-                self.horizontal(12, 19, 24, Tile::OneWay);
-                self.horizontal(8, 11, 16, Tile::OneWay);
-                self.horizontal(4, 19, 25, Tile::OneWay);
-                self.horizontal(16, 24, 27, Tile::HazardUp);
+                // A compact three-act branch instead of three broad staircase shelves. The floor
+                // door opens into a safe starting bay, but the left shaft is reachable only
+                // through a ten-pixel Dash aperture. Its alternating contact bands are capped so
+                // they cannot become Dash-refill ledges. The upper exit faces a seventy-pixel
+                // aerial commitment to the coin shelf, while the lethal lower bay closes the
+                // original walk-and-jump shortcut. Both shelves remain broad enough to brake and
+                // make the return route legible.
+                self.horizontal(16, 4, 12, Tile::Solid);
+                self.horizontal(16, 12, 20, Tile::OneWay);
+                self.horizontal(16, 20, 31, Tile::HazardUp);
+
+                self.vertical(4, 1, 17, Tile::Solid);
+                self.vertical(5, 1, 4, Tile::HazardRight);
+                self.set(5, 4, Tile::HazardUp);
+                self.vertical(5, 5, 7, Tile::Solid);
+                self.vertical(5, 7, 10, Tile::HazardRight);
+                self.set(5, 10, Tile::HazardUp);
+                self.vertical(5, 11, 13, Tile::Solid);
+                self.vertical(5, 13, 15, Tile::HazardRight);
+                self.vertical(5, 15, 17, Tile::Solid);
+
+                self.vertical(10, 1, 17, Tile::Solid);
+                self.vertical(9, 3, 5, Tile::Solid);
+                self.vertical(9, 5, 7, Tile::HazardLeft);
+                self.set(9, 7, Tile::HazardUp);
+                self.vertical(9, 8, 10, Tile::Solid);
+                self.vertical(9, 10, 13, Tile::HazardLeft);
+                self.set(9, 13, Tile::HazardUp);
+                self.vertical(9, 14, 17, Tile::Solid);
+
+                // Make the shaft backing lethal on its starting-bay side, so the player cannot
+                // single-wall-climb around the low entrance. These two authored openings are the
+                // only route through it: low Dash entry, then broad upper exit.
+                self.vertical(11, 1, 16, Tile::HazardRight);
+                for row in [1, 2, 15] {
+                    for column in 9..12 {
+                        self.set(column, row, Tile::Empty);
+                    }
+                }
+                self.horizontal(3, 9, 15, Tile::Solid);
+                self.horizontal(3, 22, 29, Tile::Solid);
             }
             DungeonPaletteCourse::Observatory => {
                 self.vertical(12, 2, 16, Tile::Solid);
@@ -2179,6 +2212,59 @@ mod tests {
                     "slalom recovery is incomplete at ({column}, {row})"
                 );
             }
+        }
+    }
+
+    #[test]
+    fn shadow_duct_serializes_low_entry_cap_safe_climb_and_reward_gap() {
+        let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::ShadowDuct).generate();
+        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
+
+        for column in 4..12 {
+            assert_eq!(tile(column, 16), Tile::Solid, "Shadow shaft floor is open");
+        }
+        for column in 12..20 {
+            assert_eq!(
+                tile(column, 16),
+                Tile::OneWay,
+                "Shadow start bay cannot return through its floor door"
+            );
+        }
+        for column in 20..31 {
+            assert_eq!(
+                tile(column, 16),
+                Tile::HazardUp,
+                "Shadow fall is non-lethal"
+            );
+        }
+        for row in [1, 2, 15] {
+            for column in 9..12 {
+                assert_eq!(tile(column, row), Tile::Empty, "Shadow aperture is sealed");
+            }
+        }
+        for row in 3..15 {
+            assert!(
+                !matches!(tile(10, row), Tile::Empty | Tile::OneWay),
+                "Shadow backing has a bypass at row {row}"
+            );
+        }
+        for row in [4, 10] {
+            assert_eq!(tile(5, row), Tile::HazardUp);
+        }
+        for row in [7, 13] {
+            assert_eq!(tile(9, row), Tile::HazardUp);
+        }
+        for (column, range) in [(9, 9..15), (22, 22..29)] {
+            for shelf_column in range {
+                assert_eq!(
+                    tile(shelf_column, 3),
+                    Tile::Solid,
+                    "Shadow shelf from column {column} is incomplete"
+                );
+            }
+        }
+        for column in 15..22 {
+            assert_eq!(tile(column, 3), Tile::Empty, "Shadow reward gap is bridged");
         }
     }
 

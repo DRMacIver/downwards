@@ -95,7 +95,7 @@ returns the player to its validated interior arrival without resetting room-loca
 Crown similarly persists and is the only terminal goal. Ordinary door exits change rooms and are
 deliberately not counted as whole-level victories.
 
-Palette generation v20 contains ten evidence-driven room replacements. Persistent history recorded
+Palette generation v21 contains eleven evidence-driven room replacements. Persistent history recorded
 24 Gale Chasm attempts, all ending on spikes, while its old AI witness used 43 action spans and 11
 horizontal reversals. As the first post-Boots room, it now teaches the action as two readable
 sixty-pixel Dash gaps separated by a three-tile full-recovery island. Its mechanically selected
@@ -193,6 +193,18 @@ and eight reversals, and lands on all three authored recovery heights. A separat
 continues east after the coin, same-budget baseline search has no positive, and each strength-one
 perturbation family retains at least 27/64 successes. The route-shape comparison, not its raw event
 count, is the reason the composed witness is retained.
+
+Shadow Duct is the eleventh replacement in v21. Its old mandatory coin route took 85 ticks across
+three broad shelves, with one incidental Wall Jump, no Dash, and five braking reversals. The
+replacement exposes three acts instead: settle in a one-way start bay and Dash left through a
+ten-pixel aperture; use a Dash assist and three alternating Wall Jumps to climb the cap-safe shaft;
+then make one coyote-assisted Dash across the seventy-pixel reward gap. The retained composition is
+136 ticks and 16 spans, cleanly collects the coin, and retains at least 40/64 successes in every
+strength-one perturbation family. A separate exact return reaches the one-way start bay and floor
+door, proving the branch is not a one-way trap. Wall-Jump-only
+search has no positive. Dash-only search does find a 489-tick, ten-Dash wall-ascent-carry route, so
+the documented claim is a readable mixed route with a costly expert alternate—not a strict
+two-method gate or a scalar human-difficulty score.
 
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
