@@ -568,10 +568,20 @@ impl DungeonPaletteKey {
 
     #[must_use]
     pub fn generate(self) -> DungeonPaletteCandidate {
-        let (_, source) = crate::room_grids::ROOM_GRIDS
-            .iter()
-            .find(|(slug, _)| *slug == self.course.slug())
-            .unwrap_or_else(|| panic!("{:?} has no authored room grid", self.course));
+        // Design-iteration override: when DOWNWARDS_ROOM_GRID_DIR is set,
+        // grids are read from that directory at runtime so a tile edit can be
+        // re-analysed with a prebuilt binary. Production and tests use the
+        // compiled-in grids; never set the variable for persisted evidence.
+        let disk_source = std::env::var("DOWNWARDS_ROOM_GRID_DIR")
+            .ok()
+            .and_then(|dir| std::fs::read_to_string(format!("{dir}/{}.txt", self.course.slug())).ok());
+        let source = disk_source.as_deref().unwrap_or_else(|| {
+            crate::room_grids::ROOM_GRIDS
+                .iter()
+                .find(|(slug, _)| *slug == self.course.slug())
+                .unwrap_or_else(|| panic!("{:?} has no authored room grid", self.course))
+                .1
+        });
         let tiles = parse_room_grid(source);
         debug_assert!(
             one_way_surfaces_have_player_headroom(&tiles),
