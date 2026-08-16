@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 25;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 26;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1988,11 +1988,24 @@ impl PaletteDraft<'_> {
                 self.vertical(20, 1, 16, Tile::Solid);
             }
             DungeonPaletteCourse::CrownSanctum => {
-                self.horizontal(14, 4, 10, Tile::OneWay);
-                self.horizontal(11, 12, 19, Tile::OneWay);
-                self.horizontal(8, 21, 29, Tile::OneWay);
-                self.horizontal(5, 13, 20, Tile::OneWay);
-                self.horizontal(3, 23, 29, Tile::OneWay);
+                // The Crown sits beyond a final W-shaped movement proof: climb the west core,
+                // descend beneath the hanging centre mast, then climb the taller east core. Each
+                // act has a full recovery, but the abyss prevents the old monotone shelf route.
+                self.horizontal(16, 1, 13, Tile::Solid);
+                self.horizontal(16, 13, 31, Tile::HazardUp);
+                self.horizontal(17, 1, 31, Tile::Solid);
+
+                self.vertical(7, 5, 11, Tile::Solid);
+                self.vertical(12, 5, 17, Tile::Solid);
+                self.horizontal(5, 12, 17, Tile::Solid);
+
+                self.vertical(18, 1, 12, Tile::Solid);
+                self.horizontal(13, 14, 18, Tile::Solid);
+                self.horizontal(13, 19, 28, Tile::Solid);
+
+                self.vertical(23, 4, 11, Tile::Solid);
+                self.vertical(28, 3, 14, Tile::Solid);
+                self.horizontal(3, 28, 31, Tile::Solid);
             }
         }
     }
@@ -2532,6 +2545,71 @@ mod tests {
         }
         for column in 21..28 {
             assert_eq!(tile(column, 13), Tile::Solid, "far recovery is incomplete");
+        }
+    }
+
+    #[test]
+    fn crown_sanctum_serializes_two_climbs_around_a_low_dash_passage() {
+        let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::CrownSanctum).generate();
+        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
+
+        for column in 1..13 {
+            assert_eq!(
+                tile(column, 16),
+                Tile::Solid,
+                "Crown approach floor is open"
+            );
+        }
+        for column in 13..31 {
+            assert_eq!(
+                tile(column, 16),
+                Tile::HazardUp,
+                "Crown abyss has a safe bypass"
+            );
+        }
+        for row in 5..11 {
+            assert_eq!(tile(7, row), Tile::Solid, "west climb face is open");
+        }
+        for row in 5..17 {
+            assert_eq!(tile(12, row), Tile::Solid, "west climb backing is open");
+        }
+        for column in 12..17 {
+            assert_eq!(
+                tile(column, 5),
+                Tile::Solid,
+                "west recovery roof is incomplete"
+            );
+        }
+        for row in 1..12 {
+            assert_eq!(tile(18, row), Tile::Solid, "centre hanging mast is open");
+        }
+        assert_eq!(
+            tile(18, 12),
+            Tile::Empty,
+            "ten-pixel Dash passage is sealed"
+        );
+        for column in 14..18 {
+            assert_eq!(
+                tile(column, 13),
+                Tile::Solid,
+                "west Dash recovery is incomplete"
+            );
+        }
+        for column in 19..28 {
+            assert_eq!(
+                tile(column, 13),
+                Tile::Solid,
+                "east Dash recovery is incomplete"
+            );
+        }
+        for row in 4..11 {
+            assert_eq!(tile(23, row), Tile::Solid, "east climb face is open");
+        }
+        for row in 3..14 {
+            assert_eq!(tile(28, row), Tile::Solid, "east climb backing is open");
+        }
+        for column in 28..31 {
+            assert_eq!(tile(column, 3), Tile::Solid, "Crown dais is incomplete");
         }
     }
 

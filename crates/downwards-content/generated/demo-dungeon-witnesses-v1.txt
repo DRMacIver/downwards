@@ -1,5 +1,5 @@
 schema downwards-demo-dungeon-witnesses-v1
-palette-generation 25
+palette-generation 26
 player-movement-policy 4
 tuning 110 72 203 50 50 250
 shaky-policy 64 18 2 2
@@ -2809,21 +2809,36 @@ room demo-dungeon.crown-sanctum
 entry west
 target exit crown-goal
 abilities 1 1
-ticks 202
-observation 11 3 3 2 3 0
-shaky BoundaryTiming 34 64 0
-shaky CorrelatedTiming 48 64 0
-shaky HoldRelease 37 64 0
-shaky DropRepeatFrame 50 64 0
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 138
-span 1 -1 1 0 0 6
-span 1 -1 0 0 0 4
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 8
-span 0 -1 1 0 0 1
-span 1 -1 0 0 0 19
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 16
-span 1 -1 1 0 0 7
+ticks 295
+observation 26 9 9 7 1 4
+shaky BoundaryTiming 24 64 0
+shaky CorrelatedTiming 20 64 0
+shaky HoldRelease 39 64 0
+shaky DropRepeatFrame 58 64 0
+span 1 0 0 0 0 42
+span 1 0 1 0 0 6
+span 0 0 1 0 0 4
+span 1 0 0 0 0 4
+span -1 0 1 0 0 1
+span -1 0 0 0 0 9
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
+span 1 0 0 0 0 8
+span -1 0 0 0 0 2
+span 0 0 0 0 0 2
+span 1 0 0 0 0 78
+span 0 0 0 1 0 1
+span 1 0 0 0 0 40
+span 1 0 1 0 0 1
+span 0 0 0 0 0 1
+span 0 0 1 0 0 1
+span 1 0 0 0 0 10
+span 0 0 1 0 0 1
+span 1 0 0 0 0 22
+span 0 0 1 0 0 1
+span 1 0 0 0 0 17
+span 0 0 1 0 0 1
+span 1 0 0 0 0 27
 end

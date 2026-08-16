@@ -310,6 +310,7 @@ fn compare_routes(
                     | DemoDungeonRoom::ShadowDuct
                     | DemoDungeonRoom::Observatory
                     | DemoDungeonRoom::AuroraSpire
+                    | DemoDungeonRoom::CrownSanctum
             ) {
                 observation.accepted_dashes_before_first_wall_jump
             } else {
@@ -488,6 +489,9 @@ fn segmented_candidate(
     }
     if spec.room == DemoDungeonRoom::Skybridge {
         return segmented_skybridge_candidate(initial, target);
+    }
+    if spec.room == DemoDungeonRoom::CrownSanctum {
+        return segmented_crown_sanctum_candidate(initial, target);
     }
     let (waypoint, first_config, second_config) = match spec.room {
         DemoDungeonRoom::VoidPass => (
@@ -1258,6 +1262,100 @@ fn readable_drop_dash_landing(initial: &Simulation) -> Option<(Simulation, Vec<A
                     if simulation.player().grounded()
                         && bounds.y == 118
                         && (210..=272).contains(&bounds.x)
+                    {
+                        candidates.push((simulation.clone(), actions));
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    candidates
+        .into_iter()
+        .min_by(|(_, left), (_, right)| static_route_key(left).cmp(&static_route_key(right)))
+}
+
+fn segmented_crown_sanctum_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    let west_roof = GroundedSupportTarget::new(
+        110,
+        170,
+        50,
+        [GroundedStandingRegion::new(120, 162).expect("valid Crown west roof")],
+    )
+    .expect("valid Crown west waypoint");
+    let wall_only = SolverConfig::for_abilities(AbilitySet::new(true, false));
+    let outcome = solve_grounded_support(initial, &west_roof, &wall_only).ok()?;
+    let GroundedSupportSolveOutcome::Solved(solution) = outcome else {
+        eprintln!("  segmented Crown west climb failed: {outcome:?}");
+        return None;
+    };
+    let mut intermediate = initial.clone();
+    let mut actions = solution.replay.actions().collect::<Vec<_>>();
+    for &action in &actions {
+        if !clean_step(&mut intermediate, action) {
+            return None;
+        }
+    }
+
+    let Some((next, descent)) = readable_crown_descent(&intermediate) else {
+        eprintln!("  segmented Crown centre descent failed");
+        return None;
+    };
+    intermediate = next;
+    actions.extend(descent);
+    for _ in 0..8 {
+        let action = Action::default();
+        if !clean_step(&mut intermediate, action) || !intermediate.player().grounded() {
+            return None;
+        }
+        actions.push(action);
+    }
+
+    let outcome = solve_target(&intermediate, target.clone(), &wall_only).ok()?;
+    let TargetSolveOutcome::Solved(solution) = outcome else {
+        eprintln!("  segmented Crown east climb failed: {outcome:?}");
+        return None;
+    };
+    actions.extend(solution.replay.actions());
+    Some(TargetSolution {
+        target: solution.target,
+        reached: solution.reached,
+        replay: Replay::record(initial, actions),
+        stats: solution.stats,
+    })
+}
+
+fn readable_crown_descent(initial: &Simulation) -> Option<(Simulation, Vec<Action>)> {
+    let mut candidates = Vec::new();
+    for takeoff_x in 140..=162 {
+        let Some((takeoff, approach)) = approach_x(initial, takeoff_x) else {
+            continue;
+        };
+        for drop_ticks in 1..=120 {
+            for (dash_x, dash_y) in [(1, 0), (1, 1), (0, 1)] {
+                let mut simulation = takeoff.clone();
+                let mut actions = approach.clone();
+                let suffix = std::iter::repeat_n(right_action(false, false), drop_ticks)
+                    .chain(std::iter::once(Action {
+                        move_x: dash_x,
+                        move_y: dash_y,
+                        jump: false,
+                        dash: true,
+                        restart: false,
+                    }))
+                    .chain(std::iter::repeat_n(right_action(false, false), 100));
+                for action in suffix {
+                    if !clean_step(&mut simulation, action) {
+                        break;
+                    }
+                    actions.push(action);
+                    let bounds = simulation.player().bounds();
+                    if simulation.player().grounded()
+                        && bounds.y == 118
+                        && (190..=222).contains(&bounds.x)
                     {
                         candidates.push((simulation.clone(), actions));
                         break;

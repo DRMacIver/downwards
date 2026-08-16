@@ -361,6 +361,17 @@ strength-one perturbation families, can continue east, and has no baseline posit
 bounded solver. Failure lands in the abyss, so this is deliberately a later and less forgiving
 route than the non-lethal Gravity Lift.
 
+The Empty Throne is the sixteenth replacement and the first deliberate capstone. The old Crown
+route held up-right across five loose shelves: 202 ticks, 11 spans, two Wall Jumps, three Dashes,
+and no reversal. The v26 sanctum is W-shaped. It climbs a west core, recovers on its roof, descends
+to a full platform split by a ten-pixel Dash passage, then climbs a taller east core to the Crown
+dais. The retained route takes 295 ticks and 26 spans, accepts all nine of its jump presses (seven
+Wall Jumps), and uses exactly one Dash between the two climbs. The Crown pickup occurs nine ticks
+before the terminal trigger, so merely touching the edge of the dais cannot finish the run.
+Strength-one perturbations retain 20–58/64 successes with no recorded deaths, while separate
+Wall-Jump-only and Dash-only bounded searches both have no positive. The outer door still requires
+all 64 coins and both traversal methods; the physical room independently exercises both methods.
+
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 
 ```sh

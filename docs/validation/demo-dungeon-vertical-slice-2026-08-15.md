@@ -254,6 +254,19 @@ same-budget baseline search has no positive. Its strength-one blind-continuation
 6, 24, 25, and 37 successes out of 64; that lower tail is recorded as a genuinely less forgiving
 late-game route, not converted into a scalar human-difficulty score.
 
+The Empty Throne is the sixteenth replacement in v26 and the first intentionally authored final
+exam. Its former Crown route was a monotone five-shelf ascent: 202 ticks, 11 spans, two Wall Jumps,
+three Dashes, and no horizontal reversal. The replacement makes a W-shaped three-act silhouette.
+The west core rises to a full roof recovery; a safe central landing faces a ten-pixel passage that
+only the Dash posture can cross; the taller east core then rises to the Crown dais. The composed
+witness exact-replays in 295 ticks and 26 spans with nine accepted jump presses, seven Wall Jumps,
+one Dash between the climbs, and four reversals. It lands after both major acts, collects the Crown
+before reaching the separately placed terminal trigger, and retains 20, 24, 39, and 58 successes
+out of 64 across the four strength-one blind-continuation families, with no deaths in those rows.
+Same-budget Wall-Jump-only and Dash-only searches both have no positive. Those bounded negatives
+support the physical two-method contract; the independent all-64-coin/all-method door and dungeon
+audits remain authoritative for progression.
+
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
 persistent item omission, additive mid-run Wall Jump and Dash state, gate rejection without room reset, client

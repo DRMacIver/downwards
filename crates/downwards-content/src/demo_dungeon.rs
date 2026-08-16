@@ -1521,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v25".to_owned(),
+        id: "demo-dungeon-v26".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -1554,7 +1554,7 @@ pub fn demo_dungeon_room(room: DemoDungeonRoom, inventory: DemoDungeonInventory)
     let exits = (room == DemoDungeonRoom::CrownSanctum && !inventory.crown)
         .then(|| Exit {
             id: DEMO_DUNGEON_GOAL_EXIT.to_owned(),
-            bounds: Rect::new(255, 12, 30, 18),
+            bounds: Rect::new(302, 12, 8, 18),
             destination: None,
             destination_entrance: None,
         })
@@ -1586,7 +1586,7 @@ pub fn demo_dungeon_room(room: DemoDungeonRoom, inventory: DemoDungeonInventory)
     }
     if room == DemoDungeonRoom::CrownSanctum && !inventory.crown {
         pickups.push(
-            Pickup::new(DEMO_DUNGEON_CROWN_PICKUP, Rect::new(262, 14, 16, 16))
+            Pickup::new(DEMO_DUNGEON_CROWN_PICKUP, Rect::new(285, 14, 16, 16))
                 .expect("crown bounds are valid"),
         );
     }
@@ -4315,6 +4315,160 @@ mod tests {
             !matches!(outcome, TargetSolveOutcome::Solved(_)),
             "baseline search unexpectedly crossed the broken Skybridge: {outcome:?}"
         );
+    }
+
+    #[test]
+    fn crown_sanctum_checked_route_completes_both_climbs_and_the_low_passage() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::CrownSanctum)
+            .expect("Crown Sanctum has route metadata");
+        let room = demo_dungeon_room(spec.room, spec.inventory);
+        let mut replayed = Simulation::enter_via_door(
+            room,
+            spec.inventory.abilities(),
+            spec.entry_door.expect("Crown Sanctum has a west entry"),
+        )
+        .unwrap();
+        replayed.enable_current_player_movement();
+        let actions = crate::demo_dungeon_witness_actions(spec.room);
+        let mut previous = downwards_core::Action::default();
+        let mut jump_presses = 0;
+        let mut accepted_jumps = 0;
+        let mut wall_jump_ticks = Vec::new();
+        let mut dash_ticks = Vec::new();
+        let mut dash_positions = Vec::new();
+        let mut landings = Vec::new();
+        let mut crown_tick = None;
+        let mut exit_tick = None;
+        for (tick, action) in actions.into_iter().enumerate() {
+            jump_presses += usize::from(action.jump && !previous.jump);
+            previous = action;
+            for event in replayed.step(action).events {
+                assert!(
+                    !matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset),
+                    "the checked Crown route must remain clean: {event:?}"
+                );
+                match event {
+                    SimulationEvent::Jumped(kind) => {
+                        accepted_jumps += 1;
+                        if matches!(kind, JumpKind::Wall { .. }) {
+                            wall_jump_ticks.push(tick);
+                        }
+                    }
+                    SimulationEvent::Dashed { .. } => {
+                        dash_ticks.push(tick);
+                        dash_positions.push(replayed.player().bounds());
+                    }
+                    SimulationEvent::Landed => {
+                        landings.push((replayed.player().bounds().x, replayed.player().bounds().y));
+                    }
+                    SimulationEvent::PickupCollected { id } if id == DEMO_DUNGEON_CROWN_PICKUP => {
+                        crown_tick = Some(tick);
+                    }
+                    SimulationEvent::ExitReached { id } if id == DEMO_DUNGEON_GOAL_EXIT => {
+                        exit_tick = Some(tick);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        assert_eq!(replayed.reached_exit(), Some(DEMO_DUNGEON_GOAL_EXIT));
+        assert!(
+            replayed
+                .collected_pickups()
+                .any(|pickup| pickup.id() == DEMO_DUNGEON_CROWN_PICKUP)
+        );
+        assert_eq!(
+            jump_presses, accepted_jumps,
+            "Crown witness contains jump spam"
+        );
+        assert!(
+            accepted_jumps >= 8,
+            "Crown route no longer demonstrates the full capstone: {accepted_jumps} jumps"
+        );
+        assert!(
+            wall_jump_ticks.len() >= 6,
+            "Crown route bypassed a climb: {wall_jump_ticks:?}"
+        );
+        assert_eq!(
+            dash_ticks.len(),
+            1,
+            "Crown route should cross the low passage once"
+        );
+        assert!(
+            (170..=178).contains(&dash_positions[0].x)
+                && (120..=122).contains(&dash_positions[0].y),
+            "Crown Dash no longer enters the ten-pixel passage: {:?}",
+            dash_positions[0]
+        );
+        let wall_jumps_before_dash = wall_jump_ticks
+            .iter()
+            .filter(|&&tick| tick < dash_ticks[0])
+            .count();
+        let wall_jumps_after_dash = wall_jump_ticks.len() - wall_jumps_before_dash;
+        assert!(
+            wall_jumps_before_dash >= 2 && wall_jumps_after_dash >= 3,
+            "Crown route lost its climb-Dash-climb ordering: {wall_jump_ticks:?} / {dash_ticks:?}"
+        );
+        assert!(
+            crown_tick.expect("Crown is collected") < exit_tick.expect("goal exit is reached"),
+            "terminal trigger fired before the Crown pickup"
+        );
+        assert!(
+            landings
+                .iter()
+                .any(|&(x, y)| (110..=162).contains(&x) && y == 38)
+                && landings
+                    .iter()
+                    .any(|&(x, y)| (190..=272).contains(&x) && y == 118),
+            "Crown route lost its full inter-act recoveries: {landings:?}"
+        );
+    }
+
+    #[test]
+    fn crown_sanctum_refuses_each_incomplete_traversal_loadout() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::CrownSanctum)
+            .expect("Crown Sanctum has route metadata");
+        for (label, inventory) in [
+            (
+                "Wall-Jump-only",
+                DemoDungeonInventory {
+                    climbing_gloves: true,
+                    winged_boots: false,
+                    ..spec.inventory
+                },
+            ),
+            (
+                "Dash-only",
+                DemoDungeonInventory {
+                    climbing_gloves: false,
+                    winged_boots: true,
+                    ..spec.inventory
+                },
+            ),
+        ] {
+            let room = demo_dungeon_room(spec.room, inventory);
+            let mut initial = Simulation::enter_via_door(
+                room,
+                inventory.abilities(),
+                spec.entry_door.expect("Crown Sanctum has a west entry"),
+            )
+            .unwrap();
+            initial.enable_current_player_movement();
+            let outcome = solve_target(
+                &initial,
+                route_spec_target(spec.target),
+                &SolverConfig::for_abilities(inventory.abilities()),
+            )
+            .unwrap();
+            assert!(
+                !matches!(outcome, TargetSolveOutcome::Solved(_)),
+                "{label} search unexpectedly reached the Crown: {outcome:?}"
+            );
+        }
     }
 
     #[test]
