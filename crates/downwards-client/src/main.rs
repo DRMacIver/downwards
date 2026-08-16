@@ -891,6 +891,8 @@ enum BrowserMode {
     Closed,
     Catalogue,
     Gallery,
+    /// Non-persistent floor-lab browser over every authored dungeon room.
+    DungeonFloors,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -2838,10 +2840,34 @@ impl ClientState {
     }
 
     const fn gallery_menu_visible(&self) -> bool {
-        matches!(self.browser_mode, BrowserMode::Gallery)
+        matches!(
+            self.browser_mode,
+            BrowserMode::Gallery | BrowserMode::DungeonFloors
+        )
+    }
+
+    fn current_dungeon_room(&self) -> Option<DemoDungeonRoom> {
+        match self.selection.mode {
+            RoomMode::Challenge(ChallengeKind::DungeonFloor(room)) => Some(room),
+            RoomMode::Dungeon => Some(
+                self.dungeon_run
+                    .map_or(DemoDungeonRoom::HollowLanding, |run| run.room),
+            ),
+            _ => None,
+        }
     }
 
     fn open_level_menu(&mut self) {
+        if let Some(room) = self.current_dungeon_room() {
+            let focused = DemoDungeonRoom::ALL
+                .iter()
+                .position(|candidate| *candidate == room)
+                .unwrap_or(0);
+            self.gallery_menu = GalleryMenuState::focused_on(focused, DemoDungeonRoom::ALL.len());
+            self.browser_mode = BrowserMode::DungeonFloors;
+            self.refresh_gallery_menu_preview();
+            return;
+        }
         if self.selection.mode == RoomMode::Gallery {
             self.gallery_menu = GalleryMenuState::focused_on(
                 usize::try_from(self.selection.seed).unwrap_or(0),
@@ -2870,8 +2896,28 @@ impl ClientState {
         true
     }
 
+    fn selected_dungeon_floor_scenario(&self) -> Option<ScenarioSelection> {
+        let room = DemoDungeonRoom::ALL.get(self.gallery_menu.selected_index)?;
+        Some(
+            ScenarioSelection {
+                mode: RoomMode::Challenge(ChallengeKind::DungeonFloor(*room)),
+                seed: 0,
+                tier: AbilityTier::Baseline,
+            }
+            .canonicalized(),
+        )
+    }
+
+    fn selected_browser_scenario(&self) -> Option<ScenarioSelection> {
+        if self.browser_mode == BrowserMode::DungeonFloors {
+            self.selected_dungeon_floor_scenario()
+        } else {
+            self.gallery_menu.selected_scenario()
+        }
+    }
+
     fn refresh_gallery_menu_preview(&mut self) -> bool {
-        let Some(selection) = self.gallery_menu.selected_scenario() else {
+        let Some(selection) = self.selected_browser_scenario() else {
             return false;
         };
         if self.level_menu_preview.selection == selection {
@@ -2909,9 +2955,8 @@ impl ClientState {
 
     fn play_gallery_selection(&mut self) -> Result<(), String> {
         let selection = self
-            .gallery_menu
-            .selected_scenario()
-            .ok_or_else(|| "calibration gallery has no playable levels".to_owned())?;
+            .selected_browser_scenario()
+            .ok_or_else(|| "this browser has no playable levels".to_owned())?;
         self.switch_to(selection)?;
         self.browser_mode = BrowserMode::Closed;
         self.awaiting_menu_input_release = true;
@@ -5322,7 +5367,11 @@ fn render(client: &ClientState, visual_assets: &VisualAssets) {
     if client.level_menu_visible() {
         let menu_viewport = viewport.translated(0, ROOM_TOP);
         if client.gallery_menu_visible() {
-            draw_gallery_menu(&menu_viewport, client, visual_assets);
+            if client.browser_mode == BrowserMode::DungeonFloors {
+                draw_dungeon_floor_menu(&menu_viewport, client, visual_assets);
+            } else {
+                draw_gallery_menu(&menu_viewport, client, visual_assets);
+            }
         } else {
             draw_level_menu(&menu_viewport, client, visual_assets);
         }
@@ -5535,6 +5584,169 @@ fn draw_gallery_menu(viewport: &PixelViewport, client: &ClientState, visual_asse
         &format!(
             "LEVEL {}/{}   HOME/END FIRST/LAST{scroll_hint}",
             selected_position, client.gallery_menu.item_count
+        ),
+        174,
+        6,
+        UI_DIM,
+    );
+}
+
+fn draw_dungeon_floor_menu(
+    viewport: &PixelViewport,
+    client: &ClientState,
+    visual_assets: &VisualAssets,
+) {
+    const PREVIEW_X: i32 = 171;
+    const PREVIEW_Y: i32 = 43;
+    const PREVIEW_SCALE: f32 = 0.43;
+
+    viewport.rectangle(CoreRect::new(0, 0, 320, 180), MENU_BACKGROUND);
+    viewport.centered_text("DOWNWARDS  /  DUNGEON FLOOR LAB", 12, 9, PLAYER);
+    viewport.centered_text(
+        &format!(
+            "{} AUTHORED FLOORS / NON-PERSISTENT ANALYSIS LOADOUTS",
+            client.gallery_menu.item_count
+        ),
+        24,
+        5,
+        PLAYER_ACCENT,
+    );
+
+    let visible = client.gallery_menu.visible_indices();
+    let visible_end = visible.end;
+    for (row, index) in visible.enumerate() {
+        let y = 42 + row as i32 * 11;
+        let Some(room) = DemoDungeonRoom::ALL.get(index).copied() else {
+            continue;
+        };
+        if index == client.gallery_menu.selected_index {
+            viewport.rectangle(CoreRect::new(4, y - 8, 159, 10), MENU_SELECTED);
+            viewport.rectangle_outline(CoreRect::new(4, y - 8, 159, 10), 1, PLAYER_ACCENT);
+            viewport.text(">", 6, y, 6, PLAYER_ACCENT);
+        }
+        viewport.text(&format!("{:>3}", index + 1), 13, y, 5, UI_DIM);
+        viewport.text(room.title(), 32, y, 6, UI_TEXT);
+    }
+    if client.gallery_menu.first_visible_index > 0 {
+        viewport.text("^", 164, 42, 6, PLAYER_ACCENT);
+    }
+    if visible_end < client.gallery_menu.item_count {
+        viewport.text("v", 164, 141, 6, PLAYER_ACCENT);
+    }
+
+    viewport.rectangle(CoreRect::new(168, 38, 146, 84), DEBUG_PANEL);
+    viewport.rectangle_outline(CoreRect::new(168, 38, 146, 84), 1, UI_DIM);
+    if let Some(simulation) = &client.level_menu_preview.simulation {
+        viewport.rectangle(
+            CoreRect::new(PREVIEW_X, PREVIEW_Y, 138, 78),
+            ROOM_BACKGROUND,
+        );
+        let preview_viewport = PixelViewport {
+            scale: viewport.scale * PREVIEW_SCALE,
+            left: viewport.screen_x(PREVIEW_X),
+            top: viewport.screen_y(PREVIEW_Y),
+        };
+        draw_tiles(&preview_viewport, simulation.room(), visual_assets);
+        draw_room_objects(&preview_viewport, simulation, visual_assets);
+        draw_exits(&preview_viewport, simulation.room(), None, visual_assets);
+        draw_animated_player(
+            &preview_viewport,
+            simulation.player().bounds(),
+            PlayerVisual {
+                pose: PlayerPose::IdleA,
+                flip_x: false,
+            },
+            visual_assets,
+        );
+    } else {
+        viewport.centered_text_in(
+            CoreRect::new(168, 38, 146, 84),
+            "PREVIEW UNAVAILABLE",
+            78,
+            7,
+            HAZARD,
+        );
+    }
+
+    if let Some(selection) = client.selected_browser_scenario()
+        && let Some(room) = DemoDungeonRoom::ALL
+            .get(client.gallery_menu.selected_index)
+            .copied()
+    {
+        let spec = dungeon_floor_route_spec(room);
+        let stats = client.stats_for(selection);
+        viewport.text(
+            &fit_preview_line(&format!(
+                "{} / {}",
+                room.id().to_ascii_uppercase(),
+                room.title().to_ascii_uppercase()
+            )),
+            170,
+            132,
+            5,
+            PLAYER,
+        );
+        viewport.text(
+            &fit_preview_line(&format!(
+                "TARGET {} {}",
+                spec.target.kind().to_ascii_uppercase(),
+                spec.target.id().to_ascii_uppercase()
+            )),
+            170,
+            139,
+            5,
+            WALL_SLIDE_CUE,
+        );
+        let abilities = spec.inventory.abilities();
+        viewport.text(
+            &fit_preview_line(&format!(
+                "WALL:{} DASH:{} / V TRACTABILITY WITNESS",
+                if abilities.wall_jump { "ON" } else { "LOCKED" },
+                if abilities.dash { "ON" } else { "LOCKED" }
+            )),
+            170,
+            146,
+            5,
+            PLAYER_ACCENT,
+        );
+        viewport.text(
+            &fit_preview_line(&format!(
+                "RUNS {} D {} C {} BEST {}",
+                stats.attempts,
+                stats.deaths,
+                stats.clears,
+                format_best_clear(stats.best_clear_ticks)
+            )),
+            170,
+            153,
+            5,
+            UI_TEXT,
+        );
+    } else {
+        viewport.centered_text("NO DUNGEON FLOORS REGISTERED", 137, 7, HAZARD);
+    }
+    if let Some(error) = &client.level_menu_preview.error {
+        viewport.text(&fit_preview_line(error), 170, 153, 5, HAZARD);
+    }
+
+    viewport.centered_text(
+        "ARROWS/WASD PREVIOUS/NEXT   ENTER PLAY   V WITNESS",
+        164,
+        6,
+        UI_TEXT,
+    );
+    let scroll_hint = if visible_end < client.gallery_menu.item_count {
+        "   v MORE BELOW"
+    } else if client.gallery_menu.first_visible_index > 0 {
+        "   ^ MORE ABOVE"
+    } else {
+        ""
+    };
+    viewport.centered_text(
+        &format!(
+            "FLOOR {}/{}   HOME/END FIRST/LAST{scroll_hint}",
+            client.gallery_menu.selected_index.saturating_add(1),
+            client.gallery_menu.item_count
         ),
         174,
         6,
@@ -7767,6 +7979,42 @@ mod tests {
         assert_eq!(menu.selected_scenario().seed, 9);
         menu.move_end();
         assert_eq!(menu.selected_scenario().mode, RoomMode::Development);
+    }
+
+    #[test]
+    fn dungeon_mode_menu_browses_dungeon_floors_and_launches_a_floor_lab() {
+        let selection = ScenarioSelection {
+            mode: RoomMode::Dungeon,
+            seed: 0,
+            tier: AbilityTier::Baseline,
+        };
+        let mut client = ClientState::new(selection, None, false).unwrap();
+
+        client.open_level_menu();
+        assert_eq!(client.browser_mode, BrowserMode::DungeonFloors);
+        assert!(client.gallery_menu_visible());
+        assert_eq!(client.gallery_menu.item_count, DemoDungeonRoom::ALL.len());
+        assert_eq!(client.gallery_menu.selected_index, 0);
+
+        let tempo_index = DemoDungeonRoom::ALL
+            .iter()
+            .position(|room| *room == DemoDungeonRoom::TempoHall)
+            .unwrap();
+        client.gallery_menu.selected_index = tempo_index;
+        client.gallery_menu.ensure_selected_visible();
+        assert!(client.refresh_gallery_menu_preview());
+        assert!(client.level_menu_preview.simulation.is_some());
+        client.play_gallery_selection().unwrap();
+        assert_eq!(
+            client.selection.mode,
+            RoomMode::Challenge(ChallengeKind::DungeonFloor(DemoDungeonRoom::TempoHall))
+        );
+        assert!(client.dungeon_run.is_none());
+
+        // Reopening the browser from the floor lab focuses the current floor.
+        client.open_level_menu();
+        assert_eq!(client.browser_mode, BrowserMode::DungeonFloors);
+        assert_eq!(client.gallery_menu.selected_index, tempo_index);
     }
 
     #[test]
