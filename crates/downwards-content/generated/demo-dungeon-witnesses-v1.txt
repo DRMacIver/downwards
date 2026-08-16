@@ -1,6 +1,6 @@
 schema downwards-demo-dungeon-witnesses-v1
 palette-generation 40
-player-movement-policy 8
+player-movement-policy 9
 tuning 110 72 203 50 50 250
 shaky-policy 64 18 2 2
 route demo-dungeon.hollow-landing
@@ -67,13 +67,13 @@ room demo-dungeon.root-cellar
 entry ceiling
 target pickup dungeon-coin-03
 abilities 0 0
-ticks 71
+ticks 79
 observation 11 5 0 0 0 0
-shaky BoundaryTiming 31 64 0
-shaky CorrelatedTiming 52 64 0
+shaky BoundaryTiming 34 64 0
+shaky CorrelatedTiming 64 64 0
 shaky HoldRelease 32 64 0
-shaky DropRepeatFrame 61 64 0
-span -1 0 0 0 0 7
+shaky DropRepeatFrame 62 64 0
+span -1 0 0 0 0 8
 span -1 1 1 0 0 1
 span -1 0 0 0 0 11
 span -1 1 1 0 0 1
@@ -81,9 +81,9 @@ span -1 0 0 0 0 15
 span -1 1 1 0 0 1
 span -1 0 0 0 0 15
 span -1 1 1 0 0 1
-span -1 0 0 0 0 6
+span -1 0 0 0 0 7
 span -1 1 1 0 0 1
-span -1 0 0 0 0 12
+span -1 0 0 0 0 18
 end
 route demo-dungeon.broken-aqueduct
 room demo-dungeon.broken-aqueduct
@@ -157,120 +157,46 @@ room demo-dungeon.watch-post
 entry floor
 target pickup dungeon-coin-05
 abilities 0 0
-ticks 553
-observation 108 29 25 0 0 32
-shaky BoundaryTiming 127 215 0
-shaky CorrelatedTiming 24 64 0
-shaky HoldRelease 36 64 0
-shaky DropRepeatFrame 10 64 0
-span -1 0 1 0 0 4
-span 1 0 1 0 0 4
-span 0 0 1 0 0 4
-span 1 0 0 0 0 4
+ticks 354
+observation 34 7 6 0 0 12
+shaky BoundaryTiming 60 67 0
+shaky CorrelatedTiming 53 64 0
+shaky HoldRelease 55 64 0
+shaky DropRepeatFrame 64 64 0
 span -1 0 0 0 0 4
-span 0 0 0 0 0 8
-span 0 0 1 0 0 4
-span 0 1 1 0 0 1
-span 0 1 0 0 0 3
-span 0 0 0 0 0 8
-span 0 1 1 0 0 1
-span 0 1 0 0 0 3
-span 0 0 0 0 0 4
-span 0 0 1 0 0 4
-span 0 0 0 0 0 8
-span -1 0 0 0 0 4
-span -1 0 1 0 0 4
-span 1 0 1 0 0 8
-span 1 0 0 0 0 16
-span 1 1 1 0 0 1
-span 1 1 0 0 0 3
-span 0 0 1 0 0 4
 span -1 1 1 0 0 1
 span -1 1 0 0 0 3
-span -1 0 1 0 0 8
+span -1 0 0 0 0 4
+span -1 0 1 0 0 12
+span -1 0 0 0 0 24
+span 1 0 0 0 0 4
+span 0 0 0 0 0 4
+span -1 0 0 0 0 16
+span 0 0 0 0 0 6
+span 1 0 0 0 0 20
+span 1 0 1 0 0 8
 span 0 0 1 0 0 4
+span 1 0 0 0 0 16
 span -1 0 0 0 0 4
-span 1 0 0 0 0 8
-span -1 0 0 0 0 4
-span 1 0 1 0 0 4
-span 0 0 1 0 0 8
-span -1 0 0 0 0 4
-span 1 0 0 0 0 8
 span 1 0 1 0 0 12
 span 1 0 0 0 0 28
 span 1 0 1 0 0 12
-span 1 0 0 0 0 4
-span 1 0 1 0 0 12
-span -1 0 0 0 0 12
+span 1 0 0 0 0 24
+span -1 0 0 0 0 4
 span 0 0 0 0 0 4
-span 1 1 1 0 0 1
-span 1 1 0 0 0 3
+span 1 0 0 0 0 16
+span 0 0 0 0 0 6
+span -1 0 0 0 0 44
+span 1 0 1 0 0 4
+span -1 0 1 0 0 8
 span -1 0 0 0 0 8
 span 1 0 0 0 0 4
-span 0 0 0 0 0 4
-span -1 0 0 0 0 4
-span 0 0 0 0 0 4
-span -1 0 0 0 0 4
+span 0 0 0 0 0 10
 span 1 0 0 0 0 4
-span 0 0 1 0 0 12
-span 0 0 0 0 0 12
-span 0 0 1 0 0 4
-span 1 0 0 0 0 8
-span 0 1 1 0 0 1
-span 0 1 0 0 0 3
-span 1 0 1 0 0 4
-span -1 1 1 0 0 1
-span -1 1 0 0 0 3
-span -1 0 1 0 0 4
-span -1 1 1 0 0 1
-span -1 1 0 0 0 3
-span 0 0 0 0 0 8
-span 1 0 1 0 0 4
-span -1 0 0 0 0 4
-span 1 0 0 0 0 4
-span -1 0 1 0 0 4
-span 0 0 1 0 0 8
-span 0 0 0 0 0 16
-span -1 1 1 0 0 1
-span -1 1 0 0 0 3
-span -1 0 1 0 0 4
-span 1 0 1 0 0 12
-span -1 0 1 0 0 4
-span 1 0 1 0 0 4
-span 1 1 1 0 0 1
-span 1 1 0 0 0 3
-span -1 0 1 0 0 4
-span -1 1 1 0 0 1
-span -1 1 0 0 0 3
-span -1 0 0 0 0 4
-span 1 0 0 0 0 4
-span -1 0 0 0 0 4
-span 0 0 0 0 0 4
-span -1 0 1 0 0 4
-span -1 1 1 0 0 1
-span -1 1 0 0 0 3
-span 0 0 0 0 0 4
-span -1 0 0 0 0 4
-span 1 0 0 0 0 4
-span 0 0 0 0 0 4
-span 1 0 0 0 0 4
-span -1 0 1 0 0 4
-span -1 1 1 0 0 1
-span -1 1 0 0 0 3
-span 0 0 0 0 0 8
-span -1 0 1 0 0 4
-span 0 0 0 0 0 4
-span -1 0 0 0 0 4
-span 0 1 1 0 0 1
-span 0 1 0 0 0 3
-span -1 0 0 0 0 4
-span 1 0 1 0 0 4
-span 0 0 1 0 0 4
-span -1 0 1 0 0 4
-span 1 0 0 0 0 12
 span 1 0 1 0 0 8
-span 1 0 0 0 0 16
-span -1 0 0 0 0 1
+span 1 0 0 0 0 20
+span -1 0 0 0 0 4
+span 0 0 0 0 0 4
 end
 route demo-dungeon.sluice
 room demo-dungeon.sluice
@@ -298,11 +224,11 @@ room demo-dungeon.climber-vault
 entry west
 target pickup climbing-gloves
 abilities 0 0
-ticks 132
-observation 15 5 5 0 0 0
-shaky BoundaryTiming 38 64 0
-shaky CorrelatedTiming 25 64 0
-shaky HoldRelease 40 64 0
+ticks 139
+observation 17 6 6 0 0 1
+shaky BoundaryTiming 29 64 0
+shaky CorrelatedTiming 21 64 0
+shaky HoldRelease 34 64 0
 shaky DropRepeatFrame 32 64 0
 span 1 0 0 0 0 7
 span 1 0 1 0 0 10
@@ -312,95 +238,85 @@ span 1 0 0 0 0 17
 span 1 0 1 0 0 10
 span 1 0 0 0 0 12
 span 1 0 1 0 0 2
-span 1 0 0 0 0 24
+span 1 0 0 0 0 23
 span 1 0 1 0 0 1
 span 0 0 1 0 0 4
-span 1 0 1 0 0 3
-span 0 0 1 0 0 2
+span 1 0 1 0 0 2
+span 0 0 1 0 0 3
 span 0 1 0 0 0 3
-span 1 0 0 0 0 8
+span 1 0 1 0 0 4
+span -1 0 0 0 0 11
+span 0 0 0 0 0 1
 end
 route demo-dungeon.wall-antechamber
 room demo-dungeon.wall-antechamber
 entry west
 target pickup dungeon-coin-16
 abilities 1 0
-ticks 230
-observation 14 6 6 1 0 1
-shaky BoundaryTiming 37 64 0
-shaky CorrelatedTiming 40 64 0
-shaky HoldRelease 38 64 0
-shaky DropRepeatFrame 58 64 0
-span 1 0 0 0 0 55
-span 1 0 1 0 0 1
-span 0 0 0 0 0 2
+ticks 306
+observation 18 8 8 3 0 1
+shaky BoundaryTiming 35 64 0
+shaky CorrelatedTiming 32 64 0
+shaky HoldRelease 36 64 0
+shaky DropRepeatFrame 31 64 0
 span 1 0 0 0 0 64
-span 1 0 1 0 0 6
+span 1 0 1 0 0 5
+span 1 0 0 0 0 7
+span 0 0 1 0 0 1
+span 1 0 0 0 0 21
+span 1 0 1 0 0 7
 span 1 0 0 0 0 15
+span 0 0 1 0 0 1
+span 1 0 0 0 0 21
 span 1 0 1 0 0 6
-span 1 0 0 0 0 12
-span 1 0 1 0 0 4
-span -1 0 0 0 0 18
-span -1 0 1 0 0 6
-span -1 0 0 0 0 16
-span -1 0 1 0 0 6
-span -1 0 0 0 0 19
+span 1 0 0 0 0 16
+span -1 0 0 0 0 35
+span -1 0 1 0 0 4
+span -1 0 0 0 0 38
+span -1 0 1 0 0 7
+span -1 0 0 0 0 14
+span -1 0 1 0 0 1
+span -1 0 0 0 0 43
 end
 route demo-dungeon.broad-chimney
 room demo-dungeon.broad-chimney
 entry west
 target pickup dungeon-coin-17
 abilities 1 0
-ticks 220
-observation 44 14 10 5 0 12
-shaky BoundaryTiming 74 87 0
-shaky CorrelatedTiming 55 64 0
-shaky HoldRelease 56 64 0
-shaky DropRepeatFrame 55 64 0
+ticks 197
+observation 28 8 7 5 0 11
+shaky BoundaryTiming 40 64 0
+shaky CorrelatedTiming 44 64 0
+shaky HoldRelease 48 64 0
+shaky DropRepeatFrame 4 64 0
+span 1 0 0 0 0 37
+span 1 0 1 0 0 3
+span 1 0 0 0 0 24
+span 0 0 0 0 0 4
 span 1 0 0 0 0 4
+span -1 0 1 0 0 4
 span 1 0 1 0 0 4
-span 1 1 1 0 0 1
-span 1 1 0 0 0 3
-span 1 0 0 0 0 8
+span -1 0 1 0 0 4
+span -1 0 0 0 0 4
 span 1 0 1 0 0 4
-span 1 0 0 0 0 12
-span 1 0 1 0 0 4
-span 1 0 0 0 0 8
-span 1 1 1 0 0 1
-span 1 1 0 0 0 3
-span 1 0 0 0 0 20
+span 0 0 0 0 0 4
 span -1 0 0 0 0 8
-span 0 0 0 0 0 4
-span 1 0 0 0 0 4
-span -1 0 1 0 0 4
-span 1 0 1 0 0 8
-span 0 1 1 0 0 1
-span 0 1 0 0 0 3
-span -1 0 1 0 0 4
-span -1 0 0 0 0 4
-span 1 0 1 0 0 4
-span 0 0 0 0 0 4
-span -1 0 0 0 0 4
-span -1 1 1 0 0 1
-span -1 1 0 0 0 3
-span -1 0 1 0 0 4
-span -1 0 0 0 0 4
-span 1 0 1 0 0 4
-span 1 0 0 0 0 4
-span 0 0 0 0 0 4
-span 1 0 0 0 0 4
-span -1 0 1 0 0 4
-span -1 0 0 0 0 4
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
+span 1 0 1 0 0 2
+span 0 0 0 0 0 12
+span -1 0 1 0 0 1
+span -1 0 0 0 0 6
 span 1 0 0 0 0 4
 span 0 0 1 0 0 4
 span -1 0 1 0 0 4
-span -1 1 1 0 0 1
-span -1 1 0 0 0 3
-span -1 0 1 0 0 4
-span -1 0 0 0 0 4
-span 1 0 1 0 0 4
-span 1 0 0 0 0 28
+span -1 1 0 0 0 4
+span -1 0 1 0 0 1
+span -1 0 0 0 0 6
+span 1 0 0 0 0 32
 span 0 0 0 0 0 4
+span -1 0 0 0 0 4
+span 0 0 0 0 0 1
 end
 route demo-dungeon.bell-switchback
 room demo-dungeon.bell-switchback
@@ -446,12 +362,12 @@ room demo-dungeon.tempo-hall
 entry west
 target pickup dungeon-coin-19
 abilities 1 0
-ticks 183
-observation 22 5 5 2 0 8
+ticks 195
+observation 23 5 5 2 0 8
 shaky BoundaryTiming 57 64 7
 shaky CorrelatedTiming 54 64 10
-shaky HoldRelease 59 64 5
-shaky DropRepeatFrame 57 64 7
+shaky HoldRelease 60 64 4
+shaky DropRepeatFrame 56 64 8
 span 1 0 0 0 0 39
 span 1 0 1 0 0 4
 span 1 0 0 0 0 33
@@ -474,6 +390,7 @@ span 1 0 0 0 0 8
 span -1 0 0 0 0 4
 span 0 0 0 0 0 4
 span 1 0 0 0 0 24
+span 0 0 0 0 0 12
 end
 route demo-dungeon.split-spire
 room demo-dungeon.split-spire
@@ -515,55 +432,43 @@ room demo-dungeon.rafter-shrine
 entry floor
 target pickup dungeon-coin-20
 abilities 1 0
-ticks 223
-observation 43 13 10 3 0 11
-shaky BoundaryTiming 27 85 0
-shaky CorrelatedTiming 23 64 0
-shaky HoldRelease 31 64 0
-shaky DropRepeatFrame 40 64 0
+ticks 159
+observation 31 9 7 3 0 9
+shaky BoundaryTiming 17 64 0
+shaky CorrelatedTiming 13 64 0
+shaky HoldRelease 32 64 0
+shaky DropRepeatFrame 18 64 0
 span 1 0 0 0 0 12
 span -1 0 0 0 0 4
-span -1 0 1 0 0 6
-span 1 0 1 0 0 3
+span -1 0 1 0 0 7
+span 1 0 1 0 0 2
 span 1 0 0 0 0 5
+span -1 0 1 0 0 2
+span 0 0 0 0 0 4
+span -1 0 0 0 0 5
+span -1 0 1 0 0 2
+span 0 0 0 0 0 8
+span 1 0 0 0 0 2
 span -1 0 1 0 0 1
-span -1 0 0 0 0 8
-span -1 0 1 0 0 2
-span -1 0 0 0 0 4
-span -1 0 1 0 0 2
-span 0 0 1 0 0 2
+span -1 0 0 0 0 1
 span 0 0 0 0 0 4
-span 1 0 0 0 0 3
-span -1 0 1 0 0 9
-span -1 1 0 0 0 3
-span 0 0 0 0 0 5
-span -1 0 0 0 0 8
-span 1 0 0 0 0 8
-span 0 0 1 0 0 7
-span 1 1 0 0 0 4
-span -1 0 0 0 0 5
-span 0 0 0 0 0 7
-span 0 0 1 0 0 8
+span 0 0 1 0 0 6
 span -1 0 0 0 0 4
-span 0 0 0 0 0 12
-span 0 0 1 0 0 1
+span 0 0 0 0 0 10
+span 1 0 1 0 0 3
+span -1 0 1 0 0 6
 span 0 0 0 0 0 4
-span 1 0 1 0 0 4
-span -1 0 1 0 0 8
-span 0 0 0 0 0 1
-span -1 1 0 0 0 3
-span 1 0 1 0 0 4
-span 0 0 1 0 0 4
-span 1 0 0 0 0 4
-span 0 0 0 0 0 2
-span -1 0 0 0 0 5
-span -1 0 1 0 0 3
+span -1 0 0 0 0 3
+span 1 0 0 0 0 7
+span -1 0 0 0 0 4
+span -1 0 1 0 0 4
 span 0 0 1 0 0 5
-span -1 1 0 0 0 3
+span -1 1 0 0 0 2
 span -1 0 1 0 0 1
 span -1 0 0 0 0 7
 span -1 0 1 0 0 1
-span -1 0 0 0 0 27
+span -1 0 0 0 0 22
+span 0 0 0 0 0 11
 end
 route demo-dungeon.landing-chain
 room demo-dungeon.landing-chain
@@ -592,13 +497,13 @@ room demo-dungeon.needle-turn
 entry west
 target pickup dungeon-coin-21
 abilities 1 0
-ticks 176
-observation 27 10 8 3 0 7
-shaky BoundaryTiming 32 64 20
-shaky CorrelatedTiming 32 64 22
-shaky HoldRelease 44 64 16
-shaky DropRepeatFrame 40 64 0
-span 1 0 0 0 0 37
+ticks 178
+observation 26 9 8 3 0 5
+shaky BoundaryTiming 24 64 18
+shaky CorrelatedTiming 29 64 17
+shaky HoldRelease 38 64 11
+shaky DropRepeatFrame 32 64 31
+span 1 0 0 0 0 36
 span 1 0 1 0 0 3
 span 1 0 0 0 0 12
 span 0 0 1 0 0 1
@@ -610,21 +515,20 @@ span 1 0 0 0 0 4
 span -1 0 1 0 0 1
 span -1 0 0 0 0 7
 span -1 0 1 0 0 1
-span -1 0 0 0 0 6
-span 1 0 1 0 0 4
-span 1 0 0 0 0 4
+span -1 0 0 0 0 5
+span 1 0 0 0 0 8
 span -1 0 1 0 0 1
-span -1 0 0 0 0 7
-span 1 0 0 0 0 2
-span 0 0 0 0 0 2
+span -1 0 0 0 0 3
+span 0 0 0 0 0 8
 span -1 0 0 0 0 2
 span 1 0 0 0 0 12
 span 1 0 1 0 0 8
-span 1 0 0 0 0 28
+span 1 0 0 0 0 27
 span 1 0 1 0 0 4
-span 1 0 0 0 0 4
+span 1 0 0 0 0 3
+span 0 0 0 0 0 5
+span -1 0 0 0 0 4
 span 0 0 0 0 0 4
-span -1 0 0 0 0 3
 end
 route demo-dungeon.wall-gate
 room demo-dungeon.wall-gate
@@ -776,65 +680,53 @@ room demo-dungeon.boots-vault
 entry floor
 target pickup winged-boots
 abilities 1 0
-ticks 139
-observation 33 10 9 5 0 6
-shaky BoundaryTiming 36 64 145
-shaky CorrelatedTiming 40 64 101
-shaky HoldRelease 41 64 140
-shaky DropRepeatFrame 61 64 18
-span 0 0 0 0 0 1
+ticks 84
+observation 16 5 5 4 0 5
+shaky BoundaryTiming 29 64 49
+shaky CorrelatedTiming 21 64 45
+shaky HoldRelease 46 64 30
+shaky DropRepeatFrame 32 64 54
 span 0 0 1 0 0 4
 span 1 0 1 0 0 1
 span 1 1 0 0 0 3
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
 span 0 0 0 0 0 4
+span -1 0 1 0 0 8
+span 1 0 1 0 0 4
+span 1 0 0 0 0 12
+span -1 0 1 0 0 1
 span -1 0 0 0 0 7
 span -1 0 1 0 0 1
-span 0 0 0 0 0 5
-span 1 0 0 0 0 3
-span 0 0 1 0 0 1
-span 0 0 0 0 0 7
-span 0 0 1 0 0 1
-span 0 1 0 0 0 3
-span 1 0 0 0 0 4
-span 1 0 1 0 0 2
-span 0 0 1 0 0 2
-span 0 0 0 0 0 11
-span -1 0 1 0 0 1
-span -1 0 0 0 0 11
-span 1 0 0 0 0 3
-span 0 0 0 0 0 4
-span -1 0 0 0 0 3
-span -1 0 1 0 0 5
-span 0 0 1 0 0 4
+span -1 0 0 0 0 7
+span 1 0 0 0 0 16
 span -1 0 0 0 0 4
-span -1 0 1 0 0 1
-span -1 0 0 0 0 7
-span -1 0 1 0 0 1
-span -1 1 0 0 0 3
-span -1 0 1 0 0 1
-span -1 0 0 0 0 7
-span 1 0 0 0 0 19
-span 0 0 0 0 0 5
+span 0 0 0 0 0 4
 end
 route demo-dungeon.underpass
 room demo-dungeon.underpass
 entry west
 target pickup dungeon-coin-13
 abilities 1 1
-ticks 115
-observation 8 3 3 0 0 0
-shaky BoundaryTiming 48 64 0
-shaky CorrelatedTiming 40 64 0
-shaky HoldRelease 48 64 0
-shaky DropRepeatFrame 56 64 0
-span 1 0 0 0 0 7
-span 1 0 1 0 0 10
-span 1 0 0 0 0 23
-span 1 0 1 0 0 8
-span 1 0 0 0 0 41
-span 1 0 1 0 0 10
-span 1 0 0 0 0 13
-span 0 0 0 0 0 3
+ticks 186
+observation 13 3 3 1 3 0
+shaky BoundaryTiming 43 64 0
+shaky CorrelatedTiming 51 64 0
+shaky HoldRelease 44 64 0
+shaky DropRepeatFrame 64 64 0
+span 1 -1 0 0 0 2
+span 1 -1 1 0 0 1
+span 1 -1 0 0 0 6
+span 1 -1 0 1 0 1
+span 1 -1 0 0 0 35
+span 1 -1 0 1 0 1
+span 1 -1 0 0 0 21
+span 1 -1 1 0 0 8
+span 1 -1 0 0 0 46
+span 1 -1 0 1 0 1
+span 1 -1 0 0 0 20
+span 0 -1 1 0 0 1
+span 1 -1 0 0 0 43
 end
 route demo-dungeon.dash-chasm
 room demo-dungeon.dash-chasm
@@ -872,50 +764,51 @@ room demo-dungeon.gale-landing
 entry west
 target pickup dungeon-coin-22
 abilities 1 1
-ticks 181
-observation 17 4 4 1 4 0
-shaky BoundaryTiming 46 64 28
-shaky CorrelatedTiming 43 64 42
-shaky HoldRelease 50 64 22
-shaky DropRepeatFrame 64 64 0
-span 1 -1 0 0 0 8
-span 1 -1 1 0 0 2
+ticks 92
+observation 16 1 1 0 6 2
+shaky BoundaryTiming 33 64 19
+shaky CorrelatedTiming 36 64 22
+shaky HoldRelease 38 64 19
+shaky DropRepeatFrame 32 64 31
+span 1 -1 0 1 0 1
+span 1 -1 0 0 0 19
+span 0 0 0 1 0 1
+span 1 0 0 0 0 11
+span 1 0 1 0 0 2
+span 1 -1 0 1 0 1
+span 1 -1 0 0 0 9
+span 1 0 0 0 0 4
 span 1 -1 0 0 0 10
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 22
-span 1 -1 1 0 0 4
-span 1 -1 0 0 0 13
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 22
-span 1 -1 1 0 0 10
-span 1 -1 0 0 0 6
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 32
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 17
-span 0 -1 1 0 0 1
-span 1 -1 0 0 0 30
+span 0 0 0 1 0 1
+span 1 0 0 0 0 8
+span 1 -1 0 0 0 10
+span -1 0 0 0 0 4
+span 1 0 0 1 0 1
+span 1 0 0 0 0 9
+span 0 1 0 1 0 1
 end
 route demo-dungeon.low-passage
 room demo-dungeon.low-passage
 entry west
 target pickup dungeon-coin-23
 abilities 1 1
-ticks 210
-observation 9 4 4 0 0 1
-shaky BoundaryTiming 46 64 12
-shaky CorrelatedTiming 44 64 12
-shaky HoldRelease 42 64 7
-shaky DropRepeatFrame 32 64 32
-span 1 0 0 0 0 78
-span 1 0 1 0 0 7
-span 1 0 0 0 0 58
+ticks 232
+observation 11 5 5 0 0 1
+shaky BoundaryTiming 46 64 0
+shaky CorrelatedTiming 57 64 0
+shaky HoldRelease 40 64 0
+shaky DropRepeatFrame 64 64 0
+span 1 0 0 0 0 79
+span 1 0 1 0 0 9
+span 1 0 0 0 0 65
+span 1 0 1 0 0 1
+span -1 0 0 0 0 12
 span -1 0 1 0 0 10
 span -1 0 0 0 0 6
 span -1 0 1 0 0 10
 span -1 0 0 0 0 6
-span -1 0 1 0 0 9
-span -1 0 0 0 0 26
+span -1 0 1 0 0 7
+span -1 0 0 0 0 27
 end
 route demo-dungeon.current-fork
 room demo-dungeon.current-fork
@@ -941,33 +834,38 @@ room demo-dungeon.coin-duct
 entry ceiling
 target pickup dungeon-coin-24
 abilities 1 1
-ticks 159
-observation 3 0 0 0 0 2
-shaky BoundaryTiming 38 64 26
-shaky CorrelatedTiming 43 64 21
+ticks 244
+observation 7 2 2 1 0 3
+shaky BoundaryTiming 54 64 10
+shaky CorrelatedTiming 53 64 11
 shaky HoldRelease 64 64 0
-shaky DropRepeatFrame 61 64 3
+shaky DropRepeatFrame 49 64 15
 span 1 0 0 0 0 40
 span -1 0 0 0 0 50
-span 1 0 0 0 0 69
+span 1 0 0 0 0 78
+span 0 0 1 0 0 1
+span 0 0 0 0 0 1
+span 0 0 1 0 0 1
+span -1 0 0 0 0 73
 end
 route demo-dungeon.pulse-gallery
 room demo-dungeon.pulse-gallery
 entry west
 target pickup dungeon-coin-25
 abilities 1 1
-ticks 77
-observation 6 2 2 0 0 0
-shaky BoundaryTiming 35 64 12
-shaky CorrelatedTiming 22 64 21
-shaky HoldRelease 43 64 10
-shaky DropRepeatFrame 54 64 0
+ticks 82
+observation 7 2 2 0 0 1
+shaky BoundaryTiming 34 64 10
+shaky CorrelatedTiming 23 64 18
+shaky HoldRelease 46 64 9
+shaky DropRepeatFrame 32 64 17
 span 1 0 0 0 0 7
 span 1 0 1 0 0 10
-span 1 0 0 0 0 31
-span 1 0 1 0 0 7
-span 1 0 0 0 0 19
-span 0 0 0 0 0 3
+span 1 0 0 0 0 29
+span 1 0 1 0 0 8
+span 1 0 0 0 0 20
+span -1 0 0 0 0 4
+span 0 0 0 0 0 4
 end
 route demo-dungeon.storm-split
 room demo-dungeon.storm-split
@@ -1012,28 +910,26 @@ room demo-dungeon.storm-cache
 entry floor
 target pickup dungeon-coin-26
 abilities 1 1
-ticks 90
-observation 16 2 2 0 5 2
-shaky BoundaryTiming 40 64 0
-shaky CorrelatedTiming 50 64 0
-shaky HoldRelease 42 64 0
-shaky DropRepeatFrame 53 64 0
+ticks 67
+observation 14 3 3 0 5 3
+shaky BoundaryTiming 28 64 0
+shaky CorrelatedTiming 32 64 0
+shaky HoldRelease 39 64 0
+shaky DropRepeatFrame 34 64 0
 span 0 0 1 0 0 4
 span 0 -1 0 1 0 1
-span 0 -1 0 0 0 9
 span 1 0 0 0 0 4
-span -1 1 0 1 0 1
 span -1 1 0 0 0 9
-span 1 0 1 0 0 8
+span 1 0 1 0 0 7
 span 0 -1 0 1 0 1
-span 0 -1 0 0 0 9
-span 1 -1 0 0 0 10
+span 0 -1 0 0 0 11
 span 0 0 0 1 0 1
 span 1 0 0 0 0 9
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 9
-span 1 0 0 0 0 4
-span 1 -1 0 0 0 10
+span 1 0 1 0 0 7
+span 0 0 0 1 0 1
+span 1 0 0 0 0 7
+span -1 0 0 0 0 4
+span 0 1 0 1 0 1
 end
 route demo-dungeon.relay-chasm
 room demo-dungeon.relay-chasm
@@ -1065,12 +961,12 @@ room demo-dungeon.brake-tower
 entry west
 target pickup dungeon-coin-27
 abilities 1 1
-ticks 113
-observation 14 1 1 0 6 0
-shaky BoundaryTiming 25 64 2
-shaky CorrelatedTiming 36 64 0
-shaky HoldRelease 31 64 3
-shaky DropRepeatFrame 57 64 0
+ticks 114
+observation 15 1 1 0 7 0
+shaky BoundaryTiming 19 64 3
+shaky CorrelatedTiming 19 64 0
+shaky HoldRelease 29 64 2
+shaky DropRepeatFrame 6 64 0
 span 1 -1 0 1 0 1
 span 1 -1 0 0 0 19
 span 1 1 0 1 0 1
@@ -1085,6 +981,7 @@ span 0 0 1 0 0 7
 span 0 -1 0 1 0 1
 span 0 -1 0 0 0 10
 span 1 -1 0 0 0 5
+span 0 1 0 1 0 1
 end
 route demo-dungeon.dash-seal
 room demo-dungeon.dash-seal
@@ -1119,46 +1016,54 @@ room demo-dungeon.alloy-threshold
 entry west
 target pickup dungeon-coin-28
 abilities 1 1
-ticks 137
-observation 9 4 4 0 0 0
-shaky BoundaryTiming 30 64 48
-shaky CorrelatedTiming 25 64 56
-shaky HoldRelease 32 64 40
-shaky DropRepeatFrame 51 64 6
-span 1 0 0 0 0 12
-span 1 0 1 0 0 10
-span 1 0 0 0 0 20
-span 1 0 1 0 0 10
-span 1 0 0 0 0 20
-span 1 0 1 0 0 8
-span 1 0 0 0 0 41
-span 1 0 1 0 0 10
-span 1 0 0 0 0 6
+ticks 107
+observation 16 2 2 0 5 3
+shaky BoundaryTiming 30 64 40
+shaky CorrelatedTiming 26 64 31
+shaky HoldRelease 45 64 17
+shaky DropRepeatFrame 39 64 1
+span 1 -1 0 1 0 1
+span 1 -1 0 0 0 11
+span 1 1 0 0 0 10
+span 1 0 1 0 0 4
+span 1 -1 0 1 0 1
+span 1 -1 0 0 0 17
+span 0 0 0 1 0 1
+span 1 1 0 0 0 9
+span 0 0 0 1 0 1
+span 1 0 0 0 0 7
+span 1 -1 0 0 0 20
+span -1 0 1 0 0 3
+span 1 -1 0 1 0 1
+span 1 -1 0 0 0 9
+span -1 0 0 0 0 4
+span 0 -1 0 0 0 8
 end
 route demo-dungeon.windshaft
 room demo-dungeon.windshaft
 entry west
 target pickup dungeon-coin-29
 abilities 1 1
-ticks 101
-observation 13 2 2 0 5 0
-shaky BoundaryTiming 31 64 3
-shaky CorrelatedTiming 29 64 0
-shaky HoldRelease 42 64 4
-shaky DropRepeatFrame 39 64 0
+ticks 105
+observation 14 2 2 0 5 0
+shaky BoundaryTiming 22 64 0
+shaky CorrelatedTiming 20 64 0
+shaky HoldRelease 41 64 5
+shaky DropRepeatFrame 34 64 0
 span 1 -1 0 1 0 1
 span 1 -1 0 0 0 19
 span 1 1 0 1 0 1
 span 1 1 0 0 0 9
 span 1 -1 0 1 0 1
 span 1 -1 0 0 0 19
-span 1 0 1 0 0 8
+span 1 0 1 0 0 7
 span 0 -1 0 1 0 1
 span 0 -1 0 0 0 9
 span 1 -1 0 0 0 10
 span 1 0 1 0 0 4
 span 1 -1 0 1 0 1
-span 0 -1 0 0 0 18
+span 0 -1 0 0 0 19
+span 0 0 0 0 0 4
 end
 route demo-dungeon.split-furnace
 room demo-dungeon.split-furnace
@@ -1186,44 +1091,44 @@ room demo-dungeon.ember-vault
 entry ceiling
 target pickup dungeon-coin-30
 abilities 1 1
-ticks 84
-observation 20 3 0 0 7 1
-shaky BoundaryTiming 26 64 25
-shaky CorrelatedTiming 25 64 31
-shaky HoldRelease 40 64 14
-shaky DropRepeatFrame 49 64 10
-span 0 0 0 1 0 1
-span 1 0 0 0 0 6
-span 0 -1 0 0 0 10
+ticks 95
+observation 20 3 0 0 6 3
+shaky BoundaryTiming 24 64 11
+shaky CorrelatedTiming 15 64 6
+shaky HoldRelease 37 64 7
+shaky DropRepeatFrame 32 64 8
 span 0 0 0 1 0 1
 span 1 0 0 0 0 9
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 7
-span -1 1 0 0 0 10
-span 0 0 0 0 0 4
+span 1 -1 0 0 0 10
+span 0 0 0 1 0 1
+span 1 0 0 0 0 11
+span 0 1 0 0 0 8
 span 0 1 1 0 0 1
 span 0 1 0 1 0 1
 span 0 1 0 0 0 9
 span 0 1 1 0 0 1
-span 0 1 0 1 0 1
-span 0 1 0 0 0 9
-span 0 1 1 0 0 1
-span 0 1 0 1 0 1
-span 0 1 0 0 0 9
+span 0 0 0 0 0 11
+span 1 0 0 0 0 3
+span -1 1 1 0 0 1
+span -1 0 0 0 0 7
+span 1 1 0 1 0 1
+span 1 1 0 0 0 7
+span -1 0 0 0 0 2
 span -1 0 0 1 0 1
-span -1 0 0 0 0 1
+span -1 0 0 0 0 9
+span 0 1 0 1 0 1
 end
 route demo-dungeon.gear-gallery
 room demo-dungeon.gear-gallery
 entry west
 target pickup dungeon-coin-31
 abilities 1 1
-ticks 104
-observation 20 5 5 3 4 3
-shaky BoundaryTiming 31 64 0
-shaky CorrelatedTiming 30 64 0
+ticks 110
+observation 20 5 5 3 4 4
+shaky BoundaryTiming 33 64 0
+shaky CorrelatedTiming 38 64 0
 shaky HoldRelease 45 64 0
-shaky DropRepeatFrame 4 64 0
+shaky DropRepeatFrame 17 64 0
 span 1 1 0 1 0 1
 span 1 1 0 0 0 9
 span 0 0 0 1 0 1
@@ -1241,8 +1146,8 @@ span -1 0 1 0 0 4
 span 0 -1 0 0 0 10
 span -1 0 1 0 0 2
 span -1 1 0 0 0 10
-span -1 0 1 0 0 1
-span -1 0 0 0 0 7
+span -1 0 1 0 0 4
+span 1 -1 0 0 0 10
 span 0 -1 0 0 0 8
 end
 route demo-dungeon.crosswind-chimney
@@ -1321,53 +1226,55 @@ room demo-dungeon.cooling-duct
 entry floor
 target pickup dungeon-coin-32
 abilities 1 1
-ticks 131
+ticks 130
 observation 12 3 3 1 3 0
-shaky BoundaryTiming 31 64 24
-shaky CorrelatedTiming 27 64 37
-shaky HoldRelease 40 64 16
+shaky BoundaryTiming 37 64 18
+shaky CorrelatedTiming 48 64 16
+shaky HoldRelease 44 64 12
 shaky DropRepeatFrame 64 64 0
 span 1 -1 1 0 0 4
 span 0 -1 0 0 0 1
 span 1 -1 0 1 0 1
 span 1 -1 0 0 0 6
 span 0 -1 1 0 0 1
-span 1 -1 0 0 0 22
-span 1 -1 1 0 0 6
-span 1 -1 0 0 0 2
+span 1 -1 0 0 0 23
+span 1 -1 1 0 0 5
+span 1 -1 0 0 0 5
 span 1 -1 0 1 0 1
-span 1 -1 0 0 0 41
+span 1 -1 0 0 0 39
 span 1 -1 0 1 0 1
-span 1 -1 0 0 0 45
+span 1 -1 0 0 0 43
 end
 route demo-dungeon.hammer-hall
 room demo-dungeon.hammer-hall
 entry west
 target pickup dungeon-coin-33
 abilities 1 1
-ticks 177
-observation 17 5 5 1 3 0
-shaky BoundaryTiming 28 64 52
-shaky CorrelatedTiming 28 64 51
-shaky HoldRelease 38 64 36
-shaky DropRepeatFrame 32 64 72
-span 1 -1 0 0 0 7
-span 0 -1 1 0 0 1
-span 1 -1 0 0 0 8
+ticks 115
+observation 19 3 2 0 6 1
+shaky BoundaryTiming 30 64 21
+shaky CorrelatedTiming 19 64 27
+shaky HoldRelease 43 64 17
+shaky DropRepeatFrame 26 64 23
 span 1 -1 0 1 0 1
-span 1 -1 0 0 0 20
-span 1 -1 1 0 0 4
+span 0 -1 0 0 0 16
+span 0 0 0 1 0 1
+span 1 0 0 0 0 6
+span 0 0 1 0 0 4
+span 1 -1 0 1 0 1
 span 1 -1 0 0 0 13
+span 0 0 0 1 0 1
+span 1 1 0 0 0 5
+span 0 0 1 0 0 4
+span 0 0 0 1 0 1
+span 1 0 0 0 0 11
+span 0 -1 0 0 0 1
+span 0 1 0 0 0 10
+span 0 0 1 0 0 12
 span 1 -1 0 1 0 1
-span 1 -1 0 0 0 23
-span 1 -1 1 0 0 7
-span 1 -1 0 0 0 26
-span 1 -1 1 0 0 8
-span 1 -1 0 0 0 5
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 17
-span 0 -1 1 0 0 1
-span 1 -1 0 0 0 34
+span 1 -1 0 0 0 9
+span -1 1 0 0 0 10
+span 0 -1 0 0 0 8
 end
 route demo-dungeon.lift-shaft
 room demo-dungeon.lift-shaft
@@ -1417,7 +1324,7 @@ ticks 70
 observation 11 2 2 0 3 1
 shaky BoundaryTiming 31 64 6
 shaky CorrelatedTiming 23 64 0
-shaky HoldRelease 42 64 6
+shaky HoldRelease 41 64 6
 shaky DropRepeatFrame 33 64 1
 span 0 0 0 1 0 1
 span 1 0 0 0 0 9
@@ -1428,8 +1335,8 @@ span 1 -1 0 0 0 9
 span -1 0 1 0 0 8
 span 0 -1 0 1 0 1
 span 0 -1 0 0 0 9
-span -1 1 0 0 0 10
-span 0 -1 0 0 0 9
+span 0 0 0 0 0 12
+span 0 -1 0 0 0 7
 end
 route demo-dungeon.rivet-run
 room demo-dungeon.rivet-run
@@ -1460,12 +1367,12 @@ room demo-dungeon.blast-gallery
 entry west
 target pickup dungeon-coin-35
 abilities 1 1
-ticks 96
-observation 15 2 2 0 6 0
-shaky BoundaryTiming 28 64 26
-shaky CorrelatedTiming 32 64 27
-shaky HoldRelease 40 64 22
-shaky DropRepeatFrame 32 64 40
+ticks 101
+observation 17 2 2 0 6 1
+shaky BoundaryTiming 27 64 22
+shaky CorrelatedTiming 31 64 24
+shaky HoldRelease 41 64 16
+shaky DropRepeatFrame 32 64 13
 span 1 -1 0 1 0 1
 span 0 -1 0 0 0 16
 span 1 1 0 1 0 1
@@ -1480,7 +1387,9 @@ span 0 0 0 1 0 1
 span 1 0 0 0 0 10
 span 1 0 1 0 0 3
 span 1 -1 0 1 0 1
-span 0 -1 0 0 0 16
+span 1 -1 0 0 0 9
+span -1 0 0 0 0 4
+span 0 -1 0 0 0 8
 end
 route demo-dungeon.pressure-fork
 room demo-dungeon.pressure-fork
@@ -1508,57 +1417,54 @@ room demo-dungeon.ash-cache
 entry ceiling
 target pickup dungeon-coin-36
 abilities 1 1
-ticks 125
-observation 6 2 2 0 0 1
-shaky BoundaryTiming 34 64 12
-shaky CorrelatedTiming 42 64 8
-shaky HoldRelease 39 64 12
-shaky DropRepeatFrame 38 64 0
+ticks 219
+observation 12 5 5 0 0 1
+shaky BoundaryTiming 53 64 6
+shaky CorrelatedTiming 52 64 6
+shaky HoldRelease 53 64 6
+shaky DropRepeatFrame 58 64 0
 span 1 0 0 0 0 86
-span 1 0 1 0 0 2
-span 1 0 0 0 0 15
-span 1 0 1 0 0 9
+span 1 0 1 0 0 3
 span 1 0 0 0 0 10
+span 1 0 1 0 0 10
+span 1 0 0 0 0 9
 span -1 0 0 0 0 3
+span -1 0 1 0 0 8
+span -1 0 0 0 0 14
+span -1 0 1 0 0 10
+span -1 0 0 0 0 6
+span -1 0 1 0 0 10
+span -1 0 0 0 0 50
 end
 route demo-dungeon.vent-spire
 room demo-dungeon.vent-spire
 entry west
 target pickup dungeon-coin-37
 abilities 1 1
-ticks 238
-observation 27 11 10 5 0 0
-shaky BoundaryTiming 35 64 16
-shaky CorrelatedTiming 36 64 0
-shaky HoldRelease 47 64 10
-shaky DropRepeatFrame 32 64 0
-span 1 -1 0 0 0 14
-span 0 -1 0 0 0 4
-span 1 -1 1 0 0 10
-span 0 -1 0 0 0 3
-span 1 -1 0 0 0 21
-span 1 -1 1 0 0 10
-span 1 -1 0 0 0 11
-span 1 -1 1 0 0 9
-span 1 -1 0 0 0 2
-span 0 -1 0 0 0 6
-span 1 -1 1 0 0 11
-span 0 -1 0 0 0 1
-span 0 -1 1 0 0 1
-span 1 -1 0 0 0 15
-span 0 -1 1 0 0 1
-span 1 -1 0 0 0 21
-span 1 -1 1 0 0 10
-span 1 -1 0 0 0 14
-span 0 -1 0 0 0 1
-span 0 -1 1 0 0 1
-span 1 -1 0 0 0 4
-span 1 -1 1 0 0 10
-span 1 -1 0 0 0 25
-span 1 -1 1 0 0 10
-span 0 -1 0 0 0 1
-span 0 -1 1 0 0 1
-span 1 -1 0 0 0 21
+ticks 125
+observation 18 4 4 3 5 2
+shaky BoundaryTiming 25 64 24
+shaky CorrelatedTiming 11 64 32
+shaky HoldRelease 46 64 8
+shaky DropRepeatFrame 24 64 15
+span 1 1 0 1 0 1
+span 1 1 0 0 0 9
+span 0 0 0 1 0 1
+span 1 0 0 0 0 9
+span 0 0 1 0 0 4
+span 0 0 0 1 0 1
+span 1 0 0 0 0 9
+span 1 -1 0 0 0 10
+span 1 -1 0 1 0 1
+span 1 -1 0 0 0 9
+span -1 0 1 0 0 4
+span -1 1 0 0 0 10
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
+span -1 0 1 0 0 3
+span 1 -1 0 0 0 16
+span 1 -1 0 1 0 1
+span 0 -1 0 0 0 29
 end
 route demo-dungeon.piston-pass
 room demo-dungeon.piston-pass
@@ -1622,12 +1528,12 @@ room demo-dungeon.cinder-bridge
 entry west
 target pickup dungeon-coin-38
 abilities 1 1
-ticks 123
-observation 20 3 3 0 7 2
-shaky BoundaryTiming 32 64 36
-shaky CorrelatedTiming 31 64 21
-shaky HoldRelease 37 64 30
-shaky DropRepeatFrame 19 64 38
+ticks 127
+observation 22 3 3 0 7 3
+shaky BoundaryTiming 34 64 24
+shaky CorrelatedTiming 36 64 26
+shaky HoldRelease 41 64 20
+shaky DropRepeatFrame 46 64 18
 span 1 -1 0 1 0 1
 span 1 -1 0 0 0 7
 span -1 1 0 0 0 10
@@ -1647,19 +1553,21 @@ span 0 0 1 0 0 4
 span 1 0 1 0 0 1
 span 1 0 0 0 0 7
 span 1 -1 0 1 0 1
-span 0 -1 0 0 0 18
+span 1 -1 0 0 0 9
+span -1 0 0 0 0 4
+span 0 -1 0 0 0 9
 end
 route demo-dungeon.foundry-seal
 room demo-dungeon.foundry-seal
 entry west
 target pickup dungeon-coin-39
 abilities 1 1
-ticks 149
-observation 24 4 4 1 5 2
-shaky BoundaryTiming 50 64 1
-shaky CorrelatedTiming 50 64 2
-shaky HoldRelease 51 64 2
-shaky DropRepeatFrame 64 64 0
+ticks 159
+observation 30 4 4 3 4 5
+shaky BoundaryTiming 44 64 5
+shaky CorrelatedTiming 36 64 6
+shaky HoldRelease 50 64 4
+shaky DropRepeatFrame 14 64 10
 span 1 1 0 1 0 1
 span 1 1 0 0 0 9
 span 1 0 0 1 0 1
@@ -1677,115 +1585,73 @@ span -1 1 0 0 0 9
 span 0 -1 0 1 0 1
 span 0 -1 0 0 0 9
 span 0 0 0 0 0 4
-span 1 -1 0 0 0 3
-span 1 -1 1 0 0 10
-span 1 -1 0 0 0 11
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 22
-span 1 -1 1 0 0 10
-span 1 -1 0 0 0 10
+span -1 0 0 0 0 4
+span 0 0 0 0 0 4
+span -1 0 0 0 0 4
+span 1 0 0 0 0 8
+span -1 0 1 0 0 4
+span -1 0 0 0 0 4
+span -1 0 1 0 0 4
+span -1 0 0 0 0 4
+span 0 0 0 0 0 8
+span 1 0 0 0 0 24
+span 0 0 0 0 0 4
+span -1 0 0 0 0 4
+span 0 0 0 0 0 1
 end
 route demo-dungeon.glass-threshold
 room demo-dungeon.glass-threshold
 entry west
 target pickup dungeon-coin-40
 abilities 1 1
-ticks 243
-observation 76 35 14 9 3 5
-shaky BoundaryTiming 124 150 20
-shaky CorrelatedTiming 38 64 11
-shaky HoldRelease 55 64 6
-shaky DropRepeatFrame 63 64 0
-span 0 0 0 0 0 4
-span 0 0 1 0 0 12
-span -1 1 1 0 0 1
+ticks 181
+observation 28 9 8 5 0 2
+shaky BoundaryTiming 26 64 13
+shaky CorrelatedTiming 31 64 9
+shaky HoldRelease 38 64 9
+shaky DropRepeatFrame 39 64 0
+span 0 0 0 0 0 7
+span 0 0 1 0 0 8
+span -1 0 1 0 0 2
+span 0 0 0 0 0 1
+span -1 0 1 0 0 1
+span -1 0 0 0 0 5
+span -1 0 1 0 0 1
 span -1 1 0 0 0 3
-span -1 1 1 0 0 1
-span -1 1 0 0 0 3
-span -1 1 1 0 0 1
-span -1 1 0 0 0 3
-span -1 1 1 0 0 1
-span -1 1 0 0 0 3
-span -1 1 1 0 0 1
-span -1 1 0 0 0 3
-span -1 0 1 0 0 4
-span -1 0 0 0 0 4
-span 1 0 0 0 0 28
+span -1 0 1 0 0 1
+span -1 0 0 0 0 5
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
+span 0 0 0 0 0 12
+span 1 0 0 0 0 4
 span 1 0 1 0 0 4
-span 1 0 0 0 0 28
-span -1 0 1 0 0 4
-span -1 0 0 0 0 4
-span 1 0 1 0 0 4
-span -1 0 0 0 0 8
-span -1 0 1 0 0 4
+span 1 0 0 0 0 39
+span 0 0 1 0 0 1
+span 1 0 0 0 0 10
+span 0 0 0 0 0 2
+span 1 0 0 0 0 26
+span 0 0 0 0 0 14
+span 1 0 0 0 0 2
+span 1 1 1 0 0 1
+span 1 1 0 0 0 3
 span -1 0 0 0 0 12
-span 0 0 0 0 0 4
-span 1 -1 1 0 0 3
-span 1 -1 1 1 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 19
-span 1 -1 1 0 0 3
-span 1 -1 1 1 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 15
-span 1 -1 1 0 0 3
-span 1 -1 1 1 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 1
-span 1 -1 1 0 0 10
+span 0 0 0 0 0 1
 end
 route demo-dungeon.prism-run
 room demo-dungeon.prism-run
 entry west
 target pickup dungeon-coin-41
 abilities 1 1
-ticks 115
-observation 14 3 3 0 5 2
-shaky BoundaryTiming 38 64 26
-shaky CorrelatedTiming 45 64 6
-shaky HoldRelease 45 64 29
-shaky DropRepeatFrame 43 64 42
+ticks 116
+observation 15 3 3 0 6 2
+shaky BoundaryTiming 30 64 38
+shaky CorrelatedTiming 42 64 3
+shaky HoldRelease 39 64 32
+shaky DropRepeatFrame 19 64 0
 span 1 -1 0 1 0 1
-span 1 -1 0 0 0 19
+span 1 -1 0 0 0 18
 span -1 0 1 0 0 4
 span 1 -1 0 1 0 1
 span 1 -1 0 0 0 19
@@ -1794,10 +1660,11 @@ span 1 1 0 0 0 9
 span 0 0 1 0 0 4
 span 1 -1 0 1 0 1
 span 1 -1 0 0 0 19
-span 1 0 1 0 0 6
-span 1 0 0 0 0 14
+span 1 0 1 0 0 5
+span 1 0 0 0 0 13
 span 1 -1 0 1 0 1
-span 1 -1 0 0 0 16
+span 1 -1 0 0 0 19
+span 0 1 0 1 0 1
 end
 route demo-dungeon.split-kiln
 room demo-dungeon.split-kiln
@@ -1823,12 +1690,12 @@ room demo-dungeon.shard-vault
 entry ceiling
 target pickup dungeon-coin-42
 abilities 1 1
-ticks 47
-observation 10 0 0 0 2 0
-shaky BoundaryTiming 21 64 32
-shaky CorrelatedTiming 11 64 41
-shaky HoldRelease 28 64 24
-shaky DropRepeatFrame 12 64 45
+ticks 48
+observation 11 0 0 0 3 0
+shaky BoundaryTiming 25 64 30
+shaky CorrelatedTiming 15 64 38
+shaky HoldRelease 26 64 20
+shaky DropRepeatFrame 42 64 17
 span 1 0 0 0 0 4
 span 0 0 0 0 0 5
 span 1 0 0 0 0 3
@@ -1839,37 +1706,41 @@ span 1 -1 0 0 0 1
 span 0 0 0 1 0 1
 span 1 0 0 0 0 9
 span 0 -1 0 0 0 10
+span 0 1 0 1 0 1
 end
 route demo-dungeon.glass-gallery
 room demo-dungeon.glass-gallery
 entry west
 target pickup dungeon-coin-43
 abilities 1 1
-ticks 220
-observation 19 5 5 2 3 0
-shaky BoundaryTiming 22 64 0
-shaky CorrelatedTiming 16 64 0
-shaky HoldRelease 32 64 0
+ticks 248
+observation 22 8 8 4 1 0
+shaky BoundaryTiming 27 64 0
+shaky CorrelatedTiming 39 64 0
+shaky HoldRelease 40 64 0
 shaky DropRepeatFrame 32 64 0
-span 1 -1 0 0 0 14
-span 0 -1 0 0 0 1
-span 1 -1 0 0 0 36
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 9
-span 0 -1 1 0 0 1
-span 1 -1 0 0 0 34
+span 1 -1 0 0 0 45
+span 0 -1 0 0 0 5
 span 1 -1 1 0 0 3
-span 1 -1 0 0 0 30
-span 1 -1 1 0 0 9
-span 1 -1 0 0 0 6
+span 1 -1 0 0 0 23
 span 1 -1 0 1 0 1
-span 1 -1 0 0 0 14
+span 0 -1 0 0 0 5
 span 0 -1 1 0 0 1
-span 1 -1 0 0 0 14
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 19
-span 1 -1 1 0 0 4
+span 1 -1 0 0 0 39
+span 1 -1 1 0 0 7
+span 0 -1 0 0 0 1
+span 1 -1 1 0 0 11
+span 0 -1 0 0 0 1
+span 0 -1 1 0 0 1
+span 1 -1 0 0 0 13
+span 0 -1 1 0 0 1
+span 1 -1 0 0 0 21
+span 0 -1 0 0 0 1
+span 1 -1 1 0 0 9
 span 1 -1 0 0 0 22
+span 1 -1 1 0 0 9
+span 1 -1 0 0 0 25
+span 0 -1 0 0 0 4
 end
 route demo-dungeon.refraction-shaft
 room demo-dungeon.refraction-shaft
@@ -1936,7 +1807,7 @@ ticks 70
 observation 11 2 2 0 3 1
 shaky BoundaryTiming 31 64 6
 shaky CorrelatedTiming 24 64 0
-shaky HoldRelease 43 64 6
+shaky HoldRelease 41 64 7
 shaky DropRepeatFrame 32 64 1
 span 0 0 0 1 0 1
 span 1 0 0 0 0 9
@@ -1947,49 +1818,48 @@ span 1 -1 0 0 0 9
 span -1 0 1 0 0 8
 span 0 -1 0 1 0 1
 span 0 -1 0 0 0 9
-span -1 1 0 0 0 10
-span 0 -1 0 0 0 9
+span 0 0 0 0 0 12
+span 0 -1 0 0 0 7
 end
 route demo-dungeon.temper-hall
 room demo-dungeon.temper-hall
 entry west
 target pickup dungeon-coin-45
 abilities 1 1
-ticks 211
-observation 29 1 1 1 10 6
-shaky BoundaryTiming 25 64 22
-shaky CorrelatedTiming 13 64 32
-shaky HoldRelease 44 64 13
-shaky DropRepeatFrame 49 64 14
+ticks 188
+observation 28 3 3 2 7 7
+shaky BoundaryTiming 43 64 10
+shaky CorrelatedTiming 44 64 7
+shaky HoldRelease 52 64 7
+shaky DropRepeatFrame 32 64 0
 span 0 -1 0 1 0 1
-span 0 -1 0 0 0 9
+span 0 -1 0 0 0 8
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
 span -1 0 1 0 0 4
-span 1 -1 0 0 0 9
-span 0 -1 0 0 0 11
-span 0 0 0 1 0 1
-span 1 0 0 0 0 9
-span 0 0 0 1 0 1
-span 1 0 0 0 0 9
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 16
-span 0 0 0 1 0 1
-span 1 0 0 0 0 9
-span 0 0 0 1 0 1
-span 1 0 0 0 0 8
 span -1 1 0 0 0 10
 span 1 0 0 0 0 4
+span 1 -1 0 0 0 10
+span 0 0 0 1 0 1
+span 0 0 0 0 0 10
+span 1 -1 0 0 0 10
+span 1 1 0 0 0 4
+span 1 -1 0 0 0 10
+span 0 0 1 0 0 4
 span 0 0 0 1 0 1
 span 1 0 0 0 0 9
-span -1 1 0 0 0 24
+span -1 0 0 0 0 12
 span 1 1 0 1 0 1
 span 1 1 0 0 0 9
-span 0 -1 0 1 0 1
-span 0 -1 0 0 0 6
-span 0 0 0 0 0 8
-span -1 0 0 0 0 28
-span -1 0 0 1 0 1
-span -1 0 0 0 0 9
-span 0 -1 0 0 0 10
+span 0 0 0 1 0 1
+span 1 0 0 0 0 9
+span -1 0 0 0 0 36
+span -1 -1 0 1 0 1
+span -1 -1 0 0 0 9
+span 1 0 0 0 0 4
+span -1 1 0 0 0 10
+span 1 0 0 1 0 1
+span 0 0 0 0 0 1
 end
 route demo-dungeon.furnace-lift
 room demo-dungeon.furnace-lift
@@ -2022,12 +1892,12 @@ room demo-dungeon.lens-niche
 entry floor
 target pickup dungeon-coin-46
 abilities 1 1
-ticks 65
-observation 11 2 1 1 3 3
-shaky BoundaryTiming 33 64 0
-shaky CorrelatedTiming 43 64 0
-shaky HoldRelease 47 64 0
-shaky DropRepeatFrame 60 64 0
+ticks 64
+observation 11 1 1 1 3 3
+shaky BoundaryTiming 30 64 3
+shaky CorrelatedTiming 31 64 12
+shaky HoldRelease 40 64 4
+shaky DropRepeatFrame 39 64 10
 span 0 0 0 1 0 1
 span 1 0 0 0 0 9
 span 0 -1 0 1 0 1
@@ -2036,9 +1906,9 @@ span -1 -1 0 1 0 1
 span -1 -1 0 0 0 9
 span -1 0 1 0 0 1
 span -1 0 0 0 0 7
-span 1 0 1 0 0 4
-span 0 -1 0 0 0 10
-span -1 0 0 0 0 13
+span 1 0 0 0 0 4
+span -1 0 0 0 0 4
+span 0 -1 0 0 0 18
 end
 route demo-dungeon.sliver-run
 room demo-dungeon.sliver-run
@@ -2069,12 +1939,12 @@ room demo-dungeon.hot-glass
 entry west
 target pickup dungeon-coin-47
 abilities 1 1
-ticks 96
-observation 15 2 2 0 6 0
-shaky BoundaryTiming 25 64 34
-shaky CorrelatedTiming 31 64 30
-shaky HoldRelease 37 64 26
-shaky DropRepeatFrame 54 64 8
+ticks 101
+observation 17 2 2 0 6 1
+shaky BoundaryTiming 27 64 22
+shaky CorrelatedTiming 28 64 25
+shaky HoldRelease 40 64 18
+shaky DropRepeatFrame 32 64 30
 span 1 -1 0 1 0 1
 span 0 -1 0 0 0 16
 span 1 1 0 1 0 1
@@ -2089,7 +1959,9 @@ span 0 0 0 1 0 1
 span 1 0 0 0 0 10
 span 1 0 1 0 0 3
 span 1 -1 0 1 0 1
-span 0 -1 0 0 0 16
+span 1 -1 0 0 0 9
+span -1 0 0 0 0 4
+span 0 -1 0 0 0 8
 end
 route demo-dungeon.cullet-fork
 room demo-dungeon.cullet-fork
@@ -2115,9 +1987,9 @@ entry ceiling
 target pickup dungeon-coin-48
 abilities 1 1
 ticks 112
-observation 17 3 2 2 2 5
-shaky BoundaryTiming 42 64 8
-shaky CorrelatedTiming 40 64 12
+observation 18 3 2 2 2 5
+shaky BoundaryTiming 41 64 10
+shaky CorrelatedTiming 41 64 9
 shaky HoldRelease 53 64 6
 shaky DropRepeatFrame 18 64 22
 span 1 0 0 0 0 2
@@ -2135,20 +2007,21 @@ span -1 0 1 0 0 4
 span 1 -1 0 0 0 10
 span 1 0 0 0 0 4
 span -1 0 1 0 0 4
-span 0 -1 0 0 0 20
-span -1 1 0 0 0 10
+span 0 -1 0 0 0 10
+span -1 0 0 0 0 4
+span 0 -1 0 0 0 16
 end
 route demo-dungeon.annealing-spire
 room demo-dungeon.annealing-spire
 entry west
 target pickup dungeon-coin-49
 abilities 1 1
-ticks 155
-observation 37 9 4 2 6 6
-shaky BoundaryTiming 57 73 6
+ticks 179
+observation 32 5 4 2 7 6
+shaky BoundaryTiming 47 64 6
 shaky CorrelatedTiming 46 64 2
-shaky HoldRelease 55 64 4
-shaky DropRepeatFrame 35 64 10
+shaky HoldRelease 55 64 5
+shaky DropRepeatFrame 32 64 7
 span 1 1 0 1 0 1
 span 1 1 0 0 0 9
 span 1 0 0 1 0 1
@@ -2173,19 +2046,14 @@ span 0 -1 0 0 0 9
 span -1 1 0 1 0 1
 span -1 1 0 0 0 9
 span 0 0 0 0 0 4
-span 1 -1 1 0 0 6
-span 1 -1 1 1 0 1
-span 1 -1 0 0 0 3
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 2
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 3
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 4
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 5
-span 1 -1 1 0 0 1
-span 1 -1 0 0 0 6
+span 1 0 1 0 0 10
+span 1 0 0 0 0 4
+span 1 0 0 1 0 1
+span 1 0 0 0 0 19
+span 1 0 1 0 0 10
+span 1 0 0 0 0 6
+span 1 0 0 1 0 1
+span 1 0 0 0 0 8
 end
 route demo-dungeon.razor-pass
 room demo-dungeon.razor-pass
@@ -2257,14 +2125,14 @@ room demo-dungeon.crystal-bridge
 entry west
 target pickup dungeon-coin-50
 abilities 1 1
-ticks 115
-observation 14 3 3 0 5 2
-shaky BoundaryTiming 42 64 26
-shaky CorrelatedTiming 45 64 6
-shaky HoldRelease 45 64 23
-shaky DropRepeatFrame 47 64 0
+ticks 116
+observation 15 3 3 0 6 2
+shaky BoundaryTiming 32 64 32
+shaky CorrelatedTiming 40 64 4
+shaky HoldRelease 41 64 28
+shaky DropRepeatFrame 32 64 2
 span 1 -1 0 1 0 1
-span 1 -1 0 0 0 19
+span 1 -1 0 0 0 18
 span -1 0 1 0 0 4
 span 1 -1 0 1 0 1
 span 1 -1 0 0 0 19
@@ -2273,59 +2141,59 @@ span 1 1 0 0 0 9
 span 0 0 1 0 0 4
 span 1 -1 0 1 0 1
 span 1 -1 0 0 0 19
-span 1 0 1 0 0 6
-span 1 0 0 0 0 14
+span 1 0 1 0 0 5
+span 1 0 0 0 0 13
 span 1 -1 0 1 0 1
-span 1 -1 0 0 0 16
+span 1 -1 0 0 0 19
+span 0 1 0 1 0 1
 end
 route demo-dungeon.glass-seal
 room demo-dungeon.glass-seal
 entry west
 target pickup dungeon-coin-51
 abilities 1 1
-ticks 199
-observation 37 11 10 6 0 7
-shaky BoundaryTiming 39 73 0
-shaky CorrelatedTiming 31 64 0
-shaky HoldRelease 44 64 0
-shaky DropRepeatFrame 31 64 0
+ticks 205
+observation 36 10 9 5 0 7
+shaky BoundaryTiming 34 71 0
+shaky CorrelatedTiming 28 64 0
+shaky HoldRelease 40 64 0
+shaky DropRepeatFrame 32 64 0
 span 1 0 0 0 0 7
 span 1 0 1 0 0 10
-span 1 0 0 0 0 7
+span 1 0 0 0 0 6
 span 1 0 1 0 0 6
-span 0 0 0 0 0 6
-span 1 0 1 0 0 2
-span 0 0 1 0 0 9
-span 1 0 1 0 0 4
+span 1 0 0 0 0 2
+span 0 0 1 0 0 5
+span 1 0 1 0 0 3
+span 0 0 1 0 0 8
+span 1 0 1 0 0 3
 span 1 1 0 0 0 4
 span 1 0 1 0 0 4
 span 0 0 0 0 0 6
-span 1 0 0 0 0 15
-span 1 0 1 0 0 3
+span 1 0 0 0 0 16
 span -1 0 1 0 0 4
 span -1 1 0 0 0 4
 span -1 0 1 0 0 1
-span -1 0 0 0 0 3
-span 0 0 0 0 0 11
+span -1 0 0 0 0 6
+span 0 0 0 0 0 8
 span -1 0 1 0 0 1
-span -1 0 0 0 0 7
-span -1 0 1 0 0 1
-span -1 0 0 0 0 7
+span -1 0 0 0 0 11
 span 1 0 0 0 0 4
 span 0 0 1 0 0 1
 span 1 1 0 0 0 3
 span -1 0 1 0 0 1
-span -1 0 0 0 0 3
+span -1 0 0 0 0 7
 span 1 0 0 0 0 8
 span -1 0 0 0 0 4
-span 0 0 0 0 0 3
+span 0 0 0 0 0 6
 span -1 0 1 0 0 1
 span -1 0 0 0 0 7
 span 0 0 0 0 0 4
-span 1 0 0 0 0 4
+span 1 0 0 0 0 3
+span 0 0 0 0 0 6
+span 1 0 0 0 0 27
+span -1 0 0 0 0 4
 span 0 0 0 0 0 4
-span 1 0 0 0 0 28
-span -1 0 0 0 0 2
 end
 route demo-dungeon.star-threshold
 room demo-dungeon.star-threshold
@@ -2333,58 +2201,73 @@ entry west
 target pickup dungeon-coin-52
 abilities 1 1
 ticks 90
-observation 15 4 4 3 3 2
-shaky BoundaryTiming 41 64 17
-shaky CorrelatedTiming 39 64 22
-shaky HoldRelease 54 64 4
-shaky DropRepeatFrame 32 64 32
-span 1 1 0 0 0 7
+observation 17 4 4 3 4 2
+shaky BoundaryTiming 39 64 13
+shaky CorrelatedTiming 33 64 25
+shaky HoldRelease 55 64 3
+shaky DropRepeatFrame 32 64 31
+span 1 1 0 0 0 8
 span 0 0 0 1 0 1
-span 1 0 0 0 0 12
+span 1 0 0 0 0 11
 span 0 0 1 0 0 4
 span -1 0 1 0 0 4
 span -1 -1 0 1 0 1
 span -1 -1 0 0 0 6
 span -1 0 1 0 0 4
 span 0 -1 0 0 0 10
-span -1 0 1 0 0 4
-span 0 -1 0 0 0 10
 span -1 0 1 0 0 2
-span 1 -1 0 0 0 20
-span 0 0 0 1 0 1
+span 0 -1 0 0 0 10
+span -1 0 1 0 0 4
+span 1 -1 0 0 0 10
 span 1 0 0 0 0 4
+span 0 0 0 1 0 1
+span 1 0 0 0 0 9
+span 0 1 0 1 0 1
 end
 route demo-dungeon.comet-run
 room demo-dungeon.comet-run
 entry west
 target pickup dungeon-coin-53
 abilities 1 1
-ticks 131
-observation 20 3 3 0 4 2
-shaky BoundaryTiming 32 64 44
-shaky CorrelatedTiming 34 64 32
-shaky HoldRelease 47 64 34
-shaky DropRepeatFrame 32 64 65
-span 1 0 0 0 0 23
-span 1 0 1 0 0 8
+ticks 305
+observation 33 8 8 5 4 2
+shaky BoundaryTiming 46 65 121
+shaky CorrelatedTiming 46 64 88
+shaky HoldRelease 53 64 76
+shaky DropRepeatFrame 64 64 0
+span 1 0 0 0 0 24
+span 1 0 1 0 0 7
 span 0 1 0 0 0 4
 span 1 -1 0 1 0 1
-span 0 -1 0 0 0 13
+span 0 -1 0 0 0 9
 span 0 0 0 0 0 3
-span 1 0 0 0 0 4
-span 1 0 1 0 0 8
+span 1 0 0 0 0 1
+span 1 0 1 0 0 7
+span 1 -1 0 0 0 8
 span 1 -1 0 1 0 1
-span 1 -1 0 0 0 13
-span 0 0 0 0 0 3
-span 1 0 0 0 0 3
+span 1 -1 0 0 0 6
+span -1 0 0 0 0 2
+span 0 0 0 0 0 4
+span 1 0 0 0 0 4
 span 0 0 0 1 0 1
 span 1 0 0 0 0 9
 span 1 -1 0 0 0 8
-span -1 1 0 0 0 4
-span 0 0 0 0 0 4
-span 1 -1 1 0 0 8
+span 0 0 0 0 0 5
+span 1 -1 0 0 0 3
+span 1 -1 1 0 0 10
+span 1 -1 0 0 0 3
 span 1 -1 0 1 0 1
-span 1 -1 0 0 0 12
+span 1 -1 0 0 0 14
+span 0 -1 1 0 0 1
+span 1 -1 0 0 0 33
+span 0 -1 1 0 0 1
+span 1 -1 0 0 0 33
+span 0 -1 1 0 0 1
+span 1 -1 0 0 0 33
+span 0 -1 1 0 0 1
+span 1 -1 0 0 0 33
+span 0 -1 1 0 0 1
+span 1 -1 0 0 0 33
 end
 route demo-dungeon.orbit-fork
 room demo-dungeon.orbit-fork
@@ -2413,16 +2296,16 @@ room demo-dungeon.moon-vault
 entry ceiling
 target pickup dungeon-coin-54
 abilities 1 1
-ticks 127
-observation 18 4 3 1 3 0
-shaky BoundaryTiming 38 64 14
-shaky CorrelatedTiming 52 64 0
-shaky HoldRelease 46 64 12
-shaky DropRepeatFrame 61 64 2
+ticks 101
+observation 18 3 2 0 3 1
+shaky BoundaryTiming 33 64 27
+shaky CorrelatedTiming 38 64 30
+shaky HoldRelease 43 64 16
+shaky DropRepeatFrame 34 64 30
 span 0 0 0 0 0 14
 span 0 1 1 0 0 1
-span 0 0 0 0 0 18
-span 1 0 0 0 0 7
+span 0 0 0 0 0 13
+span 1 0 0 0 0 8
 span 0 0 1 0 0 1
 span 1 1 0 0 0 3
 span 0 0 0 1 0 1
@@ -2431,24 +2314,24 @@ span 1 -1 0 0 0 7
 span 0 1 0 0 0 5
 span 0 -1 0 1 0 1
 span 0 -1 0 0 0 9
-span 1 0 1 0 0 9
-span 1 0 0 0 0 5
-span 0 0 0 1 0 1
-span 1 0 0 0 0 15
-span 0 0 1 0 0 1
-span 1 0 0 0 0 20
+span 1 0 1 0 0 4
+span 1 0 0 0 0 4
+span 1 -1 0 1 0 1
+span 1 -1 0 0 0 9
+span -1 0 0 0 0 4
+span 0 -1 0 0 0 7
 end
 route demo-dungeon.constellation-hall
 room demo-dungeon.constellation-hall
 entry west
 target pickup dungeon-coin-55
 abilities 1 1
-ticks 151
-observation 22 3 3 2 6 6
-shaky BoundaryTiming 32 64 35
-shaky CorrelatedTiming 29 64 41
-shaky HoldRelease 44 64 25
-shaky DropRepeatFrame 31 64 16
+ticks 158
+observation 23 3 3 2 6 7
+shaky BoundaryTiming 32 64 47
+shaky CorrelatedTiming 32 64 40
+shaky HoldRelease 47 64 18
+shaky DropRepeatFrame 28 64 58
 span 0 0 0 1 0 1
 span 1 0 0 0 0 9
 span 1 -1 0 1 0 1
@@ -2467,10 +2350,11 @@ span 1 0 0 0 0 9
 span 0 -1 0 0 0 10
 span -1 1 0 0 0 10
 span 1 0 0 1 0 1
-span 1 0 0 0 0 9
+span 1 0 0 0 0 8
 span -1 0 1 0 0 4
-span 1 -1 0 0 0 15
-span 0 -1 0 0 0 10
+span 1 -1 0 0 0 20
+span -1 0 0 0 0 4
+span 0 -1 0 0 0 9
 end
 route demo-dungeon.zenith-shaft
 room demo-dungeon.zenith-shaft
@@ -2531,19 +2415,19 @@ room demo-dungeon.shadow-duct
 entry floor
 target pickup dungeon-coin-56
 abilities 1 1
-ticks 136
-observation 17 5 5 3 3 5
-shaky BoundaryTiming 40 64 48
-shaky CorrelatedTiming 40 64 36
-shaky HoldRelease 54 64 17
-shaky DropRepeatFrame 46 64 0
+ticks 141
+observation 18 5 5 3 3 5
+shaky BoundaryTiming 29 64 64
+shaky CorrelatedTiming 20 64 76
+shaky HoldRelease 51 64 22
+shaky DropRepeatFrame 15 64 154
 span 0 0 0 0 0 1
 span -1 0 0 0 0 17
 span -1 0 0 1 0 1
-span 0 0 0 0 0 8
+span 0 0 0 0 0 7
 span 1 0 1 0 0 8
 span -1 -1 0 1 0 1
-span -1 -1 0 0 0 9
+span -1 -1 0 0 0 5
 span -1 0 1 0 0 2
 span -1 1 0 0 0 4
 span -1 0 1 0 0 4
@@ -2553,19 +2437,20 @@ span 0 -1 0 0 0 9
 span 1 0 0 0 0 37
 span 1 0 1 0 0 3
 span 0 0 0 1 0 1
-span 1 0 0 0 0 17
+span 1 0 0 0 0 14
+span 0 0 0 0 0 13
 end
 route demo-dungeon.observatory
 room demo-dungeon.observatory
 entry west
 target pickup dungeon-coin-57
 abilities 1 1
-ticks 276
+ticks 282
 observation 17 5 5 3 3 5
 shaky BoundaryTiming 37 64 27
 shaky CorrelatedTiming 36 64 28
 shaky HoldRelease 50 64 14
-shaky DropRepeatFrame 32 64 32
+shaky DropRepeatFrame 61 64 3
 span 1 0 0 0 0 127
 span 0 0 1 0 0 2
 span -1 0 1 0 0 4
@@ -2573,7 +2458,7 @@ span 0 -1 0 1 0 1
 span 0 -1 0 0 0 9
 span 1 0 1 0 0 4
 span -1 1 0 0 0 10
-span -1 0 1 0 0 4
+span -1 0 1 0 0 3
 span -1 1 0 0 0 10
 span -1 0 1 0 0 4
 span 1 -1 0 0 0 7
@@ -2582,7 +2467,7 @@ span -1 0 0 1 0 1
 span -1 0 0 0 0 42
 span -1 0 1 0 0 2
 span -1 -1 0 1 0 1
-span -1 0 0 0 0 27
+span -1 0 0 0 0 34
 end
 route demo-dungeon.gravity-lift
 room demo-dungeon.gravity-lift
@@ -2619,31 +2504,31 @@ room demo-dungeon.nova-niche
 entry floor
 target pickup dungeon-coin-58
 abilities 1 1
-ticks 102
-observation 19 7 6 4 1 5
-shaky BoundaryTiming 35 64 28
-shaky CorrelatedTiming 40 64 16
-shaky HoldRelease 49 64 22
-shaky DropRepeatFrame 42 64 1
-span -1 0 1 0 0 6
+ticks 119
+observation 19 7 6 4 1 3
+shaky BoundaryTiming 32 64 28
+shaky CorrelatedTiming 33 64 21
+shaky HoldRelease 49 64 6
+shaky DropRepeatFrame 54 64 0
+span -1 0 1 0 0 8
+span 1 0 1 0 0 1
 span 1 1 0 0 0 3
 span -1 0 1 0 0 1
 span -1 0 0 0 0 7
 span 0 0 1 0 0 4
-span -1 0 0 0 0 3
+span -1 0 0 0 0 4
 span -1 0 1 0 0 1
 span -1 0 0 0 0 7
 span 0 0 0 0 0 4
 span -1 0 1 0 0 1
-span -1 0 0 0 0 6
-span -1 0 1 0 0 8
-span 1 0 1 0 0 3
-span 1 0 0 0 0 5
-span -1 0 0 0 0 4
-span 1 0 0 0 0 19
+span -1 0 0 0 0 11
+span -1 0 1 0 0 4
+span 1 0 0 0 0 8
+span 0 0 0 0 0 3
+span 1 0 0 0 0 18
 span 1 0 1 0 0 2
 span 0 0 0 1 0 1
-span 1 0 0 0 0 17
+span 1 0 0 0 0 31
 end
 route demo-dungeon.meteor-run
 room demo-dungeon.meteor-run
@@ -2681,12 +2566,12 @@ room demo-dungeon.vacuum-gallery
 entry west
 target pickup dungeon-coin-59
 abilities 1 1
-ticks 306
-observation 18 5 5 4 3 6
-shaky BoundaryTiming 43 64 11
-shaky CorrelatedTiming 48 64 9
-shaky HoldRelease 45 64 8
-shaky DropRepeatFrame 62 64 0
+ticks 312
+observation 19 5 5 4 3 6
+shaky BoundaryTiming 45 64 11
+shaky CorrelatedTiming 49 64 9
+shaky HoldRelease 47 64 7
+shaky DropRepeatFrame 46 64 0
 span 1 0 0 0 0 72
 span 1 0 1 0 0 3
 span 1 0 0 0 0 7
@@ -2700,11 +2585,12 @@ span 1 0 1 0 0 1
 span 1 0 0 0 0 50
 span -1 0 0 0 0 87
 span 1 0 0 1 0 1
-span 1 0 0 0 0 10
-span 1 0 0 1 0 1
-span 1 0 0 0 0 10
-span 1 -1 0 1 0 1
 span 1 0 0 0 0 12
+span 1 0 0 1 0 1
+span 1 0 0 0 0 12
+span 1 -1 0 1 0 1
+span 1 0 0 0 0 9
+span 0 0 0 0 0 5
 end
 route demo-dungeon.tidal-fork
 room demo-dungeon.tidal-fork
@@ -2738,108 +2624,93 @@ room demo-dungeon.lunar-cache
 entry ceiling
 target pickup dungeon-coin-60
 abilities 1 1
-ticks 155
-observation 21 7 5 4 3 4
-shaky BoundaryTiming 28 64 13
-shaky CorrelatedTiming 39 64 11
-shaky HoldRelease 38 64 16
-shaky DropRepeatFrame 63 64 1
-span 0 1 0 0 0 12
-span 0 1 1 0 0 1
-span 0 1 0 0 0 17
-span 0 1 1 0 0 1
-span 0 1 0 0 0 17
+ticks 141
+observation 23 5 5 4 5 10
+shaky BoundaryTiming 43 64 6
+shaky CorrelatedTiming 48 64 6
+shaky HoldRelease 51 64 6
+shaky DropRepeatFrame 31 64 11
+span 1 1 0 1 0 1
+span 1 1 0 0 0 7
+span -1 1 0 0 0 20
+span 0 -1 0 0 0 10
 span 1 0 0 1 0 1
 span 1 0 0 0 0 9
-span 1 0 0 1 0 1
-span 1 0 0 0 0 9
-span 1 0 0 1 0 1
-span 1 0 0 0 0 9
-span 1 0 1 0 0 3
+span 0 0 0 1 0 1
+span 1 0 0 0 0 10
+span 1 0 1 0 0 4
+span -1 -1 0 1 0 1
+span -1 -1 0 0 0 7
+span 1 0 0 0 0 4
+span -1 0 1 0 0 4
+span 1 -1 0 0 0 10
+span -1 0 1 0 0 1
+span -1 0 0 0 0 5
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
+span 1 -1 0 0 0 10
+span -1 0 1 0 0 4
+span 1 -1 0 0 0 20
+span 0 0 0 1 0 1
 span 1 0 0 0 0 3
-span -1 0 1 0 0 1
-span -1 0 0 0 0 11
-span 1 0 1 0 0 1
-span 1 0 0 0 0 14
-span -1 0 1 0 0 1
-span -1 0 0 0 0 16
-span 1 0 1 0 0 1
-span 1 0 0 0 0 26
 end
 route demo-dungeon.aurora-spire
 room demo-dungeon.aurora-spire
 entry west
 target pickup dungeon-coin-61
 abilities 1 1
-ticks 201
-observation 20 6 6 4 1 8
-shaky BoundaryTiming 37 64 23
-shaky CorrelatedTiming 50 64 8
-shaky HoldRelease 47 64 12
-shaky DropRepeatFrame 50 64 14
-span 1 0 0 0 0 74
-span -1 0 0 0 0 11
-span 1 0 0 0 0 8
-span -1 0 1 0 0 8
-span 1 0 1 0 0 3
-span 1 0 0 0 0 5
+ticks 220
+observation 11 5 5 4 0 4
+shaky BoundaryTiming 15 64 37
+shaky CorrelatedTiming 16 64 48
+shaky HoldRelease 40 64 16
+shaky DropRepeatFrame 64 64 0
+span 1 0 0 0 0 88
+span 0 0 1 0 0 1
+span 0 0 0 0 0 1
+span 0 0 1 0 0 1
+span -1 0 0 0 0 13
 span -1 0 1 0 0 1
-span -1 0 0 0 0 6
-span 0 0 0 0 0 4
+span 1 0 0 0 0 13
+span 0 0 1 0 0 1
+span -1 0 0 0 0 13
 span -1 0 1 0 0 1
-span -1 0 0 0 0 7
-span 1 0 0 0 0 4
-span -1 0 1 0 0 1
-span -1 0 0 0 0 6
-span -1 0 1 0 0 1
-span -1 0 0 0 0 12
-span 0 0 0 0 0 4
-span 1 0 1 0 0 2
-span 0 0 0 1 0 1
-span 1 0 0 0 0 42
+span 1 0 0 0 0 87
 end
 route demo-dungeon.void-pass
 room demo-dungeon.void-pass
 entry west
 target door east
 abilities 1 1
-ticks 251
-observation 31 12 10 4 0 10
-shaky BoundaryTiming 50 64 9
-shaky CorrelatedTiming 46 64 14
-shaky HoldRelease 55 64 5
+ticks 247
+observation 23 9 9 6 0 6
+shaky BoundaryTiming 46 64 8
+shaky CorrelatedTiming 46 64 2
+shaky HoldRelease 49 64 6
 shaky DropRepeatFrame 64 64 0
-span 1 0 0 0 0 59
-span 1 0 1 0 0 10
-span 1 0 0 0 0 9
+span 1 0 0 0 0 61
+span 1 0 1 0 0 4
+span 1 0 0 0 0 14
 span 0 0 1 0 0 1
-span -1 0 0 0 0 3
-span 0 0 0 0 0 8
-span -1 0 0 0 0 4
+span -1 0 0 0 0 12
 span -1 0 1 0 0 1
 span -1 0 0 0 0 7
 span 1 0 1 0 0 4
 span 0 0 0 0 0 2
 span -1 0 1 0 0 1
-span -1 0 0 0 0 4
-span 1 0 1 0 0 4
-span -1 0 0 0 0 4
+span -1 0 0 0 0 7
 span 1 0 0 0 0 4
 span -1 0 1 0 0 1
 span -1 0 0 0 0 7
-span 0 0 0 0 0 5
-span 1 0 0 0 0 11
-span -1 0 0 0 0 2
-span 1 0 1 0 0 2
-span 1 0 0 0 0 8
-span 1 0 1 0 0 2
-span 1 0 0 0 0 8
-span 1 0 1 0 0 2
-span 1 0 0 0 0 8
-span 1 0 1 0 0 2
-span 1 0 0 0 0 14
-span 1 0 1 0 0 2
-span 1 0 0 0 0 52
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
+span 1 0 0 0 0 5
+span 0 0 0 0 0 4
+span 1 0 0 0 0 29
+span 1 0 1 0 0 14
+span 0 0 0 0 0 1
+span 1 0 1 0 0 4
+span 1 0 0 0 0 56
 end
 route demo-dungeon.starwell-climb
 room demo-dungeon.starwell-climb
@@ -2880,12 +2751,12 @@ room demo-dungeon.skybridge
 entry west
 target pickup dungeon-coin-62
 abilities 1 1
-ticks 149
-observation 23 3 3 2 6 6
-shaky BoundaryTiming 31 64 31
+ticks 150
+observation 24 3 3 2 7 6
+shaky BoundaryTiming 33 64 24
 shaky CorrelatedTiming 34 64 18
-shaky HoldRelease 41 64 23
-shaky DropRepeatFrame 28 64 37
+shaky HoldRelease 39 64 21
+shaky DropRepeatFrame 32 64 31
 span 0 0 0 1 0 1
 span 1 0 0 0 0 12
 span 0 0 1 0 0 1
@@ -2909,85 +2780,66 @@ span 0 1 0 0 0 7
 span 1 -1 0 0 0 20
 span 0 0 0 1 0 1
 span 1 0 0 0 0 9
+span 0 1 0 1 0 1
 end
 route demo-dungeon.astral-seal
 room demo-dungeon.astral-seal
 entry west
 target pickup dungeon-coin-63
 abilities 1 1
-ticks 189
-observation 37 7 7 4 6 8
-shaky BoundaryTiming 40 73 18
-shaky CorrelatedTiming 33 64 24
-shaky HoldRelease 47 64 11
-shaky DropRepeatFrame 32 64 30
-span 0 0 0 1 0 1
+ticks 194
+observation 15 6 6 4 1 4
+shaky BoundaryTiming 24 64 12
+shaky CorrelatedTiming 33 64 19
+shaky HoldRelease 41 64 3
+shaky DropRepeatFrame 64 64 0
+span 1 0 0 0 0 61
+span 1 0 1 0 0 1
 span 1 0 0 0 0 9
-span 0 0 0 1 0 1
-span 1 0 0 0 0 9
-span 0 0 0 1 0 1
-span 1 0 0 0 0 5
-span -1 0 0 0 0 1
-span 0 0 1 0 0 4
-span 0 -1 0 1 0 1
-span 0 -1 0 0 0 9
 span -1 0 1 0 0 1
-span -1 0 0 0 0 15
-span 0 0 1 0 0 1
-span 1 0 0 0 0 4
-span 0 -1 0 0 0 6
-span 0 0 0 0 0 4
-span -1 1 0 0 0 4
-span 1 0 0 0 0 8
-span 0 0 1 0 0 1
-span 0 1 0 0 0 2
+span -1 0 0 0 0 16
+span 1 0 1 0 0 1
 span 1 0 0 0 0 16
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 9
-span 1 0 0 0 0 9
-span 1 0 1 0 0 3
-span -1 0 0 0 0 4
-span 0 0 0 0 0 4
 span -1 0 1 0 0 1
-span -1 0 0 0 0 6
-span 1 0 0 0 0 4
-span -1 0 0 0 0 4
-span 1 0 0 0 0 16
-span 0 0 0 0 0 2
-span 1 0 1 0 0 4
-span 0 0 0 1 0 1
-span 1 0 0 0 0 9
-span 1 -1 0 0 0 9
+span -1 0 0 0 0 16
+span 1 0 1 0 0 1
+span 1 0 0 0 0 29
+span 1 0 1 0 0 6
+span 1 0 0 1 0 1
+span 1 0 0 0 0 23
+span 0 0 0 0 0 12
 end
 route demo-dungeon.coin-loft
 room demo-dungeon.coin-loft
 entry ceiling
 target pickup dungeon-coin-09
 abilities 1 0
-ticks 30
-observation 6 1 0 0 0 2
-shaky BoundaryTiming 46 64 0
-shaky CorrelatedTiming 45 64 0
-shaky HoldRelease 56 64 0
-shaky DropRepeatFrame 56 64 0
+ticks 35
+observation 8 1 0 0 0 3
+shaky BoundaryTiming 12 64 0
+shaky CorrelatedTiming 17 64 0
+shaky HoldRelease 28 64 0
+shaky DropRepeatFrame 35 64 0
 span -1 0 0 0 0 4
 span 0 0 0 0 0 2
 span 1 1 1 0 0 1
 span 1 1 0 0 0 3
 span 0 0 0 0 0 4
-span -1 0 0 0 0 16
+span -1 0 0 0 0 13
+span 1 0 0 0 0 4
+span 0 0 0 0 0 4
 end
 route demo-dungeon.needle-room
 room demo-dungeon.needle-room
 entry floor
 target pickup dungeon-coin-11
 abilities 1 0
-ticks 76
-observation 19 4 4 3 0 5
-shaky BoundaryTiming 34 64 20
-shaky CorrelatedTiming 36 64 26
-shaky HoldRelease 39 64 19
-shaky DropRepeatFrame 45 64 19
+ticks 80
+observation 20 4 4 3 0 4
+shaky BoundaryTiming 35 64 23
+shaky CorrelatedTiming 35 64 29
+shaky HoldRelease 40 64 18
+shaky DropRepeatFrame 37 64 27
 span 1 0 0 0 0 4
 span 0 0 0 0 0 3
 span -1 0 0 0 0 8
@@ -3006,32 +2858,47 @@ span -1 0 0 0 0 7
 span -1 0 1 0 0 1
 span -1 0 0 0 0 7
 span 1 0 0 0 0 8
-span -1 0 0 0 0 4
+span 0 0 0 0 0 4
+span 1 0 0 0 0 4
 end
 route demo-dungeon.treasury
 room demo-dungeon.treasury
 entry west
 target pickup dungeon-coin-15
 abilities 1 1
-ticks 110
-observation 13 3 3 0 3 0
-shaky BoundaryTiming 33 64 31
-shaky CorrelatedTiming 36 64 10
-shaky HoldRelease 40 64 24
-shaky DropRepeatFrame 47 64 0
-span 1 -1 0 0 0 8
-span 0 -1 1 0 0 1
-span 1 -1 0 0 0 9
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 22
-span 0 -1 1 0 0 1
-span 1 -1 0 0 0 4
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 23
-span 1 -1 1 0 0 6
-span 1 -1 0 0 0 14
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 19
+ticks 178
+observation 27 8 8 0 0 9
+shaky BoundaryTiming 13 64 30
+shaky CorrelatedTiming 11 64 38
+shaky HoldRelease 15 64 34
+shaky DropRepeatFrame 4 64 49
+span 1 0 0 0 0 7
+span 1 0 1 0 0 10
+span 1 0 0 0 0 27
+span 0 0 1 0 0 6
+span 1 0 1 0 0 4
+span 1 0 0 0 0 18
+span -1 0 1 0 0 4
+span 1 0 0 0 0 10
+span 0 0 1 0 0 4
+span -1 0 0 0 0 6
+span 0 0 0 0 0 4
+span 0 0 1 0 0 2
+span -1 0 0 0 0 3
+span 1 0 0 0 0 8
+span 1 0 1 0 0 1
+span -1 0 1 0 0 3
+span -1 0 0 0 0 5
+span 0 0 0 0 0 3
+span 1 0 1 0 0 8
+span -1 0 0 0 0 3
+span 0 0 0 0 0 3
+span -1 0 0 0 0 4
+span 1 0 0 0 0 3
+span 1 0 1 0 0 10
+span 1 0 0 0 0 14
+span -1 0 0 0 0 4
+span 0 0 0 0 0 4
 end
 route demo-dungeon.gatehouse
 room demo-dungeon.gatehouse

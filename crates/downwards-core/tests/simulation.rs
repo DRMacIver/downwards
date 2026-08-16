@@ -1798,6 +1798,134 @@ fn a_low_crawl_keeps_sliding_until_the_player_can_stand() {
 }
 
 #[test]
+fn a_touched_coin_banks_when_leaving_through_a_door() {
+    // Grabbing a coin and carrying it straight out of the room must count:
+    // the door transition banks it even though the player never stood still.
+    let mut tiles = vec![Tile::Empty; WIDTH * HEIGHT];
+    for x in 0..WIDTH {
+        tiles[16 * WIDTH + x] = Tile::Solid;
+    }
+    let room = Room::new(
+        "carry",
+        "Carry",
+        WIDTH as u16,
+        HEIGHT as u16,
+        TILE_SIZE,
+        tiles,
+        Point::new(260, 148),
+        vec![],
+    )
+    .unwrap()
+    .with_objects(
+        vec![],
+        vec![Pickup::new("coin", Rect::new(290, 140, 8, 8)).unwrap()],
+    )
+    .unwrap()
+    .with_doors(vec![Door {
+        id: "east".into(),
+        side: BoundarySide::Right,
+        trigger_bounds: Rect::new(316, 130, 4, 30),
+        arrival: Point::new(250, 148),
+        destination_room: None,
+        destination_door: None,
+    }])
+    .unwrap();
+    let mut simulation = Simulation::new(room);
+    simulation.enable_current_player_movement();
+    let mut touched = false;
+    let mut banked = false;
+    let mut exited = false;
+    for _ in 0..240 {
+        let report = simulation.step(Action {
+            move_x: 1,
+            jump: simulation.player().bounds().x >= 280,
+            ..Action::default()
+        });
+        for event in report.events {
+            match event {
+                SimulationEvent::PickupTouched { .. } => touched = true,
+                SimulationEvent::PickupCollected { .. } => {
+                    assert!(touched, "banking requires a prior touch");
+                    banked = true;
+                }
+                SimulationEvent::ExitReached { .. } => exited = true,
+                SimulationEvent::Died(_) => panic!("clean carry died"),
+                _ => {}
+            }
+        }
+        if exited {
+            break;
+        }
+    }
+    assert!(touched, "the run should clip the coin");
+    assert!(exited, "the run should reach the east door");
+    assert!(banked, "leaving the room must bank the touched coin");
+    assert_eq!(simulation.collected_pickups().count(), 1);
+}
+
+#[test]
+fn a_touched_coin_banks_only_once_the_player_stands_still() {
+    // Landing is not enough: the player must actually come to rest (or leave
+    // the room) before a touched coin is finalised.
+    let mut tiles = vec![Tile::Empty; WIDTH * HEIGHT];
+    for x in 0..WIDTH {
+        tiles[16 * WIDTH + x] = Tile::Solid;
+    }
+    let room = Room::new(
+        "rest",
+        "Rest",
+        WIDTH as u16,
+        HEIGHT as u16,
+        TILE_SIZE,
+        tiles,
+        Point::new(40, 148),
+        vec![],
+    )
+    .unwrap()
+    .with_objects(
+        vec![],
+        vec![Pickup::new("coin", Rect::new(90, 140, 8, 8)).unwrap()],
+    )
+    .unwrap();
+    let mut simulation = Simulation::new(room);
+    simulation.enable_current_player_movement();
+    let mut touched_tick = None;
+    let mut banked_tick = None;
+    for tick in 0..240 {
+        // Sprint through the coin, keep running for a while after landing,
+        // then release everything and coast to a stop.
+        let report = simulation.step(Action {
+            move_x: i8::from(tick < 90),
+            jump: (30..40).contains(&tick),
+            ..Action::default()
+        });
+        for event in report.events {
+            match event {
+                SimulationEvent::PickupTouched { .. } => touched_tick.get_or_insert(tick),
+                SimulationEvent::PickupCollected { .. } => banked_tick.get_or_insert(tick),
+                SimulationEvent::Died(_) => panic!("flat room death"),
+                _ => continue,
+            };
+        }
+        if tick < 90 && simulation.player().grounded() {
+            assert!(
+                banked_tick.is_none(),
+                "a moving player must not bank at tick {tick}"
+            );
+        }
+    }
+    assert!(touched_tick.is_some(), "the sprint should clip the coin");
+    let banked = banked_tick.expect("coasting to a stop should bank the coin");
+    assert!(banked >= 90, "banking must wait for the standstill");
+    assert_eq!(
+        simulation.player().velocity_subpixels().x,
+        0,
+        "the player should have stopped before banking"
+    );
+    assert_eq!(simulation.collected_pickups().count(), 1);
+}
+
+#[test]
 fn pickups_bank_only_after_a_safe_landing() {
     // A coin grabbed mid-air over spikes only counts once the player lands
     // somewhere safe; dying first restores it.

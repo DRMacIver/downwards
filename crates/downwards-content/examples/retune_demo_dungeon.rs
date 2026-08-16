@@ -394,6 +394,36 @@ fn clean_step(simulation: &mut Simulation, action: Action) -> bool {
         .any(|event| matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset))
 }
 
+/// Whether the pickup has been touched, even if not yet banked by a standstill
+/// or room exit.
+fn pickup_touched(simulation: &Simulation, pickup_id: &str) -> bool {
+    simulation
+        .room()
+        .pickups()
+        .iter()
+        .position(|pickup| pickup.id() == pickup_id)
+        .and_then(|index| simulation.pickup_is_collected(index))
+        == Some(true)
+}
+
+/// Coast to a stop so a touched pickup banks; fails if the coast dies or the
+/// bank never happens.
+fn settle_to_bank(simulation: &mut Simulation, actions: &mut Vec<Action>, pickup_id: &str) -> bool {
+    for _ in 0..90 {
+        if simulation
+            .collected_pickups()
+            .any(|pickup| pickup.id() == pickup_id)
+        {
+            return true;
+        }
+        if !clean_step(simulation, Action::default()) {
+            return false;
+        }
+        actions.push(Action::default());
+    }
+    false
+}
+
 fn approach_x(initial: &Simulation, target_x: i32) -> Option<(Simulation, Vec<Action>)> {
     let mut simulation = initial.clone();
     let mut actions = Vec::new();
@@ -560,6 +590,9 @@ fn segmented_candidate(
     }
     if spec.room == DemoDungeonRoom::TempoHall {
         return segmented_tempo_hall_candidate(initial, target);
+    }
+    if spec.room == DemoDungeonRoom::WatchPost {
+        return segmented_watch_post_candidate(initial, target);
     }
     let (waypoint, first_config, second_config) = match spec.room {
         // The strawberry shaft climb must survive single-frame noise: rest on the
@@ -787,11 +820,10 @@ fn segmented_vacuum_gallery_candidate(
                             .filter(|event| matches!(event, SimulationEvent::Dashed { .. }))
                             .count();
                         suffix.push(action);
-                        if simulation
-                            .collected_pickups()
-                            .any(|pickup| pickup.id() == "dungeon-coin-59")
-                        {
-                            if accepted_dashes == 3 {
+                        if pickup_touched(&simulation, "dungeon-coin-59") {
+                            if accepted_dashes == 3
+                                && settle_to_bank(&mut simulation, &mut suffix, "dungeon-coin-59")
+                            {
                                 let mut actions = climb.clone();
                                 actions.extend(suffix);
                                 complete.push(actions);
@@ -819,6 +851,95 @@ fn segmented_vacuum_gallery_candidate(
 /// upper bridge, a stop, a final verse out of the shaft onto the cap, then a
 /// walk to the coin. The grounded stops on the authored bridges are where a
 /// shaky hand can resynchronise between verses.
+/// Watch Post patrol with wall-settles: each ladder leg parks against a side
+/// wall so a jittered replay re-synchronises its position before the next
+/// climb, keeping the tower humanly recoverable rather than frame-perfect.
+fn segmented_watch_post_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    let config = SolverConfig::for_abilities(AbilitySet::new(false, false));
+    let mut simulation = initial.clone();
+    let mut actions = Vec::new();
+    // (surface_left, surface_right, surface_y, standing region, wall direction)
+    let legs = [
+        (10, 110, 140, (12, 60), -1),
+        (210, 310, 80, (250, 302), 1),
+        (130, 190, 50, (140, 180), 0),
+        (220, 310, 30, (230, 302), 1),
+    ];
+    for (surface_left, surface_right, surface_y, (region_lo, region_hi), wall_dir) in legs {
+        let waypoint = GroundedSupportTarget::new(
+            surface_left,
+            surface_right,
+            surface_y,
+            [GroundedStandingRegion::new(region_lo, region_hi)
+                .expect("valid Watch Post standing range")],
+        )
+        .expect("valid Watch Post waypoint");
+        let outcome = solve_grounded_support(&simulation, &waypoint, &config).ok()?;
+        let GroundedSupportSolveOutcome::Solved(solution) = outcome else {
+            eprintln!("  segmented Watch Post leg y={surface_y} failed: {outcome:?}");
+            return None;
+        };
+        for action in solution.replay.actions() {
+            if !clean_step(&mut simulation, action) {
+                return None;
+            }
+            actions.push(action);
+        }
+        if wall_dir != 0 {
+            let press = Action {
+                move_x: wall_dir,
+                move_y: 0,
+                jump: false,
+                dash: false,
+                restart: false,
+            };
+            for _ in 0..16 {
+                if !clean_step(&mut simulation, press) {
+                    return None;
+                }
+                actions.push(press);
+            }
+        }
+        for _ in 0..6 {
+            if !clean_step(&mut simulation, Action::default()) {
+                return None;
+            }
+            actions.push(Action::default());
+        }
+    }
+    // From the top-right corner walk left along the roof platform to the coin;
+    // the wall anchor behind us makes this leg deterministic.
+    let left = Action {
+        move_x: -1,
+        move_y: 0,
+        jump: false,
+        dash: false,
+        restart: false,
+    };
+    for _ in 0..120 {
+        if pickup_touched(&simulation, "dungeon-coin-05") {
+            break;
+        }
+        if !clean_step(&mut simulation, left) {
+            return None;
+        }
+        actions.push(left);
+    }
+    if !settle_to_bank(&mut simulation, &mut actions, "dungeon-coin-05") {
+        eprintln!("  segmented Watch Post walk did not bank its coin");
+        return None;
+    }
+    Some(TargetSolution {
+        target: target.clone(),
+        reached: ReachedTarget::Pickup("dungeon-coin-05".to_owned()),
+        replay: Replay::record(initial, actions),
+        stats: SearchStats::default(),
+    })
+}
+
 fn segmented_tempo_hall_candidate(
     initial: &Simulation,
     target: &SearchTarget,
@@ -922,10 +1043,11 @@ fn segmented_tempo_hall_candidate(
             return None;
         }
         actions.push(right_action(false, false));
-        if simulation
-            .collected_pickups()
-            .any(|pickup| pickup.id() == "dungeon-coin-19")
-        {
+        if pickup_touched(&simulation, "dungeon-coin-19") {
+            if !settle_to_bank(&mut simulation, &mut actions, "dungeon-coin-19") {
+                eprintln!("  segmented Tempo Hall could not settle on its coin");
+                return None;
+            }
             return Some(TargetSolution {
                 target: target.clone(),
                 reached: ReachedTarget::Pickup("dungeon-coin-19".to_owned()),
@@ -1025,10 +1147,7 @@ fn segmented_constellation_hall_candidate(
     };
     actions.extend(crossing);
     for _ in 0..20 {
-        if finish
-            .collected_pickups()
-            .any(|pickup| pickup.id() == "dungeon-coin-55")
-        {
+        if pickup_touched(&finish, "dungeon-coin-55") {
             break;
         }
         let action = right_action(false, false);
@@ -1037,10 +1156,7 @@ fn segmented_constellation_hall_candidate(
         }
         actions.push(action);
     }
-    if !finish
-        .collected_pickups()
-        .any(|pickup| pickup.id() == "dungeon-coin-55")
-    {
+    if !settle_to_bank(&mut finish, &mut actions, "dungeon-coin-55") {
         eprintln!("  segmented Constellation final landing missed its coin");
         return None;
     }
@@ -1183,11 +1299,10 @@ fn segmented_shadow_duct_candidate(
                             break;
                         }
                         crossing.push(action);
-                        if simulation
-                            .collected_pickups()
-                            .any(|pickup| pickup.id() == "dungeon-coin-56")
-                        {
-                            crossings.push(crossing);
+                        if pickup_touched(&simulation, "dungeon-coin-56") {
+                            if settle_to_bank(&mut simulation, &mut crossing, "dungeon-coin-56") {
+                                crossings.push(crossing);
+                            }
                             break;
                         }
                     }
@@ -1276,10 +1391,7 @@ fn segmented_observatory_candidate(
     intermediate = next;
     actions.extend(crossing);
     for _ in 0..40 {
-        if intermediate
-            .collected_pickups()
-            .any(|pickup| pickup.id() == "dungeon-coin-57")
-        {
+        if pickup_touched(&intermediate, "dungeon-coin-57") {
             break;
         }
         let action = Action {
@@ -1294,10 +1406,7 @@ fn segmented_observatory_candidate(
         }
         actions.push(action);
     }
-    if !intermediate
-        .collected_pickups()
-        .any(|pickup| pickup.id() == "dungeon-coin-57")
-    {
+    if !settle_to_bank(&mut intermediate, &mut actions, "dungeon-coin-57") {
         eprintln!("  segmented Observatory final shelf did not reach its coin");
         return None;
     }
@@ -1429,10 +1538,7 @@ fn segmented_aurora_spire_candidate(
     };
     intermediate = next;
     actions.extend(crossing);
-    if !intermediate
-        .collected_pickups()
-        .any(|pickup| pickup.id() == "dungeon-coin-61")
-    {
+    if !settle_to_bank(&mut intermediate, &mut actions, "dungeon-coin-61") {
         eprintln!("  segmented Aurora Spire upper landing did not collect its coin");
         return None;
     }
@@ -1604,10 +1710,7 @@ fn segmented_skybridge_candidate(
     };
     actions.extend(crossing);
     for _ in 0..100 {
-        if intermediate
-            .collected_pickups()
-            .any(|pickup| pickup.id() == "dungeon-coin-62")
-        {
+        if pickup_touched(&intermediate, "dungeon-coin-62") {
             break;
         }
         let action = right_action(false, false);
@@ -1616,10 +1719,7 @@ fn segmented_skybridge_candidate(
         }
         actions.push(action);
     }
-    if !intermediate
-        .collected_pickups()
-        .any(|pickup| pickup.id() == "dungeon-coin-62")
-    {
+    if !settle_to_bank(&mut intermediate, &mut actions, "dungeon-coin-62") {
         return None;
     }
     Some(TargetSolution {
@@ -1802,13 +1902,12 @@ fn segmented_astral_seal_candidate(
                         break;
                     }
                     suffix.push(action);
-                    if simulation
-                        .collected_pickups()
-                        .any(|pickup| pickup.id() == "dungeon-coin-63")
-                    {
-                        let mut full_actions = climb.clone();
-                        full_actions.extend(suffix);
-                        candidates.push(full_actions);
+                    if pickup_touched(&simulation, "dungeon-coin-63") {
+                        if settle_to_bank(&mut simulation, &mut suffix, "dungeon-coin-63") {
+                            let mut full_actions = climb.clone();
+                            full_actions.extend(suffix);
+                            candidates.push(full_actions);
+                        }
                         break;
                     }
                 }
@@ -2226,11 +2325,10 @@ fn readable_nova_niche_suffix(
                         break;
                     }
                     actions.push(action);
-                    if simulation
-                        .collected_pickups()
-                        .any(|pickup| pickup.id() == "dungeon-coin-58")
-                    {
-                        complete.push(actions);
+                    if pickup_touched(&simulation, "dungeon-coin-58") {
+                        if settle_to_bank(&mut simulation, &mut actions, "dungeon-coin-58") {
+                            complete.push(actions);
+                        }
                         break;
                     }
                 }
@@ -2621,10 +2719,7 @@ fn segmented_lunar_cache_candidate(
     };
     actions.extend(climb);
     for _ in 0..30 {
-        if summit
-            .collected_pickups()
-            .any(|pickup| pickup.id() == "dungeon-coin-60")
-        {
+        if pickup_touched(&summit, "dungeon-coin-60") {
             break;
         }
         let action = right_action(false, false);
@@ -2633,10 +2728,7 @@ fn segmented_lunar_cache_candidate(
         }
         actions.push(action);
     }
-    if !summit
-        .collected_pickups()
-        .any(|pickup| pickup.id() == "dungeon-coin-60")
-    {
+    if !settle_to_bank(&mut summit, &mut actions, "dungeon-coin-60") {
         eprintln!("  segmented Lunar Cache summit did not reach its coin");
         return None;
     }
@@ -2789,7 +2881,7 @@ fn main() {
         let outcome = solve_target(&initial, target.clone(), &solver_config)
             .unwrap_or_else(|error| panic!("{} solve failed: {error}", spec.id()));
         let (mut candidates, global_miss) = match outcome {
-            TargetSolveOutcome::Solved(solution) => (vec![(solution, true)], None),
+            TargetSolveOutcome::Solved(solution) => (vec![(solution, true, false)], None),
             outcome => (Vec::new(), Some(format!("{outcome:?}"))),
         };
         if selected_route.is_some()
@@ -2815,8 +2907,10 @@ fn main() {
                             | DemoDungeonRoom::LunarCache
                             | DemoDungeonRoom::TempoHall
                             | DemoDungeonRoom::VacuumGallery
+                            | DemoDungeonRoom::WatchPost
                             | DemoDungeonRoom::ZenithShaft
                     ),
+                    true,
                 )
             }),
         );
@@ -2829,6 +2923,7 @@ fn main() {
                     stats: witness.stats_at_first_discovery,
                 },
                 true,
+                false,
             )
         }));
         if let Some(actions) = previous_actions.get(spec.id())
@@ -2842,6 +2937,7 @@ fn main() {
                     stats: SearchStats::default(),
                 },
                 false,
+                true,
             ));
         }
         assert!(
@@ -2852,7 +2948,7 @@ fn main() {
         );
         let mut simplified = candidates
             .into_iter()
-            .map(|(mut solution, should_simplify)| {
+            .map(|(mut solution, should_simplify, authored)| {
                 let found_actions = solution.replay.actions().collect::<Vec<_>>();
                 let actions = if should_simplify {
                     greedily_simplify(&initial, spec.target, &found_actions)
@@ -2862,13 +2958,20 @@ fn main() {
                 let actions =
                     trim_to_first_completion(&initial, spec.target, &actions).unwrap_or(actions);
                 solution.replay = Replay::record(&initial, actions.iter().copied());
-                (solution, actions)
+                // Authored candidates - retained witnesses and segmented
+                // routes - carry the room's intended readable shape, so they
+                // outrank freshly searched routes.
+                (solution, actions, authored)
             })
             .collect::<Vec<_>>();
-        simplified.sort_by(|(_, left), (_, right)| compare_routes(&initial, spec, left, right));
-        simplified.dedup_by(|(_, left), (_, right)| left == right);
+        simplified.sort_by(|(_, left, left_authored), (_, right, right_authored)| {
+            right_authored
+                .cmp(left_authored)
+                .then_with(|| compare_routes(&initial, spec, left, right))
+        });
+        simplified.dedup_by(|(_, left, _), (_, right, _)| left == right);
         let mut assessed = Vec::with_capacity(simplified.len());
-        for (candidate_index, (solution, actions)) in simplified.into_iter().enumerate() {
+        for (candidate_index, (solution, actions, _)) in simplified.into_iter().enumerate() {
             let observation = observe(&initial, spec, &actions);
             let shaky = evaluate_shaky_hand(
                 &initial,

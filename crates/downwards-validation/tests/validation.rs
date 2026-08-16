@@ -833,13 +833,19 @@ fn route_evidence_retains_mixed_positive_and_bounded_inconclusive_results() {
         .room
         .with_objects(
             vec![],
-            vec![Pickup::new("near-west", Rect::new(29, 158, 6, 6)).unwrap()],
+            vec![
+                Pickup::new("near-west", Rect::new(29, 158, 6, 6)).unwrap(),
+                Pickup::new("sky-cache", Rect::new(150, 60, 6, 6)).unwrap(),
+            ],
         )
         .unwrap();
     let mut config = ValidationConfig::default();
-    config.solver.max_expanded_nodes = 1;
-    config.solver.max_simulated_ticks = 40;
-    config.solver.max_ticks_per_path = 40;
+    // Banking a touched pickup needs a standstill (or a room exit), so the
+    // reachable targets need a real (if small) search budget; the mid-air
+    // pickup is unreachable and exhausts the node budget instead.
+    config.solver.max_expanded_nodes = 400;
+    config.solver.max_simulated_ticks = 40_000;
+    config.solver.max_ticks_per_path = 600;
 
     let batch =
         evaluate_generated_door_targets_for_loadout(&level, AbilitySet::NONE, &config).unwrap();
@@ -858,9 +864,12 @@ fn route_evidence_retains_mixed_positive_and_bounded_inconclusive_results() {
     assert!(outcomes.iter().any(|outcome| matches!(
         outcome,
         BoundedTargetEvidence::Inconclusive(inconclusive)
-            if inconclusive.reason == InconclusiveReason::ExpandedNodeBudget
+            if matches!(
+                inconclusive.reason,
+                InconclusiveReason::ExpandedNodeBudget | InconclusiveReason::SimulatedTickBudget
+            )
     )));
-    assert_eq!(outcomes.len(), 4);
+    assert_eq!(outcomes.len(), 6);
 }
 
 fn flat_level(seed: u64, exits: Vec<Exit>, seal_route: bool) -> GeneratedLevel {

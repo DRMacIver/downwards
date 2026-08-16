@@ -24,7 +24,7 @@ pub const ONE_WAY_DROP_TICKS: u8 = 3;
 ///
 /// Historical corpus replays deliberately keep constructing an unconfigured `Simulation`; their
 /// digests therefore remain in the legacy policy domain until that corpus is regenerated.
-pub const PLAYER_MOVEMENT_POLICY_VERSION: u32 = 8;
+pub const PLAYER_MOVEMENT_POLICY_VERSION: u32 = 9;
 
 const GRAVITY: i32 = 96;
 const HELD_JUMP_GRAVITY: i32 = 48;
@@ -1514,8 +1514,30 @@ impl Simulation {
                 });
             }
         }
-        // Bank pending pickups on a safe landing or on leaving the room.
-        if self.state.player.grounded || self.state.reached_exit.is_some() {
+        let newly_reached = if let Some(exit) = self
+            .room
+            .exits
+            .iter()
+            .find(|exit| bounds.intersects(exit.bounds))
+        {
+            Some(exit.id.clone())
+        } else {
+            self.room
+                .doors
+                .iter()
+                .find(|door| bounds.intersects(door.trigger_bounds))
+                // Doors intentionally share the legacy exit event/state contract:
+                // targeted solvers can reach a door without a parallel objective.
+                .map(|door| door.id.clone())
+        };
+        if let Some(id) = &newly_reached {
+            self.state.reached_exit = Some(id.clone());
+        }
+        // Bank pending pickups once the player comes to rest on the ground, or
+        // automatically on leaving the room (exit or door) with the coin in
+        // hand; on a leaving tick the bank is reported before the exit event.
+        let at_rest = self.state.player.grounded && self.state.player.velocity_subpixels.x == 0;
+        if at_rest || self.state.reached_exit.is_some() {
             for pickup_index in 0..self.state.pending_pickups.len() {
                 if self.state.pending_pickups[pickup_index] {
                     self.state.pending_pickups[pickup_index] = false;
@@ -1525,28 +1547,8 @@ impl Simulation {
                 }
             }
         }
-        if let Some(exit) = self
-            .room
-            .exits
-            .iter()
-            .find(|exit| bounds.intersects(exit.bounds))
-        {
-            self.state.reached_exit = Some(exit.id.clone());
-            events.push(SimulationEvent::ExitReached {
-                id: exit.id.clone(),
-            });
-        } else if let Some(door) = self
-            .room
-            .doors
-            .iter()
-            .find(|door| bounds.intersects(door.trigger_bounds))
-        {
-            // Doors intentionally share the legacy exit event/state contract:
-            // targeted solvers can reach a door without a parallel objective.
-            self.state.reached_exit = Some(door.id.clone());
-            events.push(SimulationEvent::ExitReached {
-                id: door.id.clone(),
-            });
+        if let Some(id) = newly_reached {
+            events.push(SimulationEvent::ExitReached { id });
         }
     }
 
