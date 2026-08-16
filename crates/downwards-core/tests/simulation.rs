@@ -817,6 +817,64 @@ fn side_spike_underside_kills_from_below() {
 }
 
 #[test]
+fn vertical_spike_sides_are_obstacles_not_perches() {
+    // Walking into the flank of an up spike stops the player without killing
+    // them; the flank is an obstacle, not a lethal face and not a wall to
+    // climb or carry off.
+    let mut simulation = Simulation::new(single_hazard_room(Tile::HazardUp, Point::new(160, 98)));
+    for _ in 0..60 {
+        let report = simulation.step(Action {
+            move_x: 1,
+            ..Action::default()
+        });
+        assert!(
+            !report
+                .events
+                .iter()
+                .any(|event| matches!(event, SimulationEvent::Died(_))),
+            "an up spike's flank must block, not kill"
+        );
+    }
+    assert_eq!(simulation.player().bounds().x, 192);
+
+    // Pressing into the flank while airborne grants neither wall contact nor
+    // a wall jump.
+    let mut tiles = vec![Tile::Empty; WIDTH * HEIGHT];
+    for row in 6..12 {
+        tiles[row * WIDTH + 20] = Tile::HazardUp;
+    }
+    tiles[5 * WIDTH + 20] = Tile::Solid;
+    for x in 0..WIDTH {
+        tiles[12 * WIDTH + x] = Tile::Solid;
+    }
+    let room = Room::new(
+        "spike-flank",
+        "Spike flank",
+        WIDTH as u16,
+        HEIGHT as u16,
+        TILE_SIZE,
+        tiles,
+        Point::new(180, 108),
+        vec![],
+    )
+    .unwrap();
+    let mut simulation = Simulation::with_abilities(room, AbilitySet::new(true, false));
+    for tick in 0..240 {
+        let report = simulation.step(Action {
+            move_x: 1,
+            jump: tick % 20 < 8,
+            ..Action::default()
+        });
+        for event in report.events {
+            assert!(
+                !matches!(event, SimulationEvent::Jumped(JumpKind::Wall { .. })),
+                "a spike flank must not be wall-jumpable"
+            );
+        }
+    }
+}
+
+#[test]
 fn up_spike_underside_is_its_safe_back() {
     let mut room_tiles = vec![Tile::Empty; WIDTH * HEIGHT];
     room_tiles[8 * WIDTH + 20] = Tile::HazardUp;

@@ -7190,13 +7190,35 @@ fn draw_replay_status(viewport: &PixelViewport, client: &ClientState) {
         }
     };
     let panel_height = 5 + lines.len() as i32 * 8;
-    viewport.rectangle(CoreRect::new(4, 12, 150, panel_height), DEBUG_PANEL);
-    viewport.rectangle_outline(CoreRect::new(4, 12, 150, panel_height), 1, colour);
+    let panel_width = 150;
+    // Dodge the player: the panel slides to the top-right whenever the player
+    // is anywhere near the default top-left spot, so it never hides the tile
+    // the player is actually interacting with.
+    let player = client.simulation.player().bounds();
+    let near = |panel_x: i32| {
+        player.x < panel_x + panel_width + 12
+            && player.right() > panel_x - 12
+            && player.y < 12 + panel_height + 12
+    };
+    let panel_x = if near(4) && !near(320 - panel_width - 4) {
+        320 - panel_width - 4
+    } else {
+        4
+    };
+    viewport.rectangle(
+        CoreRect::new(panel_x, 12, panel_width, panel_height),
+        DEBUG_PANEL,
+    );
+    viewport.rectangle_outline(
+        CoreRect::new(panel_x, 12, panel_width, panel_height),
+        1,
+        colour,
+    );
     for (index, line) in lines.iter().enumerate() {
         let line_colour = if index == 0 { colour } else { UI_TEXT };
         viewport.text(
             &fit_status_line(line),
-            8,
+            panel_x + 4,
             20 + index as i32 * 8,
             6,
             line_colour,

@@ -1,6 +1,6 @@
 calibrated-wall-jump-witnesses-v1
 generation-version 2
-movement-policy-version 5
+movement-policy-version 6
 seed 0
 room-id generated.calibrated-wall-jump.v2.short-turns.0000000000000000
 course short-turns
@@ -122,38 +122,42 @@ seed 4
 room-id generated.calibrated-wall-jump.v2.low-bridge.0000000000000004
 course low-bridge
 reflected false
-ticks 146
-jump-presses 7
-accepted-jumps 7
+ticks 144
+jump-presses 8
+accepted-jumps 8
 wall-jumps 4
 repeated-wall-sides 1
-action-spans 23
+action-spans 27
 direct-positives 0
 baseline-status PathHorizon
 baseline-search 14182 480088
 span 1 0 0 1 0 0
-span 10 0 0 0 0 0
-span 1 -1 0 0 0 0
+span 9 0 0 0 0 0
 span 1 0 0 1 0 0
 span 7 0 0 0 0 0
 span 1 0 0 1 0 0
 span 7 0 0 0 0 0
-span 13 0 0 1 0 0
+span 12 0 0 1 0 0
 span 3 1 0 0 0 0
-span 6 0 0 0 0 0
+span 7 0 0 0 0 0
+span 3 1 0 0 0 0
 span 1 0 0 1 0 0
-span 34 1 0 0 0 0
-span 6 1 0 1 0 0
-span 31 1 0 0 0 0
+span 3 0 0 0 0 0
+span 15 1 0 0 0 0
+span 1 1 0 1 0 0
+span 4 0 0 0 0 0
+span 10 1 0 0 0 0
+span 5 1 0 1 0 0
+span 29 1 0 0 0 0
 span 8 1 0 1 0 0
-span 4 1 0 0 0 0
-span 1 0 0 0 0 0
-span 1 1 0 0 0 0
+span 3 1 0 0 0 0
 span 1 0 0 0 0 0
 span 1 1 0 0 0 0
 span 2 0 0 0 0 0
 span 1 1 0 0 0 0
-span 5 0 0 0 0 0
+span 4 0 0 0 0 0
+span 1 1 0 0 0 0
+span 4 0 0 0 0 0
 end
 seed 5
 room-id generated.calibrated-wall-jump.v2.short-turns.0000000000000005
@@ -263,55 +267,43 @@ seed 9
 room-id generated.calibrated-wall-jump.v2.low-bridge.0000000000000009
 course low-bridge
 reflected false
-ticks 185
-jump-presses 10
-accepted-jumps 10
-wall-jumps 6
+ticks 134
+jump-presses 6
+accepted-jumps 6
+wall-jumps 4
 repeated-wall-sides 1
-action-spans 40
+action-spans 28
 direct-positives 0
 baseline-status FrontierExhausted
 baseline-search 10170 343820
-span 1 0 0 0 0 0
-span 2 1 0 0 0 0
-span 1 1 0 1 0 0
-span 3 0 0 0 0 0
-span 1 0 0 1 0 0
-span 3 0 0 0 0 0
 span 1 0 0 1 0 0
 span 7 0 0 0 0 0
 span 1 0 0 1 0 0
-span 24 0 0 0 0 0
+span 9 0 0 0 0 0
+span 1 0 0 1 0 0
+span 10 0 0 0 0 0
 span 1 0 0 1 0 0
 span 8 0 0 0 0 0
-span 1 0 0 1 0 0
-span 16 0 0 0 0 0
-span 7 1 0 0 0 0
-span 1 0 0 0 0 0
-span 1 0 0 1 0 0
-span 17 0 0 0 0 0
 span 6 1 0 0 0 0
-span 1 0 0 1 0 0
+span 6 0 0 0 0 0
 span 1 1 0 0 0 0
 span 1 0 0 0 0 0
+span 1 1 0 0 0 0
+span 4 0 0 0 0 0
 span 2 1 0 0 0 0
-span 1 0 0 0 0 0
-span 1 1 0 0 0 0
-span 1 0 0 0 0 0
-span 1 1 0 0 0 0
-span 3 0 0 0 0 0
-span 1 1 0 0 0 0
-span 9 0 0 0 0 0
-span 6 1 0 0 0 0
-span 6 1 0 1 0 0
-span 29 1 0 0 0 0
-span 7 1 0 1 0 0
-span 3 1 0 0 0 0
 span 1 0 0 0 0 0
 span 1 1 0 0 0 0
 span 4 0 0 0 0 0
 span 1 1 0 0 0 0
+span 2 0 0 0 0 0
+span 11 1 0 0 0 0
+span 6 1 0 1 0 0
+span 29 1 0 0 0 0
+span 7 1 0 1 0 0
+span 4 1 0 0 0 0
 span 3 0 0 0 0 0
+span 1 1 0 0 0 0
+span 5 0 0 0 0 0
 end
 seed 10
 room-id generated.calibrated-wall-jump.v2.short-turns.000000000000000a

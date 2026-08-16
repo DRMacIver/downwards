@@ -121,6 +121,30 @@ fn clean_completion(
     false
 }
 
+/// Truncate a route at its first clean target completion so a physics change
+/// that makes a stored candidate arrive early cannot leave trailing actions.
+fn trim_to_first_completion(
+    initial: &Simulation,
+    target: DemoDungeonRouteTarget,
+    actions: &[Action],
+) -> Option<Vec<Action>> {
+    let mut simulation = initial.clone();
+    for (index, &action) in actions.iter().enumerate() {
+        let report = simulation.step(action);
+        if report
+            .events
+            .iter()
+            .any(|event| matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset))
+        {
+            return None;
+        }
+        if target_reached(&simulation, target) {
+            return Some(actions[..=index].to_vec());
+        }
+    }
+    None
+}
+
 fn static_route_key(actions: &[Action]) -> StaticRouteKey {
     let mut previous = Action::default();
     let mut previous_nonzero_x = 0;
@@ -2792,6 +2816,8 @@ fn main() {
                 } else {
                     found_actions
                 };
+                let actions =
+                    trim_to_first_completion(&initial, spec.target, &actions).unwrap_or(actions);
                 solution.replay = Replay::record(&initial, actions.iter().copied());
                 (solution, actions)
             })

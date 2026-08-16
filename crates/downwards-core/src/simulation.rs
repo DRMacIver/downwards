@@ -24,7 +24,7 @@ pub const ONE_WAY_DROP_TICKS: u8 = 3;
 ///
 /// Historical corpus replays deliberately keep constructing an unconfigured `Simulation`; their
 /// digests therefore remain in the legacy policy domain until that corpus is regenerated.
-pub const PLAYER_MOVEMENT_POLICY_VERSION: u32 = 5;
+pub const PLAYER_MOVEMENT_POLICY_VERSION: u32 = 6;
 
 const RUN_SPEED: i32 = 384;
 const GROUND_ACCELERATION: i32 = 96;
@@ -1116,6 +1116,9 @@ impl Simulation {
         let target_x =
             unrestricted_x.clamp(0, ROOM_WIDTH_PIXELS * SUBPIXELS_PER_PIXEL - current.width);
         let mut resolved_x = target_x;
+        // Vertical spike flanks block movement but are not walls: they grant
+        // neither ascent carry nor wall-velocity retention below.
+        let mut blocked_by_wall = target_x != unrestricted_x;
         let swept_left = current.x.min(target_x);
         let swept_right = current.right().max(target_x + current.width);
         let swept = Rect::new(
@@ -1134,10 +1137,21 @@ impl Simulation {
                     if current.y >= tile.bottom() || current.bottom() <= tile.y {
                         continue;
                     }
+                    let mut blocked_here = false;
                     if dx > 0 && current.right() <= tile.x && target_x + current.width > tile.x {
                         resolved_x = resolved_x.min(tile.x - current.width);
+                        blocked_here = true;
                     } else if dx < 0 && current.x >= tile.right() && target_x < tile.right() {
                         resolved_x = resolved_x.max(tile.right());
+                        blocked_here = true;
+                    }
+                    if blocked_here {
+                        let side = if dx < 0 {
+                            WallSide::Left
+                        } else {
+                            WallSide::Right
+                        };
+                        blocked_by_wall |= self.tile_has_wall_surface(x, y, side);
                     }
                 }
             }
@@ -1148,7 +1162,8 @@ impl Simulation {
             } else {
                 WallSide::Right
             };
-            if !self.state.player.grounded
+            if blocked_by_wall
+                && !self.state.player.grounded
                 && self.state.player.velocity_subpixels.y < 0
                 && self.wall_ascent_carry_wall != Some(collision_side)
                 && let Some(tuning) = self.movement_tuning
@@ -1162,7 +1177,7 @@ impl Simulation {
             let retention_ticks =
                 horizontal_motion_tuning(self.movement_tuning, self.state.player.grounded)
                     .wall_retention_ticks;
-            if retention_ticks > 0 && self.wall_velocity_retention_ticks == 0 {
+            if blocked_by_wall && retention_ticks > 0 && self.wall_velocity_retention_ticks == 0 {
                 self.retained_wall_velocity_x = dx;
                 self.wall_velocity_retention_ticks = retention_ticks;
             }
@@ -1351,14 +1366,15 @@ impl Simulation {
         match self.room.tile(x, y) {
             Some(Tile::Solid) => true,
             Some(Tile::HazardUp | Tile::HazardDown | Tile::HazardLeft | Tile::HazardRight) => {
-                // Only a hazard's back face blocks; its point and sides let
-                // the player pass into the lethal overlap.
+                // A vertical spike's flanks are plain obstacles; a horizontal
+                // spike blocks only on its back face, and every other face
+                // lets the player pass into the lethal overlap.
                 match self
                     .room
                     .hazard_direction(x, y)
                     .expect("hazard tile has a direction")
                 {
-                    HazardDirection::Up | HazardDirection::Down => false,
+                    HazardDirection::Up | HazardDirection::Down => true,
                     HazardDirection::Left => dx < 0,
                     HazardDirection::Right => dx > 0,
                 }

@@ -243,6 +243,39 @@ fn load_cache(path: &PathBuf) -> BTreeMap<PairKey, Verdict> {
 }
 
 fn main() {
+    let arguments: Vec<String> = std::env::args().skip(1).collect();
+    // `--pair <room-slug> <entry|spawn> <exit-door> <wall01><dash01>` solves a
+    // single pair fresh (no cache) for fast design iteration.
+    if arguments.first().map(String::as_str) == Some("--pair") {
+        let [_, room, entry, exit, loadout] = &arguments[..] else {
+            panic!("--pair needs <room-slug> <entry|spawn> <exit-door> <wall><dash>");
+        };
+        let room = DemoDungeonRoom::ALL
+            .into_iter()
+            .find(|candidate| candidate.id().ends_with(room.as_str()))
+            .unwrap_or_else(|| panic!("unknown room {room}"));
+        let entry = DOOR_NAMES
+            .iter()
+            .copied()
+            .find(|name| *name == entry.as_str());
+        let exit = DOOR_NAMES
+            .iter()
+            .copied()
+            .find(|name| *name == exit.as_str())
+            .expect("canonical exit door");
+        let job = Job {
+            room,
+            entry,
+            target: PairTarget::Door(exit),
+        };
+        let wall = loadout.as_bytes()[0] == b'1';
+        let dash = loadout.as_bytes()[1] == b'1';
+        match solve_pair(&job, wall, dash) {
+            Verdict::Solved(actions) => println!("solved in {} ticks", actions.len()),
+            Verdict::Inconclusive(reason) => println!("inconclusive: {reason}"),
+        }
+        return;
+    }
     let graph_only = std::env::args().any(|argument| argument == "--graph-only");
     let path = PathBuf::from(ARTIFACT);
     let cache = load_cache(&path);
