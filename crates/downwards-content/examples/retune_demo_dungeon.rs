@@ -38,6 +38,7 @@ struct RouteObservation {
     accepted_jumps: usize,
     accepted_wall_jumps: usize,
     accepted_dashes: usize,
+    accepted_dashes_before_first_wall_jump: usize,
     horizontal_reversals: usize,
 }
 
@@ -193,6 +194,7 @@ fn observe(
     };
     let mut previous = Action::default();
     let mut previous_nonzero_x = 0;
+    let mut saw_wall_jump = false;
     for (index, &action) in actions.iter().enumerate() {
         observation.action_spans += usize::from(index == 0 || action != previous);
         observation.jump_presses += usize::from(action.jump && !previous.jump);
@@ -206,10 +208,16 @@ fn observe(
             match event {
                 SimulationEvent::Jumped(kind) => {
                     observation.accepted_jumps += 1;
-                    observation.accepted_wall_jumps +=
-                        usize::from(matches!(kind, downwards_core::JumpKind::Wall { .. }));
+                    if matches!(kind, downwards_core::JumpKind::Wall { .. }) {
+                        observation.accepted_wall_jumps += 1;
+                        saw_wall_jump = true;
+                    }
                 }
-                SimulationEvent::Dashed { .. } => observation.accepted_dashes += 1,
+                SimulationEvent::Dashed { .. } => {
+                    observation.accepted_dashes += 1;
+                    observation.accepted_dashes_before_first_wall_jump +=
+                        usize::from(!saw_wall_jump);
+                }
                 SimulationEvent::Died(reason) => {
                     panic!(
                         "{} exact witness dies at tick {}: {reason:?}",
@@ -241,6 +249,39 @@ fn observe(
     observation
 }
 
+fn print_behavior_trace(initial: &Simulation, spec: DemoDungeonRouteSpec, actions: &[Action]) {
+    let mut simulation = initial.clone();
+    eprintln!("  selected behavior trace for {}:", spec.id());
+    for (index, &action) in actions.iter().enumerate() {
+        let report = simulation.step(action);
+        for event in report.events.iter().filter(|event| {
+            matches!(
+                event,
+                SimulationEvent::Jumped(_)
+                    | SimulationEvent::Dashed { .. }
+                    | SimulationEvent::Landed
+                    | SimulationEvent::PickupCollected { .. }
+                    | SimulationEvent::ExitReached { .. }
+            )
+        }) {
+            let bounds = simulation.player().bounds();
+            let velocity = simulation.player().velocity_subpixels();
+            eprintln!(
+                "    t{:>3} at ({:>3},{:>3}) v=({:>5},{:>5}) input=({:+},{:+},j{},d{}) {event:?}",
+                index + 1,
+                bounds.x,
+                bounds.y,
+                velocity.x,
+                velocity.y,
+                action.move_x,
+                action.move_y,
+                u8::from(action.jump),
+                u8::from(action.dash),
+            );
+        }
+    }
+}
+
 fn action_key(action: Action) -> (i8, i8, bool, bool, bool) {
     (
         action.move_x,
@@ -261,6 +302,11 @@ fn compare_routes(
     let right_observation = observe(initial, spec, right);
     let key = |observation: RouteObservation, actions: &[Action]| {
         (
+            if spec.room == DemoDungeonRoom::VacuumGallery {
+                observation.accepted_dashes_before_first_wall_jump
+            } else {
+                0
+            },
             observation.action_spans,
             observation.horizontal_reversals,
             observation
@@ -402,7 +448,7 @@ fn segmented_candidate(
     if spec.room == DemoDungeonRoom::DashChasm {
         return readable_dash_chasm_candidate(initial, target);
     }
-    let (waypoint, segment_config) = match spec.room {
+    let (waypoint, first_config, second_config) = match spec.room {
         DemoDungeonRoom::VoidPass => (
             GroundedSupportTarget::new(
                 170,
@@ -412,12 +458,31 @@ fn segmented_candidate(
             )
             .expect("valid authored support waypoint"),
             SolverConfig::for_abilities(AbilitySet::new(true, false)),
+            SolverConfig::for_abilities(AbilitySet::new(true, false)),
+        ),
+        DemoDungeonRoom::VacuumGallery => (
+            GroundedSupportTarget::new(
+                170,
+                210,
+                30,
+                [GroundedStandingRegion::new(170, 202).expect("valid authored standing range")],
+            )
+            .expect("valid authored support waypoint"),
+            // The first segment is deliberately Wall-Jump-only so the candidate cannot waste
+            // Dashes while approaching or climbing the authored shaft. Dash is restored only
+            // after the player is standing on the visible launch shelf.
+            SolverConfig::for_abilities(AbilitySet::new(true, false)),
+            SolverConfig::for_abilities(AbilitySet::new(true, true)),
         ),
         _ => return None,
     };
-    let GroundedSupportSolveOutcome::Solved(first) =
-        solve_grounded_support(initial, &waypoint, &segment_config).ok()?
-    else {
+    let first_outcome = solve_grounded_support(initial, &waypoint, &first_config).ok()?;
+    let GroundedSupportSolveOutcome::Solved(first) = first_outcome else {
+        if spec.room == DemoDungeonRoom::VacuumGallery {
+            eprintln!(
+                "  segmented Vacuum Gallery climb did not reach its authored shelf: {first_outcome:?}"
+            );
+        }
         return None;
     };
     let mut intermediate = initial.clone();
@@ -425,12 +490,9 @@ fn segmented_candidate(
     for &action in &actions {
         intermediate.step(action);
     }
-    let direct = audit_direct_controller_probes(
-        &intermediate,
-        std::slice::from_ref(target),
-        &segment_config,
-    )
-    .ok()?;
+    let direct =
+        audit_direct_controller_probes(&intermediate, std::slice::from_ref(target), &second_config)
+            .ok()?;
     let second = if let Some(witness) = direct
         .witnesses
         .into_iter()
@@ -443,9 +505,13 @@ fn segmented_candidate(
             stats: witness.stats_at_first_discovery,
         }
     } else {
-        let TargetSolveOutcome::Solved(second) =
-            solve_target(&intermediate, target.clone(), &segment_config).ok()?
-        else {
+        let second_outcome = solve_target(&intermediate, target.clone(), &second_config).ok()?;
+        let TargetSolveOutcome::Solved(second) = second_outcome else {
+            if spec.room == DemoDungeonRoom::VacuumGallery {
+                eprintln!(
+                    "  segmented Vacuum Gallery suffix did not reach its coin: {second_outcome:?}"
+                );
+            }
             return None;
         };
         second
@@ -667,19 +733,20 @@ fn main() {
             });
             if selected_route.is_some() {
                 eprintln!(
-                    "  candidate {:>2}: {:>3}t {:>2}sp {:>2}j {:>2}wj {:>2}d {:>2}rev{}",
+                    "  candidate {:>2}: {:>3}t {:>2}sp {:>2}j {:>2}wj {:>2}d ({:>2} pre-WJ) {:>2}rev{}",
                     candidate_index + 1,
                     observation.ticks,
                     observation.action_spans,
                     observation.accepted_jumps,
                     observation.accepted_wall_jumps,
                     observation.accepted_dashes,
+                    observation.accepted_dashes_before_first_wall_jump,
                     observation.horizontal_reversals,
                     if fragile { " FRAGILE" } else { "" },
                 );
             }
             assessed.push((fragile, solution, actions, shaky));
-            if !fragile {
+            if !fragile && selected_route.is_none() {
                 break;
             }
         }
@@ -689,6 +756,9 @@ fn main() {
             .unwrap_or(0);
         let (_, _solution, actions, shaky) = assessed.remove(selected_index);
         let observation = observe(&initial, spec, &actions);
+        if selected_route.is_some() {
+            print_behavior_trace(&initial, spec, &actions);
+        }
         assert!(shaky.exact_control_succeeded);
         let strength_one = shaky
             .curves

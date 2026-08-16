@@ -1,5 +1,5 @@
 schema downwards-demo-dungeon-witnesses-v1
-palette-generation 12
+palette-generation 13
 player-movement-policy 4
 tuning 110 72 203 50 50 250
 shaky-policy 64 18 2 2
@@ -2426,19 +2426,41 @@ room demo-dungeon.vacuum-gallery
 entry west
 target pickup dungeon-coin-59
 abilities 1 1
-ticks 126
-observation 7 3 3 0 0 0
-shaky BoundaryTiming 30 64 0
-shaky CorrelatedTiming 30 64 0
-shaky HoldRelease 32 64 0
-shaky DropRepeatFrame 35 64 0
-span 1 0 0 0 0 30
-span 1 0 1 0 0 8
-span 1 0 0 0 0 41
-span 1 0 1 0 0 8
-span 1 0 0 0 0 25
-span 1 0 1 0 0 9
-span 1 0 0 0 0 5
+ticks 217
+observation 29 7 7 6 4 10
+shaky BoundaryTiming 35 64 16
+shaky CorrelatedTiming 38 64 12
+shaky HoldRelease 44 64 7
+shaky DropRepeatFrame 28 64 19
+span 1 0 0 0 0 75
+span 1 0 1 0 0 1
+span -1 0 0 0 0 2
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
+span 1 0 1 0 0 2
+span 0 0 0 0 0 12
+span -1 0 1 0 0 1
+span -1 0 0 0 0 5
+span 1 0 0 0 0 4
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
+span -1 0 1 0 0 1
+span -1 0 0 0 0 7
+span 1 0 0 0 0 6
+span 0 0 0 0 0 6
+span 0 0 0 1 0 1
+span 1 0 0 0 0 7
+span -1 1 0 0 0 20
+span 1 -1 0 0 0 9
+span -1 0 0 0 0 4
+span 1 0 0 1 0 1
+span 1 0 0 0 0 9
+span 0 0 0 1 0 1
+span 1 0 0 0 0 9
+span 1 -1 0 1 0 1
+span 1 -1 0 0 0 9
 end
 route demo-dungeon.tidal-fork
 room demo-dungeon.tidal-fork

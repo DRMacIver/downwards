@@ -95,7 +95,7 @@ returns the player to its validated interior arrival without resetting room-loca
 Crown similarly persists and is the only terminal goal. Ordinary door exits change rooms and are
 deliberately not counted as whole-level victories.
 
-Palette generation v12 contains two evidence-driven room replacements. Persistent history recorded
+Palette generation v13 contains three evidence-driven room replacements. Persistent history recorded
 24 Gale Chasm attempts, all ending on spikes, while its old AI witness used 43 action spans and 11
 horizontal reversals. As the first post-Boots room, it now teaches the action as two readable
 sixty-pixel Dash gaps separated by a three-tile full-recovery island. Its mechanically selected
@@ -106,6 +106,14 @@ faces remain valid Wall-Jump contacts, while the horizontal surfaces cannot refi
 route reaches the east door in 224 ticks with five accepted Wall Jumps and seven horizontal
 reversals. A bounded Dash-only solve under the same policy has no positive. These are no-known-
 bypass audits, not claims of physical impossibility.
+
+Vacuum Gallery is the third replacement. Its v12 route reached a late mandatory coin using three
+ordinary jumps and neither unlocked traversal method. The v13 room instead composes a cap-safe
+alternating wall shaft with a grounded recovery and a one-tile Dash tunnel. The mechanically
+retained trace performs six Wall Jumps before its first Dash, then four accepted Dashes; all four
+strength-one shaky-hand families retain nonzero successes. Separate same-budget Wall-Jump-only and
+Dash-only searches find no coin. Targeted retuning prints exact events, positions, velocities, and
+inputs so this is inspected as behavior rather than inferred from a scalar score.
 
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,
@@ -133,7 +141,8 @@ The mechanically generated per-floor witness artifact records exact routes and e
 applicable strength-one outcome, including explicit zero-success blind-continuation families rather
 than hiding them. The final Dash Seal's exact positive uses Dash while an
 equivalent WallJump-only search has no positive. Those observations are controller diagnostics, not
-a scalar difficulty or human-robustness claim.
+a scalar difficulty or human-robustness claim. Targeted retuning additionally prints the selected
+route's event, position, velocity, and input trace for behavior-level inspection.
 
 The perturbation seed is derived from stable room identity, so inserting a floor cannot silently
 change earlier observations. The current policy uses 64 trials per curve point rather than the

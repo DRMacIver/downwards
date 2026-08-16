@@ -234,7 +234,7 @@ methods as well as the coins. Deaths and restarts return to the door used to ent
 without discarding gloves, boots, Crown, or coins. `V` demonstrates the next intended room-local
 objective; it is not a whole-dungeon route.
 
-Palette generation v12 includes two evidence-driven replacements. The first post-Boots Gale Chasm
+Palette generation v13 includes three evidence-driven replacements. The first post-Boots Gale Chasm
 was implicated by 24 recorded human deaths and an AI witness with 43 action spans and 11 reversals;
 it now presents two readable sixty-pixel Dash gaps separated by a three-tile full-recovery island.
 The mechanically selected route uses nine spans, two jumps, two Dashes, and no reversals, while a
@@ -243,6 +243,12 @@ Pass shell is now a distinct late wall-rhythm room. Its four alternating contact
 upward-lethal caps so Dash cannot turn them into recharge ledges. The retained route has five
 accepted Wall Jumps and seven horizontal reversals; a bounded Dash-only search has no positive. As
 elsewhere, bounded misses are evidence for the authored gates, not proofs of impossibility.
+
+The third replacement is late-game Vacuum Gallery. Its former route was only three ordinary jumps,
+so its hazards were visual noise rather than a traversal test. The new room serializes a cap-safe
+alternating wall shaft, a full-recovery shelf, and a one-tile Dash-posture tunnel. Its selected route
+uses six Wall Jumps before any Dash and four Dashes afterward. Same-budget searches with either
+method removed find no coin, and every recorded strength-one shaky-hand family retains successes.
 
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 
@@ -258,7 +264,8 @@ tractability and controller-behaviour records, not difficulty scores. The retune
 previous checked-in witness, finite direct-controller positives, and course-specific segmented
 routes; it mechanically simplifies exact replays, compares action shape lexicographically, and
 only adopts a candidate with at least one success in every applicable perturbation family. The
-targeted `--route` form prints those observations without rewriting the full artifact.
+targeted `--route` form prints candidate observations plus the selected route's exact
+event/position/velocity/input trace without rewriting the full artifact.
 
 Join that evidence to the persistent human-attempt history and a tile-layout similarity audit with:
 

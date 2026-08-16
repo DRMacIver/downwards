@@ -1521,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v12".to_owned(),
+        id: "demo-dungeon-v13".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -1662,7 +1662,7 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         DemoDungeonRoom::ShadowDuct => vec![(56, Rect::new(224, 30, 8, 10))],
         DemoDungeonRoom::Observatory => vec![(57, Rect::new(214, 20, 8, 10))],
         DemoDungeonRoom::NovaNiche => vec![(58, Rect::new(224, 30, 8, 10))],
-        DemoDungeonRoom::VacuumGallery => vec![(59, Rect::new(214, 110, 8, 10))],
+        DemoDungeonRoom::VacuumGallery => vec![(59, Rect::new(294, 150, 8, 10))],
         DemoDungeonRoom::LunarCache => vec![(60, Rect::new(224, 30, 8, 10))],
         DemoDungeonRoom::AuroraSpire => vec![(61, Rect::new(214, 20, 8, 10))],
         DemoDungeonRoom::Skybridge => vec![(62, Rect::new(274, 60, 8, 10))],
@@ -3155,6 +3155,79 @@ mod tests {
             !matches!(outcome, TargetSolveOutcome::Solved(_)),
             "Wall-Jump-only search unexpectedly crossed the mixed Astral Seal: {outcome:?}"
         );
+    }
+
+    #[test]
+    fn vacuum_gallery_known_positive_uses_both_and_missing_methods_have_no_known_route() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::VacuumGallery)
+            .expect("Vacuum Gallery has route metadata");
+        assert!(spec.inventory.climbing_gloves);
+        assert!(spec.inventory.winged_boots);
+        let (initial, solution) = solve_route(
+            spec.room,
+            spec.entry_door,
+            spec.inventory,
+            route_spec_target(spec.target),
+        );
+        let mut replayed = initial;
+        let mut wall_jumps = 0;
+        let mut dashes = 0;
+        for action in solution.replay.actions() {
+            for event in replayed.step(action).events {
+                wall_jumps += usize::from(matches!(
+                    event,
+                    SimulationEvent::Jumped(JumpKind::Wall { .. })
+                ));
+                dashes += usize::from(matches!(event, SimulationEvent::Dashed { .. }));
+            }
+        }
+        assert!(
+            replayed
+                .collected_pickups()
+                .any(|pickup| pickup.id() == spec.target.id())
+        );
+        assert!(wall_jumps >= 3, "Vacuum Gallery bypassed its wall rhythm");
+        assert!(dashes > 0, "Vacuum Gallery bypassed its low tunnel");
+
+        for (label, inventory) in [
+            (
+                "Wall-Jump-only",
+                DemoDungeonInventory {
+                    climbing_gloves: true,
+                    winged_boots: false,
+                    ..spec.inventory
+                },
+            ),
+            (
+                "Dash-only",
+                DemoDungeonInventory {
+                    climbing_gloves: false,
+                    winged_boots: true,
+                    ..spec.inventory
+                },
+            ),
+        ] {
+            let room = demo_dungeon_room(spec.room, inventory);
+            let mut initial = Simulation::enter_via_door(
+                room,
+                inventory.abilities(),
+                spec.entry_door.expect("Vacuum Gallery has a west entry"),
+            )
+            .unwrap();
+            initial.enable_current_player_movement();
+            let outcome = solve_target(
+                &initial,
+                route_spec_target(spec.target),
+                &SolverConfig::for_abilities(inventory.abilities()),
+            )
+            .unwrap();
+            assert!(
+                !matches!(outcome, TargetSolveOutcome::Solved(_)),
+                "{label} search unexpectedly reached the Vacuum Gallery coin: {outcome:?}"
+            );
+        }
     }
 
     #[test]

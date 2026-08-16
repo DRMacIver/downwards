@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 12;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 13;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1648,17 +1648,33 @@ impl PaletteDraft<'_> {
                 }
             }
             DungeonPaletteCourse::VacuumGallery => {
-                self.vertical(11, 2, 16, Tile::Solid);
-                self.vertical(18, 5, 17, Tile::Solid);
-                self.horizontal(16, 11, 19, Tile::Solid);
-                self.horizontal(12, 19, 25, Tile::OneWay);
-                self.horizontal(6, 12, 16, Tile::OneWay);
-                self.horizontal(3, 14, 18, Tile::OneWay);
-                self.horizontal(14, 26, 30, Tile::OneWay);
-                for row in 13..16 {
+                // A late mixed-method route: enter the narrow alternating wall shaft from the
+                // lower left, climb over its sealed backing, then descend into a low tunnel whose
+                // far wall is open only at Dash posture. The solid backing prevents side-entry
+                // shortcuts. Upward-facing caps on every intermediate contact band prevent Dash
+                // from landing, refreshing, and substituting for the authored wall rhythm.
+                self.vertical(10, 1, 17, Tile::Solid);
+                self.vertical(11, 1, 4, Tile::HazardRight);
+                self.set(11, 4, Tile::HazardUp);
+                self.vertical(11, 5, 7, Tile::Solid);
+                self.vertical(11, 7, 10, Tile::HazardRight);
+                self.set(11, 10, Tile::HazardUp);
+                self.vertical(11, 11, 13, Tile::Solid);
+                self.vertical(11, 13, 15, Tile::HazardRight);
+                self.vertical(17, 3, 17, Tile::Solid);
+                self.vertical(16, 3, 7, Tile::HazardLeft);
+                self.set(16, 7, Tile::HazardUp);
+                self.vertical(16, 8, 10, Tile::Solid);
+                self.vertical(16, 10, 13, Tile::HazardLeft);
+                self.set(16, 13, Tile::HazardUp);
+                self.vertical(16, 14, 17, Tile::Solid);
+                self.horizontal(15, 21, 29, Tile::Solid);
+                self.vertical(28, 1, 16, Tile::Solid);
+                for row in 15..17 {
+                    self.set(10, row, Tile::Empty);
                     self.set(11, row, Tile::Empty);
-                    self.set(18, row, Tile::Empty);
                 }
+                self.horizontal(3, 17, 21, Tile::Solid);
             }
             DungeonPaletteCourse::TidalFork => {
                 self.horizontal(14, 3, 8, Tile::OneWay);
@@ -1906,6 +1922,45 @@ mod tests {
             recovery
                 .clone()
                 .all(|column| course_row[column] == Tile::OneWay)
+        );
+    }
+
+    #[test]
+    fn vacuum_gallery_serializes_an_alternating_climb_and_low_dash_tunnel() {
+        let candidate = DungeonPaletteKey::new(0, DungeonPaletteCourse::VacuumGallery).generate();
+        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
+
+        for row in 15..17 {
+            assert_eq!(tile(10, row), Tile::Empty, "lower shaft entry is sealed");
+            assert_eq!(tile(11, row), Tile::Empty, "lower shaft face is sealed");
+        }
+        for row in [4, 10] {
+            assert_eq!(tile(11, row), Tile::HazardUp);
+        }
+        for row in [7, 13] {
+            assert_eq!(tile(16, row), Tile::HazardUp);
+        }
+        for (column, rows) in [(11, [5..7, 11..13]), (16, [8..10, 14..17])] {
+            for row in rows.into_iter().flatten() {
+                assert_eq!(tile(column, row), Tile::Solid);
+            }
+        }
+        for column in 21..29 {
+            assert_eq!(tile(column, 15), Tile::Solid, "low tunnel lacks a ceiling");
+            assert_eq!(tile(column, 16), Tile::Empty, "Dash aperture is obstructed");
+            assert_eq!(tile(column, 17), Tile::Solid, "low tunnel lacks a floor");
+        }
+        for row in 1..16 {
+            assert_eq!(
+                tile(28, row),
+                Tile::Solid,
+                "tunnel barrier has an upper bypass"
+            );
+        }
+        assert_eq!(
+            tile(28, 16),
+            Tile::Empty,
+            "tunnel barrier lacks its Dash aperture"
         );
     }
 
