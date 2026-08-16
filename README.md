@@ -234,7 +234,7 @@ methods as well as the coins. Deaths and restarts return to the door used to ent
 without discarding gloves, boots, Crown, or coins. `V` demonstrates the next intended room-local
 objective; it is not a whole-dungeon route.
 
-Palette generation v19 includes nine evidence-driven replacements. The first post-Boots Gale Chasm
+Palette generation v20 includes ten evidence-driven replacements. The first post-Boots Gale Chasm
 was implicated by 24 recorded human deaths and an AI witness with 43 action spans and 11 reversals;
 it now presents two readable sixty-pixel Dash gaps separated by a three-tile full-recovery island.
 The mechanically selected route uses nine spans, two jumps, two Dashes, and no reversals, while a
@@ -301,6 +301,15 @@ every strength-one perturbation family retains at least 35/64 successes. Separat
 also retain harder Wall-Jump-only and Dash/wall-ascent-carry solutions. Nova is therefore a
 late-game movement laboratory with a readable preferred route, deliberately not misrepresented as
 a two-method gate.
+
+Constellation Hall is the tenth replacement. Its old mandatory coin route was a monotone diagonal
+staircase: five Dashes, no Wall Jumps, and no change of direction. The v20 silhouette is an
+under-over-under slalom around two ceiling pillars and one floor-anchored centre, with broad
+braking shelves above lethal floor. A waypoint-composed route preserves the three visible
+recoveries and is preferred over the first solver positive: four Dashes, two Wall Jumps, and eight
+direction changes tied to the slalom rather than 12 in the unconstrained trace. It can continue
+east after the coin, baseline search has no positive, and every strength-one perturbation family
+retains at least 27/64 successes.
 
 Dungeon route evidence is regenerated rather than edited into tests by hand:
 

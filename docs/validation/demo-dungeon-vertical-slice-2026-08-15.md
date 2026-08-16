@@ -95,7 +95,7 @@ returns the player to its validated interior arrival without resetting room-loca
 Crown similarly persists and is the only terminal goal. Ordinary door exits change rooms and are
 deliberately not counted as whole-level victories.
 
-Palette generation v19 contains nine evidence-driven room replacements. Persistent history recorded
+Palette generation v20 contains ten evidence-driven room replacements. Persistent history recorded
 24 Gale Chasm attempts, all ending on spikes, while its old AI witness used 43 action spans and 11
 horizontal reversals. As the first post-Boots room, it now teaches the action as two readable
 sixty-pixel Dash gaps separated by a three-tile full-recovery island. Its mechanically selected
@@ -181,6 +181,18 @@ returns to the floor door after collection and retains at least 35/64 successes 
 strength-one perturbation family. Current movement semantics also admit a noisier Wall-Jump-only
 corona leap and a Dash-only ascent using wall-momentum carry. Both are exact retained evidence:
 this room explores the interaction between methods and does not falsely claim to gate either one.
+
+Constellation Hall is the tenth replacement in v20. The old mandatory coin route was another broad
+diagonal staircase and exact-replayed in 112 ticks with five Dashes, no Wall Jumps, and no
+horizontal reversal. The replacement is a single readable under-over-under silhouette: recover
+beneath a ceiling pillar, climb over a floor-anchored centre, then descend beneath a second ceiling
+pillar to the coin. Lethal floor closes the low bypass while four broad shelves preserve deliberate
+braking. The unconstrained first positive took 189 ticks, six Dashes, three Wall Jumps, and 12
+reversals. A three-waypoint composition exact-replays in 165 ticks with four Dashes, two Wall Jumps,
+and eight reversals, and lands on all three authored recovery heights. A separate exact solve
+continues east after the coin, same-budget baseline search has no positive, and each strength-one
+perturbation family retains at least 27/64 successes. The route-shape comparison, not its raw event
+count, is the reason the composed witness is retained.
 
 Validation covers exact reciprocal room/door IDs, opposite socket geometry, full standing
 headroom over every authored one-way surface, unique persistent coins, all coin and method gates,

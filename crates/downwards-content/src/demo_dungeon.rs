@@ -1521,7 +1521,7 @@ pub fn demo_dungeon_definition() -> AuthoredDungeonDefinition {
         .collect();
     AuthoredDungeonDefinition {
         schema_version: AUTHORED_DUNGEON_SCHEMA_VERSION,
-        id: "demo-dungeon-v19".to_owned(),
+        id: "demo-dungeon-v20".to_owned(),
         start_floor: DemoDungeonRoom::HollowLanding.authored_key(),
         start_methods: TraversalMethods::NONE,
         crown_floor: DemoDungeonRoom::CrownSanctum.authored_key(),
@@ -1676,7 +1676,7 @@ fn room_coin_specs(room: DemoDungeonRoom) -> Vec<(u8, Rect)> {
         DemoDungeonRoom::StarThreshold => vec![(52, Rect::new(144, 20, 8, 10))],
         DemoDungeonRoom::CometRun => vec![(53, Rect::new(294, 60, 8, 10))],
         DemoDungeonRoom::MoonVault => vec![(54, Rect::new(274, 40, 8, 10))],
-        DemoDungeonRoom::ConstellationHall => vec![(55, Rect::new(284, 30, 8, 10))],
+        DemoDungeonRoom::ConstellationHall => vec![(55, Rect::new(274, 120, 8, 10))],
         DemoDungeonRoom::ShadowDuct => vec![(56, Rect::new(224, 30, 8, 10))],
         DemoDungeonRoom::Observatory => vec![(57, Rect::new(214, 20, 8, 10))],
         DemoDungeonRoom::NovaNiche => vec![(58, Rect::new(284, 20, 8, 10))],
@@ -3617,6 +3617,106 @@ mod tests {
         assert!(
             matches!(outcome, TargetSolveOutcome::Solved(_)),
             "Nova's difficult Wall-Jump-only corona route should remain honestly recorded: {outcome:?}"
+        );
+    }
+
+    #[test]
+    fn constellation_hall_checked_route_follows_the_under_over_under_slalom() {
+        let spec = demo_dungeon_route_specs()
+            .into_iter()
+            .find(|spec| spec.room == DemoDungeonRoom::ConstellationHall)
+            .expect("Constellation Hall has route metadata");
+        let room = demo_dungeon_room(spec.room, spec.inventory);
+        let mut replayed = Simulation::enter_via_door(
+            room,
+            spec.inventory.abilities(),
+            spec.entry_door
+                .expect("Constellation Hall has a west entry"),
+        )
+        .unwrap();
+        replayed.enable_current_player_movement();
+        let mut wall_jumps = 0;
+        let mut dashes = 0;
+        let mut landings = Vec::new();
+        for action in crate::demo_dungeon_witness_actions(spec.room) {
+            for event in replayed.step(action).events {
+                assert!(
+                    !matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset),
+                    "the checked Constellation slalom must remain clean: {event:?}"
+                );
+                wall_jumps += usize::from(matches!(
+                    event,
+                    SimulationEvent::Jumped(JumpKind::Wall { .. })
+                ));
+                dashes += usize::from(matches!(event, SimulationEvent::Dashed { .. }));
+                if matches!(event, SimulationEvent::Landed) {
+                    landings.push((replayed.player().bounds().x, replayed.player().bounds().y));
+                }
+            }
+        }
+        assert!(
+            replayed
+                .collected_pickups()
+                .any(|pickup| pickup.id() == spec.target.id())
+        );
+        assert!(
+            wall_jumps >= 2,
+            "Constellation route bypassed its central climb"
+        );
+        assert!(
+            dashes >= 4,
+            "Constellation route bypassed its slalom transfers"
+        );
+        assert!(
+            landings
+                .iter()
+                .any(|&(x, y)| (90..=132).contains(&x) && y == 128)
+                && landings
+                    .iter()
+                    .any(|&(x, y)| (160..=212).contains(&x) && y == 58)
+                && landings
+                    .iter()
+                    .any(|&(x, y)| (200..=240).contains(&x) && y == 128),
+            "Constellation route lost its under-over-under recoveries: {landings:?}"
+        );
+
+        let exit_outcome = solve_target(
+            &replayed,
+            SearchTarget::door("east"),
+            &SolverConfig::for_abilities(spec.inventory.abilities()),
+        )
+        .unwrap();
+        let TargetSolveOutcome::Solved(exit_solution) = exit_outcome else {
+            panic!("Constellation Hall cannot continue after its coin: {exit_outcome:?}");
+        };
+        for action in exit_solution.replay.actions() {
+            replayed.step(action);
+        }
+        assert_eq!(replayed.reached_exit(), Some("east"));
+
+        let baseline = DemoDungeonInventory {
+            climbing_gloves: false,
+            winged_boots: false,
+            ..spec.inventory
+        };
+        let room = demo_dungeon_room(spec.room, baseline);
+        let mut initial = Simulation::enter_via_door(
+            room,
+            baseline.abilities(),
+            spec.entry_door
+                .expect("Constellation Hall has a west entry"),
+        )
+        .unwrap();
+        initial.enable_current_player_movement();
+        let outcome = solve_target(
+            &initial,
+            route_spec_target(spec.target),
+            &SolverConfig::for_abilities(baseline.abilities()),
+        )
+        .unwrap();
+        assert!(
+            !matches!(outcome, TargetSolveOutcome::Solved(_)),
+            "baseline search unexpectedly crossed the Constellation slalom: {outcome:?}"
         );
     }
 

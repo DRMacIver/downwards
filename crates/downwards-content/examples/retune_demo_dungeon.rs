@@ -468,6 +468,9 @@ fn segmented_candidate(
     if spec.room == DemoDungeonRoom::StarThreshold {
         return segmented_star_threshold_candidate(initial, target);
     }
+    if spec.room == DemoDungeonRoom::ConstellationHall {
+        return segmented_constellation_hall_candidate(initial, target);
+    }
     let (waypoint, first_config, second_config) = match spec.room {
         DemoDungeonRoom::VoidPass => (
             GroundedSupportTarget::new(
@@ -565,6 +568,77 @@ fn segmented_candidate(
         reached: second.reached,
         replay: Replay::record(initial, actions),
         stats: second.stats,
+    })
+}
+
+fn segmented_constellation_hall_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    let waypoints = [
+        (
+            GroundedSupportTarget::new(
+                100,
+                140,
+                140,
+                [GroundedStandingRegion::new(100, 132).expect("valid authored standing range")],
+            )
+            .expect("valid authored support waypoint"),
+            AbilitySet::new(false, true),
+        ),
+        (
+            GroundedSupportTarget::new(
+                170,
+                220,
+                70,
+                [GroundedStandingRegion::new(170, 212).expect("valid authored standing range")],
+            )
+            .expect("valid authored support waypoint"),
+            AbilitySet::new(true, true),
+        ),
+        (
+            GroundedSupportTarget::new(
+                200,
+                240,
+                140,
+                [GroundedStandingRegion::new(200, 232).expect("valid authored standing range")],
+            )
+            .expect("valid authored support waypoint"),
+            AbilitySet::new(true, true),
+        ),
+    ];
+    let mut intermediate = initial.clone();
+    let mut actions = Vec::new();
+    for (waypoint, abilities) in waypoints {
+        let outcome = solve_grounded_support(
+            &intermediate,
+            &waypoint,
+            &SolverConfig::for_abilities(abilities),
+        )
+        .ok()?;
+        let GroundedSupportSolveOutcome::Solved(solution) = outcome else {
+            return None;
+        };
+        actions.extend(solution.replay.actions());
+        for action in solution.replay.actions() {
+            intermediate.step(action);
+        }
+    }
+    let outcome = solve_target(
+        &intermediate,
+        target.clone(),
+        &SolverConfig::for_abilities(AbilitySet::new(false, true)),
+    )
+    .ok()?;
+    let TargetSolveOutcome::Solved(solution) = outcome else {
+        return None;
+    };
+    actions.extend(solution.replay.actions());
+    Some(TargetSolution {
+        target: solution.target,
+        reached: solution.reached,
+        replay: Replay::record(initial, actions),
+        stats: solution.stats,
     })
 }
 

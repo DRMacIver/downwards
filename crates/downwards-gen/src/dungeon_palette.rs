@@ -11,7 +11,7 @@ use downwards_core::{
     BoundarySide, Door, DoorError, Exit, PLAYER_HEIGHT, Point, Rect, Room, RoomError, Tile,
 };
 
-pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 19;
+pub const DUNGEON_PALETTE_GENERATION_VERSION: u32 = 20;
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -1574,19 +1574,23 @@ impl PaletteDraft<'_> {
                 self.horizontal(4, 18, 26, Tile::HazardDown);
             }
             DungeonPaletteCourse::ConstellationHall => {
-                self.horizontal(14, 3, 7, Tile::OneWay);
-                self.horizontal(11, 10, 13, Tile::OneWay);
-                self.horizontal(7, 16, 19, Tile::OneWay);
-                self.horizontal(10, 22, 25, Tile::OneWay);
-                self.horizontal(5, 27, 30, Tile::OneWay);
-                self.horizontal(16, 7, 10, Tile::HazardUp);
-                self.horizontal(17, 7, 10, Tile::Solid);
-                self.horizontal(16, 13, 16, Tile::HazardUp);
-                self.horizontal(17, 13, 16, Tile::Solid);
-                self.horizontal(16, 19, 22, Tile::HazardUp);
-                self.horizontal(17, 19, 22, Tile::Solid);
-                self.horizontal(16, 25, 27, Tile::HazardUp);
-                self.horizontal(17, 25, 27, Tile::Solid);
+                // A late under-over-under slalom rather than another diagonal Dash staircase.
+                // Broad recovery shelves make the intended silhouette readable: pass beneath the
+                // first ceiling pillar, climb over the floor-anchored centre, then descend and
+                // commit under the final ceiling pillar. The lethal floor closes the low bypass
+                // while leaving each authored recovery large enough for deliberate braking.
+                self.horizontal(16, 1, 7, Tile::OneWay);
+                self.horizontal(16, 7, 31, Tile::HazardUp);
+
+                self.vertical(9, 1, 11, Tile::Solid);
+                self.horizontal(14, 10, 14, Tile::OneWay);
+
+                self.vertical(17, 7, 17, Tile::Solid);
+                self.horizontal(7, 17, 22, Tile::Solid);
+
+                self.vertical(24, 1, 11, Tile::Solid);
+                self.horizontal(14, 20, 24, Tile::OneWay);
+                self.horizontal(14, 25, 30, Tile::OneWay);
             }
             DungeonPaletteCourse::ZenithShaft => {
                 self.vertical(9, 1, 17, Tile::Solid);
@@ -2133,6 +2137,48 @@ mod tests {
         }
         for column in 20..31 {
             assert_eq!(tile(column, 16), Tile::HazardUp, "Nova fall is non-lethal");
+        }
+    }
+
+    #[test]
+    fn constellation_hall_serializes_an_under_over_under_slalom() {
+        let candidate =
+            DungeonPaletteKey::new(0, DungeonPaletteCourse::ConstellationHall).generate();
+        let tile = |column: usize, row: usize| candidate.tiles[row * usize::from(WIDTH) + column];
+
+        for column in 1..7 {
+            assert_eq!(
+                tile(column, 16),
+                Tile::OneWay,
+                "start recovery is incomplete"
+            );
+        }
+        for column in (7..17).chain(18..31) {
+            assert_eq!(
+                tile(column, 16),
+                Tile::HazardUp,
+                "slalom floor has a bypass"
+            );
+        }
+        assert_eq!(
+            tile(17, 16),
+            Tile::Solid,
+            "central slalom pillar does not meet the floor"
+        );
+        for row in 1..11 {
+            assert_eq!(tile(9, row), Tile::Solid, "first hanging pillar is open");
+            assert_eq!(tile(24, row), Tile::Solid, "last hanging pillar is open");
+        }
+        for row in 7..17 {
+            assert_eq!(tile(17, row), Tile::Solid, "central pillar is open");
+        }
+        for (row, range) in [(14, 10..14), (7, 17..22), (14, 20..24), (14, 25..30)] {
+            for column in range {
+                assert!(
+                    matches!(tile(column, row), Tile::OneWay | Tile::Solid),
+                    "slalom recovery is incomplete at ({column}, {row})"
+                );
+            }
         }
     }
 
