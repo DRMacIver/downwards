@@ -110,10 +110,12 @@ bypass audits, not claims of physical impossibility.
 Vacuum Gallery is the third replacement. Its v12 route reached a late mandatory coin using three
 ordinary jumps and neither unlocked traversal method. The v13 room instead composes a cap-safe
 alternating wall shaft with a grounded recovery and a one-tile Dash tunnel. The mechanically
-retained trace performs six Wall Jumps before its first Dash, then four accepted Dashes; all four
-strength-one shaky-hand families retain nonzero successes. Separate same-budget Wall-Jump-only and
-Dash-only searches find no coin. Targeted retuning prints exact events, positions, velocities, and
-inputs so this is inspected as behavior rather than inferred from a scalar score.
+retained trace now performs four strictly alternating Wall Jumps before its first Dash, then exactly
+three accepted Dash strokes through the tunnel. Its 17 semantic spans replace the generic 29-span
+trace that repeated walls and spent a Dash during the descent. All four strength-one shaky-hand
+families retain nonzero successes. Separate same-budget Wall-Jump-only and Dash-only searches find
+no coin. Targeted retuning prints exact events, positions, velocities, and inputs so this is
+inspected as behavior rather than inferred from a scalar score.
 
 Lunar Cache is the fourth replacement in v14. Its prior coin route contained two incidental Wall
 Jumps, no Dash, and a buffered-jump-heavy controller trace. The replacement preserves the ceiling

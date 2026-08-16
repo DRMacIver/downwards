@@ -247,8 +247,10 @@ elsewhere, bounded misses are evidence for the authored gates, not proofs of imp
 The third replacement is late-game Vacuum Gallery. Its former route was only three ordinary jumps,
 so its hazards were visual noise rather than a traversal test. The new room serializes a cap-safe
 alternating wall shaft, a full-recovery shelf, and a one-tile Dash-posture tunnel. Its selected route
-uses six Wall Jumps before any Dash and four Dashes afterward. Same-budget searches with either
-method removed find no coin, and every recorded strength-one shaky-hand family retains successes.
+now uses four strictly alternating Wall Jumps before any Dash, followed by exactly three deliberate
+Dash strokes through the tunnel. The 17-span route replaces a generic 29-span witness that repeated
+walls and wasted a Dash while falling. Same-budget searches with either method removed find no coin,
+and every recorded strength-one shaky-hand family retains successes.
 
 The fourth replacement is its required Lunar Cache branch. The former witness meandered through a
 generic cache shell with two incidental Wall Jumps and no Dash. The new ceiling-entry room exposes a

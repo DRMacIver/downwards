@@ -2438,41 +2438,29 @@ room demo-dungeon.vacuum-gallery
 entry west
 target pickup dungeon-coin-59
 abilities 1 1
-ticks 217
-observation 29 7 7 6 4 10
-shaky BoundaryTiming 35 64 16
-shaky CorrelatedTiming 38 64 12
-shaky HoldRelease 44 64 7
-shaky DropRepeatFrame 28 64 19
-span 1 0 0 0 0 75
-span 1 0 1 0 0 1
-span -1 0 0 0 0 2
-span -1 0 1 0 0 1
-span -1 0 0 0 0 7
-span -1 0 1 0 0 1
-span -1 0 0 0 0 7
+ticks 237
+observation 17 5 5 4 3 6
+shaky BoundaryTiming 36 64 20
+shaky CorrelatedTiming 40 64 12
+shaky HoldRelease 42 64 16
+shaky DropRepeatFrame 32 64 32
+span 1 0 0 0 0 76
 span 1 0 1 0 0 2
-span 0 0 0 0 0 12
-span -1 0 1 0 0 1
-span -1 0 0 0 0 5
 span 1 0 0 0 0 4
 span -1 0 1 0 0 1
-span -1 0 0 0 0 7
+span -1 0 0 0 0 16
+span 1 0 1 0 0 1
+span 1 0 0 0 0 16
 span -1 0 1 0 0 1
-span -1 0 0 0 0 7
-span 1 0 0 0 0 6
-span 0 0 0 0 0 6
-span 0 0 0 1 0 1
-span 1 0 0 0 0 7
-span -1 1 0 0 0 20
-span 1 -1 0 0 0 9
-span -1 0 0 0 0 4
+span -1 0 0 0 0 16
+span 1 0 1 0 0 1
+span 1 0 0 0 0 45
+span -1 0 0 0 0 29
 span 1 0 0 1 0 1
-span 1 0 0 0 0 9
-span 0 0 0 1 0 1
-span 1 0 0 0 0 9
+span 1 0 0 0 0 13
+span 1 0 0 1 0 1
+span 1 0 0 0 0 13
 span 1 -1 0 1 0 1
-span 1 -1 0 0 0 9
 end
 route demo-dungeon.tidal-fork
 room demo-dungeon.tidal-fork

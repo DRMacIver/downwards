@@ -475,6 +475,9 @@ fn segmented_candidate(
     if spec.room == DemoDungeonRoom::MeteorRun {
         return readable_meteor_run_candidate(initial, target);
     }
+    if spec.room == DemoDungeonRoom::VacuumGallery {
+        return segmented_vacuum_gallery_candidate(initial, target);
+    }
     if spec.room == DemoDungeonRoom::StarThreshold {
         return segmented_star_threshold_candidate(initial, target);
     }
@@ -525,20 +528,6 @@ fn segmented_candidate(
             .expect("valid authored support waypoint"),
             SolverConfig::for_abilities(AbilitySet::new(true, false)),
             SolverConfig::for_abilities(AbilitySet::new(true, false)),
-        ),
-        DemoDungeonRoom::VacuumGallery => (
-            GroundedSupportTarget::new(
-                170,
-                210,
-                30,
-                [GroundedStandingRegion::new(170, 202).expect("valid authored standing range")],
-            )
-            .expect("valid authored support waypoint"),
-            // The first segment is deliberately Wall-Jump-only so the candidate cannot waste
-            // Dashes while approaching or climbing the authored shaft. Dash is restored only
-            // after the player is standing on the visible launch shelf.
-            SolverConfig::for_abilities(AbilitySet::new(true, false)),
-            SolverConfig::for_abilities(AbilitySet::new(true, true)),
         ),
         DemoDungeonRoom::NovaNiche => (
             GroundedSupportTarget::new(
@@ -611,6 +600,134 @@ fn segmented_candidate(
         reached: second.reached,
         replay: Replay::record(initial, actions),
         stats: second.stats,
+    })
+}
+
+/// Author the visible two-act contract directly: a strict alternating climb, a controlled drop
+/// onto the tunnel runway, then three rightward Dash strokes through the low aperture. The old
+/// generic two-solver composition found a positive, but its representative repeated same-wall
+/// jumps and spent an extra Dash while falling; neither action explained the room to a player.
+fn segmented_vacuum_gallery_candidate(
+    initial: &Simulation,
+    target: &SearchTarget,
+) -> Option<TargetSolution> {
+    let Some((top, climb)) = readable_alternating_climb(
+        initial,
+        132,
+        148,
+        18,
+        162,
+        202,
+        AlternatingClimbPolicy::strict(3),
+    ) else {
+        eprintln!("  segmented Vacuum Gallery strict climb failed");
+        return None;
+    };
+
+    let mut runway_candidates = Vec::new();
+    for takeoff_x in 162..=202 {
+        let Some((takeoff, approach)) = approach_x(&top, takeoff_x) else {
+            continue;
+        };
+        for run_off_ticks in 0..=24 {
+            for fall_x in [-1, 0, 1] {
+                let mut simulation = takeoff.clone();
+                let mut actions = approach.clone();
+                let descent = std::iter::repeat_n(right_action(false, false), run_off_ticks).chain(
+                    std::iter::repeat_n(
+                        Action {
+                            move_x: fall_x,
+                            move_y: 0,
+                            jump: false,
+                            dash: false,
+                            restart: false,
+                        },
+                        100,
+                    ),
+                );
+                for action in descent {
+                    if !clean_step(&mut simulation, action) {
+                        break;
+                    }
+                    actions.push(action);
+                    let player = simulation.player();
+                    let bounds = player.bounds();
+                    if player.grounded() && bounds.y == 158 && (176..=202).contains(&bounds.x) {
+                        runway_candidates.push((simulation.clone(), actions));
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    runway_candidates
+        .sort_by(|(_, left), (_, right)| static_route_key(left).cmp(&static_route_key(right)));
+    runway_candidates.dedup_by(|(_, left), (_, right)| left == right);
+
+    let mut complete = Vec::new();
+    for (runway, descent) in runway_candidates.into_iter().take(16) {
+        for first_delay in 0..=8 {
+            for release_ticks in 1..=4 {
+                for final_vertical in [-1, 0] {
+                    let mut simulation = runway.clone();
+                    let mut suffix = descent.clone();
+                    let strokes = std::iter::repeat_n(right_action(false, false), first_delay)
+                        .chain(std::iter::once(right_action(false, true)))
+                        .chain(std::iter::repeat_n(
+                            right_action(false, false),
+                            9 + release_ticks,
+                        ))
+                        .chain(std::iter::once(right_action(false, true)))
+                        .chain(std::iter::repeat_n(
+                            right_action(false, false),
+                            9 + release_ticks,
+                        ))
+                        .chain(std::iter::once(Action {
+                            move_x: 1,
+                            move_y: final_vertical,
+                            jump: false,
+                            dash: true,
+                            restart: false,
+                        }))
+                        .chain(std::iter::repeat_n(right_action(false, false), 40));
+                    let mut accepted_dashes = 0;
+                    for action in strokes {
+                        let report = simulation.step(action);
+                        if report.events.iter().any(|event| {
+                            matches!(event, SimulationEvent::Died(_) | SimulationEvent::Reset)
+                        }) {
+                            break;
+                        }
+                        accepted_dashes += report
+                            .events
+                            .iter()
+                            .filter(|event| matches!(event, SimulationEvent::Dashed { .. }))
+                            .count();
+                        suffix.push(action);
+                        if simulation
+                            .collected_pickups()
+                            .any(|pickup| pickup.id() == "dungeon-coin-59")
+                        {
+                            if accepted_dashes == 3 {
+                                let mut actions = climb.clone();
+                                actions.extend(suffix);
+                                complete.push(actions);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    let actions = complete
+        .into_iter()
+        .min_by(|left, right| static_route_key(left).cmp(&static_route_key(right)))?;
+    Some(TargetSolution {
+        target: target.clone(),
+        reached: ReachedTarget::Pickup("dungeon-coin-59".to_owned()),
+        replay: Replay::record(initial, actions),
+        stats: SearchStats::default(),
     })
 }
 
@@ -2402,6 +2519,7 @@ fn main() {
                         spec.room,
                         DemoDungeonRoom::AstralSeal
                             | DemoDungeonRoom::EclipseFork
+                            | DemoDungeonRoom::VacuumGallery
                             | DemoDungeonRoom::ZenithShaft
                     ),
                 )
