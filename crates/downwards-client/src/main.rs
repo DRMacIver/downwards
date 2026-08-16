@@ -5351,8 +5351,6 @@ enum EnvironmentSprite {
     Exit = 7,
     Door = 8,
     Pickup = 9,
-    TimedHazardActive = 10,
-    TimedHazardInactive = 11,
 }
 
 impl EnvironmentSprite {
@@ -9705,8 +9703,6 @@ mod tests {
             EnvironmentSprite::Exit,
             EnvironmentSprite::Door,
             EnvironmentSprite::Pickup,
-            EnvironmentSprite::TimedHazardActive,
-            EnvironmentSprite::TimedHazardInactive,
         ];
         let sources = sprites.map(EnvironmentSprite::sheet_source);
         for (index, source) in sources.iter().enumerate() {
