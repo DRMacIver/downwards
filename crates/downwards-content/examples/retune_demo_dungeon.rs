@@ -270,6 +270,7 @@ fn observe(
                     panic!("{} exact witness resets at tick {}", spec.id(), index + 1)
                 }
                 SimulationEvent::Landed
+                | SimulationEvent::PickupTouched { .. }
                 | SimulationEvent::PickupCollected { .. }
                 | SimulationEvent::ExitReached { .. } => {}
             }

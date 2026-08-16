@@ -24,7 +24,7 @@ pub const ONE_WAY_DROP_TICKS: u8 = 3;
 ///
 /// Historical corpus replays deliberately keep constructing an unconfigured `Simulation`; their
 /// digests therefore remain in the legacy policy domain until that corpus is regenerated.
-pub const PLAYER_MOVEMENT_POLICY_VERSION: u32 = 7;
+pub const PLAYER_MOVEMENT_POLICY_VERSION: u32 = 8;
 
 const RUN_SPEED: i32 = 384;
 const GROUND_ACCELERATION: i32 = 96;
@@ -381,12 +381,23 @@ pub enum DeathReason {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SimulationEvent {
     Jumped(JumpKind),
-    Dashed { direction: DashDirection },
+    Dashed {
+        direction: DashDirection,
+    },
     Landed,
     Died(DeathReason),
-    PickupCollected { id: String },
+    /// The pickup left the world, but it only banks (PickupCollected) once
+    /// the player next lands somewhere safe or leaves through an exit.
+    PickupTouched {
+        id: String,
+    },
+    PickupCollected {
+        id: String,
+    },
     Reset,
-    ExitReached { id: String },
+    ExitReached {
+        id: String,
+    },
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -432,6 +443,8 @@ struct SimulationState {
     deaths: u32,
     reached_exit: Option<String>,
     collected_pickups: Vec<bool>,
+    /// Touched but not yet banked; cleared by reset, banked on safe landing.
+    pending_pickups: Vec<bool>,
 }
 
 /// Cloneable, renderer-independent authoritative simulation.
@@ -491,6 +504,7 @@ impl Simulation {
             .map_or(room.spawn, |door| door.arrival);
         let player = spawn_player(spawn, abilities);
         let collected_pickups = vec![false; room.pickups.len()];
+        let pending_pickups = vec![false; room.pickups.len()];
         Self {
             room: Arc::new(room),
             abilities,
@@ -503,6 +517,7 @@ impl Simulation {
                 deaths: 0,
                 reached_exit: None,
                 collected_pickups,
+                pending_pickups,
             },
             human_wall_assists: false,
             recent_wall: None,
@@ -658,12 +673,28 @@ impl Simulation {
         self.state.collected_pickups.get(pickup_index).copied()
     }
 
+    /// Touched pickups only bank once the player next lands somewhere safe
+    /// (or leaves through an exit); success criteria should use this.
+    pub fn pickup_is_banked(&self, pickup_index: usize) -> Option<bool> {
+        Some(
+            *self.state.collected_pickups.get(pickup_index)?
+                && !*self.state.pending_pickups.get(pickup_index)?,
+        )
+    }
+
     pub fn collected_pickups(&self) -> impl Iterator<Item = &Pickup> + '_ {
         self.room
             .pickups
             .iter()
-            .zip(&self.state.collected_pickups)
-            .filter_map(|(pickup, &collected)| collected.then_some(pickup))
+            .zip(
+                self.state
+                    .collected_pickups
+                    .iter()
+                    .zip(&self.state.pending_pickups),
+            )
+            .filter_map(|(pickup, (&collected, &pending))| {
+                (collected && !pending).then_some(pickup)
+            })
     }
 
     pub fn reset(&mut self) {
@@ -677,6 +708,7 @@ impl Simulation {
         self.state.previous_action = Action::default();
         self.state.reached_exit = None;
         self.state.collected_pickups.fill(false);
+        self.state.pending_pickups.fill(false);
         self.recent_wall = None;
         self.wall_grace_ticks = 0;
         self.wall_force_direction = 0;
@@ -767,6 +799,9 @@ impl Simulation {
         hash.bool(self.state.previous_action.dash);
         hash.bool(self.state.previous_action.restart);
         hash.u32(self.state.deaths);
+        for &pending in &self.state.pending_pickups {
+            hash.bool(pending);
+        }
         hash.u64(self.state.collected_pickups.len() as u64);
         for &collected in &self.state.collected_pickups {
             hash.bool(collected);
@@ -1505,9 +1540,21 @@ impl Simulation {
         for (pickup_index, pickup) in self.room.pickups.iter().enumerate() {
             if !self.state.collected_pickups[pickup_index] && bounds.intersects(pickup.bounds()) {
                 self.state.collected_pickups[pickup_index] = true;
-                events.push(SimulationEvent::PickupCollected {
+                self.state.pending_pickups[pickup_index] = true;
+                events.push(SimulationEvent::PickupTouched {
                     id: pickup.id().to_owned(),
                 });
+            }
+        }
+        // Bank pending pickups on a safe landing or on leaving the room.
+        if self.state.player.grounded || self.state.reached_exit.is_some() {
+            for pickup_index in 0..self.state.pending_pickups.len() {
+                if self.state.pending_pickups[pickup_index] {
+                    self.state.pending_pickups[pickup_index] = false;
+                    events.push(SimulationEvent::PickupCollected {
+                        id: self.room.pickups[pickup_index].id().to_owned(),
+                    });
+                }
             }
         }
         if let Some(exit) = self

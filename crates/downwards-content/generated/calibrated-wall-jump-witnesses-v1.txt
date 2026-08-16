@@ -1,6 +1,6 @@
 calibrated-wall-jump-witnesses-v1
 generation-version 2
-movement-policy-version 7
+movement-policy-version 8
 seed 0
 room-id generated.calibrated-wall-jump.v2.short-turns.0000000000000000
 course short-turns

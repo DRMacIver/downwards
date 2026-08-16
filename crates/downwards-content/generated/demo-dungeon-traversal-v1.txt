@@ -1,6 +1,6 @@
 schema downwards-demo-dungeon-traversal-v1
 palette-generation 40
-player-movement-policy 7
+player-movement-policy 8
 pair demo-dungeon.alloy-threshold east door east 00 solved
 span 1 0 0 0 0 6
 end
@@ -2484,69 +2484,43 @@ end
 pair demo-dungeon.climber-vault east door west 11 solved
 span -1 0 0 0 0 162
 end
-pair demo-dungeon.climber-vault east pickup climbing-gloves 00 solved
-span -1 0 0 0 0 144
-span 1 0 1 0 0 10
-span 1 0 0 0 0 6
-span 1 0 1 0 0 10
-span 1 0 0 0 0 17
-span 1 0 1 0 0 10
-span 1 0 0 0 0 12
-span 1 0 1 0 0 10
-span 1 0 0 0 0 12
-span 1 0 1 0 0 10
-span 1 0 0 0 0 15
-span 1 0 1 0 0 10
-span 1 0 0 0 0 6
-span 1 0 1 0 0 3
+pair demo-dungeon.climber-vault east pickup climbing-gloves 00 inconclusive:Inconclusive
 end
 pair demo-dungeon.climber-vault east pickup climbing-gloves 01 solved
-span -1 0 0 0 0 144
-span 1 0 1 0 0 10
-span 1 0 0 0 0 6
-span 1 0 1 0 0 10
-span 1 0 0 0 0 17
-span 1 0 1 0 0 10
-span 1 0 0 0 0 12
-span 1 0 1 0 0 10
-span 1 0 0 0 0 12
-span 1 0 1 0 0 10
-span 1 0 0 0 0 15
-span 1 0 1 0 0 10
-span 1 0 0 0 0 6
-span 1 0 1 0 0 3
+span 0 -1 0 1 0 1
+span 0 -1 0 0 0 9
+span -1 1 0 1 0 1
+span -1 1 0 0 0 9
+span -1 0 1 0 0 4
+span 0 0 1 0 0 4
+span -1 0 1 0 0 4
+span -1 0 0 0 0 4
+span 0 -1 0 1 0 1
+span 0 -1 0 0 0 9
+span -1 0 0 0 0 4
+span 0 -1 0 1 0 1
+span 0 -1 0 0 0 9
+span 0 -1 0 1 0 1
+span 0 -1 0 0 0 5
 end
-pair demo-dungeon.climber-vault east pickup climbing-gloves 10 solved
-span -1 0 0 0 0 144
-span 1 0 1 0 0 10
-span 1 0 0 0 0 6
-span 1 0 1 0 0 10
-span 1 0 0 0 0 17
-span 1 0 1 0 0 10
-span 1 0 0 0 0 12
-span 1 0 1 0 0 10
-span 1 0 0 0 0 12
-span 1 0 1 0 0 10
-span 1 0 0 0 0 15
-span 1 0 1 0 0 10
-span 1 0 0 0 0 6
-span 1 0 1 0 0 3
+pair demo-dungeon.climber-vault east pickup climbing-gloves 10 inconclusive:error:-target-pickup-"climbing-gloves"-is-not-defined-by-the-room
 end
 pair demo-dungeon.climber-vault east pickup climbing-gloves 11 solved
-span -1 0 0 0 0 144
-span 1 0 1 0 0 10
-span 1 0 0 0 0 6
-span 1 0 1 0 0 10
-span 1 0 0 0 0 17
-span 1 0 1 0 0 10
-span 1 0 0 0 0 12
-span 1 0 1 0 0 10
-span 1 0 0 0 0 12
-span 1 0 1 0 0 10
-span 1 0 0 0 0 15
-span 1 0 1 0 0 10
-span 1 0 0 0 0 6
-span 1 0 1 0 0 3
+span 0 -1 0 1 0 1
+span 0 -1 0 0 0 9
+span -1 1 0 1 0 1
+span -1 1 0 0 0 9
+span -1 0 1 0 0 4
+span 0 0 1 0 0 4
+span -1 0 1 0 0 4
+span -1 0 0 0 0 4
+span 0 -1 0 1 0 1
+span 0 -1 0 0 0 9
+span -1 0 0 0 0 4
+span 0 -1 0 1 0 1
+span 0 -1 0 0 0 9
+span 0 -1 0 1 0 1
+span 0 -1 0 0 0 5
 end
 pair demo-dungeon.climber-vault west door east 00 solved
 span 1 0 0 0 0 163
@@ -2588,7 +2562,7 @@ span 1 0 1 0 0 4
 span 0 1 1 0 0 1
 span 0 1 0 0 0 3
 span 1 0 1 0 0 4
-span 1 0 0 0 0 4
+span -1 0 0 0 0 11
 end
 pair demo-dungeon.climber-vault west pickup climbing-gloves 01 solved
 span 1 0 0 0 0 4
@@ -2606,7 +2580,7 @@ span 1 0 1 0 0 4
 span 0 1 1 0 0 1
 span 0 1 0 0 0 3
 span 1 0 1 0 0 4
-span 1 0 0 0 0 4
+span -1 0 0 0 0 11
 end
 pair demo-dungeon.climber-vault west pickup climbing-gloves 10 solved
 span 1 0 0 0 0 4
@@ -2624,7 +2598,7 @@ span 1 0 1 0 0 4
 span 0 1 1 0 0 1
 span 0 1 0 0 0 3
 span 1 0 1 0 0 4
-span 1 0 0 0 0 4
+span -1 0 0 0 0 11
 end
 pair demo-dungeon.climber-vault west pickup climbing-gloves 11 solved
 span 1 0 0 0 0 4
@@ -2642,7 +2616,7 @@ span 1 0 1 0 0 4
 span 0 1 1 0 0 1
 span 0 1 0 0 0 3
 span 1 0 1 0 0 4
-span 1 0 0 0 0 4
+span -1 0 0 0 0 11
 end
 pair demo-dungeon.coin-duct ceiling door ceiling 00 solved
 span 1 0 0 0 0 11
@@ -3082,17 +3056,17 @@ end
 pair demo-dungeon.comet-run west door west 11 solved
 span -1 0 0 0 0 5
 end
-pair demo-dungeon.constellation-hall east door east 00 inconclusive:Inconclusive
+pair demo-dungeon.constellation-hall east door east 00 solved
+span 1 0 0 0 0 5
 end
 pair demo-dungeon.constellation-hall east door east 01 solved
-span 1 -1 1 1 0 1
-span 1 -1 1 0 0 1
+span 1 0 0 0 0 5
 end
-pair demo-dungeon.constellation-hall east door east 10 inconclusive:Inconclusive
+pair demo-dungeon.constellation-hall east door east 10 solved
+span 1 0 0 0 0 5
 end
 pair demo-dungeon.constellation-hall east door east 11 solved
-span 1 -1 1 1 0 1
-span 1 -1 1 0 0 1
+span 1 0 0 0 0 5
 end
 pair demo-dungeon.constellation-hall east door west 00 inconclusive:Inconclusive
 end
@@ -3101,64 +3075,51 @@ end
 pair demo-dungeon.constellation-hall east door west 10 inconclusive:Inconclusive
 end
 pair demo-dungeon.constellation-hall east door west 11 solved
-span 0 -1 0 1 0 1
-span 0 -1 0 0 0 9
-span -1 0 0 0 0 8
-span -1 1 1 0 0 1
-span -1 1 0 0 0 3
-span -1 0 1 0 0 4
-span -1 0 0 0 0 12
-span 0 0 1 0 0 4
-span -1 0 0 0 0 8
-span -1 1 0 1 0 1
-span -1 1 0 0 0 9
-span -1 1 0 1 0 1
-span -1 1 0 0 0 9
+span -1 0 0 0 0 4
 span 1 1 1 0 0 1
 span 1 1 0 0 0 3
 span 0 0 0 0 0 4
-span -1 0 0 1 0 1
-span -1 0 0 0 0 9
 span -1 1 1 0 0 1
 span -1 1 0 0 0 3
-span 0 -1 0 1 0 1
-span 0 -1 0 0 0 9
-span 1 0 0 0 0 4
-span 1 0 1 0 0 4
-span 0 1 1 0 0 1
-span 0 1 0 0 0 3
-span -1 1 0 1 0 1
-span -1 1 0 0 0 9
-span -1 0 1 0 0 4
-span -1 0 0 0 0 4
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 9
-span 1 -1 0 1 0 1
-span 1 -1 0 0 0 9
-span -1 0 1 0 0 4
-span -1 1 0 1 0 1
-span -1 1 0 0 0 9
-span -1 0 1 0 0 4
-span -1 1 0 1 0 1
-span -1 1 0 0 0 9
-span -1 1 0 1 0 1
-span -1 1 0 0 0 9
-span -1 1 0 1 0 1
-span -1 1 0 0 0 9
+span -1 0 1 0 0 8
+span 0 0 0 0 0 8
+span -1 0 0 0 0 8
 span -1 -1 0 1 0 1
 span -1 -1 0 0 0 9
+span 0 0 0 0 0 4
+span -1 0 1 0 0 4
 span -1 1 0 1 0 1
 span -1 1 0 0 0 9
+span -1 0 0 0 0 4
+span -1 0 1 0 0 4
+span -1 1 0 1 0 1
+span -1 1 0 0 0 9
+span -1 1 0 1 0 1
+span -1 1 0 0 0 9
+span 0 0 0 0 0 4
+span 0 0 1 0 0 4
+span 1 -1 0 1 0 1
+span 1 -1 0 0 0 9
+span -1 0 1 0 0 4
+span -1 1 0 1 0 1
+span -1 1 0 0 0 9
+span -1 1 0 1 0 1
+span -1 1 0 0 0 9
+span -1 1 0 1 0 1
+span -1 1 0 0 0 9
+span -1 0 1 0 0 4
+span -1 0 0 1 0 1
+span -1 0 0 0 0 9
 span 0 -1 0 1 0 1
 span 0 -1 0 0 0 9
+span -1 1 0 1 0 1
+span -1 1 0 0 0 9
 span -1 1 0 1 0 1
 span -1 1 0 0 0 9
 span -1 1 0 1 0 1
 span -1 1 0 0 0 9
 span -1 0 0 1 0 1
-span -1 0 0 0 0 9
-span -1 1 0 1 0 1
-span -1 1 0 0 0 2
+span -1 0 0 0 0 12
 end
 pair demo-dungeon.constellation-hall west door east 00 inconclusive:Inconclusive
 end

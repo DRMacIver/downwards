@@ -1572,6 +1572,9 @@ fn pickup_collects_once_per_attempt_and_restart_restores_it() {
         collected.events,
         vec![
             SimulationEvent::Landed,
+            SimulationEvent::PickupTouched {
+                id: "spawn-gem".into(),
+            },
             SimulationEvent::PickupCollected {
                 id: "spawn-gem".into(),
             },
@@ -1782,4 +1785,99 @@ fn a_low_crawl_keeps_sliding_until_the_player_can_stand() {
         simulation.player().bounds().x
     );
     assert!(simulation.player().bounds().x >= 240);
+}
+
+#[test]
+fn pickups_bank_only_after_a_safe_landing() {
+    // A coin grabbed mid-air over spikes only counts once the player lands
+    // somewhere safe; dying first restores it.
+    let build = || {
+        let mut tiles = vec![Tile::Empty; WIDTH * HEIGHT];
+        for x in 0..WIDTH {
+            tiles[16 * WIDTH + x] = Tile::Solid;
+        }
+        for x in 12..15 {
+            tiles[15 * WIDTH + x] = Tile::HazardUp; // spike bed mid-floor
+        }
+        Room::new(
+            "bank",
+            "Bank",
+            WIDTH as u16,
+            HEIGHT as u16,
+            TILE_SIZE,
+            tiles,
+            Point::new(60, 148),
+            vec![],
+        )
+        .unwrap()
+        .with_objects(
+            vec![],
+            vec![Pickup::new("coin", Rect::new(130, 114, 8, 8)).unwrap()],
+        )
+        .unwrap()
+    };
+
+    // Run right and jump over the bed, touching the coin mid-air, then land
+    // on the far side: the coin banks on landing.
+    let mut simulation = Simulation::new(build());
+    simulation.enable_current_player_movement();
+    let mut touched_tick = None;
+    let mut banked_tick = None;
+    for tick in 0..240 {
+        let near = simulation.player().bounds().x >= 106;
+        let report = simulation.step(Action {
+            move_x: 1,
+            jump: near && tick < 200,
+            ..Action::default()
+        });
+        for event in report.events {
+            match event {
+                SimulationEvent::PickupTouched { .. } => touched_tick.get_or_insert(tick),
+                SimulationEvent::PickupCollected { .. } => banked_tick.get_or_insert(tick),
+                SimulationEvent::Died(_) => panic!("clean crossing died at tick {tick}"),
+                _ => continue,
+            };
+        }
+        if banked_tick.is_some() {
+            break;
+        }
+    }
+    let touched = touched_tick.expect("coin should be touched mid-air");
+    let banked = banked_tick.expect("coin should bank on the far landing");
+    assert!(banked > touched, "banking must wait for the landing");
+    assert_eq!(simulation.collected_pickups().count(), 1);
+
+    // Touch the coin but die in the bed before landing: nothing banks and the
+    // coin is back in the room.
+    let mut simulation = Simulation::new(build());
+    simulation.enable_current_player_movement();
+    let mut touched = false;
+    let mut died = false;
+    for tick in 0..240 {
+        let near = simulation.player().bounds().x >= 95;
+        // Hold the jump shorter so the arc clips the coin then drops short.
+        let report = simulation.step(Action {
+            move_x: 1,
+            jump: near && tick < 200 && simulation.player().bounds().x < 130,
+            ..Action::default()
+        });
+        for event in report.events {
+            match event {
+                SimulationEvent::PickupTouched { .. } => touched = true,
+                SimulationEvent::PickupCollected { .. } => {
+                    panic!("coin banked despite dying before a safe landing")
+                }
+                SimulationEvent::Died(_) => died = true,
+                _ => {}
+            }
+        }
+        if died {
+            break;
+        }
+    }
+    assert!(died, "the short arc should end in the spike bed");
+    if touched {
+        assert_eq!(simulation.pickup_is_collected(0), Some(false));
+        assert_eq!(simulation.collected_pickups().count(), 0);
+    }
 }

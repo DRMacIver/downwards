@@ -2402,6 +2402,7 @@ impl SimulationFeedback {
                     }
                     SimulationEvent::Dashed { .. }
                     | SimulationEvent::Died(_)
+                    | SimulationEvent::PickupTouched { .. }
                     | SimulationEvent::PickupCollected { .. }
                     | SimulationEvent::Reset
                     | SimulationEvent::ExitReached { .. } => {}

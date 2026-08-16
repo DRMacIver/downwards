@@ -2469,8 +2469,9 @@ fn reached_target(simulation: &Simulation, target: ResolvedTarget<'_>) -> Option
         ResolvedTarget::Door { id, .. } => {
             (simulation.reached_exit() == Some(id)).then(|| ReachedTarget::Door(id.to_owned()))
         }
+        // A touched pickup only counts once it banks on a safe landing.
         ResolvedTarget::Pickup { id, index, .. } => simulation
-            .pickup_is_collected(index)
+            .pickup_is_banked(index)
             .unwrap_or(false)
             .then(|| ReachedTarget::Pickup(id.to_owned())),
     }

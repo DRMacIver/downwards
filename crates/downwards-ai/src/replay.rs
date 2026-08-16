@@ -246,6 +246,10 @@ impl EventDigestBuilder {
                 self.byte(3);
                 self.death_reason(*reason);
             }
+            SimulationEvent::PickupTouched { id } => {
+                self.byte(7);
+                self.bytes(id.as_bytes());
+            }
             SimulationEvent::PickupCollected { id } => {
                 self.byte(4);
                 self.bytes(id.as_bytes());

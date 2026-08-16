@@ -54,6 +54,7 @@ fn observe(initial: &Simulation, target: &str, actions: &[Action]) -> Observatio
                     reached_tick = index + 1;
                 }
                 SimulationEvent::Landed
+                | SimulationEvent::PickupTouched { .. }
                 | SimulationEvent::PickupCollected { .. }
                 | SimulationEvent::ExitReached { .. } => {}
             }
