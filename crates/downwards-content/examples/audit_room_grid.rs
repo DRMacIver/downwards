@@ -29,7 +29,7 @@ use downwards_ai::{
 use downwards_core::{
     AbilitySet, BoundarySide, Door, Pickup, Point, Rect, Room, Simulation, Tile, TimedHazard,
 };
-use downwards_gen::parse_room_grid;
+use downwards_gen::{hazard_off_time_deficit, parse_room_grid, useless_spikes};
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -225,6 +225,23 @@ fn main() -> ExitCode {
     let spec = parse_spec(&spec_source);
 
     let mut problems = check_apertures(&tiles, &spec);
+    for (row, column) in useless_spikes(&tiles) {
+        problems.push(format!(
+            "useless-spike row {row} column {column}: the spike's point faces a cell it can never kill through (solid, spike, or out of bounds); make it a block or point it into open space"
+        ));
+    }
+    for (index, hazard) in spec.hazards.iter().enumerate() {
+        if let Some(deficit) = hazard_off_time_deficit(hazard.period_ticks(), hazard.active_ticks())
+        {
+            problems.push(format!(
+                "hazard-no-off-cycle hazard {index}: period {} minus active {} leaves under {} ticks of amber wind-up plus {} ticks of visible off-time ({deficit} ticks short)",
+                hazard.period_ticks(),
+                hazard.active_ticks(),
+                downwards_gen::HAZARD_AMBER_WIND_UP_TICKS,
+                downwards_gen::HAZARD_MIN_OFF_TICKS,
+            ));
+        }
+    }
     for problem in &problems {
         println!("{problem}");
     }

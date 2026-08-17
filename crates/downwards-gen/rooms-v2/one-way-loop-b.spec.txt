@@ -10,8 +10,9 @@
 # THE MEDIUM TWIST -- two variant axes, combined:
 #  (1) WHICH DIRECTION IS GATED, and how. The gate is boots, and it is enforced
 #      by geometry rather than by height alone: the island's west flank
-#      (col 5, rows 6-12) is a stack of upward spikes. Their flanks block you
-#      like an obstacle but offer NO wall surface, so the west shaft has only
+#      (col 5, rows 6-12) is a run of left-pointing spikes (row 9 is solid,
+#      buried behind the ledge). Their backs block you like an obstacle but
+#      offer NO wall surface, and their points face the shaft, so the west shaft has only
 #      one real wall (col 0) and a single wall cannot be climbed. Its first
 #      lift, floor y=170 up to the ledge at y=110, is 60px -- half again the
 #      40px jump. The west arc is therefore dash-only upward and free downward.

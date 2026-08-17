@@ -35,7 +35,8 @@
 #     as a shortcut on the way down and a wall on the way back up.
 #
 # The whole outer wall of the descent shaft (col 28, rows 6-12) is a column of
-# ^ spikes: its flank blocks movement but gives no wall surface, so the descent
+# < spikes pointing into the shaft (row 12 is solid behind the lower catch
+# spike): their backs block movement but give no wall surface, so the descent
 # shaft cannot be wall-jumped even though it is four tiles wide. The gating is
 # geometric and visible from either end.
 #

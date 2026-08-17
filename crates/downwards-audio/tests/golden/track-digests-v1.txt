@@ -1,3 +1,4 @@
+# track digests v1: fnv1a64 of the composed serialized track
 antiphase-airlock-a 795b45e164ebdc51
 antiphase-airlock-b f50b341aec701077
 antiphase-airlock-c 6c6ad7d3f3bee1cd
@@ -10,7 +11,7 @@ gable-run-a 2c2bb42d637d704c
 greed-loop-a 391219fa1568d20e
 greed-loop-b a182b2349e95b40c
 greed-loop-c 614161fcdfa754dc
-keep-astral-seal 6ad605cb7336ef8f
+keep-astral-seal e6835ed103d0fd2b
 keep-aurora-spire a76d9016bb298004
 keep-boots-vault 4f2c8a7040d8dbdf
 keep-crown-sanctum ee0b55549098cef6
@@ -36,7 +37,7 @@ one-way-loop-a 69a5dd3fa3bb0351
 one-way-loop-b c04c7a1b7e1a05f4
 one-way-loop-c 5ad196690876dc98
 sandglass-drop-a 8964b59c30790ec7
-sandglass-drop-b 100cb587ff1b6801
+sandglass-drop-b 1c551c59f9c406e0
 shutter-chute-a 218c0a406da365e0
 shutter-chute-b c95ad84d9483eb79
 shutter-chute-c 16e8fbdf8c195eec

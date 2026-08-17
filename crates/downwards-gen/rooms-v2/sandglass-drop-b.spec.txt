@@ -4,11 +4,11 @@
 # from the east door a step and a zig-zag of shingles climb to the ceiling
 # door, and anything that falls in simply lands on the chamber slabs. The
 # neck is the tunnel along the floor: one broad sand-curtain pours across it
-# on a 72-count, too wide to walk through in its dry window - only a dash
+# on a 96-count (widened so its dry window still cannot be walked), too wide to walk through in its dry window - only a dash
 # crosses it. Behind the curtains, under the chamber slabs, the lower bulb holds
 # the floor door. Every crossing that touches the floor door is a dash
 # crossing; everything else is bare.
-hazard 215 130 36 40 72 51 0
+hazard 180 130 80 40 96 60 0  # 60 on + 24 amber + 12 visibly off (min off-cycle floor)
 door ceiling
 door east
 door floor

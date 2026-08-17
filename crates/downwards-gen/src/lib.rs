@@ -18,7 +18,10 @@ pub use calibrated_wall_jump::{
     CALIBRATED_WALL_JUMP_TARGET, CalibratedWallJumpCandidate, CalibratedWallJumpCourse,
     CalibratedWallJumpKey, CalibratedWallJumpParameters,
 };
-pub use room_grid::{parse_room_grid, render_room_grid};
+pub use room_grid::{
+    HAZARD_AMBER_WIND_UP_TICKS, HAZARD_MIN_OFF_TICKS, hazard_off_time_deficit, parse_room_grid,
+    render_room_grid, useless_spikes,
+};
 
 pub use v6::{
     COMPOSITIONAL_FEATURE_STAGE_VERSION, COMPOSITIONAL_GENERATION_VERSION, CompositionFailure,
