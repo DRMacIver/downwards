@@ -236,6 +236,11 @@ pub struct DungeonV2Instance {
     pub connections: BTreeMap<String, (String, String)>,
 }
 
+/// The one door in and out of the dungeon: the exit room's ceiling opening.
+/// A fresh run enters through it and a crowned run escapes through it — no
+/// code path may treat "starting door" and "exit door" as different things.
+pub const DUNGEON_V2_EXIT_DOOR: &str = "ceiling";
+
 #[derive(Debug)]
 pub struct DungeonV2 {
     pub instances: BTreeMap<String, DungeonV2Instance>,
@@ -448,7 +453,7 @@ fn build_definition() -> DungeonV2 {
     );
     for instance in instances.values() {
         for &(door_id, _) in &specs[instance.slug.as_str()].doors {
-            if instance.id == exit_id && door_id == "ceiling" {
+            if instance.id == exit_id && door_id == DUNGEON_V2_EXIT_DOOR {
                 // The escape door leads out of the dungeon, not to a room.
                 assert!(
                     !instance.connections.contains_key(door_id),
@@ -467,13 +472,13 @@ fn build_definition() -> DungeonV2 {
         specs[instances[&exit_id].slug.as_str()]
             .doors
             .iter()
-            .any(|&(door_id, _)| door_id == "ceiling"),
+            .any(|&(door_id, _)| door_id == DUNGEON_V2_EXIT_DOOR),
         "exit room {exit_id} has no ceiling door to escape through"
     );
     assert!(
         gates
             .insert(
-                (exit_id.clone(), "ceiling".to_owned()),
+                (exit_id.clone(), DUNGEON_V2_EXIT_DOOR.to_owned()),
                 DungeonV2Requirement::Crown
             )
             .is_none(),

@@ -21,7 +21,8 @@ use downwards_content::{
     DUNGEON_V2_CROWN_PICKUP, DUNGEON_V2_GLOVE_PICKUP, DUNGEON_V2_GOAL_EXIT, DungeonV2Inventory,
     DungeonV2Requirement, HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET, MEDIUM_NO_DASH_ABILITIES,
     MEDIUM_NO_DASH_TARGET, calibrated_generator_playtest, calibration_gallery,
-    dungeon_v2_definition, dungeon_v2_door_requirement, dungeon_v2_room, dungeon_v2_total_coins,
+    DUNGEON_V2_EXIT_DOOR, dungeon_v2_definition, dungeon_v2_door_requirement, dungeon_v2_room,
+    dungeon_v2_total_coins,
     first_steps_room, hard_no_dash_scenario,
     hard_no_dash_witness_actions, medium_no_dash_scenario, medium_no_dash_witness_actions,
 };
@@ -2708,7 +2709,9 @@ struct DungeonV2RunState {
 impl Default for DungeonV2RunState {
     fn default() -> Self {
         Self {
-            room: dungeon_v2_definition().spawn.clone(),
+            // A fresh run starts where it will end: at the dungeon's one
+            // mouth, entering through the exit door.
+            room: dungeon_v2_definition().exit.clone(),
             inventory: DungeonV2Inventory::default(),
             deaths: 0,
             play_ticks: 0,
@@ -4764,16 +4767,14 @@ fn load_scenario(
         }
         RoomMode::DungeonV2 => {
             let run = DungeonV2RunState::default();
-            // A fresh run begins as an arrival: the delver falls in past the
-            // roof-cap (the exit room above, whose ceiling opening is the
-            // eventual crown-locked escape) and lands in the spawn hub
-            // through its ceiling door.
+            // A fresh run begins as an arrival through the dungeon's one
+            // mouth: the exit door itself.
             let simulation = Simulation::enter_via_door(
                 dungeon_v2_room(&run.room, &run.inventory),
                 run.inventory.abilities(),
-                "ceiling",
+                DUNGEON_V2_EXIT_DOOR,
             )
-            .map_err(|error| format!("dungeon spawn room has no ceiling entry: {error}"))?;
+            .map_err(|error| format!("dungeon exit door admits no entry: {error}"))?;
             (simulation, None)
         }
         RoomMode::Challenge(kind) => {
@@ -5680,7 +5681,7 @@ fn draw_dungeon_v2_door_locks(viewport: &PixelViewport, client: &ClientState) {
         let bounds = door.trigger_bounds;
         let centre_x = bounds.x + bounds.width / 2;
         let centre_y = bounds.y + bounds.height / 2;
-        let is_escape = is_exit_room && door.id == "ceiling";
+        let is_escape = is_exit_room && door.id == DUNGEON_V2_EXIT_DOOR;
 
         if is_escape && run.inventory.crown {
             // The crowned escape: a bright, open EXIT at the ceiling mouth.
@@ -7999,10 +8000,12 @@ mod tests {
             Some((&save_path, false)),
         )
         .unwrap();
+        // The run starts at the dungeon's mouth: the exit room, entered
+        // through the exit door itself.
         let spawn = dungeon_v2_definition().spawn.clone();
         assert_eq!(
             client.dungeon_v2_run.as_ref().map(|run| run.room.clone()),
-            Some(spawn.clone())
+            Some(dungeon_v2_definition().exit.clone())
         );
         let report = |client: &ClientState, events: Vec<SimulationEvent>| StepReport {
             tick: client.simulation.tick(),
@@ -10043,6 +10046,24 @@ mod tests {
             ],
         )));
         assert_eq!(client.simulation.entry_door(), Some("east"));
+    }
+
+    #[test]
+    fn a_fresh_run_enters_through_the_exit_door() {
+        // The dungeon has exactly one mouth: the exit door. A fresh run
+        // starts by falling in through it, so the starting room IS the exit
+        // room and the starting door IS the exit door — there is no separate
+        // "starting door" concept for a layout to get wrong.
+        let dungeon = dungeon_v2_definition();
+        let run = DungeonV2RunState::default();
+        assert_eq!(run.room, dungeon.exit);
+        let simulation = Simulation::enter_via_door(
+            dungeon_v2_room(&run.room, &run.inventory),
+            run.inventory.abilities(),
+            DUNGEON_V2_EXIT_DOOR,
+        )
+        .expect("the exit door admits a fresh run");
+        assert_eq!(simulation.entry_door(), Some(DUNGEON_V2_EXIT_DOOR));
     }
 
     #[test]
