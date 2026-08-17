@@ -1493,7 +1493,7 @@ impl Simulation {
                 .iter()
                 .enumerate()
                 .find(|(_, hazard)| {
-                    hazard.is_active_at(self.state.room_tick) && bounds.intersects(hazard.bounds())
+                    hazard.is_active_at(self.state.room_tick) && bounds.intersects(hazard.lethal_bounds())
                 })
         {
             self.state.deaths = self.state.deaths.saturating_add(1);

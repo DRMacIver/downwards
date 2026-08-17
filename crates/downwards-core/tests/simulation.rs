@@ -1,7 +1,7 @@
 use downwards_core::{
     AbilitySet, Action, BoundarySide, COYOTE_TICKS, DASH_TICKS, DashDirection, DeathReason, Door,
     DoorEntryError, JUMP_BUFFER_TICKS, JumpKind, MovementTuning, ONE_WAY_DROP_TICKS, Pickup, Point,
-    Rect, Room, RoomObjectError, SUBPIXELS_PER_PIXEL, Simulation, SimulationEvent, Tile,
+    Rect, Room, RoomError, RoomObjectError, SUBPIXELS_PER_PIXEL, Simulation, SimulationEvent, Tile,
     TimedHazard, WallSide,
 };
 
@@ -1565,6 +1565,46 @@ fn timed_hazard_phase_boundaries_are_exact_and_death_resets_room_clock() {
     assert_eq!(simulation.timed_hazard_is_active(0), Some(true));
     assert_eq!(simulation.timed_hazard_is_active(1), None);
     assert_eq!(simulation.active_timed_hazards().count(), 1);
+}
+
+/// Designer rule (2026-08-17): laser boundaries are forgiving — the outer
+/// couple of pixels of a timed hazard overlap the player without killing, so
+/// walking right up to the edge of a beam feels fair.
+#[test]
+fn timed_hazard_edges_grant_two_pixels_of_grace() {
+    // Always-active beam whose lethal core starts 2px inside its bounds.
+    let beam = |x| TimedHazard::new(Rect::new(x, 140, 20, 24), 1, 1, 0).unwrap();
+
+    // Player spawns at (40, 148) with an 8px-wide body: bounds 40..48.
+    // A beam at x=46 overlaps the standing player by exactly 2px — within
+    // grace, so the room builds (spawn not blocked) and standing there,
+    // fully overlapped by an ACTIVE hazard's outer edge, never kills.
+    let room = room_with_floor(Point::new(40, 148), 16)
+        .with_objects(vec![beam(46)], vec![])
+        .unwrap();
+    let mut simulation = Simulation::new(room);
+    for _ in 0..10 {
+        let report = simulation.step(Action::default());
+        assert!(
+            !report
+                .events
+                .iter()
+                .any(|event| matches!(event, SimulationEvent::Died(_))),
+            "2px of overlap with a laser must be survivable"
+        );
+    }
+    assert_eq!(simulation.deaths(), 0);
+
+    // One pixel deeper (3px overlap) crosses into the lethal core: the spawn
+    // validator must reject it exactly where the beam becomes deadly.
+    let blocked = room_with_floor(Point::new(40, 148), 16).with_objects(vec![beam(45)], vec![]);
+    assert!(
+        matches!(
+            blocked,
+            Err(RoomError::SpawnBlockedByTimedHazard { index: 0 })
+        ),
+        "3px of overlap must be lethal (and so block spawning)"
+    );
 }
 
 #[test]

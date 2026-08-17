@@ -57,6 +57,15 @@ pub enum HazardDirection {
     Right,
 }
 
+/// How far the player may overlap a timed hazard's edge without dying, in
+/// pixels (designer rule 2026-08-17: walking up to the edge of a laser
+/// should be forgiving).
+pub const TIMED_HAZARD_GRACE_PIXELS: i32 = 2;
+
+const fn min_i32(a: i32, b: i32) -> i32 {
+    if a < b { a } else { b }
+}
+
 /// A rectangular hazard whose activation is derived solely from the room
 /// clock. Fields are private so every instance satisfies its timing and
 /// screen-bounds invariants.
@@ -118,6 +127,24 @@ impl TimedHazard {
     #[must_use]
     pub const fn phase_ticks(&self) -> u32 {
         self.phase_ticks
+    }
+
+    /// The deadly core of the hazard: its bounds deflated by
+    /// [`TIMED_HAZARD_GRACE_PIXELS`] on every side (clamped so it never
+    /// vanishes). The player may overlap the outer grace ring of an active
+    /// beam without dying, so walking right up to a laser's edge feels fair.
+    /// Rendering and safety checks (spawn placement aside) still use the full
+    /// [`Self::bounds`].
+    #[must_use]
+    pub const fn lethal_bounds(&self) -> Rect {
+        let horizontal = min_i32(TIMED_HAZARD_GRACE_PIXELS, (self.bounds.width - 1) / 2);
+        let vertical = min_i32(TIMED_HAZARD_GRACE_PIXELS, (self.bounds.height - 1) / 2);
+        Rect::new(
+            self.bounds.x + horizontal,
+            self.bounds.y + vertical,
+            self.bounds.width - 2 * horizontal,
+            self.bounds.height - 2 * vertical,
+        )
     }
 
     #[must_use]
@@ -608,14 +635,14 @@ impl Room {
         if let Some((index, _)) = timed_hazards
             .iter()
             .enumerate()
-            .find(|(_, hazard)| spawn_bounds.intersects(hazard.bounds))
+            .find(|(_, hazard)| spawn_bounds.intersects(hazard.lethal_bounds()))
         {
             return Err(RoomError::SpawnBlockedByTimedHazard { index });
         }
         if let Some((index, _)) = timed_hazards.iter().enumerate().find(|(_, hazard)| {
             self.doors.iter().any(|door| {
                 Rect::new(door.arrival.x, door.arrival.y, PLAYER_WIDTH, PLAYER_HEIGHT)
-                    .intersects(hazard.bounds)
+                    .intersects(hazard.lethal_bounds())
             })
         }) {
             // Keep the established RoomError API exhaustive for downstream
@@ -720,7 +747,7 @@ impl Room {
                 .timed_hazards
                 .iter()
                 .enumerate()
-                .find(|(_, hazard)| arrival_bounds.intersects(hazard.bounds))
+                .find(|(_, hazard)| arrival_bounds.intersects(hazard.lethal_bounds()))
             {
                 return Err(DoorError::ArrivalBlockedByTimedHazard {
                     id: door.id.clone(),

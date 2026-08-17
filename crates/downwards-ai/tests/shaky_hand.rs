@@ -350,7 +350,9 @@ fn evaluator_rejects_a_noncanonical_or_divergent_zero_noise_control() {
 fn fragile_hazard_room(phase_ticks: u32) -> Room {
     exit_room("shaky-fragile", 150)
         .with_objects(
-            vec![TimedHazard::new(Rect::new(82, 136, 16, 24), 60, 30, phase_ticks).unwrap()],
+            // Sized so the lethal core (bounds minus the edge grace ring) is
+            // the 16x24 crossing this test was calibrated against.
+            vec![TimedHazard::new(Rect::new(80, 134, 20, 28), 60, 30, phase_ticks).unwrap()],
             vec![],
         )
         .unwrap()
