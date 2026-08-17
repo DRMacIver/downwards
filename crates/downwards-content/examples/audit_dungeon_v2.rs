@@ -220,6 +220,10 @@ fn main() {
             Some(DungeonV2Requirement::ClimbingGloves) => wall,
             Some(DungeonV2Requirement::WingedBoots) => dash,
             Some(DungeonV2Requirement::Coins(count)) => coins >= usize::from(count),
+            // The spawn ceiling escape door: locked for the whole descent
+            // (graph exploration and retreat never hold the crown); the
+            // crowned escape specials below prove the exit side.
+            Some(DungeonV2Requirement::Crown) => false,
         }
     };
     let coins_in = |instance: &str| -> usize {

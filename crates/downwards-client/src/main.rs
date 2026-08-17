@@ -21,8 +21,8 @@ use downwards_content::{
     DUNGEON_V2_CROWN_PICKUP, DUNGEON_V2_GLOVE_PICKUP, DUNGEON_V2_GOAL_EXIT, DungeonV2Inventory,
     DungeonV2Requirement, HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET, MEDIUM_NO_DASH_ABILITIES,
     MEDIUM_NO_DASH_TARGET, calibrated_generator_playtest, calibration_gallery,
-    dungeon_v2_definition, dungeon_v2_door_requirement, dungeon_v2_exit_gate_bounds,
-    dungeon_v2_room, dungeon_v2_total_coins, first_steps_room, hard_no_dash_scenario,
+    dungeon_v2_definition, dungeon_v2_door_requirement, dungeon_v2_room, dungeon_v2_total_coins,
+    first_steps_room, hard_no_dash_scenario,
     hard_no_dash_witness_actions, medium_no_dash_scenario, medium_no_dash_witness_actions,
 };
 use downwards_core::{
@@ -809,6 +809,91 @@ fn dungeon_v2_map_layout() -> &'static HashMap<String, (i32, i32)> {
         }
         positions
     })
+}
+
+/// Dungeon-graph hop distance from every room to the nearest room in
+/// `targets`, following door edges backwards so a room's distance describes
+/// forward travel, honouring per-direction door gates under `inventory`.
+fn dungeon_v2_distances_to(
+    targets: &BTreeSet<&str>,
+    inventory: &DungeonV2Inventory,
+) -> HashMap<String, usize> {
+    let dungeon = dungeon_v2_definition();
+    let mut distances: HashMap<String, usize> = HashMap::new();
+    let mut frontier: VecDeque<String> = VecDeque::new();
+    for id in dungeon.instances.keys() {
+        if targets.contains(id.as_str()) {
+            distances.insert(id.clone(), 0);
+            frontier.push_back(id.clone());
+        }
+    }
+    while let Some(room) = frontier.pop_front() {
+        let next = distances[&room] + 1;
+        for instance in dungeon.instances.values() {
+            for (door_id, (destination, _)) in &instance.connections {
+                let openable = dungeon_v2_door_requirement(&instance.id, door_id)
+                    .is_none_or(|requirement| inventory.satisfies(requirement));
+                if *destination == room && openable && !distances.contains_key(&instance.id) {
+                    distances.insert(instance.id.clone(), next);
+                    frontier.push_back(instance.id.clone());
+                }
+            }
+        }
+    }
+    distances
+}
+
+/// The assist solver's dungeon-level door choice (AI mode). Among the current
+/// room's doors the run can actually open, pick the one on the shortest
+/// dungeon-graph path to the current objective: before the crown, the nearest
+/// unexplored room (falling back to the crown room when everything reachable
+/// is explored); with the crown held, the spawn room whose ceiling door is
+/// the escape. Graph distances, not straight-line distance; ties break by
+/// door id for determinism.
+fn dungeon_v2_best_door(
+    current_room: &str,
+    inventory: &DungeonV2Inventory,
+    explored: &BTreeSet<String>,
+) -> Option<String> {
+    let dungeon = dungeon_v2_definition();
+    let instance = dungeon.instances.get(current_room)?;
+    let openable_doors: Vec<&String> = instance
+        .connections
+        .keys()
+        .filter(|door_id| {
+            dungeon_v2_door_requirement(current_room, door_id)
+                .is_none_or(|requirement| inventory.satisfies(requirement))
+        })
+        .collect();
+    let best_toward = |targets: &BTreeSet<&str>| -> Option<String> {
+        let distances = dungeon_v2_distances_to(targets, inventory);
+        openable_doors
+            .iter()
+            .filter_map(|door_id| {
+                let (destination, _) = &instance.connections[*door_id];
+                distances
+                    .get(destination)
+                    .map(|&distance| (distance, (*door_id).clone()))
+            })
+            .min()
+            .map(|(_, door_id)| door_id)
+    };
+    if inventory.crown {
+        let escape: BTreeSet<&str> = std::iter::once(dungeon.spawn.as_str()).collect();
+        return best_toward(&escape).or_else(|| openable_doors.iter().min().cloned().cloned());
+    }
+    let unexplored: BTreeSet<&str> = dungeon
+        .instances
+        .keys()
+        .filter(|id| !explored.contains(*id))
+        .map(String::as_str)
+        .collect();
+    let toward_crown: BTreeSet<&str> = std::iter::once(dungeon.goal.as_str()).collect();
+    (!unexplored.is_empty())
+        .then(|| best_toward(&unexplored))
+        .flatten()
+        .or_else(|| best_toward(&toward_crown))
+        .or_else(|| openable_doors.iter().min().cloned().cloned())
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -3579,8 +3664,21 @@ impl ClientState {
             return;
         }
         if run.room == dungeon.spawn && run.inventory.crown {
-            // With the crown held the spawn room hosts the escape gate.
+            // With the crown held the spawn room's ceiling door carries the
+            // escape exit trigger.
             self.perform_exit_solve(initial, None);
+            return;
+        }
+        if run.inventory.crown {
+            // Crowned and not yet home: head along the shortest dungeon-graph
+            // path to the spawn room's ceiling escape (no more detours).
+            if let Some(target) =
+                dungeon_v2_best_door(&run.room, &run.inventory, &self.explored_v2_rooms)
+            {
+                self.perform_target_door_solve(initial, None, target, None, 0, 0);
+            } else {
+                self.perform_exit_solve(initial, None);
+            }
             return;
         }
         if let Some(coin_id) = self
@@ -3598,32 +3696,11 @@ impl ClientState {
             self.perform_pickup_solve(initial, None, coin_id);
             return;
         }
-        // Nearest openable door that is not the entry door (which stays as a
-        // last resort so retreat is still offered).
-        let entry_door = self.simulation.entry_door().map(str::to_owned);
-        let player = self.simulation.player().bounds();
-        let mut candidates: Vec<(i64, String)> = self
-            .simulation
-            .room()
-            .doors()
-            .iter()
-            .filter(|door| {
-                dungeon_v2_door_requirement(&run.room, &door.id)
-                    .is_none_or(|requirement| run.inventory.satisfies(requirement))
-            })
-            .map(|door| {
-                let trigger = door.trigger_bounds;
-                let dx = i64::from(trigger.x + trigger.width / 2 - player.x - player.width / 2);
-                let dy = i64::from(trigger.y + trigger.height / 2 - player.y - player.height / 2);
-                let mut score = dx * dx + dy * dy;
-                if Some(door.id.as_str()) == entry_door.as_deref() {
-                    score += 1_000_000_000;
-                }
-                (score, door.id.clone())
-            })
-            .collect();
-        candidates.sort();
-        if let Some((_, target)) = candidates.into_iter().next() {
+        // Pre-crown: the openable door on the shortest dungeon-graph path to
+        // the nearest unexplored room (crown room as fallback once explored).
+        if let Some(target) =
+            dungeon_v2_best_door(&run.room, &run.inventory, &self.explored_v2_rooms)
+        {
             self.perform_target_door_solve(initial, None, target, None, 0, 0);
         } else {
             self.perform_exit_solve(initial, None);
@@ -4349,10 +4426,17 @@ impl ClientState {
         {
             let entry_door = self.simulation.entry_door().map(str::to_owned);
             let room = dungeon_v2_room(&run.room, &run.inventory);
+            // Dying in the crown room while holding the crown resumes at the
+            // crown point (the crowned crown room's canonical spawn), not the
+            // room entry; everywhere else keeps the entry-door respawn.
+            let crown_point_respawn =
+                run.inventory.crown && run.room == dungeon_v2_definition().goal;
             let mut rebound = match entry_door.as_deref() {
-                Some(door) => Simulation::enter_via_door(room, run.inventory.abilities(), door)
-                    .expect("persistent dungeon v2 entry door remains valid"),
-                None => Simulation::with_abilities(room, run.inventory.abilities()),
+                Some(door) if !crown_point_respawn => {
+                    Simulation::enter_via_door(room, run.inventory.abilities(), door)
+                        .expect("persistent dungeon v2 entry door remains valid")
+                }
+                _ => Simulation::with_abilities(room, run.inventory.abilities()),
             };
             configure_live_simulation(&mut rebound, self.movement_tuning);
             self.simulation = rebound;
@@ -4402,7 +4486,7 @@ impl ClientState {
                 changed = true;
                 self.replay_notice = Some(ReplayNotice {
                     title: "THE CROWN".to_owned(),
-                    detail: "Climb back out · the exit gate at the start is open".to_owned(),
+                    detail: "Climb back out · the ceiling door above the start is open".to_owned(),
                     is_error: false,
                 });
             }
@@ -4444,14 +4528,21 @@ impl ClientState {
                 DungeonV2Requirement::ClimbingGloves => "CLIMBING GLOVES".to_owned(),
                 DungeonV2Requirement::WingedBoots => "WINGED BOOTS".to_owned(),
                 DungeonV2Requirement::Coins(count) => format!("{count} COINS"),
+                DungeonV2Requirement::Crown => "THE CROWN".to_owned(),
             };
-            self.replay_notice = Some(ReplayNotice {
-                title: format!("SEALED · {label} REQUIRED"),
-                detail: format!(
+            let detail = match requirement {
+                DungeonV2Requirement::Crown => {
+                    "claim the crown at the dungeon's bottom, then escape here".to_owned()
+                }
+                _ => format!(
                     "you have {}/{} coins; explore another branch",
                     run.inventory.coins.len(),
                     dungeon_v2_total_coins()
                 ),
+            };
+            self.replay_notice = Some(ReplayNotice {
+                title: format!("SEALED · {label} REQUIRED"),
+                detail,
                 is_error: true,
             });
             return true;
@@ -5276,7 +5367,7 @@ fn render(client: &ClientState, visual_assets: &VisualAssets) {
         visual_assets,
     );
     if client.selection.mode == RoomMode::DungeonV2 {
-        draw_dungeon_v2_exit_gate(&room_viewport, client);
+        draw_dungeon_v2_door_locks(&room_viewport, client);
     }
     draw_player_effects(
         &room_viewport,
@@ -5554,32 +5645,113 @@ fn draw_dungeon_v2_pause(viewport: &PixelViewport, client: &ClientState) {
     );
 }
 
-/// The escape gate marking in the dungeon v2 spawn room. Drawn in every
-/// crown state so the player learns where the run will end: dim and inert
-/// before the crown, bright once the crown is held and the exit trigger
-/// exists.
-fn draw_dungeon_v2_exit_gate(viewport: &PixelViewport, client: &ClientState) {
+/// A small padlock glyph whose shackle tops the body at `(x, y)`.
+fn draw_lock_glyph(viewport: &PixelViewport, x: i32, y: i32, colour: Color) {
+    viewport.rectangle_outline(CoreRect::new(x + 1, y - 2, 3, 3), 1, colour);
+    viewport.rectangle(CoreRect::new(x, y, 5, 4), colour);
+}
+
+/// A tiny three-point crown glyph with its base's top-left at `(x, y)`.
+fn draw_crown_glyph(viewport: &PixelViewport, x: i32, y: i32, colour: Color) {
+    viewport.rectangle(CoreRect::new(x, y, 7, 2), colour);
+    for spike in [0, 3, 6] {
+        viewport.rectangle(CoreRect::new(x + spike, y - 2, 1, 2), colour);
+    }
+}
+
+/// Locked-door and escape-door treatments for the current dungeon v2 room,
+/// drawn at the door mouths so every sealed door is unmistakably locked, with
+/// its concrete unlock condition, before the player touches it: coin gates
+/// show a live current/required count with a coin glyph, ability gates name
+/// the gear, and the spawn room's ceiling escape shows the crown glyph while
+/// locked and a bright open EXIT once the crown is held. Doors whose
+/// condition is met (or that never had one) get no treatment.
+fn draw_dungeon_v2_door_locks(viewport: &PixelViewport, client: &ClientState) {
     let Some(run) = client.dungeon_v2_run.as_ref() else {
         return;
     };
-    if run.room != dungeon_v2_definition().spawn {
-        return;
+    let dungeon = dungeon_v2_definition();
+    let is_spawn_room = run.room == dungeon.spawn;
+    for door in client.simulation.room().doors() {
+        let bounds = door.trigger_bounds;
+        let centre_x = bounds.x + bounds.width / 2;
+        let centre_y = bounds.y + bounds.height / 2;
+        let is_escape = is_spawn_room && door.id == "ceiling";
+
+        if is_escape && run.inventory.crown {
+            // The crowned escape: a bright, open EXIT at the ceiling mouth.
+            viewport.rectangle(bounds, EXIT_DARK);
+            viewport.rectangle_outline(bounds, 1, EXIT);
+            viewport.triangle(
+                (centre_x, bounds.y + 1),
+                (centre_x - 4, bounds.bottom() + 3),
+                (centre_x + 4, bounds.bottom() + 3),
+                EXIT,
+            );
+            viewport.text("EXIT", centre_x - 8, bounds.bottom() + 14, 5, EXIT);
+            continue;
+        }
+        let Some(requirement) = dungeon_v2_door_requirement(&run.room, &door.id) else {
+            continue;
+        };
+        if run.inventory.satisfies(requirement) {
+            continue;
+        }
+
+        // The sealed mouth: dark fill, hazard outline, and bars across the
+        // passage so the lock reads at a glance from anywhere in the room.
+        viewport.rectangle(bounds, DEBUG_PANEL);
+        viewport.rectangle_outline(bounds, 1, HAZARD);
+        let vertical_mouth = bounds.height > bounds.width;
+        for third in 1..=2 {
+            if vertical_mouth {
+                let bar_y = bounds.y + third * bounds.height / 3;
+                viewport.rectangle(CoreRect::new(bounds.x, bar_y, bounds.width, 2), HAZARD);
+            } else {
+                let bar_x = bounds.x + third * bounds.width / 3;
+                viewport.rectangle(CoreRect::new(bar_x, bounds.y, 2, bounds.height), HAZARD);
+            }
+        }
+
+        // Condition panel just inside the room, per door orientation: a
+        // padlock, the requirement glyph, and its live text.
+        let label = match requirement {
+            DungeonV2Requirement::Coins(count) => {
+                format!("{}/{count}", run.inventory.coins.len())
+            }
+            DungeonV2Requirement::ClimbingGloves => "GLOVES".to_owned(),
+            DungeonV2Requirement::WingedBoots => "BOOTS".to_owned(),
+            DungeonV2Requirement::Crown => {
+                if is_escape {
+                    "EXIT·CROWN".to_owned()
+                } else {
+                    "CROWN".to_owned()
+                }
+            }
+        };
+        let glyph_width = 9;
+        let text_width = label.len() as i32 * 3 + 2;
+        let panel_width = 7 + glyph_width + text_width;
+        let (panel_x, panel_y) = match door.side {
+            BoundarySide::Left => (bounds.right() + 3, centre_y),
+            BoundarySide::Right => (bounds.x - 3 - panel_width, centre_y),
+            BoundarySide::Ceiling => (centre_x - panel_width / 2, bounds.bottom() + 8),
+            BoundarySide::Floor => (centre_x - panel_width / 2, bounds.y - 10),
+        };
+        draw_lock_glyph(viewport, panel_x, panel_y - 2, HAZARD);
+        match requirement {
+            DungeonV2Requirement::Coins(_) => {
+                // Coin glyph: a small gold disc beside the live count.
+                viewport.rectangle(CoreRect::new(panel_x + 7, panel_y - 2, 4, 4), PICKUP);
+                viewport.rectangle_outline(CoreRect::new(panel_x + 7, panel_y - 2, 4, 4), 1, UI_TEXT);
+            }
+            DungeonV2Requirement::Crown => {
+                draw_crown_glyph(viewport, panel_x + 7, panel_y, PICKUP);
+            }
+            _ => {}
+        }
+        viewport.text(&label, panel_x + 7 + glyph_width, panel_y + 3, 5, HAZARD);
     }
-    let bounds = dungeon_v2_exit_gate_bounds();
-    let crowned = run.inventory.crown;
-    let accent = if crowned { EXIT } else { UI_DIM };
-    viewport.rectangle(bounds, if crowned { EXIT_DARK } else { DEBUG_PANEL });
-    viewport.rectangle_outline(bounds, 1, accent);
-    // Chevron pointing out through the west wall.
-    let centre_y = bounds.y + bounds.height / 2;
-    let arrow_x = bounds.x + bounds.width - 2;
-    viewport.triangle(
-        (arrow_x, centre_y - 3),
-        (arrow_x - 3, centre_y),
-        (arrow_x, centre_y + 3),
-        accent,
-    );
-    viewport.text("EXIT", bounds.x + bounds.width + 3, centre_y + 2, 5, accent);
 }
 
 fn draw_dungeon_v2_victory(viewport: &PixelViewport, client: &ClientState) {
@@ -5700,7 +5872,7 @@ fn draw_dungeon_v2_map(viewport: &PixelViewport, client: &ClientState) {
     viewport.centered_text("DUNGEON MAP", 12, 9, PLAYER);
     viewport.centered_text(
         &format!(
-            "COINS {}/{}   GOLD DOT = COINS LEFT   MATCHING MARKS = LINKED DOORS",
+            "COINS {}/{}   GOLD DOT = COINS LEFT   LOCK = SEALED DOOR   MARKS = LINKS",
             run.inventory.coins.len(),
             dungeon_v2_total_coins()
         ),
@@ -5828,6 +6000,12 @@ fn draw_dungeon_v2_map(viewport: &PixelViewport, client: &ClientState) {
             let (px, py) = door_edge_midpoint(instance_id, door_id);
             viewport.rectangle(CoreRect::new(px - 1, py - 1, 3, 3), colour);
         }
+        if sealed {
+            // A padlock on the still-locked door's edge; it clears as soon as
+            // the run satisfies the door's condition.
+            let (px, py) = door_edge_midpoint(instance_id, door_id);
+            draw_lock_glyph(viewport, px - 2, py, HAZARD);
+        }
     }
 
     for instance_id in &client.explored_v2_rooms {
@@ -5862,8 +6040,9 @@ fn draw_dungeon_v2_map(viewport: &PixelViewport, client: &ClientState) {
             },
         );
         if is_exit_node {
-            // Door glyph on the cell's west edge, mirroring the in-room gate.
-            viewport.rectangle(CoreRect::new(x + 1, y + 2, 2, CELL_H - 4), EXIT);
+            // Door glyph on the cell's TOP edge, mirroring the in-room
+            // ceiling escape door.
+            viewport.rectangle(CoreRect::new(x + CELL_W / 2 - 3, y + 1, 6, 2), EXIT);
         }
         let remaining = dungeon_v2_room(instance_id, &run.inventory)
             .pickups()
@@ -5878,9 +6057,9 @@ fn draw_dungeon_v2_map(viewport: &PixelViewport, client: &ClientState) {
     // Exit legend, drawn after the cells so it stays legible.
     viewport.centered_text(
         if run.inventory.crown {
-            "THE CROWN IS YOURS · ESCAPE THROUGH THE GREEN EXIT DOOR"
+            "THE CROWN IS YOURS · ESCAPE THROUGH THE START'S CEILING DOOR"
         } else {
-            "GREEN DOOR = EXIT · RETURN THERE WITH THE CROWN"
+            "GREEN TOP MARK = CEILING EXIT · RETURN WITH THE CROWN"
         },
         160,
         5,
@@ -7894,6 +8073,7 @@ mod tests {
                         run.inventory.coins.insert(format!("v2-coin-test-{index}"));
                     }
                 }
+                DungeonV2Requirement::Crown => run.inventory.crown = true,
             }
             assert!(run.inventory.satisfies(requirement));
         }
@@ -9781,6 +9961,157 @@ mod tests {
                 left: 0.0,
                 top: 40.0
             }
+        );
+    }
+
+    #[test]
+    fn dying_in_the_crown_room_with_the_crown_respawns_at_the_crown_point() {
+        let save_path = temporary_test_path("dungeon-v2-crown-respawn", "save.json");
+        let selection = ScenarioSelection {
+            mode: RoomMode::DungeonV2,
+            seed: 0,
+            tier: AbilityTier::Baseline,
+        };
+        let mut client = ClientState::new_with_persistence(
+            selection,
+            None,
+            false,
+            None,
+            Some((&save_path, false)),
+        )
+        .unwrap();
+        let dungeon = dungeon_v2_definition();
+        let report = |client: &ClientState, events: Vec<SimulationEvent>| StepReport {
+            tick: client.simulation.tick(),
+            events,
+            digest: client.simulation.digest(),
+        };
+        let place_in_goal = |client: &mut ClientState, crown: bool| {
+            let run = client.dungeon_v2_run.as_mut().unwrap();
+            run.room = dungeon.goal.clone();
+            run.inventory.climbing_gloves = true;
+            run.inventory.winged_boots = true;
+            run.inventory.crown = crown;
+            let room = dungeon_v2_room(&dungeon.goal, &run.inventory);
+            client.simulation =
+                Simulation::enter_via_door(room, AbilitySet::new(true, true), "west").unwrap();
+        };
+
+        // Pre-crown deaths in the crown room keep the entry-door respawn.
+        place_in_goal(&mut client, false);
+        assert!(client.observe_dungeon_v2_progress(&report(
+            &client,
+            vec![
+                SimulationEvent::Died(DeathReason::Hazard { tile_x: 0, tile_y: 0 }),
+                SimulationEvent::Reset,
+            ],
+        )));
+        assert_eq!(client.simulation.entry_door(), Some("west"));
+
+        // With the crown held, a death in the crown room resumes at the
+        // crown point instead of the entry.
+        place_in_goal(&mut client, true);
+        assert!(client.observe_dungeon_v2_progress(&report(
+            &client,
+            vec![
+                SimulationEvent::Died(DeathReason::Hazard { tile_x: 0, tile_y: 0 }),
+                SimulationEvent::Reset,
+            ],
+        )));
+        assert_eq!(client.simulation.entry_door(), None);
+        let player = client.simulation.player().bounds();
+        let respawn = downwards_content::dungeon_v2_crown_respawn_point();
+        assert_eq!((player.x, player.y), (respawn.x, respawn.y));
+
+        // Dying elsewhere post-crown keeps the normal entry-door respawn.
+        {
+            let run = client.dungeon_v2_run.as_mut().unwrap();
+            run.room = dungeon.spawn.clone();
+            let room = dungeon_v2_room(&dungeon.spawn, &run.inventory);
+            client.simulation =
+                Simulation::enter_via_door(room, AbilitySet::new(true, true), "east").unwrap();
+        }
+        assert!(client.observe_dungeon_v2_progress(&report(
+            &client,
+            vec![
+                SimulationEvent::Died(DeathReason::Hazard { tile_x: 0, tile_y: 0 }),
+                SimulationEvent::Reset,
+            ],
+        )));
+        assert_eq!(client.simulation.entry_door(), Some("east"));
+    }
+
+    #[test]
+    fn assist_best_door_heads_for_the_nearest_unexplored_room_before_the_crown() {
+        let dungeon = dungeon_v2_definition();
+        // Spawn and its east neighbour explored: the floor door reaches an
+        // unexplored room in one hop, the east door needs two, and the
+        // crown-locked ceiling escape is never a candidate.
+        let explored: BTreeSet<String> = [dungeon.spawn.clone(), "ob".to_owned()].into();
+        let chosen = dungeon_v2_best_door(&dungeon.spawn, &DungeonV2Inventory::default(), &explored)
+            .expect("the spawn room has openable doors");
+        assert_eq!(chosen, "floor");
+        assert_ne!(chosen, "ceiling");
+    }
+
+    #[test]
+    fn assist_best_door_never_picks_the_crown_locked_ceiling_pre_crown() {
+        let dungeon = dungeon_v2_definition();
+        // Everything explored except the roof cap directly above the spawn:
+        // the ceiling door would be the 1-hop route, but it is crown-locked,
+        // so the assist must route the long way round (down through the
+        // halls towards the postern).
+        let explored: BTreeSet<String> = dungeon
+            .instances
+            .keys()
+            .filter(|id| id.as_str() != "ga")
+            .cloned()
+            .collect();
+        let chosen = dungeon_v2_best_door(&dungeon.spawn, &DungeonV2Inventory::default(), &explored)
+            .expect("the spawn room has openable doors");
+        assert_ne!(chosen, "ceiling");
+    }
+
+    #[test]
+    fn assist_best_door_heads_for_the_ceiling_escape_once_crowned() {
+        let dungeon = dungeon_v2_definition();
+        let mut crowned = DungeonV2Inventory::default();
+        crowned.climbing_gloves = true;
+        crowned.winged_boots = true;
+        crowned.crown = true;
+        let explored: BTreeSet<String> = dungeon.instances.keys().cloned().collect();
+        // From the observatory east of the spawn, the shortest path to the
+        // spawn room's ceiling escape is straight back west.
+        assert_eq!(
+            dungeon_v2_best_door("ob", &crowned, &explored).as_deref(),
+            Some("west")
+        );
+        // From the crown room, the first hop home is its only door.
+        assert_eq!(
+            dungeon_v2_best_door(&dungeon.goal, &crowned, &explored).as_deref(),
+            Some("west")
+        );
+    }
+
+    #[test]
+    fn assist_graph_distances_respect_coin_gates() {
+        let dungeon = dungeon_v2_definition();
+        let goal: BTreeSet<&str> = std::iter::once(dungeon.goal.as_str()).collect();
+        // Without the 58 coins the crown room is unreachable through the
+        // sealed asl east door...
+        let bare = dungeon_v2_distances_to(&goal, &DungeonV2Inventory::default());
+        assert!(!bare.contains_key("asl"));
+        // ...and with the coins banked the seal antechamber routes through.
+        let mut rich = DungeonV2Inventory::default();
+        for coin in 0..58 {
+            rich.coins.insert(format!("test-coin-{coin}"));
+        }
+        let funded = dungeon_v2_distances_to(&goal, &rich);
+        assert_eq!(funded.get("asl"), Some(&1));
+        let explored: BTreeSet<String> = dungeon.instances.keys().cloned().collect();
+        assert_eq!(
+            dungeon_v2_best_door("asl", &rich, &explored).as_deref(),
+            Some("east")
         );
     }
 }

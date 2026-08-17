@@ -215,6 +215,8 @@ pub enum DungeonV2Requirement {
     ClimbingGloves,
     WingedBoots,
     Coins(u16),
+    /// The crown itself: guards the spawn room's ceiling escape door.
+    Crown,
 }
 
 /// Parsed room `.spec.txt` payload, shared with the rooms-v2 catalogue so
@@ -437,6 +439,20 @@ fn build_definition() -> DungeonV2 {
             );
         }
     }
+    // The escape is the spawn room's CEILING door: locked (crown-gated) on
+    // the way in, and the winning exit once the crown is held. The gate is
+    // structural rather than a layout directive so the layout format (and its
+    // offline metrics tooling) stays unchanged.
+    let spawn_id = spawn.clone().expect("layout declares a spawn");
+    assert!(
+        gates
+            .insert(
+                (spawn_id, "ceiling".to_owned()),
+                DungeonV2Requirement::Crown
+            )
+            .is_none(),
+        "the spawn ceiling escape door must not carry another gate"
+    );
     let (glove_room, glove_bounds) = glove_room.expect("layout places the glove");
     let (boots_room, boots_bounds) = boots_room.expect("layout places the boots");
     DungeonV2 {
@@ -496,17 +512,28 @@ impl DungeonV2Inventory {
             DungeonV2Requirement::ClimbingGloves => self.climbing_gloves,
             DungeonV2Requirement::WingedBoots => self.winged_boots,
             DungeonV2Requirement::Coins(count) => self.coins.len() >= usize::from(count),
+            DungeonV2Requirement::Crown => self.crown,
         }
     }
 }
 
-/// Build one dungeon v2 room instance against the persistent inventory.
-/// Where the escape gate sits inside the spawn room (the bottom-west chamber
-/// of the strata sort): the run finishes here once the crown is held. The
-/// client draws the gate marking at this rectangle in every crown state.
+/// Where the escape sits: the spawn room's CEILING door mouth, at the top of
+/// the dungeon. Pre-crown the door is crown-locked; once the crown is held
+/// the mouth carries the winning exit trigger (exits take priority over the
+/// coincident door in the core, so touching the mouth ends the run). The
+/// client draws the locked/open door treatment at this rectangle in every
+/// crown state.
 #[must_use]
 pub fn dungeon_v2_exit_gate_bounds() -> Rect {
-    Rect::new(10, 140, 8, 30)
+    door_geometry(BoundarySide::Ceiling).0
+}
+
+/// Where the player respawns after dying in the crown room while holding the
+/// crown: the crown pickup point (standing atop the pedestal block under the
+/// crown at `Rect(285, 14, 16, 16)`), not the room entry.
+#[must_use]
+pub fn dungeon_v2_crown_respawn_point() -> Point {
+    Point::new(290, 18)
 }
 
 /// Collected coins and owned ability pickups are omitted, matching the demo
@@ -520,10 +547,12 @@ pub fn dungeon_v2_room(instance_id: &str, inventory: &DungeonV2Inventory) -> Roo
         .unwrap_or_else(|| panic!("unknown dungeon v2 room {instance_id}"));
     let spec = &dungeon.specs[instance.slug.as_str()];
     let is_goal = instance_id == dungeon.goal;
-    // The run ends by climbing back OUT: the exit gate sits in the spawn
-    // room and only opens (exists as a trigger) once the crown is held.
-    // The gate marking itself is always drawn by the client so the player
-    // learns the exit's location on the way in.
+    // The run ends by climbing back OUT through the spawn room's ceiling
+    // door: the exit trigger only exists once the crown is held, and it
+    // shares the door mouth's bounds (exits fire before doors in the core,
+    // so the crowned player escapes instead of transiting). The locked-door
+    // marking itself is always drawn by the client so the player learns the
+    // exit's location on the way in.
     let is_spawn = instance_id == dungeon.spawn;
     let exits = (is_spawn && inventory.crown)
         .then(|| Exit {
@@ -587,6 +616,14 @@ pub fn dungeon_v2_room(instance_id: &str, inventory: &DungeonV2Inventory) -> Roo
         );
     }
 
+    // Post-crown, dying in the crown room respawns at the crown point (the
+    // canonical spawn is only used when the client rebuilds without an entry
+    // door, which it does exactly for that death case).
+    let spawn_point = if is_goal && inventory.crown {
+        dungeon_v2_crown_respawn_point()
+    } else {
+        Point::new(20, 148)
+    };
     Room::new(
         format!("dungeon-v2.{instance_id}"),
         instance.slug.clone(),
@@ -594,7 +631,7 @@ pub fn dungeon_v2_room(instance_id: &str, inventory: &DungeonV2Inventory) -> Roo
         HEIGHT,
         TILE_SIZE,
         dungeon.grids[instance.slug.as_str()].clone(),
-        Point::new(20, 148),
+        spawn_point,
         exits,
     )
     .expect("authored v2 grids build valid rooms")
@@ -686,6 +723,63 @@ mod tests {
         assert!(
             dungeon_v2_room(&dungeon.goal, &crowned).exits().is_empty(),
             "the crown room is no longer terminal"
+        );
+    }
+
+    #[test]
+    fn the_escape_is_the_spawn_ceiling_door_and_it_is_crown_locked() {
+        let dungeon = dungeon_v2_definition();
+        // The exit trigger IS the ceiling door mouth of the spawn room, so
+        // the escape door sits on the ceiling at the top of the dungeon.
+        let (ceiling_mouth, _) = door_geometry(BoundarySide::Ceiling);
+        assert_eq!(dungeon_v2_exit_gate_bounds(), ceiling_mouth);
+        let spawn_room = dungeon_v2_room(&dungeon.spawn, &DungeonV2Inventory::default());
+        let ceiling = spawn_room
+            .doors()
+            .iter()
+            .find(|door| door.id == "ceiling")
+            .expect("spawn room has a ceiling door");
+        assert_eq!(ceiling.trigger_bounds, dungeon_v2_exit_gate_bounds());
+        // Locked without the crown, open with it.
+        let requirement = dungeon_v2_door_requirement(&dungeon.spawn, "ceiling")
+            .expect("the spawn ceiling door is gated");
+        assert_eq!(requirement, DungeonV2Requirement::Crown);
+        assert!(!DungeonV2Inventory::default().satisfies(requirement));
+        let mut crowned = DungeonV2Inventory::default();
+        crowned.crown = true;
+        assert!(crowned.satisfies(requirement));
+    }
+
+    #[test]
+    fn dying_with_the_crown_respawns_at_the_crown_point_in_the_crown_room() {
+        let dungeon = dungeon_v2_definition();
+        let mut crowned = DungeonV2Inventory::default();
+        crowned.climbing_gloves = true;
+        crowned.winged_boots = true;
+        crowned.crown = true;
+        // The crowned crown room's canonical spawn is the crown point...
+        let room = dungeon_v2_room(&dungeon.goal, &crowned);
+        assert_eq!(room.spawn(), dungeon_v2_crown_respawn_point());
+        // ...and it stands where the crown was collected.
+        let crown_bounds = Rect::new(285, 14, 16, 16);
+        let respawn = dungeon_v2_crown_respawn_point();
+        assert!(
+            Rect::new(
+                respawn.x,
+                respawn.y,
+                downwards_core::PLAYER_WIDTH,
+                downwards_core::PLAYER_HEIGHT
+            )
+            .intersects(crown_bounds)
+        );
+        // Everywhere else (and pre-crown) keeps the normal entry spawn.
+        assert_eq!(
+            dungeon_v2_room(&dungeon.goal, &DungeonV2Inventory::default()).spawn(),
+            Point::new(20, 148)
+        );
+        assert_eq!(
+            dungeon_v2_room(&dungeon.spawn, &crowned).spawn(),
+            Point::new(20, 148)
         );
     }
 

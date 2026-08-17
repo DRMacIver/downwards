@@ -30,7 +30,8 @@ pub use calibration_gallery_b::{
 pub use dungeon_v2::{
     DUNGEON_V2_BOOT_PICKUP, DUNGEON_V2_CROWN_PICKUP, DUNGEON_V2_GLOVE_PICKUP, DUNGEON_V2_GOAL_EXIT,
     DungeonV2, DungeonV2Instance, DungeonV2Inventory, DungeonV2Requirement, dungeon_v2_coin_id,
-    dungeon_v2_definition, dungeon_v2_door_requirement, dungeon_v2_exit_gate_bounds,
+    dungeon_v2_crown_respawn_point, dungeon_v2_definition, dungeon_v2_door_requirement,
+    dungeon_v2_exit_gate_bounds,
     dungeon_v2_room, dungeon_v2_total_coins,
 };
 pub use rooms_v2::{rooms_v2_room, rooms_v2_slugs};

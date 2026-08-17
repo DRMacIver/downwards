@@ -101,6 +101,10 @@ edge asl east crown west
 
 # --- gates -------------------------------------------------------------
 gate asl east coins 58         # crown coin door (one direction only)
+# NOTE: the spawn room's CEILING door (s1 ceiling, under the roof-cap) is the
+# crown-locked escape door. The gate is structural (added by dungeon_v2.rs,
+# not a layout directive): locked without the crown, and once the crown is
+# held the mouth carries the winning exit trigger.
 
 # --- pickups / endpoints ----------------------------------------------
 pickup glove ew1 190 150
