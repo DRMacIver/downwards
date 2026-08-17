@@ -415,7 +415,10 @@ async fn main() {
             continue;
         }
         if is_key_pressed(KeyCode::Tab)
-            && client.selection.mode == RoomMode::Dungeon
+            && matches!(
+                client.selection.mode,
+                RoomMode::Dungeon | RoomMode::DungeonV2
+            )
             && !client.level_menu_visible()
         {
             client.map_visible = !client.map_visible;
@@ -671,6 +674,43 @@ impl ChallengeKind {
 /// Stable 2D layout of the dungeon graph: BFS from Hollow Landing, stepping
 /// one cell per door direction and extending past occupied cells so every
 /// room gets a distinct coordinate.
+/// Stable 2D layout of the dungeon v2 graph, mirroring `dungeon_map_layout`:
+/// BFS from the spawn, one cell per door direction, extending past occupied
+/// cells so every instance gets a distinct coordinate.
+fn dungeon_v2_map_layout() -> &'static HashMap<String, (i32, i32)> {
+    static LAYOUT: std::sync::OnceLock<HashMap<String, (i32, i32)>> = std::sync::OnceLock::new();
+    LAYOUT.get_or_init(|| {
+        let dungeon = dungeon_v2_definition();
+        let mut positions: HashMap<String, (i32, i32)> = HashMap::new();
+        let mut occupied: HashSet<(i32, i32)> = HashSet::new();
+        let mut queue = VecDeque::from([dungeon.spawn.clone()]);
+        positions.insert(dungeon.spawn.clone(), (0, 0));
+        occupied.insert((0, 0));
+        while let Some(instance_id) = queue.pop_front() {
+            let origin = positions[&instance_id];
+            for (door_id, (destination, _)) in &dungeon.instances[&instance_id].connections {
+                if positions.contains_key(destination) {
+                    continue;
+                }
+                let step = match door_id.as_str() {
+                    "west" => (-1, 0),
+                    "east" => (1, 0),
+                    "ceiling" => (0, -1),
+                    _ => (0, 1),
+                };
+                let mut cell = (origin.0 + step.0, origin.1 + step.1);
+                while occupied.contains(&cell) {
+                    cell = (cell.0 + step.0, cell.1 + step.1);
+                }
+                positions.insert(destination.clone(), cell);
+                occupied.insert(cell);
+                queue.push_back(destination.clone());
+            }
+        }
+        positions
+    })
+}
+
 fn dungeon_map_layout() -> &'static HashMap<DemoDungeonRoom, (i32, i32)> {
     static LAYOUT: std::sync::OnceLock<HashMap<DemoDungeonRoom, (i32, i32)>> =
         std::sync::OnceLock::new();
@@ -5930,7 +5970,12 @@ fn render(client: &ClientState, visual_assets: &VisualAssets) {
     }
 
     if client.map_visible {
-        draw_dungeon_map(&viewport.translated(0, ROOM_TOP), client);
+        let map_viewport = viewport.translated(0, ROOM_TOP);
+        if client.selection.mode == RoomMode::DungeonV2 {
+            draw_dungeon_v2_map(&map_viewport, client);
+        } else {
+            draw_dungeon_map(&map_viewport, client);
+        }
         return;
     }
 
@@ -6145,6 +6190,96 @@ fn draw_gallery_menu(viewport: &PixelViewport, client: &ClientState, visual_asse
         6,
         UI_DIM,
     );
+}
+
+fn draw_dungeon_v2_map(viewport: &PixelViewport, client: &ClientState) {
+    const CELL_W: i32 = 12;
+    const CELL_H: i32 = 8;
+    const PITCH_X: i32 = 17;
+    const PITCH_Y: i32 = 13;
+    const CENTER_X: i32 = 160;
+    const CENTER_Y: i32 = 92;
+
+    let Some(run) = client.dungeon_v2_run.as_ref() else {
+        return;
+    };
+    viewport.rectangle(CoreRect::new(0, 0, 320, 180), MENU_BACKGROUND);
+    viewport.centered_text("DUNGEON MAP", 12, 9, PLAYER);
+    viewport.centered_text(
+        &format!(
+            "COINS {}/{}   GOLD DOT = COINS LEFT IN A ROOM YOU HAVE SEEN",
+            run.inventory.coins.len(),
+            dungeon_v2_total_coins()
+        ),
+        24,
+        5,
+        PLAYER_ACCENT,
+    );
+
+    let layout = dungeon_v2_map_layout();
+    let dungeon = dungeon_v2_definition();
+    let origin = layout[&run.room];
+    let cell_origin = |instance_id: &str| {
+        let (x, y) = layout[instance_id];
+        (
+            CENTER_X + (x - origin.0) * PITCH_X - CELL_W / 2,
+            CENTER_Y + (y - origin.1) * PITCH_Y - CELL_H / 2,
+        )
+    };
+    let on_screen =
+        |(x, y): (i32, i32)| (-CELL_W..320).contains(&x) && (30 - CELL_H..168).contains(&y);
+
+    // Connection stubs between explored neighbours first, so cells draw over
+    // them. A sealed door the player cannot yet open draws its stub in the
+    // hazard tint as a reminder of where to come back to.
+    for instance_id in &client.explored_v2_rooms {
+        let (x, y) = cell_origin(instance_id);
+        if !on_screen((x, y)) {
+            continue;
+        }
+        for door_id in dungeon.instances[instance_id].connections.keys() {
+            let (stub_x, stub_y, stub_w, stub_h) = match door_id.as_str() {
+                "west" => (x - (PITCH_X - CELL_W), y + CELL_H / 2, PITCH_X - CELL_W, 1),
+                "east" => (x + CELL_W, y + CELL_H / 2, PITCH_X - CELL_W, 1),
+                "ceiling" => (x + CELL_W / 2, y - (PITCH_Y - CELL_H), 1, PITCH_Y - CELL_H),
+                _ => (x + CELL_W / 2, y + CELL_H, 1, PITCH_Y - CELL_H),
+            };
+            let sealed = dungeon_v2_door_requirement(instance_id, door_id)
+                .is_some_and(|requirement| !run.inventory.satisfies(requirement));
+            viewport.rectangle(
+                CoreRect::new(stub_x, stub_y, stub_w, stub_h),
+                if sealed { HAZARD_DARK } else { UI_DIM },
+            );
+        }
+    }
+
+    for instance_id in &client.explored_v2_rooms {
+        let (x, y) = cell_origin(instance_id);
+        if !on_screen((x, y)) {
+            continue;
+        }
+        let current = *instance_id == run.room;
+        viewport.rectangle(
+            CoreRect::new(x, y, CELL_W, CELL_H),
+            if current { MENU_SELECTED } else { DEBUG_PANEL },
+        );
+        viewport.rectangle_outline(
+            CoreRect::new(x, y, CELL_W, CELL_H),
+            1,
+            if current { PLAYER_ACCENT } else { UI_DIM },
+        );
+        let remaining = dungeon_v2_room(instance_id, &run.inventory)
+            .pickups()
+            .iter()
+            .filter(|pickup| pickup.id().starts_with("v2-coin-"))
+            .count();
+        if remaining > 0 {
+            viewport.rectangle(CoreRect::new(x + CELL_W - 4, y + 1, 3, 3), PICKUP);
+        }
+    }
+
+    viewport.centered_text(&run.room.to_ascii_uppercase(), 168, 7, UI_TEXT);
+    viewport.centered_text("TAB/ESC CLOSE", 177, 5, UI_DIM);
 }
 
 fn draw_dungeon_map(viewport: &PixelViewport, client: &ClientState) {
@@ -8861,6 +8996,17 @@ mod tests {
         assert_eq!(client.simulation.entry_door(), Some("west"));
         // Completion never falls through to the generated catalogue.
         assert_eq!(client.next_level_selection(), None);
+    }
+
+    #[test]
+    fn dungeon_v2_map_layout_places_every_room_distinctly() {
+        let layout = dungeon_v2_map_layout();
+        let dungeon = dungeon_v2_definition();
+        assert_eq!(layout.len(), dungeon.instances.len());
+        let mut seen = HashSet::new();
+        for cell in layout.values() {
+            assert!(seen.insert(*cell), "map layout reuses cell {cell:?}");
+        }
     }
 
     #[test]
