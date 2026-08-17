@@ -11,6 +11,7 @@ gable-run-a 75da23b948efbcce
 greed-loop-a ace9830c3996674c
 greed-loop-b 19b4f4df36436a09
 greed-loop-c 07775d72ea898f9f
+greed-loop-d b5faf706ff5ae427
 keep-astral-seal af1e18eb90400aee
 keep-aurora-spire 6b56e313fc7d24ef
 keep-boots-vault 73edac84b42c61c8
@@ -26,7 +27,10 @@ keep-zenith-shaft cb1d96c091df61a0
 keyhole-vault-a ca825682b1a1fac0
 keyhole-vault-b b30490ba137a54b5
 keyhole-vault-c 9c51624adb3c05e8
+keyhole-vault-d c5e828d3953afe73
+keyhole-vault-e 75baccb2a9f2f41b
 lantern-cross-a c42badf8ff2b033a
+lantern-cross-b 10c58f88e3789a2e
 low-ceiling-arena-a 88be6bd3312e68c3
 low-ceiling-arena-b 700ef85eba59c944
 low-ceiling-arena-c 3a564e0538353c10
@@ -36,6 +40,7 @@ metronome-gallery-c 1ccb939312647469
 one-way-loop-a 78568c42b6f625be
 one-way-loop-b 03c6659a4df1745f
 one-way-loop-c 7065301625fed596
+one-way-loop-d 0f24da9bba12b8a7
 sandglass-drop-a fff5e5935f349c7b
 sandglass-drop-b cc50e1fe4fe44fbb
 shutter-chute-a 2222a8eb28ab1e3e

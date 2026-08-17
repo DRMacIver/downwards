@@ -1,0 +1,88 @@
+# Keyhole Vault - "e": THE ZIGGURAT, or "the vault is the wall you climb".
+#
+# The east deep vault hangs under the eaves on the dungeon's east flank, and it
+# inverts the family's usual shape. The other Keyhole Vaults are hollow boxes
+# with a slot in the roof. This one is almost entirely SOLID: a six-tier
+# staircase of stone filling the south-west two thirds of the room, so the
+# "vault chamber" is the diagonal void cut out above it, and the only hollow
+# spaces inside the stone are the ones the builders left on purpose. No
+# chimney, no hanging shelf, no spiked pedestal - the silhouette is a stepped
+# mass with a gallery laid across its top and a ladder bored down its heart.
+#
+# THE SPLIT LID (row 3). The lid is NOT pierced under the ceiling door. You
+# fall through the ceiling mouth at cols 14-17 and land on TOP of it, in the
+# attic gallery at rows 1-2 that runs the full width of the room. From up
+# there you are outside the vault entirely, and the room asks its question:
+# the lid has exactly two openings and neither of them is under your feet.
+#   * cols 4-7, the far WEST end - THE SPLIT. It is the head of the ziggurat:
+#     drop through and you land on the top rung at rows 3-4, with the whole
+#     coin-bearing staircase unrolling east beneath you. It is also the only
+#     way back UP, needs no ability at all, and it shuts - a shutter closes the
+#     split on a 150-tick beat, so the two-way door is a wait, never a wall.
+#   * cols 28-30, the far EAST end - THE PLUNGE. A 100px shaft straight down to
+#     the east door alcove, one tile from the exit. Instant, and absolutely
+#     one-way at bare loadout: nothing in it can be climbed, and its west face
+#     (col 27, rows 7-11) is a five-row bar of `>` spikes, so the fall has to
+#     be flown straight rather than scraped down the wall.
+# Walking east to the plunge is gated too - the attic shutter at cols 24-26
+# stands between the ceiling mouth and the shaft head - so BOTH prices are
+# timed, and the choice is honestly "cheap, unrewarded and irreversible"
+# against "long, paid and reversible". That is this variant's twist on the
+# class: entering the vault is OPTIONAL. A player who only wants to get from
+# the eaves to the east cap never has to set foot inside it.
+#
+# THE ZIGGURAT (six tiers, 20px risers, no ability anywhere). Standing bands:
+# rows 3-4 (the rung at cols 4-5), 5-6 (cols 6-11), 7-8 (12-15), 9-10 (16-19),
+# 11-12 (20-23), 13-14 (24-26), then the alcove floor at rows 15-16 and out the
+# east door. Every riser is a comfortable two-tile step, up or down, and the
+# tiers abut, so there is a wall-backed surface to resynchronise on between
+# every pair of moves. That is what buys the room its honest bare route in both
+# directions: east->ceiling is the full climb plus the walk home along the
+# gallery (237 ticks at `none`), ceiling->east is the same staircase read
+# downwards - or the plunge, if you would rather not be paid.
+#
+# THE SPIKE STEP. The rows 11-12 band (cols 20-23) carries `^` spikes at cols
+# 21-22, so the widest tier is the one tier you cannot stand across. Climbing,
+# you arrive from the rows 13-14 band and land at col 23 with the spikes
+# between you and the rest of the staircase; the hop from col 23 to col 20 is
+# the climb's one moment of commitment -
+# a flat 30px hop over lethal ground, not a pixel perch.
+#
+# THE STRONGBOX (cols 1-7, rows 14-16). Bored down through the top tier is a
+# six-rung ladder of one-way platforms, alternating cols 4-5 / cols 6-7 every
+# two rows from row 5 to row 15, dropping 100px into a sealed treasury at the
+# base of the mass. It is the deepest, most enclosed place in the dungeon's
+# east flank and it is a pure cul-de-sac: the only way out is back up the same
+# rungs. Press down to fall it, hop 20px a rung at a time to climb it - free at
+# every loadout, but it is the one part of the room you enter knowing you will
+# have to climb out again. `^` spikes at cols 6-7 row 16, directly under the
+# bottom rung, mean the last drop cannot simply be ridden straight down: you
+# step off west or you die on the floor of the vault you came to rob.
+door ceiling
+door east
+# The lid shutter: the split at cols 4-7 closes on the beat. Both the descent
+# into the vault and the climb home pass through it, so the ziggurat's mouth
+# costs a wait rather than an ability.
+hazard 40 30 40 10 150 50 30
+# The tier-two bar (cols 8-11, row 5): head height over the top tier's landing,
+# counter-phased against the lid so the climb cannot be run as one unbroken
+# sprint - you land, you breathe, you go.
+hazard 80 50 40 10 150 45 75
+# The attic gate (cols 24-26, rows 1-2): the only thing between the ceiling
+# mouth and the head of the plunge shaft. Taxes the fast unrewarded exit so
+# that the greedy route is not merely the slow one.
+hazard 240 10 30 20 150 45 0
+# Coin 0 - on the top tier at cols 8-11, standing in the tier bar's own
+# footprint. The first reward of the climb and a timed grab: you have to hold
+# ground under a shutter to take it.
+coin 101 50
+# Coin 1 - in the mouth of the plunge shaft, one tile east of the spike bar.
+# The fast exit pays too, but only to a player who commits to the drop with the
+# line already right; drifting west into the `>` bar on the way down is the
+# price. From the east door it is the whole circuit away, which is exactly the
+# asymmetry the family is about.
+coin 291 50
+# Coin 2 - on the floor of the strongbox at the far west, past the spikes under
+# the bottom rung. The far end of the built geometry, six rungs down a hole
+# that only gives back what you are willing to climb for.
+coin 11 160

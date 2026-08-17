@@ -1,0 +1,106 @@
+# greed-loop-d -- "The Under-Hall Step", medium variant of the level class
+# "Greed Loop".
+#
+# THE CLASS: a closed circuit. The bank sits in plain sight, the whole room is
+# one lap, coins sit at increasing lap-depth, and nothing is banked until the
+# lap closes back onto the bank tile.
+#
+# THE ROOM'S JOB IN THE DUNGEON: this is a STEP, not a tower. You come in from
+# the west out of the dash-curtain hall and you are leaving through the FLOOR,
+# down into the deep crossing. The mandatory route is thirteen steps east along
+# a flat gutter and one press of DOWN. The room exists to put a lap between you
+# and that press.
+#
+# THE VARIANT AXIS (what makes it not greed-loop-b): b is a donut with the lap
+# climbing the right-hand chimney and returning west along the roof. This room
+# is a TWO-STOREY CLOCKWISE LAP AROUND AN OFF-CENTRE CORE, and the return leg
+# is the LOWER FLOOR -- the same gutter you arrived on, walked the other way.
+# The core (cols 5-20, rows 5-13) is jammed against the west half of the room,
+# so the lap is lopsided: a short ladder on the narrow west side, a long run
+# east across the roof, and a deep, hazard-loaded descending spiral down the
+# wide east well. You never climb the way you came down and you never come
+# down the way you climbed; the circuit is strictly one-directional at every
+# loadout because the well's last drop is 50px and cannot be reversed.
+#
+# THE LAP, clockwise, starting where you land:
+#   0. LANDING / GUTTER (rows 15-16, cols 1-30). You arrive through the west
+#      door and drop into the west shaft onto the gutter. Look east: the bank
+#      is right there, four tiles of one-way slab at cols 14-17 row 16 with the
+#      floor door underneath it. Stand on it, press down, you are out. This is
+#      the abort, and it is visible from the first frame.
+#   1. WEST LADDER (cols 1-4, rungs at rows 14 / 12 / 10 / 8 / 6, alternating
+#      the col 3-4 and col 1-2 bands, every rise a comfortable 20px, and the
+#      top rung stepping straight onto the core's roof at col 5). The narrow
+#      side of the lopsided ring. Easy up, awkward down -- which is the point:
+#      stepping onto rung three has already half-committed you.
+#   2. TOP RUN (rows 1-4 over the core's roof at row 5, cols 5-20), eastward,
+#      the long leg. It runs over the whole core with no floor beneath it to
+#      fall back to and it dead-ends in open air at col 20.
+#   3. THE WELL (cols 21-30, rows 5-16): a descending spiral of three shelves
+#      hung off the core's east face and the east wall -- A (row 7, cols 21-24),
+#      B (row 9, cols 27-30), C (row 12, cols 21-25). You fall off the top run
+#      onto A, step east across the 20px notch onto B, step back west onto C,
+#      and then off C's east lip into a 50px free-fall to the gutter at col 27.
+#      Zig, zag, zig, gone. This is the deep half.
+#   4. RETURN LEG (gutter, rows 15-16, westward, cols 27 -> 17). The lap closes
+#      by walking back along the floor you started on, in the opposite
+#      direction, up to the bank slab from its far side. Approaching the
+#      treasury from the east when you left it heading east is what makes the
+#      circuit read as a lap and not an out-and-back.
+#
+# HAZARDS ARE BACK-LOADED, all of them in leg 2 and leg 3:
+#   * the shutter sits two thirds along the top run, and
+#   * both spikes are past it, one at the lip of the well and one on the
+#     deepest shelf.
+# Legs 0, 1 and 4 -- arriving, climbing, and coming home -- are completely
+# clean. Everything that can kill you is in the half of the lap you entered by
+# choice, which is the shape the class wants: greed is taxed, arrival is not.
+door west
+door floor
+
+# COIN 0 -- lap depth ~1/6. Hovering in the col 1-2 band of the west ladder
+# between the third and fourth rungs,
+# grabbed mid-climb. Its job is to prove that coins live ON the ring: it costs
+# three hops and it is already 100px above the bank, so the player learns the
+# geometry of the lap while collecting it, and can turn round and drop straight
+# back down the shaft to cash out.
+coin 12 90
+
+# COIN 1 -- lap depth ~1/2. On the deck of the top run at cols 15-16, one tile
+# short of the spike pair, and BEYOND the shutter. It is the last free thing on
+# the lap: you have to beat the gate to reach it, and once you are standing on
+# it the only cheap way home is back west through the gate again. Taking it and
+# then looking east at the spikes is the room's decision point.
+coin 152 40
+
+# COIN 2 -- the deep one, lap depth ~3/4, and the hardest thing in the room.
+# It sits in the far corner of shelf C, jammed against the core's east face at
+# col 21, with the shelf's spike at col 23 between it and the only way off. You
+# land on C at its east end; to take the coin you walk INTO the dead end past
+# the spike, and then you must re-cross that spike carrying the whole lap's
+# haul to reach the east lip and the drop home. The greedy detour is the only
+# stretch of the room where you travel away from the bank with a full purse,
+# and it is a dead end -- there is no bail-out from C except the way you came.
+# It is also the room's ability-gated coin: bare-handed the spiral's shelves
+# hand you onto C too far east to work the dead end and get back out inside the
+# budget, so coin 2 reads as DASH-ONLY, exactly as the class's deep coin should.
+coin 210 100
+
+# SPIKE, cols 17-18 row 4 -- the toll at the lip of the well, and the point of
+# no return. Cleared eastward it dumps you onto the two-tile perch at cols
+# 19-20 or straight off into the well; cleared westward it is the price of
+# aborting the lap after coin 1. Two tiles of spike with flat deck on both
+# sides: a plain 20px hop, no perch precision, but it is the first thing in the
+# room that can cost the run.
+# SPIKE, col 23 row 11 -- the guard on shelf C, described with coin 2 above.
+# It points up into open air with landing room either side, so it punishes the
+# greedy walk-in and walk-out, never the arrival drop (you land east of it).
+
+# THE SHUTTER: fills rows 3-4 at cols 12-13, a 20px-square gate across the
+# lower half of the top run, leaving a 20px slot at rows 1-2 above it. Closed,
+# it is a wall you leap; open, you stroll. It is the ONLY hazard on the way in
+# and it sits between the ladder and everything else, so it gates the whole
+# deep half in both directions -- the tax is on committing to the run and on
+# backing out of it, never on arriving. 45 shut of every 160 ticks: mostly
+# open, so a patient player is never blocked, and an impatient one leaps.
+hazard 120 30 20 20 160 45 0

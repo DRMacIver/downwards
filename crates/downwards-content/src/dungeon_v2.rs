@@ -63,6 +63,11 @@ const GRIDS: &[(&str, &str, &str)] = &[
         include_str!("../../downwards-gen/rooms-v2/greed-loop-c.spec.txt"),
     ),
     (
+        "greed-loop-d",
+        include_str!("../../downwards-gen/rooms-v2/greed-loop-d.txt"),
+        include_str!("../../downwards-gen/rooms-v2/greed-loop-d.spec.txt"),
+    ),
+    (
         "keep-astral-seal",
         include_str!("../../downwards-gen/rooms-v2/keep-astral-seal.txt"),
         include_str!("../../downwards-gen/rooms-v2/keep-astral-seal.spec.txt"),
@@ -113,9 +118,24 @@ const GRIDS: &[(&str, &str, &str)] = &[
         include_str!("../../downwards-gen/rooms-v2/keyhole-vault-c.spec.txt"),
     ),
     (
+        "keyhole-vault-d",
+        include_str!("../../downwards-gen/rooms-v2/keyhole-vault-d.txt"),
+        include_str!("../../downwards-gen/rooms-v2/keyhole-vault-d.spec.txt"),
+    ),
+    (
+        "keyhole-vault-e",
+        include_str!("../../downwards-gen/rooms-v2/keyhole-vault-e.txt"),
+        include_str!("../../downwards-gen/rooms-v2/keyhole-vault-e.spec.txt"),
+    ),
+    (
         "lantern-cross-a",
         include_str!("../../downwards-gen/rooms-v2/lantern-cross-a.txt"),
         include_str!("../../downwards-gen/rooms-v2/lantern-cross-a.spec.txt"),
+    ),
+    (
+        "lantern-cross-b",
+        include_str!("../../downwards-gen/rooms-v2/lantern-cross-b.txt"),
+        include_str!("../../downwards-gen/rooms-v2/lantern-cross-b.spec.txt"),
     ),
     (
         "low-ceiling-arena-a",
@@ -141,6 +161,11 @@ const GRIDS: &[(&str, &str, &str)] = &[
         "one-way-loop-c",
         include_str!("../../downwards-gen/rooms-v2/one-way-loop-c.txt"),
         include_str!("../../downwards-gen/rooms-v2/one-way-loop-c.spec.txt"),
+    ),
+    (
+        "one-way-loop-d",
+        include_str!("../../downwards-gen/rooms-v2/one-way-loop-d.txt"),
+        include_str!("../../downwards-gen/rooms-v2/one-way-loop-d.spec.txt"),
     ),
     (
         "sandglass-drop-a",
@@ -369,6 +394,16 @@ fn build_definition() -> DungeonV2 {
                     .map(|&(slug, _, _)| slug)
                     .find(|&slug| slug == parts[2])
                     .unwrap_or_else(|| panic!("layout uses unknown grid {}", parts[2]));
+                // Designer rule: no grid appears twice in a dungeon.
+                if let Some(previous) = instances
+                    .values()
+                    .find(|instance: &&DungeonV2Instance| instance.slug == slug)
+                {
+                    panic!(
+                        "grid {slug} is used by both {} and {} — every room must be distinct",
+                        previous.id, parts[1]
+                    );
+                }
                 instances.insert(
                     parts[1].to_owned(),
                     DungeonV2Instance {
@@ -704,6 +739,23 @@ mod tests {
         }
         assert!(dungeon.instances.contains_key(&dungeon.spawn));
         assert!(dungeon.instances.contains_key(&dungeon.goal));
+    }
+
+    /// Designer rule (2026-08-17): no grid appears twice in a dungeon —
+    /// repeated rooms read as filler and share a track, so every instance
+    /// must use a distinct grid.
+    #[test]
+    fn no_repeated_room_grids() {
+        let dungeon = dungeon_v2_definition();
+        let mut seen: BTreeMap<&str, &str> = BTreeMap::new();
+        for instance in dungeon.instances.values() {
+            if let Some(previous) = seen.insert(instance.slug.as_str(), &instance.id) {
+                panic!(
+                    "grid {} is used by both {previous} and {}",
+                    instance.slug, instance.id
+                );
+            }
+        }
     }
 
     #[test]

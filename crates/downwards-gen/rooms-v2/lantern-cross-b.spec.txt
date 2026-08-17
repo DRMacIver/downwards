@@ -1,0 +1,67 @@
+# Lantern Cross (deep): the crossing under the seal.
+#
+# Same family job as the airy variant - a crossroads, not a test, every door
+# pair readable and mostly bare - but cut out of rock instead of hung in
+# air. The middle of the room is one solid keep from row 4 to row 12, and
+# the four doors are stitched around it rather than through it. All the
+# vertical traffic is pushed out to two wells hard against the side walls
+# (cols 1-6 and cols 25-30); all the horizontal traffic runs in two flat
+# corridors, the keep roof (rows 1-3, with the ceiling mouth in it) and the
+# low gallery (rows 13-15, with the west and east mouths in it). That is the
+# whole silhouette: a block with a hole in its floor, a ladder at each
+# shoulder, and one chimney bored down through it off-centre.
+#
+# Up and down are deliberately not the same route, and they are not on the
+# same side. From west or east you climb the well at your own shoulder -
+# five staggered shingles, an honest 20px a hop, alternating cols 1-3/4-6
+# and 25-27/28-30 - step onto the keep roof and walk inward to the plinth
+# under the ceiling mouth. Coming the other way you do not climb down at
+# all: the seal shaft at cols 18-19 is a bare 20px chimney bored clean
+# through the keep, capped at roof level by a one-way grate, so from the
+# roof you simply press down and fall the whole height of the room onto the
+# lip beside the sump. Down the middle, up the sides.
+#
+# That is also the room's gate. The floor door is a grating at the centre of
+# the low gallery - cols 14-15 are a rusted plate you land on, cols 16-17
+# are open air, so arriving from below you stand with a 20px hole at your
+# right hand and every careless step east drops you back out of the room.
+# West and east are a short walk from there. The ceiling is not: the seal
+# shaft is smooth, so getting back up means going all the way out to a
+# shoulder, up the well, and all the way back in along the roof, with a
+# flue to time in whichever direction you take it. The dungeon's soft-lock
+# analysis depends on that dogleg staying too long to walk, so the keep
+# stays solid. Wall jumps turn the seal shaft itself into the way home
+# (93 ticks instead of never), and a dash makes the dogleg cheap (133).
+#
+# The low gallery is not quite level: cols 18-19 stand 10px proud of the
+# rest of the floor - the foot of the seal shaft - so the sump reads as a
+# step down coming west and a step up going east, and you always know which
+# side of the hole you are on.
+#
+# Hazards: two flues, one either side of the sump (cols 8-11 and cols
+# 20-23), full height of the low gallery, 180-tick period and only 36 ticks
+# hot, running 90 ticks out of phase with each other. Crossing the room is a
+# two-beat stroll rather than a gate - the deep answer to the lantern pulse
+# upstairs, exhaling instead of glowing - and neither flue stands between
+# the seal shaft and the sump, so the honest descent is never timed.
+#
+# Coins - none of the three sits on a mandatory line.
+#  - coin 0 is on the keep roof at its west lip (col 7), the far end of the
+#    roof from the east well and one lip past the ceiling mouth from the
+#    west one.
+#  - coin 1 is in the west gallery, a shelf cut into the keep's flank at
+#    rows 6-8, entered by a 30px side-jump off the cols 1-3 shingle near the
+#    top of the west well and dead-ending against solid at col 11.
+#  - coin 2 is the mirror shelf on the east flank, entered by jumping inward
+#    off the cols 28-30 shingle and dead-ending at col 20 against the wall
+#    of the seal shaft. Both shelves are blind from the low gallery, so the
+#    crossroads keeps its secrets at shoulder height.
+door west
+door east
+door ceiling
+door floor
+hazard 80 130 40 30 180 36 0
+hazard 200 130 40 30 180 36 90
+coin 72 28
+coin 100 78
+coin 212 78

@@ -573,5 +573,73 @@
   "description": "The open bulb of the hourglass: a bare chamber with a shingle ladder to the ceiling door, and the same dash-only 80px sand-curtain (96-count: 60 on, 24 amber, 12 visibly off) over the floor-door tunnel. Everything that touches the floor door needs boots; everything else is bare.",
   "coin_count": 2,
   "notes": "Doors: ceiling, east, floor. Authored for dungeon v2 rev 3 (the descent). Solved pairs: ceiling->east: none,wall,dash,both; ceiling->floor: dash,both; east->ceiling: none,wall,dash,both; east->floor: dash,both; floor->ceiling: dash,both; floor->east: dash,both."
+ },
+ {
+  "slug": "greed-loop-d",
+  "verdict_ok": true,
+  "doors": [
+   "west",
+   "floor"
+  ],
+  "ability_requirement": "none",
+  "difficulty": "medium",
+  "coin_count": 3,
+  "description": "A two-storey clockwise lap around an off-centre core jammed into the west half of the room: a short one-way ladder up the narrow west side, a long top run east over the core's roof, a three-shelf descending spiral down the wide east well, and then the gutter itself walked back west as the return leg. The bank is the floor door under a one-way slab at cols 14-17, visible from the moment you land, so the mandatory route is thirteen steps east and one press of DOWN and the whole room exists to put a lap between you and that press. Hazards are back-loaded onto the top run and the well: the arrival, the climb and the walk home are clean.",
+  "notes": "Doors: west (rows 13-16 col 0) and floor (cols 14-17). Every ordered pair is bare: west-west 5, west-floor 85, floor-west 80, floor-floor 8 (identical to the greed-loop-b step it replaces). Coins 0 (west ladder, 100px above the bank) and 1 (top run beyond the shutter) are bare-collectable (none: 96 and 226); coin 2 on the dead end of shelf C behind its spike is dash-only (dash 86, both 86, none/wall inconclusive), matching the original's dash-only deep coin. One shutter (period 160, active 45, cols 12-13 rows 3-4) two thirds along the top run, plus two spikes past it. Replaces greed-loop-b as the dungeon's `gx` under-hall step."
+ },
+ {
+  "slug": "keyhole-vault-d",
+  "verdict_ok": true,
+  "doors": [
+   "ceiling",
+   "east"
+  ],
+  "ability_requirement": "none",
+  "difficulty": "hard",
+  "coin_count": 3,
+  "description": "The seal antechamber: the family's lid worn high instead of dug deep. Row 5 is a wall-to-wall slab whose back is a shallow processional gallery, the ceiling door opens onto the lid rather than through it, and the floor below is split between a deep sump and a raised bay that the east seal door opens onto. Three holes at three prices: the keyhole drops onto an altar you cannot climb back out of, the servants' slot hangs a two-rung corkscrew that is the honest bare way home, and a bare 30px tithe chimney at the far west is the gloves-or-boots shortcut out of the sump. The bay is the dungeon's last quiet ground and it is one hazard beat wide.",
+  "notes": "Doors: ceiling (cols 14-17) and east (rows 13-16 col 31). Bare in every direction: ceiling-ceiling 199, ceiling-east 88, east-ceiling 103, east-east 6 (keyhole-vault-c reference: 10 / 116 / 151 / 6 \u2014 the long ceiling self-pair is the price of the one-way keyhole drop). All three coins solve at `none`: altar coin 169, sump coin 108, gallery buttress coin 105. Four hazards, all period 150 with 45-50 ticks active: the bay ward on the mandatory crossing, the keyhole curtain in the drop shaft, the tithe curtain banding the west chimney, and the sump ward between the two spike beds. Replaces keyhole-vault-c as the dungeon's `kvc2` seal antechamber."
+ },
+ {
+  "slug": "keyhole-vault-e",
+  "verdict_ok": true,
+  "doors": [
+   "ceiling",
+   "east"
+  ],
+  "ability_requirement": "none",
+  "difficulty": "hard",
+  "coin_count": 3,
+  "description": "The ziggurat: a Keyhole Vault built solid instead of hollow. A six-tier staircase of stone fills the south-west two thirds of the room, so the vault chamber is the diagonal void above it, and the lid is split rather than pierced \u2014 you fall through the ceiling mouth onto an attic gallery and the lid's only two openings are at the far west (the shutter-gated split at the head of the staircase, the one two-way route) and the far east (a 100px plunge shaft to the door alcove, one-way, its west face a five-row bar of right-pointing spikes). Entering the vault is optional, both prices are timed, and the treasury is a six-rung one-way ladder bored down through the mass into a sealed cul-de-sac.",
+  "notes": "Doors: ceiling (cols 14-17) and east (rows 13-16 col 31). Bare in every direction: ceiling-ceiling 15, ceiling-east 104, east-ceiling 237, east-east 6 (keyhole-vault-c reference: 10 / 116 / 151 / 6). All three coins solve at `none`: top-tier coin 230, plunge-mouth coin 101, strongbox coin 118. Three hazards, period 150: the lid shutter over the split, the counter-phased tier bar over the top tier's landing, and the attic gate between the ceiling mouth and the head of the plunge. Every riser is a 20px step, so the staircase is honest bare in both directions; the rows 11-12 spike step is the climb's one 30px commitment hop. Replaces keyhole-vault-c as the dungeon's `kvc3` east deep vault."
+ },
+ {
+  "slug": "lantern-cross-b",
+  "verdict_ok": true,
+  "doors": [
+   "west",
+   "east",
+   "ceiling",
+   "floor"
+  ],
+  "ability_requirement": "none",
+  "difficulty": "medium",
+  "coin_count": 3,
+  "description": "The deep crossing, cut out of rock instead of hung in air: a solid keep from row 4 to row 12 with the four doors stitched around it. All vertical traffic runs in two shingle wells hard against the side walls, all horizontal traffic in two flat corridors (the keep roof with the ceiling mouth, the low gallery with the west and east mouths), and a bare 20px seal shaft bored off-centre through the keep drops you from the roof straight to the gallery under a one-way grate. Down the middle, up the sides \u2014 and because the shaft is smooth, climbing back to the ceiling means walking out to a shoulder and all the way back in, which is the dogleg the dungeon's soft-lock analysis rests on.",
+  "notes": "Doors: all four. Bare at `none` for fifteen of the sixteen ordered pairs (ceiling-ceiling 15, ceiling-east 112, ceiling-floor 74, ceiling-west 103, east-ceiling 146, east-east 5, east-floor 81, east-west 166, floor-east 104, floor-floor 8, floor-west 96, west-ceiling 199, west-east 188, west-floor 88, west-west 5). floor-ceiling is deliberately gated: inconclusive at `none`, 93 with wall (the seal shaft becomes the way home), 133 with dash \u2014 the same gating lantern-cross-a had (dash 53, wall 567). All three coins bare: roof-lip coin 79, west flank shelf 77, east flank shelf 77. Two counter-phased flues over the low gallery (period 180, 36 active, 90 apart), neither of them between the seal shaft and the sump, so the honest descent is never timed. Replaces lantern-cross-a as the dungeon's `lc2` deep crossing."
+ },
+ {
+  "slug": "one-way-loop-d",
+  "verdict_ok": true,
+  "doors": [
+   "west",
+   "ceiling",
+   "floor"
+  ],
+  "ability_requirement": "wall",
+  "difficulty": "hard",
+  "coin_count": 3,
+  "description": "The Seal: a One-Way Loop with the ring turned inside out. Instead of a corridor wrapped around an island, the spine is a plumb line \u2014 a four-tile shaft hanging directly under the ceiling door and landing directly on the floor door \u2014 with a descending spiral of shelves and pockets bolted to its outside and nothing closing into a circuit. Three ways down, all free (the shutter-timed plunge weaving between two opposed catches, the refundable west pocket into the wall chute, and the honest two-step east stair), and exactly one way back, up the shaft, which is gloves or boots. The junction over the point of no return reads as a map with a single road home drawn up the middle of it.",
+  "notes": "Doors: west (rows 13-16 col 0), ceiling (cols 14-17), floor (cols 14-17). Bare at `none`: ceiling-ceiling 15, ceiling-floor 76, ceiling-west 141, floor-floor 8, floor-west 80, west-floor 92, west-west 5. Gated exactly like the one-way-loop-c it replaces: floor-ceiling and west-ceiling are inconclusive at `none` (wall 65 and 103, dash 161 and 101; one-way-loop-c reference wall 149/293, dash 132/190), so retreat west is always free and only UP is gated. All three coins bare: top-shelf coin 86, west-pocket coin 47, chute-ledge coin 86. One shutter (period 150, 40 active) in the blank stretch of shaft between the two catches, so the plunge down and the ability climb home pass the same window in opposite directions. Replaces one-way-loop-c as the dungeon's `owc` deep junction."
  }
 ]

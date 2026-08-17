@@ -31,29 +31,29 @@ room ga    greed-loop-a           # roof cap over spawn; its CEILING is the esca
 room bv    keep-boots-vault       # coin vault, top-left roof corner (wall-sealed)
 room kwp   keep-west-postern      # roof gate: wall-kick bays seal the vault
 room gr1   gable-run-a            # north-west gable (wall quarter)
-room owp   one-way-loop-c         # vault under-stair (duplicate grid #1)
+room owp   one-way-loop-c         # vault under-stair
 room t1    tide-shaft-a           # spawn-side shaft, climbable bare
 room ob    keep-observatory       # east upper hall (observatory keep)
 room gb    greed-loop-b           # east roof step
 room sb    strata-sort-b          # wall-quarter crossroads; BOOTS atop the west flue wall-kick climb
 room lcc   low-ceiling-arena-c    # wall-quarter crawl junction
 room chl   chimney-lock-a         # THE wall gate into the north-west quarter
-room lc1   lantern-cross-a        # central crossing (duplicate grid #2)
+room lc1   lantern-cross-a        # central crossing
 room wg    keep-wall-gate         # wall showcase on the east gallery loop
 room swa   switchback-spine-a     # east gallery pocket
 room sd1   sandglass-drop-a       # sealed-bulb sandglass: dash trapdoor to the vault
 room mr    keep-meteor-run        # dash curtains on the vault's east exit
-room gx    greed-loop-b           # under-hall step (duplicate grid #3)
+room gx    greed-loop-d           # under-hall step (the greed step's lap)
 room sd2   sandglass-drop-b       # open-bulb sandglass: dash trapdoor to the deep
 room ew1   eaves-walk-a           # east under-eaves walk; GLOVE atop the icicle-shaft climb
 room gc    greed-loop-c           # east wall-hatch step down
 room kvc1  keyhole-vault-c        # dash vault (coins), west deep
 room lca   low-ceiling-arena-a    # dash crawl into the deep
-room lc2   lantern-cross-a        # deep crossing (duplicate grid #2)
-room owc   one-way-loop-c         # deep junction over the seal
-room kvc3  keyhole-vault-c        # east deep vault (duplicate grid #4)
+room lc2   lantern-cross-b        # deep crossing (the deep lantern cross)
+room owc   one-way-loop-d         # deep junction over the seal
+room kvc3  keyhole-vault-e        # east deep vault (under the eaves)
 room swb   switchback-spine-b     # east deep cap
-room kvc2  keyhole-vault-c        # seal antechamber (duplicate grid #4)
+room kvc2  keyhole-vault-d        # seal antechamber
 room asl   keep-astral-seal       # final gauntlet: passable only with BOTH
 room crown keep-crown-sanctum     # goal, bottom row east end
 

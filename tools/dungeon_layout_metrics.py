@@ -85,6 +85,17 @@ def main() -> int:
                 f"problem ability gate on {room}.{door}: use geometry, not door locks"
             )
 
+    # Design rule (2026-08-17): no grid appears twice in a dungeon — repeated
+    # rooms read as filler (and share a music track).
+    grid_users: dict[str, list[str]] = {}
+    for room, slug in sorted(layout.rooms.items()):
+        grid_users.setdefault(slug, []).append(room)
+    for slug, rooms in sorted(grid_users.items()):
+        if len(rooms) > 1:
+            problems.append(
+                f"problem grid {slug} repeated across rooms {rooms}: every room must be distinct"
+            )
+
     # --- structural checks -------------------------------------------------
     door_used: dict[tuple[str, str], int] = {}
     for a, da, b, db in layout.edges:
@@ -201,6 +212,24 @@ def main() -> int:
         }[loadout]
         return any(slot.get(l) is not None for l in ok_loadouts)
 
+    def collectable(slug: str, loadout: str) -> int:
+        """Coins in this room the given loadout can actually reach. A coin
+        whose only route needs an ability the dungeon does not contain is
+        not money, and must not be counted towards a coin gate."""
+        routes = table.get(slug, {}).get("coin_routes")
+        if not routes:
+            return table.get(slug, {}).get("coins", 0)
+        ok_loadouts = {
+            "none": ["none"],
+            "wall": ["none", "wall"],
+            "dash": ["none", "dash"],
+            "both": LOADOUTS,
+        }[loadout]
+        return sum(
+            1 for slot in routes.values()
+            if any(slot.get(l) is not None for l in ok_loadouts)
+        )
+
     def gate_open(room: str, door: str, wall: bool, dash: bool, coins: int) -> bool:
         gate = layout.gates.get((room, door), {})
         need = gate.get("ability")
@@ -257,7 +286,8 @@ def main() -> int:
             new_wall = wall or layout.pickups.get("glove") in rooms_seen
             new_dash = dash or layout.pickups.get("boots") in rooms_seen
             new_coins = sum(
-                table.get(layout.rooms[r], {}).get("coins", 0) for r in rooms_seen
+                collectable(layout.rooms[r], loadout_name(new_wall, new_dash))
+                for r in rooms_seen
             )
             if local_visited == visited and new_wall == wall and new_dash == dash and new_coins == coins:
                 return rooms_seen, visited, backtracks, seen_locked
@@ -321,12 +351,27 @@ def main() -> int:
     if layout.goal not in rooms_seen:
         problems.append("problem goal is not reachable")
     metrics["rooms"] = len(layout.rooms)
+    # Which loadouts a player can actually hold here depends on which
+    # traversal items the dungeon contains (the loadout axis): a trap
+    # "at loadout both" is not a trap in a dungeon with no boots in it.
+    feasible = {(False, False)}
+    if "glove" in layout.pickups:
+        feasible.add((True, False))
+    if "boots" in layout.pickups:
+        feasible.add((False, True))
+    if "glove" in layout.pickups and "boots" in layout.pickups:
+        feasible.add((True, True))
+    metrics["loadouts-feasible"] = ",".join(
+        sorted(loadout_name(w, d) for w, d in feasible)
+    )
     for wall, dash in [(False, False), (True, False), (False, True), (True, True)]:
         name = loadout_name(wall, dash)
         states = fixed_loadout_states(wall, dash)
         loadout_rooms = {room for room, _ in states}
         metrics[f"rooms-at-{name}"] = len(loadout_rooms)
         metrics[f"goal-reachable-at-{name}"] = layout.goal in loadout_rooms
+        if (wall, dash) not in feasible:
+            continue
         trapped = sorted(
             {room for (room, entry) in states if not can_retreat((room, entry), wall, dash)}
         )

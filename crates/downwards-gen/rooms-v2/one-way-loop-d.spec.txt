@@ -1,0 +1,104 @@
+# one-way-loop-d -- "THE SEAL" -- hard variant of "One-Way Loop (asymmetric
+# circuit)", built for the deep junction that sits directly over the point of no
+# return: entered from the west crossing or by falling through its own ceiling,
+# and leaving downward into the last gauntlet before the crown.
+#
+# NO RING. The other variants of this class are a corridor wrapped around a
+# solid island, and the lap is the room. This one inverts that silhouette. The
+# spine here is a PLUMB LINE: a four-tile shaft (cols 14-17, faced by col 13 and
+# col 18) hanging directly beneath the ceiling door and landing directly on the
+# floor door. Everything else is a descending spiral of shelves and pockets bolted
+# to the outside of that shaft, and none of it closes into a circuit. There is no
+# lap. There are THREE WAYS DOWN, all free, and ONE WAY BACK, which is the shaft,
+# and the shaft is gloves or boots. The player learns the room as a map with a
+# single road home drawn up the middle of it -- which is exactly the reading this
+# junction needs, because the hole in its floor is the last one you can decline.
+#
+# THE TOP. The ceiling door drops four tiles onto THE SILL: a one-way slab at row
+# 3, cols 13-18, wide enough that you cannot miss it. It is the room's only
+# two-way tile. From it you can step straight back out of the roof, walk WEST onto
+# the stub shelf at cols 10-12, walk EAST onto the long shelf at cols 19-25, or
+# press down and take the shaft. Four choices from one landing, three of them
+# one-way, and you can see all four before you commit.
+#
+# DESCENT 1 -- THE PLUNGE (the commitment line). Press down through the sill and
+# the shaft catches you twice on opposite sides: the wide lip at row 6 (cols 16
+# onward) leaves the fall lane at cols 14-15, and the catch at row 11 (cols 14-15)
+# leaves it at cols 16-17. The drop is a weave, not a chute, and each leg is 50px
+# -- half again a full jump, so each leg is free downward and impossible upward
+# without an ability. Between the two catches the SEAL SHUTTER fires, so the
+# plunge is entered on a beat rather than on a whim. It ends on the floor door's
+# own one-way sill: from the roof of this room to the gauntlet below in one
+# continuous fall, with every step of it irreversible bare-handed.
+#
+# DESCENT 2 -- THE WEST SPIRAL (the coin route). Walk west off the stub shelf and
+# you drop 30px into a pocket tucked under it: THE STEP, row 6, cols 6-9. This is
+# the one drop in the room you can undo -- 30px back up to the shelf -- so the
+# pocket is a loan rather than a sale, and that is why the room's most exposed
+# coin lives in it. Its west lip carries a ^ spike, so leaving the pocket the
+# other way is a hop over the point into open air: you cannot drift out of this
+# one by accident, you jump and you are gone. What you are gone into is THE CHUTE,
+# cols 1-5, straight down the west wall, caught once at row 11 and otherwise
+# running to the corridor floor beside the west door. It is the fastest way from
+# the ceiling to the west door in the room and it passes both west coins.
+#
+# DESCENT 3 -- THE EAST STAIR (the honest one). Off the east shelf's end at col 26,
+# 50px down onto the terrace at row 8 (cols 24-30), then west along it and off its
+# lip -- also spiked, the same grammar as the west pocket -- for 80px into the
+# corridor. Two sheer steps, no shutter, no puzzle, no way back up either of them.
+# It exists so the room has a descent that costs nothing and teaches nothing: the
+# one you take when you have already decided.
+#
+# THE ONE ASCENT. From the corridor the shaft is a 50px step to the row-11 catch,
+# a 50px step to the row-6 lip, and then 30px of free air through the sill to the
+# top. Two gated steps and a gift. The chimney is four tiles of clean opposing
+# rock at col 13 and col 18, so gloves chain it outright; jump + up-dash clears
+# 50px, so boots buy each step. Nothing else in the room reaches the sill: the
+# step is 100px over the corridor, the east terrace 80px, and the shutter sits in
+# the middle of the climb so the way home is timed in both directions.
+#
+# THE LOOK-BUT-DO-NOT-TOUCH. The chute's row-11 ledge (cols 1-3) is reachable by
+# anyone: a one-way rung at row 14 lifts you off the corridor onto it with no
+# abilities at all. From there the west pocket is 50px straight overhead with its
+# coin sitting on the lip. That sightline -- one coin you can have, one coin you
+# can see, 50px of nothing between them -- is the whole room stated in a single
+# glance, and it is stated at the bottom, where a player deciding whether to drop
+# into the gauntlet is standing.
+#
+# RETREAT IS ALWAYS FREE. The corridor (rows 13-15 over the floor at row 16) runs
+# unbroken from the west mouth to the floor door's sill, so west <-> floor and
+# both self-pairs close bare-handed from anywhere in the lower half, and the
+# ceiling player can always get down and out west. Only UP is gated, and only from
+# below. A player who comes down here and finds the way on shut can always walk
+# back west; a player who wants the roof again pays gloves or boots. That is
+# precisely the soft-lock profile the dungeon needs from the last junction above
+# the crown.
+door west
+door ceiling
+door floor
+# --- coins ---
+# COIN 0 -- THE SHELF COIN. Far east end of the top shelf, five tiles past the
+# shaft mouth and out over open air. Free for anyone arriving through the ceiling
+# and unreachable by any other route without climbing the whole shaft first; the
+# walk out to it and back is the room's cheapest way of making you stand on the
+# top level and look at it.
+coin 240 20
+# COIN 1 -- THE POCKET COIN. On the step under the west stub shelf, at its east
+# end, so you must drop into the pocket to take it. It is the only coin behind a
+# spiked lip, and the only one whose pocket you can climb back out of -- greed
+# here is genuinely refundable, which makes taking it a choice rather than a fee.
+coin 80 50
+# COIN 2 -- THE LEDGE COIN. On the chute's row-11 ledge, 50px directly below the
+# pocket coin. This is the coin the west-door and floor-door players can actually
+# have -- one one-way rung and a hop, no abilities -- and its whole job is to put
+# those players in the spot where the room's asymmetry is visible overhead.
+coin 10 100
+# --- hazards ---
+# THE SEAL SHUTTER: cols 14-17, rows 9-10, the blank stretch of shaft between the
+# two catches. 150-tick period, 40 of them closed, so more than two thirds of the
+# cycle is open and both catches are stand-still landings you can wait on
+# indefinitely -- a read-and-commit, never a reaction test. It puts one clock on
+# the room, and it puts it on the commitment line: the plunge to the floor door
+# and the gloves/boots climb home pass through the same window in opposite
+# directions.
+hazard 140 90 40 20 150 40 0

@@ -1,0 +1,74 @@
+# Keyhole Vault - "d" (hard): THE SEAL ANTECHAMBER.
+#
+# The last room before the astral seal, and the family's lid geometry worn high
+# instead of dug deep. Row 5 is a single slab from wall to wall, and the top of
+# the room - rows 1-4 - is a shallow processional GALLERY walked on the slab's
+# back, with the ceiling door opening straight down into it. Everything below
+# is the vault. The floor is split: a deep SUMP (cols 1-19, floor at row 17)
+# and a raised BAY (cols 20-28, floor at row 14) that the seal door opens onto,
+# with a two-tile well at cols 29-30 where you actually land coming in. Two
+# floors at two heights, a lid with three holes, and a corkscrew between them:
+# no chimney-chute-stairwell triptych anywhere in it.
+#
+# THREE HOLES IN THE LID, THREE PRICES - the family rule:
+#
+#   * cols 15-16, THE KEYHOLE. The ceiling mouth is four tiles wide, the slot
+#     under it only two, and cols 14 and 17 of the lid are solid - so arriving
+#     from above you LAND ON THE LID and dropping through is a separate,
+#     deliberate act. What you land on 50px down is the ALTAR (row 11, cols
+#     13-18) with the coin on it, and from the altar there is no way back: the
+#     lid's underside is 50px overhead with nothing to touch, and stepping off
+#     drops you 60px into the sump. Free to enter, impossible to leave by. The
+#     solver's ceiling->ceiling of 199 ticks is the price of that one step: you
+#     came in at the middle of the lid, and you go out the long way round.
+#
+#   * cols 19-22, THE SERVANTS' SLOT. The honest bare way home, and the only
+#     hole that works in both directions. Under it hangs a two-rung CORKSCREW -
+#     row 8 at cols 19-22 and row 11 at cols 23-26 - that zigzags down onto the
+#     raised bay, three 30px rises from bay top to lid. Demanding but ungated:
+#     no ability, no wall, no dash. It surfaces on the two solid lid tiles at
+#     cols 17-18, one step from the ceiling mouth, which is the whole point of
+#     an antechamber - the way out is visible from the moment you come in and
+#     still costs three committed hops.
+#
+#   * cols 1-3, THE TITHE SLOT, at the far end of the sump. A 30px chimney of
+#     bare facing rock between the west wall and the col-4 pillar, seven rows
+#     tall, with no ledge in it anywhere. Gloves or boots only. It is the fast
+#     way from the sump's treasure back to the gallery, and a bootless player
+#     who came west for the coin has to walk the whole sump back east instead -
+#     slowed, never trapped. Note the mirror against the rest of the family:
+#     here the ability price is paid on the WEST and the free route is EAST.
+#
+# THE SUMP IS OPTIONAL AND EXPENSIVE. Neither crossing needs it; it is where
+# two of the three coins live. Its floor is banded with two spike beds (cols
+# 5-6 and 14-15) and a ward curtain at cols 9-10, with three to four clear
+# tiles between every pair of threats so there is always a place to stand and
+# re-read the beat. Climbing back out is the 30px cliff at col 19 onto the bay.
+#
+# THE BAY IS THE HELD BREATH. Eight tiles of flat stone between the seal door
+# and the foot of the corkscrew, crossed by a single ward curtain at cols
+# 24-25. That is the last quiet ground in the dungeon, and it is one beat wide.
+door ceiling
+door east
+# Bay ward - the one timed beat on the mandatory crossing, hung so that the
+# corkscrew's bottom rung is a safe place to wait it out.
+hazard 240 120 20 20 150 50 0
+# Keyhole curtain, in the drop shaft between the lid and the altar. It taxes
+# the commitment itself: you can stand on the lid at col 14 and watch it.
+hazard 150 80 20 20 150 45 75
+# Tithe curtain, banding the west chimney so the ability shortcut is a timed
+# commitment too - there is nowhere in the chimney to stop for the beat.
+hazard 10 80 30 20 150 45 40
+# Sump ward, between the two spike beds, guarding the walk to the deep coin.
+hazard 90 140 20 30 150 50 110
+# Coin 0 - on the altar, dead under the keyhole. Collected by the fall itself:
+# the reward is free and the way back up is the entire price.
+coin 152 98
+# Coin 1 - the deep coin, on the sump floor at the foot of the tithe chimney:
+# two spike beds and the sump ward from anywhere, and the far end of the room
+# from both doors.
+coin 24 158
+# Coin 2 - on top of the gallery buttress at cols 10-11, west of the ceiling
+# mouth. Free to anyone who lands on the lid and walks west, but it is the one
+# reward that sits on the wrong side of the keyhole from the way home.
+coin 102 18

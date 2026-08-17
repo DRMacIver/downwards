@@ -79,6 +79,11 @@ const ROOMS: &[(&str, &str, &str)] = &[
         include_str!("../../downwards-gen/rooms-v2/greed-loop-c.spec.txt"),
     ),
     (
+        "greed-loop-d",
+        include_str!("../../downwards-gen/rooms-v2/greed-loop-d.txt"),
+        include_str!("../../downwards-gen/rooms-v2/greed-loop-d.spec.txt"),
+    ),
+    (
         "keep-astral-seal",
         include_str!("../../downwards-gen/rooms-v2/keep-astral-seal.txt"),
         include_str!("../../downwards-gen/rooms-v2/keep-astral-seal.spec.txt"),
@@ -154,9 +159,24 @@ const ROOMS: &[(&str, &str, &str)] = &[
         include_str!("../../downwards-gen/rooms-v2/keyhole-vault-c.spec.txt"),
     ),
     (
+        "keyhole-vault-d",
+        include_str!("../../downwards-gen/rooms-v2/keyhole-vault-d.txt"),
+        include_str!("../../downwards-gen/rooms-v2/keyhole-vault-d.spec.txt"),
+    ),
+    (
+        "keyhole-vault-e",
+        include_str!("../../downwards-gen/rooms-v2/keyhole-vault-e.txt"),
+        include_str!("../../downwards-gen/rooms-v2/keyhole-vault-e.spec.txt"),
+    ),
+    (
         "lantern-cross-a",
         include_str!("../../downwards-gen/rooms-v2/lantern-cross-a.txt"),
         include_str!("../../downwards-gen/rooms-v2/lantern-cross-a.spec.txt"),
+    ),
+    (
+        "lantern-cross-b",
+        include_str!("../../downwards-gen/rooms-v2/lantern-cross-b.txt"),
+        include_str!("../../downwards-gen/rooms-v2/lantern-cross-b.spec.txt"),
     ),
     (
         "low-ceiling-arena-a",
@@ -202,6 +222,11 @@ const ROOMS: &[(&str, &str, &str)] = &[
         "one-way-loop-c",
         include_str!("../../downwards-gen/rooms-v2/one-way-loop-c.txt"),
         include_str!("../../downwards-gen/rooms-v2/one-way-loop-c.spec.txt"),
+    ),
+    (
+        "one-way-loop-d",
+        include_str!("../../downwards-gen/rooms-v2/one-way-loop-d.txt"),
+        include_str!("../../downwards-gen/rooms-v2/one-way-loop-d.spec.txt"),
     ),
     (
         "sandglass-drop-a",
