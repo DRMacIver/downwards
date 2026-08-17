@@ -423,6 +423,23 @@ async fn main() {
         {
             client.map_visible = !client.map_visible;
         }
+        if client.pause_visible {
+            if is_key_pressed(KeyCode::Escape) || is_key_pressed(KeyCode::Enter) {
+                client.pause_visible = false;
+            }
+            if is_key_pressed(KeyCode::Tab) {
+                client.pause_visible = false;
+                client.map_visible = true;
+            }
+            accumulated_seconds = 0.0;
+            dash_queued = false;
+            jump_input.reset();
+            restart_queued = false;
+            replay_frame_queued = false;
+            render(&client, &visual_assets);
+            next_frame().await;
+            continue;
+        }
         if client.map_visible {
             if is_key_pressed(KeyCode::Escape) {
                 client.map_visible = false;
@@ -445,6 +462,13 @@ async fn main() {
             replay_frame_queued = false;
         } else if is_key_pressed(KeyCode::Escape) {
             if client.cancel_replay() {
+                accumulated_seconds = 0.0;
+                dash_queued = false;
+                jump_input.reset();
+                restart_queued = false;
+                replay_frame_queued = false;
+            } else if client.selection.mode == RoomMode::DungeonV2 {
+                client.pause_visible = true;
                 accumulated_seconds = 0.0;
                 dash_queued = false;
                 jump_input.reset();
@@ -2615,6 +2639,7 @@ struct ClientState {
     death_pause_ticks: u8,
     explored_rooms: BTreeSet<DemoDungeonRoom>,
     map_visible: bool,
+    pause_visible: bool,
     notice_seen: Option<(String, String)>,
     notice_age: u32,
 }
@@ -2641,6 +2666,8 @@ impl Default for DungeonRunState {
 struct DungeonV2RunState {
     room: String,
     inventory: DungeonV2Inventory,
+    deaths: u32,
+    play_ticks: u64,
 }
 
 impl Default for DungeonV2RunState {
@@ -2648,6 +2675,8 @@ impl Default for DungeonV2RunState {
         Self {
             room: dungeon_v2_definition().spawn.clone(),
             inventory: DungeonV2Inventory::default(),
+            deaths: 0,
+            play_ticks: 0,
         }
     }
 }
@@ -2664,6 +2693,10 @@ struct DungeonV2SaveV1 {
     crown: bool,
     collected_coins: Vec<String>,
     explored_rooms: Vec<String>,
+    #[serde(default)]
+    deaths: u32,
+    #[serde(default)]
+    play_ticks: u64,
     saved_at_unix_ms: u64,
 }
 
@@ -2684,6 +2717,8 @@ impl DungeonV2SaveV1 {
             crown: run.inventory.crown,
             collected_coins: run.inventory.coins.iter().cloned().collect(),
             explored_rooms: explored.iter().cloned().collect(),
+            deaths: run.deaths,
+            play_ticks: run.play_ticks,
             saved_at_unix_ms: unix_time_ms(),
         }
     }
@@ -2710,6 +2745,8 @@ impl DungeonV2SaveV1 {
                 crown: self.crown,
                 coins: self.collected_coins.iter().cloned().collect(),
             },
+            deaths: self.deaths,
+            play_ticks: self.play_ticks,
         };
         Ok((
             run,
@@ -3190,6 +3227,7 @@ impl ClientState {
             death_pause_ticks: 0,
             explored_rooms,
             map_visible: false,
+            pause_visible: false,
             notice_seen: None,
             notice_age: 0,
         })
@@ -3219,6 +3257,7 @@ impl ClientState {
             BTreeSet::new()
         };
         self.map_visible = false;
+        self.pause_visible = false;
         Ok(())
     }
 
@@ -4737,6 +4776,16 @@ impl ClientState {
     }
 
     fn observe_dungeon_v2_progress(&mut self, report: &StepReport) -> bool {
+        if let Some(live) = self.dungeon_v2_run.as_mut() {
+            live.play_ticks = live.play_ticks.saturating_add(1);
+            live.deaths = live.deaths.saturating_add(
+                report
+                    .events
+                    .iter()
+                    .filter(|event| matches!(event, SimulationEvent::Died(_)))
+                    .count() as u32,
+            );
+        }
         let Some(mut run) = self.dungeon_v2_run.clone() else {
             return false;
         };
@@ -4759,6 +4808,7 @@ impl ClientState {
             configure_live_simulation(&mut rebound, self.movement_tuning);
             self.simulation = rebound;
             self.human_recorder = HumanRecorder::new(&self.simulation);
+            self.persist_dungeon_v2_progress();
             return true;
         }
 
@@ -5969,6 +6019,10 @@ fn render(client: &ClientState, visual_assets: &VisualAssets) {
         return;
     }
 
+    if client.pause_visible {
+        draw_dungeon_v2_pause(&viewport.translated(0, ROOM_TOP), client);
+        return;
+    }
     if client.map_visible {
         let map_viewport = viewport.translated(0, ROOM_TOP);
         if client.selection.mode == RoomMode::DungeonV2 {
@@ -6190,6 +6244,69 @@ fn draw_gallery_menu(viewport: &PixelViewport, client: &ClientState, visual_asse
         6,
         UI_DIM,
     );
+}
+
+fn draw_dungeon_v2_pause(viewport: &PixelViewport, client: &ClientState) {
+    viewport.rectangle(CoreRect::new(0, 0, 320, 180), MENU_BACKGROUND);
+    viewport.centered_text("PAUSED", 14, 9, PLAYER);
+    let Some(run) = client.dungeon_v2_run.as_ref() else {
+        return;
+    };
+    let dungeon = dungeon_v2_definition();
+    let seconds = run.play_ticks / 60;
+    let sealed_seen = client
+        .explored_v2_rooms
+        .iter()
+        .flat_map(|instance_id| {
+            dungeon.instances[instance_id]
+                .connections
+                .keys()
+                .map(move |door_id| (instance_id, door_id))
+        })
+        .filter(|(instance_id, door_id)| {
+            dungeon_v2_door_requirement(instance_id, door_id)
+                .is_some_and(|requirement| !run.inventory.satisfies(requirement))
+        })
+        .count();
+    let lines = [
+        format!("ROOM        {}", run.room.to_ascii_uppercase()),
+        format!(
+            "EXPLORED    {}/{} ROOMS",
+            client.explored_v2_rooms.len(),
+            dungeon.instances.len()
+        ),
+        format!(
+            "COINS       {}/{}",
+            run.inventory.coins.len(),
+            dungeon_v2_total_coins()
+        ),
+        format!(
+            "GEAR        GLOVES {} · BOOTS {} · CROWN {}",
+            if run.inventory.climbing_gloves {
+                "YES"
+            } else {
+                "NO"
+            },
+            if run.inventory.winged_boots {
+                "YES"
+            } else {
+                "NO"
+            },
+            if run.inventory.crown { "YES" } else { "NO" },
+        ),
+        format!("SEALED DOORS SEEN  {sealed_seen}"),
+        format!("DEATHS      {}", run.deaths),
+        format!(
+            "TIME        {}:{:02}:{:02}",
+            seconds / 3600,
+            (seconds / 60) % 60,
+            seconds % 60
+        ),
+    ];
+    for (index, line) in lines.iter().enumerate() {
+        viewport.text(line, 70, 44 + index as i32 * 14, 6, UI_TEXT);
+    }
+    viewport.centered_text("ESC RESUME · TAB MAP", 168, 6, UI_DIM);
 }
 
 fn draw_dungeon_v2_map(viewport: &PixelViewport, client: &ClientState) {
