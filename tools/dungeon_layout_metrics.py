@@ -72,6 +72,15 @@ def main() -> int:
     table = json.loads(PASSABILITY.read_text())
     problems: list[str] = []
 
+    # Design rule: traversal abilities must gate areas through room geometry
+    # (crossings that genuinely need the ability), never through magic door
+    # locks. Only coin gates are allowed as explicit door requirements.
+    for (room, door), gate in sorted(layout.gates.items()):
+        if "ability" in gate:
+            problems.append(
+                f"problem ability gate on {room}.{door}: use geometry, not door locks"
+            )
+
     # --- structural checks -------------------------------------------------
     door_used: dict[tuple[str, str], int] = {}
     for a, da, b, db in layout.edges:
@@ -194,6 +203,11 @@ def main() -> int:
                 loadout = loadout_name(wall, dash)
                 for exit_door in table.get(slug, {}).get("doors", []):
                     if not crossable(slug, entry, exit_door, loadout):
+                        # A crossing that opens at a bigger loadout is a
+                        # geometric lock: it counts as a seen-then-unlocked
+                        # backtrack opportunity once abilities arrive.
+                        if crossable(slug, entry, exit_door, "both"):
+                            seen_locked.add((room, exit_door))
                         continue
                     if not gate_open(room, exit_door, wall, dash, coins if use_coin_gates else 10**9):
                         seen_locked.add((room, exit_door))
