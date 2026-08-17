@@ -8,7 +8,7 @@ braided-crossing-c f3c268c4c2f048fb
 chimney-lock-a 76bb9e6f3d914fd0
 eaves-walk-a 599da7b6703e508b
 gable-run-a 2c2bb42d637d704c
-greed-loop-a 391219fa1568d20e
+greed-loop-a 67e258dceec93521
 greed-loop-b a182b2349e95b40c
 greed-loop-c 614161fcdfa754dc
 keep-astral-seal e6835ed103d0fd2b

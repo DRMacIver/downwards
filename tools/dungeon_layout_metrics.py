@@ -14,6 +14,7 @@ Layout format (one directive per line, # comments allowed):
   pickup boots <id>
   spawn <id>
   goal <id>
+  exit <id>                      # room whose CEILING door is the escape exit
 
 Requires docs/design/rooms-v2-passability.json (tools/room_passability.py).
 
@@ -44,6 +45,7 @@ class Layout:
         self.pickups: dict[str, str] = {}
         self.spawn = None
         self.goal = None
+        self.exit = None
         for raw in path.read_text().splitlines():
             line = raw.split("#")[0].strip()
             if not line:
@@ -65,6 +67,8 @@ class Layout:
                 self.spawn = parts[1]
             elif parts[0] == "goal":
                 self.goal = parts[1]
+            elif parts[0] == "exit":
+                self.exit = parts[1]
 
 
 def main() -> int:
@@ -103,11 +107,35 @@ def main() -> int:
         if slug in table:
             for door in table[slug]["doors"]:
                 if (room, door) not in door_used:
+                    if room == layout.exit and door == "ceiling":
+                        # The declared exit room's ceiling door is the escape
+                        # out of the dungeon: it must NOT be an edge.
+                        continue
                     problems.append(f"problem door {room}.{door} is not connected to anything")
     if layout.spawn is None or layout.goal is None:
         problems.append("problem layout needs both spawn and goal")
         print_report(problems, {})
         return 1
+    # --- exit checks -------------------------------------------------------
+    # The escape door is the declared exit room's ceiling door, and that room
+    # must genuinely be at the top of the dungeon: nothing above it, and its
+    # ceiling door free of edges so it leads OUT of the dungeon.
+    if layout.exit is None:
+        problems.append("problem layout must declare `exit <room>` (the escape room)")
+    elif layout.exit not in layout.rooms:
+        problems.append(f"problem exit room {layout.exit} is not a declared room")
+    else:
+        exit_slug = layout.rooms[layout.exit]
+        if exit_slug in table and "ceiling" not in table[exit_slug]["doors"]:
+            problems.append(
+                f"problem exit room {layout.exit} ({exit_slug}) has no ceiling door to escape through"
+            )
+        for a, da, b, db in layout.edges:
+            if (a, da) == (layout.exit, "ceiling") or (b, db) == (layout.exit, "ceiling"):
+                problems.append(
+                    f"problem exit room {layout.exit}'s ceiling door is wired to another room "
+                    f"({a}.{da} <-> {b}.{db}); the escape door must lead out of the dungeon"
+                )
 
     # --- grid embedding ----------------------------------------------------
     # The dungeon must embed on a 2D grid: every edge joins rooms in adjacent
@@ -144,6 +172,14 @@ def main() -> int:
     for cell, owners in sorted(cell_owners.items()):
         if len(owners) > 1:
             problems.append(f"problem grid cell {cell} shared by rooms {sorted(owners)}")
+    if layout.exit in positions:
+        x, y = positions[layout.exit]
+        above = cell_owners.get((x, y - 1), [])
+        if above:
+            problems.append(
+                f"problem exit room {layout.exit} is not on the top row: "
+                f"room(s) {sorted(above)} sit directly above it"
+            )
 
     # --- progression model -------------------------------------------------
     # neighbour map: (room, entry_door) --edge--> (other_room, other_entry)

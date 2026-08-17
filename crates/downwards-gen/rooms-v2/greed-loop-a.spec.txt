@@ -24,6 +24,18 @@
 # door and the floor door share the bottom-left of the gutter, four tiles apart.
 door west
 door floor
+door ceiling
+
+# THE ROOF OPENING (ceiling door, cols 14-17, a 3-row shaft down through the
+# old low-ceiling mass onto the island cap's top run). Added when this grid
+# became the dungeon's roof-cap escape room: the crown-locked way OUT of the
+# dungeon sits directly over the treasury bridge, so leaving and banking are
+# the same vertical line. Falling in through the roof drops you onto the top
+# run mid-lap (you land past the ladder, with only the shelf hop and the
+# return chute left), which keeps the one-way ring honest. Climbing OUT is a
+# wall-kick ascent of the 4-wide shaft (walls at cols 13 and 18) from the top
+# run -- deliberately impossible bare-handed, which is fine because the crown
+# journey is late-game: by then the delver holds gloves and boots.
 
 # WHY THIS IS THE EASY VARIANT AND NOT A SCALED-DOWN HARD ONE.
 # Axes chosen: three coins (low end of the class's 2-5), a short lap, the bank

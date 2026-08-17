@@ -61,8 +61,10 @@ first unlock is earned by real descent. Wall: back up and west through the
 chimney lock into the gable quarter - the boots sit at the quarter's far
 crossroads (`sb`), the whole loop deep. Dash: down the sandglass trapdoors
 into the deep vaults. Both: the astral seal, then the crown - and then the
-climb back out: the run only ends at the escape gate in the spawn room,
-marked in-room and on the map from the first minute. Fourteen-plus geometric locks are
+climb back out: the run only ends at the escape gate in the roof-cap
+(`ga`, the room above the spawn — top row, nothing above it, its ceiling
+door leading out of the dungeon rather than to another room), marked
+in-room and on the map from the first minute. Fourteen-plus geometric locks are
 seen before they open, so the backtrack-unlock metric stays comfortably
 above target; cycle rank 8 keeps two-to-three live loops per act.
 

@@ -215,7 +215,7 @@ pub enum DungeonV2Requirement {
     ClimbingGloves,
     WingedBoots,
     Coins(u16),
-    /// The crown itself: guards the spawn room's ceiling escape door.
+    /// The crown itself: guards the exit room's ceiling escape door.
     Crown,
 }
 
@@ -241,6 +241,10 @@ pub struct DungeonV2 {
     pub instances: BTreeMap<String, DungeonV2Instance>,
     pub spawn: String,
     pub goal: String,
+    /// The room whose ceiling door is the crown-locked escape out of the
+    /// dungeon. Declared by the layout's `exit` directive; the layout tooling
+    /// guarantees it sits on the top row with its ceiling door edge-free.
+    pub exit: String,
     pub glove_room: String,
     pub boots_room: String,
     glove_bounds: Option<Rect>,
@@ -343,6 +347,7 @@ fn build_definition() -> DungeonV2 {
     let mut gates = BTreeMap::new();
     let mut spawn = None;
     let mut goal = None;
+    let mut exit = None;
     let mut glove_room: Option<(String, Option<Rect>)> = None;
     let mut boots_room: Option<(String, Option<Rect>)> = None;
     let mut edges = Vec::new();
@@ -405,6 +410,7 @@ fn build_definition() -> DungeonV2 {
             }
             "spawn" => spawn = Some(parts[1].to_owned()),
             "goal" => goal = Some(parts[1].to_owned()),
+            "exit" => exit = Some(parts[1].to_owned()),
             other => panic!("unknown layout directive {other:?}"),
         }
     }
@@ -430,8 +436,26 @@ fn build_definition() -> DungeonV2 {
             "door {room_b}.{door_b} wired twice"
         );
     }
+    // The escape is the exit room's CEILING door: locked (crown-gated) on
+    // the way in, and the winning exit once the crown is held. The exit room
+    // sits on the top row with nothing above it, so that door leads out of
+    // the dungeon and is deliberately NOT an edge. The gate is structural
+    // (derived from the layout's `exit` directive rather than a `gate` line).
+    let exit_id = exit.expect("layout declares an exit room");
+    assert!(
+        instances.contains_key(&exit_id),
+        "exit room {exit_id} is not a declared room"
+    );
     for instance in instances.values() {
         for &(door_id, _) in &specs[instance.slug.as_str()].doors {
+            if instance.id == exit_id && door_id == "ceiling" {
+                // The escape door leads out of the dungeon, not to a room.
+                assert!(
+                    !instance.connections.contains_key(door_id),
+                    "the exit room's ceiling escape door must not be an edge"
+                );
+                continue;
+            }
             assert!(
                 instance.connections.contains_key(door_id),
                 "door {}.{door_id} is not wired to anything",
@@ -439,19 +463,21 @@ fn build_definition() -> DungeonV2 {
             );
         }
     }
-    // The escape is the spawn room's CEILING door: locked (crown-gated) on
-    // the way in, and the winning exit once the crown is held. The gate is
-    // structural rather than a layout directive so the layout format (and its
-    // offline metrics tooling) stays unchanged.
-    let spawn_id = spawn.clone().expect("layout declares a spawn");
+    assert!(
+        specs[instances[&exit_id].slug.as_str()]
+            .doors
+            .iter()
+            .any(|&(door_id, _)| door_id == "ceiling"),
+        "exit room {exit_id} has no ceiling door to escape through"
+    );
     assert!(
         gates
             .insert(
-                (spawn_id, "ceiling".to_owned()),
+                (exit_id.clone(), "ceiling".to_owned()),
                 DungeonV2Requirement::Crown
             )
             .is_none(),
-        "the spawn ceiling escape door must not carry another gate"
+        "the exit room's ceiling escape door must not carry another gate"
     );
     let (glove_room, glove_bounds) = glove_room.expect("layout places the glove");
     let (boots_room, boots_bounds) = boots_room.expect("layout places the boots");
@@ -459,6 +485,7 @@ fn build_definition() -> DungeonV2 {
         instances,
         spawn: spawn.expect("layout declares a spawn"),
         goal: goal.expect("layout declares a goal"),
+        exit: exit_id,
         glove_room,
         boots_room,
         glove_bounds,
@@ -517,12 +544,12 @@ impl DungeonV2Inventory {
     }
 }
 
-/// Where the escape sits: the spawn room's CEILING door mouth, at the top of
-/// the dungeon. Pre-crown the door is crown-locked; once the crown is held
-/// the mouth carries the winning exit trigger (exits take priority over the
-/// coincident door in the core, so touching the mouth ends the run). The
-/// client draws the locked/open door treatment at this rectangle in every
-/// crown state.
+/// Where the escape sits: the exit room's CEILING door mouth, at the top of
+/// the dungeon (nothing above the exit room; the door leads outside).
+/// Pre-crown the door is crown-locked; once the crown is held the mouth
+/// carries the winning exit trigger (exits take priority over the coincident
+/// door in the core, so touching the mouth ends the run). The client draws
+/// the locked/open door treatment at this rectangle in every crown state.
 #[must_use]
 pub fn dungeon_v2_exit_gate_bounds() -> Rect {
     door_geometry(BoundarySide::Ceiling).0
@@ -547,14 +574,14 @@ pub fn dungeon_v2_room(instance_id: &str, inventory: &DungeonV2Inventory) -> Roo
         .unwrap_or_else(|| panic!("unknown dungeon v2 room {instance_id}"));
     let spec = &dungeon.specs[instance.slug.as_str()];
     let is_goal = instance_id == dungeon.goal;
-    // The run ends by climbing back OUT through the spawn room's ceiling
+    // The run ends by climbing back OUT through the exit room's ceiling
     // door: the exit trigger only exists once the crown is held, and it
-    // shares the door mouth's bounds (exits fire before doors in the core,
-    // so the crowned player escapes instead of transiting). The locked-door
-    // marking itself is always drawn by the client so the player learns the
-    // exit's location on the way in.
-    let is_spawn = instance_id == dungeon.spawn;
-    let exits = (is_spawn && inventory.crown)
+    // shares the door mouth's bounds (that door has no destination — it
+    // leads out of the dungeon, and pre-crown the client rejects it as
+    // crown-sealed). The locked-door marking itself is always drawn by the
+    // client so the player learns the exit's location on the way in.
+    let is_exit_room = instance_id == dungeon.exit;
+    let exits = (is_exit_room && inventory.crown)
         .then(|| Exit {
             id: DUNGEON_V2_GOAL_EXIT.to_owned(),
             bounds: dungeon_v2_exit_gate_bounds(),
@@ -568,14 +595,20 @@ pub fn dungeon_v2_room(instance_id: &str, inventory: &DungeonV2Inventory) -> Roo
         .iter()
         .map(|&(door_id, side)| {
             let (trigger_bounds, arrival) = door_geometry(side);
-            let (destination_room, destination_door) = instance.connections[door_id].clone();
+            // The exit room's ceiling escape door has no destination: it
+            // leads out of the dungeon rather than to another room.
+            let connection = instance.connections.get(door_id).cloned();
+            let (destination_room, destination_door) = match connection {
+                Some((room, door)) => (Some(room), Some(door)),
+                None => (None, None),
+            };
             Door {
                 id: door_id.to_owned(),
                 side,
                 trigger_bounds,
                 arrival,
-                destination_room: Some(destination_room),
-                destination_door: Some(destination_door),
+                destination_room,
+                destination_door,
             }
         })
         .collect::<Vec<_>>();
@@ -676,7 +709,12 @@ mod tests {
             let room = dungeon_v2_room(instance_id, &bare);
             assert_eq!(room.width(), WIDTH);
             for door in room.doors() {
-                assert!(door.destination_room.is_some());
+                if *instance_id == dungeon.exit && door.id == "ceiling" {
+                    // The escape door leads out of the dungeon.
+                    assert!(door.destination_room.is_none());
+                } else {
+                    assert!(door.destination_room.is_some());
+                }
             }
         }
         let glove_room = dungeon_v2_room(&dungeon.glove_room, &bare);
@@ -703,7 +741,7 @@ mod tests {
     }
 
     #[test]
-    fn the_escape_gate_opens_in_the_spawn_room_only_with_the_crown() {
+    fn the_escape_gate_opens_in_the_exit_room_only_with_the_crown() {
         let dungeon = dungeon_v2_definition();
         let bare = DungeonV2Inventory::default();
         for instance_id in dungeon.instances.keys() {
@@ -716,10 +754,14 @@ mod tests {
         crowned.climbing_gloves = true;
         crowned.winged_boots = true;
         crowned.crown = true;
-        let spawn_room = dungeon_v2_room(&dungeon.spawn, &crowned);
-        let exit = spawn_room.exits().first().expect("spawn hosts the escape");
+        let exit_room = dungeon_v2_room(&dungeon.exit, &crowned);
+        let exit = exit_room.exits().first().expect("exit room hosts the escape");
         assert_eq!(exit.id, DUNGEON_V2_GOAL_EXIT);
         assert_eq!(exit.bounds, dungeon_v2_exit_gate_bounds());
+        assert!(
+            dungeon_v2_room(&dungeon.spawn, &crowned).exits().is_empty(),
+            "the spawn room no longer hosts the escape"
+        );
         assert!(
             dungeon_v2_room(&dungeon.goal, &crowned).exits().is_empty(),
             "the crown room is no longer terminal"
@@ -727,22 +769,49 @@ mod tests {
     }
 
     #[test]
-    fn the_escape_is_the_spawn_ceiling_door_and_it_is_crown_locked() {
+    fn the_escape_is_the_exit_room_ceiling_door_and_it_is_crown_locked() {
         let dungeon = dungeon_v2_definition();
-        // The exit trigger IS the ceiling door mouth of the spawn room, so
+        // The exit trigger IS the ceiling door mouth of the exit room, so
         // the escape door sits on the ceiling at the top of the dungeon.
         let (ceiling_mouth, _) = door_geometry(BoundarySide::Ceiling);
         assert_eq!(dungeon_v2_exit_gate_bounds(), ceiling_mouth);
-        let spawn_room = dungeon_v2_room(&dungeon.spawn, &DungeonV2Inventory::default());
-        let ceiling = spawn_room
+        let exit_room = dungeon_v2_room(&dungeon.exit, &DungeonV2Inventory::default());
+        let ceiling = exit_room
             .doors()
             .iter()
             .find(|door| door.id == "ceiling")
-            .expect("spawn room has a ceiling door");
+            .expect("exit room has a ceiling door");
         assert_eq!(ceiling.trigger_bounds, dungeon_v2_exit_gate_bounds());
+        // The escape door leads OUT of the dungeon: no destination room, and
+        // no edge points back at it either.
+        assert!(ceiling.destination_room.is_none());
+        assert!(
+            !dungeon.instances[&dungeon.exit]
+                .connections
+                .contains_key("ceiling"),
+            "the exit room's ceiling door must not be a connection edge"
+        );
+        for instance in dungeon.instances.values() {
+            for (destination, destination_door) in instance.connections.values() {
+                assert!(
+                    !(*destination == dungeon.exit && destination_door == "ceiling"),
+                    "{}'s connections target the escape door",
+                    instance.id
+                );
+            }
+        }
+        // The spawn room's ceiling is an ordinary edge again: it climbs into
+        // the exit room above (the roof-cap the delver fell in through).
+        let spawn = &dungeon.instances[&dungeon.spawn];
+        assert_eq!(
+            spawn.connections["ceiling"],
+            (dungeon.exit.clone(), "floor".to_owned()),
+            "spawn ceiling leads up into the exit room"
+        );
+        assert!(dungeon_v2_door_requirement(&dungeon.spawn, "ceiling").is_none());
         // Locked without the crown, open with it.
-        let requirement = dungeon_v2_door_requirement(&dungeon.spawn, "ceiling")
-            .expect("the spawn ceiling door is gated");
+        let requirement = dungeon_v2_door_requirement(&dungeon.exit, "ceiling")
+            .expect("the exit room's ceiling door is gated");
         assert_eq!(requirement, DungeonV2Requirement::Crown);
         assert!(!DungeonV2Inventory::default().satisfies(requirement));
         let mut crowned = DungeonV2Inventory::default();

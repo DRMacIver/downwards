@@ -1,8 +1,9 @@
 # Dungeon v2 layout (rev 3) - THE DESCENT
 #
 # Grid-consistent embedding (every edge is a unit step; the in-game map is
-# exact). Spawn sits under the roof-cap on the top row; the crown is the
-# east end of the bottom row. All ability gating is geometric - no ability
+# exact). Spawn sits under the roof-cap; the escape exit is the roof-cap's
+# own ceiling (top row, nothing above it); the crown is the east end of the
+# bottom row. All ability gating is geometric - no ability
 # door locks anywhere; the only explicit gate is the crown coin door.
 #
 # Cells (x east, y down):
@@ -24,7 +25,7 @@
 
 # --- rooms -------------------------------------------------------------
 room s1    strata-sort-a          # spawn hub, under the greed roof-cap
-room ga    greed-loop-a           # roof cap over spawn
+room ga    greed-loop-a           # roof cap over spawn; its CEILING is the escape
 room bv    keep-boots-vault       # coin vault, top-left roof corner (wall-sealed)
 room kwp   keep-west-postern      # roof gate: wall-kick bays seal the vault
 room gr1   gable-run-a            # north-west gable (wall quarter)
@@ -40,7 +41,7 @@ room wg    keep-wall-gate         # wall showcase on the east gallery loop
 room swa   switchback-spine-a     # east gallery pocket
 room sd1   sandglass-drop-a       # sealed-bulb sandglass: dash trapdoor to the vault
 room mr    keep-meteor-run        # dash curtains on the vault's east exit
-room gx    greed-loop-a           # under-hall step (duplicate grid #3)
+room gx    greed-loop-b           # under-hall step (duplicate grid #3)
 room sd2   sandglass-drop-b       # open-bulb sandglass: dash trapdoor to the deep
 room ew1   eaves-walk-a           # east under-eaves walk; GLOVE mid-walk
 room gc    greed-loop-c           # east wall-hatch step down
@@ -101,13 +102,16 @@ edge asl east crown west
 
 # --- gates -------------------------------------------------------------
 gate asl east coins 58         # crown coin door (one direction only)
-# NOTE: the spawn room's CEILING door (s1 ceiling, under the roof-cap) is the
-# crown-locked escape door. The gate is structural (added by dungeon_v2.rs,
-# not a layout directive): locked without the crown, and once the crown is
-# held the mouth carries the winning exit trigger.
+# NOTE: the exit room's CEILING door (ga ceiling, the roof-cap's opening to
+# the sky) is the crown-locked escape door. The gate is structural (added by
+# dungeon_v2.rs from the `exit` directive, not a `gate` line): locked without
+# the crown, and once the crown is held the mouth carries the winning exit
+# trigger. It is NOT an edge: ga sits on the top row with nothing above it,
+# so the door leads out of the dungeon.
 
 # --- pickups / endpoints ----------------------------------------------
 pickup glove ew1 190 150
 pickup boots sb 152 148
 spawn s1
 goal crown
+exit ga

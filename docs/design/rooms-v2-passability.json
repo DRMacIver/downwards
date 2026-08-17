@@ -559,18 +559,43 @@
     "wall": 80
    },
    "2": {
-    "both": 99,
-    "dash": 119,
-    "none": 376,
-    "wall": 99
+    "both": 53,
+    "dash": 71,
+    "none": 71,
+    "wall": 53
    }
   },
   "coins": 3,
   "doors": [
    "west",
-   "floor"
+   "floor",
+   "ceiling"
   ],
   "pairs": {
+   "ceiling->ceiling": {
+    "both": 149,
+    "dash": 140,
+    "none": 140,
+    "wall": 149
+   },
+   "ceiling->floor": {
+    "both": 172,
+    "dash": 172,
+    "none": 172,
+    "wall": 172
+   },
+   "ceiling->west": {
+    "both": 121,
+    "dash": 93,
+    "none": 93,
+    "wall": 121
+   },
+   "floor->ceiling": {
+    "both": 261,
+    "dash": 102,
+    "none": 335,
+    "wall": 261
+   },
    "floor->floor": {
     "both": 8,
     "dash": 8,
@@ -582,6 +607,12 @@
     "dash": 80,
     "none": 80,
     "wall": 80
+   },
+   "west->ceiling": {
+    "both": 193,
+    "dash": 128,
+    "none": 488,
+    "wall": 193
    },
    "west->floor": {
     "both": 84,

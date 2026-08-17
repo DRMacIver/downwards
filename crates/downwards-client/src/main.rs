@@ -847,9 +847,9 @@ fn dungeon_v2_distances_to(
 /// room's doors the run can actually open, pick the one on the shortest
 /// dungeon-graph path to the current objective: before the crown, the nearest
 /// unexplored room (falling back to the crown room when everything reachable
-/// is explored); with the crown held, the spawn room whose ceiling door is
-/// the escape. Graph distances, not straight-line distance; ties break by
-/// door id for determinism.
+/// is explored); with the crown held, the exit room (the roof-cap) whose
+/// ceiling door is the escape. Graph distances, not straight-line distance;
+/// ties break by door id for determinism.
 fn dungeon_v2_best_door(
     current_room: &str,
     inventory: &DungeonV2Inventory,
@@ -879,7 +879,7 @@ fn dungeon_v2_best_door(
             .map(|(_, door_id)| door_id)
     };
     if inventory.crown {
-        let escape: BTreeSet<&str> = std::iter::once(dungeon.spawn.as_str()).collect();
+        let escape: BTreeSet<&str> = std::iter::once(dungeon.exit.as_str()).collect();
         return best_toward(&escape).or_else(|| openable_doors.iter().min().cloned().cloned());
     }
     let unexplored: BTreeSet<&str> = dungeon
@@ -3663,15 +3663,15 @@ impl ClientState {
             self.perform_pickup_solve(initial, None, DUNGEON_V2_CROWN_PICKUP.to_owned());
             return;
         }
-        if run.room == dungeon.spawn && run.inventory.crown {
-            // With the crown held the spawn room's ceiling door carries the
+        if run.room == dungeon.exit && run.inventory.crown {
+            // With the crown held the exit room's ceiling door carries the
             // escape exit trigger.
             self.perform_exit_solve(initial, None);
             return;
         }
         if run.inventory.crown {
-            // Crowned and not yet home: head along the shortest dungeon-graph
-            // path to the spawn room's ceiling escape (no more detours).
+            // Crowned and not yet out: head along the shortest dungeon-graph
+            // path to the exit room's ceiling escape (no more detours).
             if let Some(target) =
                 dungeon_v2_best_door(&run.room, &run.inventory, &self.explored_v2_rooms)
             {
@@ -4486,7 +4486,7 @@ impl ClientState {
                 changed = true;
                 self.replay_notice = Some(ReplayNotice {
                     title: "THE CROWN".to_owned(),
-                    detail: "Climb back out · the ceiling door above the start is open".to_owned(),
+                    detail: "Climb back out · the roof-cap's ceiling door is open".to_owned(),
                     is_error: false,
                 });
             }
@@ -4510,7 +4510,7 @@ impl ClientState {
             .find(|door| door.id == exit_id)
             .cloned()
         else {
-            // The spawn room's escape gate is a terminal legacy Exit, not a
+            // The exit room's escape gate is a terminal legacy Exit, not a
             // room transition; it only exists in the room once the crown is
             // held, so reaching it ends the run.
             if run.inventory.crown {
@@ -4764,8 +4764,10 @@ fn load_scenario(
         }
         RoomMode::DungeonV2 => {
             let run = DungeonV2RunState::default();
-            // A fresh run begins as an arrival: the delver drops in through the
-            // ceiling door they will eventually escape from.
+            // A fresh run begins as an arrival: the delver falls in past the
+            // roof-cap (the exit room above, whose ceiling opening is the
+            // eventual crown-locked escape) and lands in the spawn hub
+            // through its ceiling door.
             let simulation = Simulation::enter_via_door(
                 dungeon_v2_room(&run.room, &run.inventory),
                 run.inventory.abilities(),
@@ -5665,7 +5667,7 @@ fn draw_crown_glyph(viewport: &PixelViewport, x: i32, y: i32, colour: Color) {
 /// drawn at the door mouths so every sealed door is unmistakably locked, with
 /// its concrete unlock condition, before the player touches it: coin gates
 /// show a live current/required count with a coin glyph, ability gates name
-/// the gear, and the spawn room's ceiling escape shows the crown glyph while
+/// the gear, and the exit room's ceiling escape shows the crown glyph while
 /// locked and a bright open EXIT once the crown is held. Doors whose
 /// condition is met (or that never had one) get no treatment.
 fn draw_dungeon_v2_door_locks(viewport: &PixelViewport, client: &ClientState) {
@@ -5673,12 +5675,12 @@ fn draw_dungeon_v2_door_locks(viewport: &PixelViewport, client: &ClientState) {
         return;
     };
     let dungeon = dungeon_v2_definition();
-    let is_spawn_room = run.room == dungeon.spawn;
+    let is_exit_room = run.room == dungeon.exit;
     for door in client.simulation.room().doors() {
         let bounds = door.trigger_bounds;
         let centre_x = bounds.x + bounds.width / 2;
         let centre_y = bounds.y + bounds.height / 2;
-        let is_escape = is_spawn_room && door.id == "ceiling";
+        let is_escape = is_exit_room && door.id == "ceiling";
 
         if is_escape && run.inventory.crown {
             // The crowned escape: a bright, open EXIT at the ceiling mouth.
@@ -6016,10 +6018,10 @@ fn draw_dungeon_v2_map(viewport: &PixelViewport, client: &ClientState) {
             continue;
         }
         let current = *instance_id == run.room;
-        // The spawn room doubles as the exit node: always outlined in the
-        // exit colour, filled bright once the crown is held and the escape
-        // gate is live.
-        let is_exit_node = *instance_id == dungeon.spawn;
+        // The exit room (the roof-cap over the spawn) is the exit node:
+        // always outlined in the exit colour, filled bright once the crown
+        // is held and the escape gate is live.
+        let is_exit_node = *instance_id == dungeon.exit;
         viewport.rectangle(
             CoreRect::new(x, y, CELL_W, CELL_H),
             if current {
@@ -6059,7 +6061,7 @@ fn draw_dungeon_v2_map(viewport: &PixelViewport, client: &ClientState) {
     // Exit legend, drawn after the cells so it stays legible.
     viewport.centered_text(
         if run.inventory.crown {
-            "THE CROWN IS YOURS · ESCAPE THROUGH THE START'S CEILING DOOR"
+            "THE CROWN IS YOURS · ESCAPE THROUGH THE ROOF-CAP'S CEILING DOOR"
         } else {
             "GREEN TOP MARK = CEILING EXIT · RETURN WITH THE CROWN"
         },
@@ -10046,10 +10048,11 @@ mod tests {
     #[test]
     fn assist_best_door_heads_for_the_nearest_unexplored_room_before_the_crown() {
         let dungeon = dungeon_v2_definition();
-        // Spawn and its east neighbour explored: the floor door reaches an
-        // unexplored room in one hop, the east door needs two, and the
-        // crown-locked ceiling escape is never a candidate.
-        let explored: BTreeSet<String> = [dungeon.spawn.clone(), "ob".to_owned()].into();
+        // Spawn, the roof-cap above it, and the east neighbour explored: the
+        // floor door reaches an unexplored room in one hop, the east door
+        // needs two, and the ceiling (up into the explored roof-cap) loses.
+        let explored: BTreeSet<String> =
+            [dungeon.spawn.clone(), dungeon.exit.clone(), "ob".to_owned()].into();
         let chosen = dungeon_v2_best_door(&dungeon.spawn, &DungeonV2Inventory::default(), &explored)
             .expect("the spawn room has openable doors");
         assert_eq!(chosen, "floor");
@@ -10057,21 +10060,27 @@ mod tests {
     }
 
     #[test]
-    fn assist_best_door_never_picks_the_crown_locked_ceiling_pre_crown() {
+    fn assist_best_door_climbs_into_the_unexplored_roof_cap_pre_crown() {
         let dungeon = dungeon_v2_definition();
         // Everything explored except the roof cap directly above the spawn:
-        // the ceiling door would be the 1-hop route, but it is crown-locked,
-        // so the assist must route the long way round (down through the
-        // halls towards the postern).
+        // the spawn's ceiling door is an ordinary ungated edge up into it,
+        // so the assist takes the 1-hop route.
         let explored: BTreeSet<String> = dungeon
             .instances
             .keys()
-            .filter(|id| id.as_str() != "ga")
+            .filter(|id| *id != &dungeon.exit)
             .cloned()
             .collect();
         let chosen = dungeon_v2_best_door(&dungeon.spawn, &DungeonV2Inventory::default(), &explored)
             .expect("the spawn room has openable doors");
-        assert_ne!(chosen, "ceiling");
+        assert_eq!(chosen, "ceiling");
+        // The crown-locked escape itself is never a door candidate: the exit
+        // room's ceiling is not a connection at all.
+        assert!(
+            !dungeon.instances[&dungeon.exit]
+                .connections
+                .contains_key("ceiling")
+        );
     }
 
     #[test]
@@ -10083,10 +10092,16 @@ mod tests {
         crowned.crown = true;
         let explored: BTreeSet<String> = dungeon.instances.keys().cloned().collect();
         // From the observatory east of the spawn, the shortest path to the
-        // spawn room's ceiling escape is straight back west.
+        // roof-cap exit room is back west into the spawn hub...
         assert_eq!(
             dungeon_v2_best_door("ob", &crowned, &explored).as_deref(),
             Some("west")
+        );
+        // ...and from the spawn hub the way out is up through the ceiling
+        // into the roof-cap, whose own ceiling is the escape.
+        assert_eq!(
+            dungeon_v2_best_door(&dungeon.spawn, &crowned, &explored).as_deref(),
+            Some("ceiling")
         );
         // From the crown room, the first hop home is its only door.
         assert_eq!(

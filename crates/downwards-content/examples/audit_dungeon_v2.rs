@@ -170,14 +170,33 @@ fn main() {
             SearchTarget::pickup(DUNGEON_V2_CROWN_PICKUP),
         );
     }
-    // ...and the escape gate in the spawn room must be reachable with the
-    // crown held (the exit trigger only exists in the crowned room state).
+    // ...and the escape gate in the exit room's ceiling must be reachable
+    // with the crown held from every way into that room (the exit trigger
+    // only exists in the crowned room state).
     let crowned = DungeonV2Inventory {
         climbing_gloves: true,
         winged_boots: true,
         crown: true,
         ..DungeonV2Inventory::default()
     };
+    for entry in dungeon.instances[&dungeon.exit].connections.keys() {
+        let initial = enter_with(
+            &dungeon.exit,
+            entry,
+            AbilitySet::new(true, true),
+            &crowned,
+        );
+        check_special(
+            &mut cache,
+            format!("escape {} {entry} 3", dungeon.exit),
+            &initial,
+            AbilitySet::new(true, true),
+            SearchTarget::exit(DUNGEON_V2_GOAL_EXIT),
+        );
+    }
+    // The last hop of the crown journey: from every way into the spawn room,
+    // the crowned delver can reach its ceiling door (which climbs into the
+    // exit room, whose escape specials above finish the proof).
     for entry in dungeon.instances[&dungeon.spawn].connections.keys() {
         let initial = enter_with(
             &dungeon.spawn,
@@ -187,10 +206,10 @@ fn main() {
         );
         check_special(
             &mut cache,
-            format!("escape {} {entry} 3", dungeon.spawn),
+            format!("homeward {} {entry} ceiling 3", dungeon.spawn),
             &initial,
             AbilitySet::new(true, true),
-            SearchTarget::exit(DUNGEON_V2_GOAL_EXIT),
+            SearchTarget::door("ceiling"),
         );
     }
 
@@ -220,9 +239,10 @@ fn main() {
             Some(DungeonV2Requirement::ClimbingGloves) => wall,
             Some(DungeonV2Requirement::WingedBoots) => dash,
             Some(DungeonV2Requirement::Coins(count)) => coins >= usize::from(count),
-            // The spawn ceiling escape door: locked for the whole descent
-            // (graph exploration and retreat never hold the crown); the
-            // crowned escape specials below prove the exit side.
+            // The exit room's ceiling escape door: locked for the whole
+            // descent (graph exploration and retreat never hold the crown);
+            // the crowned escape specials below prove the exit side. It is
+            // not an edge, so it never appears in exploration anyway.
             Some(DungeonV2Requirement::Crown) => false,
         }
     };
