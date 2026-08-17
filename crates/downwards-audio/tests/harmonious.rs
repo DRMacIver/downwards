@@ -159,6 +159,8 @@ fn percussion_is_sparse_on_easy_rooms() {
         easy_count * 2 <= hard_count,
         "easy rooms must have at most half the hats of hard rooms ({easy_count} vs {hard_count})"
     );
-    // And easy percussion is genuinely sparse: at most 2 hats per bar.
-    assert!(easy_count <= 32, "easy perc too dense: {easy_count}");
+    // And easy percussion is genuinely sparse: about 2 hats per bar (the v5
+    // intensity arc adds one soft downbeat accent in each of the three peak
+    // bars, on top of the backbeat pairs and the turnaround fill).
+    assert!(easy_count <= 34, "easy perc too dense: {easy_count}");
 }

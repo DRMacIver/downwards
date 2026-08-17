@@ -16,7 +16,7 @@
 //!
 //! | Hear... | Means... |
 //! |---|---|
-//! | Mode colour (mixolydian / dorian / aeolian) | difficulty easy / medium / hard |
+//! | Mode colour (dorian / aeolian) + rhythm-section weight | difficulty easy/medium (dorian) / hard (aeolian) |
 //! | Tonal centre (C/D/E/G) | ability requirement none/wall/dash/both |
 //! | Tempo family | hazard period family (derived, exact) |
 //! | Rising pickup → snare + low stab | a locked hazard arming → firing, on the beat |

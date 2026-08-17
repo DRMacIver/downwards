@@ -1,6 +1,6 @@
 downwards-track v2
 slug keep-crown-sanctum
-generated-digest 6bee7b5f266a63ae
+generated-digest 455ece0d4535a18d
 hand-tuned false
 
 grid step-ticks 8 beat-steps 4 offset 0 loop-bars 16
@@ -68,24 +68,24 @@ note lead 178 4 A#3 8
 note lead 186 2 A3 9
 note lead 188 1 F3 8
 note lead 190 1 A#3 8
-note lead 192 2 C4 12
-note lead 194 4 D4 10
-note lead 200 1 C4 10
-note lead 202 4 F4 11
-note lead 206 2 D#4 10
-note lead 208 4 G4 13
-note lead 212 4 A#4 13
-note lead 218 2 G4 10
-note lead 220 2 A#4 11
-note lead 224 2 D#4 13
-note lead 226 4 F4 11
-note lead 230 1 D4 10
-note lead 232 4 G4 9
-note lead 236 2 F4 10
-note lead 238 2 D#4 9
-note lead 240 2 G4 12
-note lead 246 4 C4 8
-note lead 254 1 A#3 9
+note lead 192 2 C4 13
+note lead 194 4 D4 11
+note lead 200 1 C4 11
+note lead 202 4 F4 12
+note lead 206 2 D#4 11
+note lead 208 4 G4 14
+note lead 212 4 A#4 14
+note lead 218 2 G4 11
+note lead 220 2 A#4 12
+note lead 224 2 D#4 14
+note lead 226 4 F4 12
+note lead 230 1 D4 11
+note lead 232 4 G4 10
+note lead 236 2 F4 11
+note lead 238 2 D#4 10
+note lead 240 2 G4 13
+note lead 246 4 C4 9
+note lead 254 1 A#3 10
 note arp 0 4 G3 7
 note arp 4 4 C3 5
 note arp 8 4 D#3 6
@@ -226,11 +226,13 @@ hat shaker 182 3
 hat perc 184 6
 hat shaker 186 4
 hat shaker 190 3
-note arp 192 4 G3 8
-note arp 196 4 C3 6
-note arp 200 4 D#3 7
-note arp 204 4 C3 6
-note pad 192 32 C3 10
+note arp 192 4 G3 9
+note arp 196 4 C3 7
+note arp 200 4 D#3 8
+note arp 204 4 C3 7
+note pad 192 32 C3 11
+note pad 192 32 D#3 9
+note pad 192 32 G3 9
 note bass 192 8 C2 12
 note bass 200 2 G2 9
 note bass 202 2 C2 8
@@ -240,10 +242,10 @@ hat shaker 198 3
 hat perc 200 5
 hat shaker 206 4
 hat perc 192 5
-note arp 208 4 G3 8
-note arp 212 4 C3 6
-note arp 216 4 D#3 7
-note arp 220 4 C3 6
+note arp 208 4 G3 9
+note arp 212 4 C3 7
+note arp 216 4 D#3 8
+note arp 220 4 C3 7
 note bass 208 8 C2 12
 note bass 216 2 G2 9
 note bass 218 2 C2 8
@@ -253,11 +255,13 @@ hat perc 216 6
 hat shaker 218 4
 hat shaker 220 3
 hat perc 208 5
-note arp 224 4 G3 8
-note arp 228 4 C3 6
-note arp 232 4 D#3 7
-note arp 236 4 C3 6
-note pad 224 32 C3 10
+note arp 224 4 G3 9
+note arp 228 4 C3 7
+note arp 232 4 D#3 8
+note arp 236 4 C3 7
+note pad 224 32 C3 11
+note pad 224 32 D#3 9
+note pad 224 32 G3 9
 note bass 224 8 C2 12
 note bass 232 2 G2 9
 note bass 234 2 C2 8
@@ -267,10 +271,10 @@ hat shaker 230 3
 hat perc 232 5
 hat shaker 238 4
 hat perc 224 5
-note arp 240 4 G3 7
-note arp 244 4 C3 5
-note arp 248 4 D#3 6
-note arp 252 4 C3 5
+note arp 240 4 G3 8
+note arp 244 4 C3 6
+note arp 248 4 D#3 7
+note arp 252 4 C3 6
 note bass 240 4 C2 11
 note bass 244 4 G2 10
 note bass 248 4 A1 10

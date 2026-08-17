@@ -53,13 +53,16 @@ pub enum Difficulty {
 }
 
 impl Difficulty {
-    /// Target BPM used to score tempo candidates (§6.2 step 3).
+    /// Target BPM used to score tempo candidates (§6.2 step 3). The hard
+    /// band was pulled down from 136 in the v5 restraint pass (designer
+    /// feedback: escalation must come from low-register drive, not speed —
+    /// 136 was landing hazard rooms as high as 150 BPM).
     #[must_use]
     pub const fn target_bpm(self) -> u32 {
         match self {
             Self::Easy => 96,
             Self::Medium => 114,
-            Self::Hard => 136,
+            Self::Hard => 124,
         }
     }
 

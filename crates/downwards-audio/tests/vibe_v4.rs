@@ -47,8 +47,10 @@ fn rms(samples: &[f32]) -> f64 {
 /// in the dropped C3..C5 register instead of the old piercing C4..C6.
 #[test]
 fn modes_are_darkened_and_lead_register_is_low() {
+    // v5 restraint pass darkened the easy band from mixolydian to dorian —
+    // the whole ladder now stays minor-leaning.
     for (difficulty, mode) in [
-        (Difficulty::Easy, Mode::Mixolydian),
+        (Difficulty::Easy, Mode::Dorian),
         (Difficulty::Medium, Mode::Dorian),
         (Difficulty::Hard, Mode::Aeolian),
     ] {

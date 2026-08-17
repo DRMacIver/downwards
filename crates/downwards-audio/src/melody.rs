@@ -6,6 +6,7 @@
 //! reshuffle earlier choices.
 
 use crate::{
+    tempo::Difficulty,
     theory::{Key, XorShift64Star, fnv1a64},
     track::{NoteEvent, TempoGrid},
 };
@@ -41,6 +42,7 @@ struct Walk<'a> {
     rng: XorShift64Star,
     grid: &'a TempoGrid,
     progression: [u8; 4],
+    difficulty: Difficulty,
     coin_count: u32,
     doors: DoorSet,
 }
@@ -49,11 +51,13 @@ struct Walk<'a> {
 /// downbeats are chord tones of each bar's actual chord, fills tethered
 /// between neighbouring downbeats, and the final note forced to the tonic.
 #[must_use]
+#[allow(clippy::too_many_arguments)]
 pub fn generate_melody(
     slug: &str,
     key: Key,
     grid: &TempoGrid,
     progression: [u8; 4],
+    difficulty: Difficulty,
     coin_count: u32,
     doors: DoorSet,
     voice_name: &str,
@@ -63,6 +67,7 @@ pub fn generate_melody(
         rng: XorShift64Star::new(fnv1a64(slug.as_bytes())),
         grid,
         progression,
+        difficulty,
         coin_count,
         doors,
     };
@@ -376,17 +381,31 @@ impl Walk<'_> {
     /// tethered within a fifth of both the bar's downbeat and the next bar's
     /// downbeat so no interval — including across the barline — leaps wide.
     fn fill_bar(&mut self, downbeat: i32, next_downbeat: i32) -> Vec<(u32, i32)> {
-        let sixteenth_percent = match self.coin_count {
-            0 | 1 => 0,
-            2 => 15,
-            _ => 25,
+        // v5 restraint: the hard band THINS the lead as difficulty rises —
+        // intensity lives in the rhythm section, not in a busier top line —
+        // and the coin-driven sixteenth chatter is halved everywhere. Changing
+        // only the percentages is stream-safe: every position still consumes
+        // exactly one RNG draw, so downbeats and earlier fills never reshuffle
+        // (keep-wall-gate has zero coins and stays byte-identical).
+        let hard = self.difficulty == Difficulty::Hard;
+        let sixteenth_percent = match (self.coin_count, hard) {
+            (0 | 1, _) => 0,
+            (2, false) => 10,
+            (2, true) => 4,
+            (_, false) => 15,
+            (_, true) => 6,
         };
+        let eighth_percent = if hard { 30 } else { 50 };
         let mut notes = Vec::new();
         let mut current = downbeat;
         // 0 = previous move was a step (or none); ±1 = a leap in that direction.
         let mut leap_direction = 0_i32;
         for (offset, is_sixteenth) in self.fill_positions() {
-            let percent = if is_sixteenth { sixteenth_percent } else { 50 };
+            let percent = if is_sixteenth {
+                sixteenth_percent
+            } else {
+                eighth_percent
+            };
             if !self.rng.percent(percent) {
                 continue;
             }

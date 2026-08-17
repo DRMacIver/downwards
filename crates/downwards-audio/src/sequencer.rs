@@ -79,21 +79,28 @@ const HAT_NOISE: (f64, bool, f64) = (12_000.0, false, 0.025);
 /// The `noise-soft` shaker (v4 de-clack): darker clock, longer decay — a
 /// brushed texture where the hat is a tick.
 const SHAKER_NOISE: (f64, bool, f64) = (4_200.0, false, 0.09);
-const SNARE_NOISE: (f64, bool, f64) = (6_000.0, false, 0.06);
-const CRASH_NOISE: (f64, bool, f64) = (3_000.0, false, 0.2);
+/// Hazard hit timbres, darkened in the v5 restraint pass: the audition
+/// analysis put the disliked hazard-heavy rooms at roughly double the
+/// above-2 kHz energy fraction of the approved hazard-free reference, and
+/// the bright snare/crash/riser telegraphs were the dominant cause. Lower noise
+/// clocks keep the hits legible while sitting them down in the mix.
+const SNARE_NOISE: (f64, bool, f64) = (4_000.0, false, 0.07);
+const CRASH_NOISE: (f64, bool, f64) = (2_000.0, false, 0.24);
 const BED_NOISE: (f64, bool) = (1_400.0, true);
-const SWEEP_LOW_HZ: f64 = 500.0;
-const SWEEP_HIGH_HZ: f64 = 8_000.0;
+const SWEEP_LOW_HZ: f64 = 400.0;
+const SWEEP_HIGH_HZ: f64 = 3_600.0;
 
 /// Pooled hazard voice gains (§6.3). Softened 2026-08: hazard voices blend
 /// into the mix — still audibly telegraphing timing, no longer dominating.
+/// Velocities eased again in v5 (restraint pass) alongside the darker
+/// timbres above.
 const STAB_GAIN: f32 = 8.0 / 15.0;
 const SNARE_GAIN: f32 = 10.0 / 15.0;
 const CRASH_GAIN: f32 = 9.0 / 15.0;
-const HIT_VEL: f32 = 12.0 / 15.0;
-const WINDUP_VEL: f32 = 5.0 / 15.0;
-const STAB_VEL: f32 = 10.0 / 15.0;
-const SWEEP_VEL: f32 = 5.0 / 15.0;
+const HIT_VEL: f32 = 9.0 / 15.0;
+const WINDUP_VEL: f32 = 4.0 / 15.0;
+const STAB_VEL: f32 = 9.0 / 15.0;
+const SWEEP_VEL: f32 = 4.0 / 15.0;
 
 #[derive(Clone, Debug)]
 struct PatternNote {

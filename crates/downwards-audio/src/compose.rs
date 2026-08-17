@@ -80,13 +80,15 @@ pub mod defaults {
     pub const BED_LEVEL: u8 = 2;
 }
 
-/// The chord progression as 1-based scale-degree roots (§6.1). Darkened in
-/// the v4 vibe pass: minor-leaning progressions everywhere, the warmth
-/// gradient carried by the mode ladder (mixolydian → dorian → aeolian).
+/// The chord progression as 1-based scale-degree roots (§6.1). Darkened
+/// again in the v5 restraint pass: the easy band's mixolydian major triads
+/// read as "upbeat and chipper" next to the approved dorian reference
+/// (keep-wall-gate), so easy joins dorian — bands are told apart by
+/// progression, tempo, and rhythm-section weight instead of a major mode.
 #[must_use]
 pub const fn progression(difficulty: Difficulty) -> [u8; 4] {
     match difficulty {
-        Difficulty::Easy => [1, 7, 4, 1],   // I – ♭VII – IV – I (mixolydian)
+        Difficulty::Easy => [1, 7, 4, 1],   // i – ♭VII – IV – i (dorian)
         Difficulty::Medium => [1, 3, 7, 1], // i – ♭III – ♭VII – i (dorian)
         Difficulty::Hard => [1, 6, 7, 1],   // i – ♭VI – ♭VII – i (aeolian)
     }
@@ -94,8 +96,7 @@ pub const fn progression(difficulty: Difficulty) -> [u8; 4] {
 
 const fn mode_for(difficulty: Difficulty) -> Mode {
     match difficulty {
-        Difficulty::Easy => Mode::Mixolydian,
-        Difficulty::Medium => Mode::Dorian,
+        Difficulty::Easy | Difficulty::Medium => Mode::Dorian,
         Difficulty::Hard => Mode::Aeolian,
     }
 }
@@ -116,7 +117,10 @@ const ACCOMPANIMENT_SALT: u64 = 0x00ba_5511_e50f_f00d_u64;
 
 /// The seeded arpeggio shapes (v4 same-band variety): beat → chord-tone
 /// position, where 3 means the root an octave above. One shape per track
-/// (motif unity — the coherence brief).
+/// (motif unity — the coherence brief). v5 restraint: the hard band draws
+/// from its own pool of falling/circling contours — rising arps read as
+/// enthusiasm, and escalation must come from weight, not lift. The pool
+/// lengths match so the seeded draw consumes the same RNG stream.
 const ARP_SHAPES: [[usize; 4]; 6] = [
     [0, 1, 2, 0], // rising, resolving home
     [2, 1, 0, 1], // falling, rocking back
@@ -125,6 +129,24 @@ const ARP_SHAPES: [[usize; 4]; 6] = [
     [2, 0, 1, 0], // dropping in, pedalling the root
     [0, 3, 2, 1], // octave answer, walking down
 ];
+
+/// Hard-band arp pool: every shape falls at least as often as it rises
+/// within the bar (tested), circling or sinking instead of climbing.
+const HARD_ARP_SHAPES: [[usize; 4]; 6] = [
+    [2, 1, 0, 1], // falling, rocking back
+    [2, 0, 1, 0], // dropping in, pedalling the root
+    [3, 2, 1, 0], // walking straight down the octave
+    [0, 2, 1, 0], // one reach up, settling home
+    [3, 1, 2, 0], // sawing downward
+    [2, 1, 1, 0], // leaning on the third, sinking out
+];
+
+const fn arp_shapes(difficulty: Difficulty) -> &'static [[usize; 4]; 6] {
+    match difficulty {
+        Difficulty::Easy | Difficulty::Medium => &ARP_SHAPES,
+        Difficulty::Hard => &HARD_ARP_SHAPES,
+    }
+}
 
 /// The 16-bar tension/release arc (§ round-3 critique: "energising without
 /// exhausting"): bars 9–10 breathe (a layer drops, percussion thins), bars
@@ -339,6 +361,15 @@ pub fn compose(inputs: &RoomMusicInputs) -> Track {
         send,
         vibrato: None,
     };
+    // v5 restraint mix: the hard band tilts its balance toward the low
+    // registers — quieter lead/arp, heavier pad and bass — so intensity comes
+    // from weight instead of treble activity. Easy/medium keep the approved
+    // v4 balance (keep-wall-gate protection).
+    let hard = inputs.difficulty == Difficulty::Hard;
+    let lead_gain = if hard { defaults::LEAD_GAIN - 1 } else { defaults::LEAD_GAIN };
+    let arp_gain = if hard { defaults::ARP_GAIN - 1 } else { defaults::ARP_GAIN };
+    let pad_gain = if hard { defaults::PAD_GAIN + 1 } else { defaults::PAD_GAIN };
+    let bass_gain = if hard { defaults::BASS_GAIN + 1 } else { defaults::BASS_GAIN };
     let mut voices = vec![
         VoiceDef {
             vibrato: Some(Vibrato { cents: 8, rate_dhz: 55 }),
@@ -346,7 +377,7 @@ pub fn compose(inputs: &RoomMusicInputs) -> Track {
                 "lead",
                 VoiceKind::Pulse { duty: Duty::Half },
                 "base",
-                defaults::LEAD_GAIN,
+                lead_gain,
                 defaults::LEAD_SEND,
             )
         },
@@ -354,22 +385,22 @@ pub fn compose(inputs: &RoomMusicInputs) -> Track {
             "arp",
             VoiceKind::Pulse { duty: Duty::Half },
             "base",
-            defaults::ARP_GAIN,
+            arp_gain,
             defaults::ARP_SEND,
         ),
-        voice("pad", VoiceKind::Pad, "base", defaults::PAD_GAIN, defaults::PAD_SEND),
-        voice("bass", VoiceKind::Triangle, "base", defaults::BASS_GAIN, 0),
+        voice("pad", VoiceKind::Pad, "base", pad_gain, defaults::PAD_SEND),
+        voice("bass", VoiceKind::Triangle, "base", bass_gain, 0),
         voice("perc", VoiceKind::Noise, "base", defaults::PERC_GAIN, 0),
     ];
-    if inputs.difficulty != Difficulty::Easy {
-        voices.push(voice(
-            "shaker",
-            VoiceKind::NoiseSoft,
-            "base",
-            defaults::SHAKER_GAIN,
-            0,
-        ));
-    }
+    // v5: every band carries the soft shaker — the easy band's crisp ticks
+    // moved onto it (crisp 12 kHz ticks on every backbeat read as chipper).
+    voices.push(voice(
+        "shaker",
+        VoiceKind::NoiseSoft,
+        "base",
+        defaults::SHAKER_GAIN,
+        0,
+    ));
     if inputs.layer_gates.gloves {
         voices.push(VoiceDef {
             vibrato: Some(Vibrato { cents: 10, rate_dhz: 45 }),
@@ -397,10 +428,26 @@ pub fn compose(inputs: &RoomMusicInputs) -> Track {
         key,
         &grid,
         progression,
+        inputs.difficulty,
         inputs.coin_count,
         inputs.doors,
         "lead",
     );
+
+    // Finale detection (v5): keep-crown-sanctum is the dungeon's final
+    // screen and the one room allowed extra lift — fuller pad harmony and a
+    // lifted dynamic through the last section (bars 13–16). Keyed by slug
+    // because the room metadata carries no finale flag; the slug is unique
+    // and the mapping stays pure and deterministic.
+    let finale = inputs.slug == "keep-crown-sanctum";
+    if finale {
+        let final_section = 12 * grid.bar_steps();
+        for note in &mut notes {
+            if note.start_step >= final_section {
+                note.vel = (note.vel + 1).min(15);
+            }
+        }
+    }
 
     let bar_steps = grid.bar_steps();
     let eighth = grid.beat_steps / 2;
@@ -416,7 +463,8 @@ pub fn compose(inputs: &RoomMusicInputs) -> Track {
     // motif unity with one point of departure. v4 variety: the arp shape,
     // bass pair, and perc pair are independent seeded axes, so two same-band
     // rooms almost never share a groove.
-    let arp_shape = ARP_SHAPES[accompaniment.below(ARP_SHAPES.len() as u64) as usize];
+    let shapes = arp_shapes(inputs.difficulty);
+    let arp_shape = shapes[accompaniment.below(shapes.len() as u64) as usize];
     let pick_pair = |rng: &mut XorShift64Star, len: usize| -> [usize; 4] {
         let a = rng.below(len as u64) as usize;
         let b = (a + 1 + rng.below(len as u64 - 1) as usize) % len;
@@ -463,6 +511,10 @@ pub fn compose(inputs: &RoomMusicInputs) -> Track {
                 if role == BarRole::Peak {
                     vel += 1;
                 }
+                if finale && role != BarRole::Normal && bar >= 12 {
+                    // Finale enthusiasm: the last section's arp leans in.
+                    vel += 1;
+                }
                 // The track's single seeded shape (position 3 = the root an
                 // octave up), the same every bar: motif unity.
                 let position = arp_shape[beat as usize];
@@ -492,7 +544,10 @@ pub fn compose(inputs: &RoomMusicInputs) -> Track {
             while key.scale_pitch(pad_index).midi() < 45 {
                 pad_index += 7;
             }
-            let vel = if role == BarRole::Peak {
+            let finale_section = finale && bar >= 12;
+            let vel = if finale_section {
+                defaults::PAD_VEL + 2
+            } else if role == BarRole::Peak {
                 defaults::PAD_VEL + 1
             } else {
                 defaults::PAD_VEL
@@ -504,6 +559,20 @@ pub fn compose(inputs: &RoomMusicInputs) -> Track {
                 pitch: Some(key.scale_pitch(pad_index)),
                 vel,
             });
+            if finale_section {
+                // Finale warmth: the closing pads bloom into full sustained
+                // triads — added third and fifth above the root, triumph
+                // through harmony rather than brightness.
+                for added in [2, 4] {
+                    notes.push(NoteEvent {
+                        voice: "pad".to_owned(),
+                        start_step: base,
+                        len_steps: 2 * bar_steps,
+                        pitch: Some(key.scale_pitch(pad_index + added)),
+                        vel: defaults::PAD_VEL,
+                    });
+                }
+            }
         }
 
         // Bass (round-3 rewrite): a seeded rhythmic pattern per chord block
@@ -595,12 +664,18 @@ pub fn compose(inputs: &RoomMusicInputs) -> Track {
             });
         };
         match inputs.difficulty {
-            // Easy keeps its approved sparse feel: soft ticks on beats 2
-            // and 4 only, silent in the breathing bars.
+            // Easy keeps its sparse placement — beats 2 and 4 only, silent
+            // in the breathing bars — but on the soft shaker since v5: the
+            // crisp tick on every backbeat read as chipper.
             Difficulty::Easy => {
                 if role != BarRole::Breathe {
-                    push_perc(base + 2 * eighth, defaults::HAT_OFFBEAT_VEL, true);
-                    push_perc(base + 6 * eighth, defaults::HAT_OFFBEAT_VEL, true);
+                    push_perc(base + 2 * eighth, defaults::HAT_OFFBEAT_VEL, false);
+                    push_perc(base + 6 * eighth, defaults::HAT_OFFBEAT_VEL, false);
+                }
+                if role == BarRole::Peak {
+                    // The same intensity-arc downbeat accent the other bands
+                    // carry, one notch softer.
+                    push_perc(base, defaults::HAT_BEAT3_VEL, true);
                 }
             }
             // Medium/hard (v4 de-clack): a seeded two-bar shaker cell with
@@ -632,6 +707,8 @@ pub fn compose(inputs: &RoomMusicInputs) -> Track {
             push_perc(beat4, defaults::HAT_DOWNBEAT_VEL, true);
             if inputs.difficulty != Difficulty::Easy && sixteenth > 0 {
                 push_perc(beat4 + sixteenth, defaults::HAT_DOWNBEAT_VEL, false);
+            }
+            if sixteenth > 0 {
                 push_perc(beat4 + 3 * sixteenth, defaults::HAT_BEAT3_VEL, true);
             }
         }
