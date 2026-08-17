@@ -332,16 +332,16 @@
     "wall": 36
    },
    "1": {
-    "both": 88,
+    "both": 92,
     "dash": 105,
     "none": 86,
-    "wall": 88
+    "wall": 92
    },
    "2": {
     "both": 245,
     "dash": null,
     "none": null,
-    "wall": 221
+    "wall": 245
    }
   },
   "coins": 3,
@@ -372,8 +372,8 @@
    "east->ceiling": {
     "both": 175,
     "dash": 175,
-    "none": 357,
-    "wall": 178
+    "none": null,
+    "wall": 382
    },
    "east->east": {
     "both": 6,
@@ -412,14 +412,14 @@
  "eaves-walk-a": {
   "coin_routes": {
    "0": {
-    "both": 62,
-    "dash": 62,
-    "none": 32,
-    "wall": 32
+    "both": 80,
+    "dash": 80,
+    "none": 80,
+    "wall": 80
    },
    "1": {
-    "both": 41,
-    "dash": 41,
+    "both": 95,
+    "dash": 95,
     "none": 11,
     "wall": 11
    }
@@ -440,20 +440,20 @@
    "east->floor": {
     "both": 41,
     "dash": 41,
-    "none": 87,
-    "wall": 87
+    "none": 105,
+    "wall": 105
    },
    "east->west": {
-    "both": 208,
-    "dash": 208,
+    "both": 127,
+    "dash": 127,
     "none": 208,
     "wall": 208
    },
    "floor->east": {
-    "both": 87,
-    "dash": 87,
-    "none": 87,
-    "wall": 87
+    "both": 43,
+    "dash": 43,
+    "none": 94,
+    "wall": 94
    },
    "floor->floor": {
     "both": 8,
@@ -462,16 +462,16 @@
     "wall": 8
    },
    "floor->west": {
-    "both": 62,
-    "dash": 62,
-    "none": 107,
-    "wall": 107
+    "both": 80,
+    "dash": 80,
+    "none": 80,
+    "wall": 80
    },
    "west->east": {
-    "both": 128,
-    "dash": 128,
-    "none": 174,
-    "wall": 174
+    "both": 165,
+    "dash": 165,
+    "none": 165,
+    "wall": 165
    },
    "west->floor": {
     "both": 85,
@@ -523,10 +523,10 @@
     "wall": 6
    },
    "east->floor": {
-    "both": 41,
-    "dash": 41,
-    "none": 90,
-    "wall": 90
+    "both": 85,
+    "dash": 85,
+    "none": 85,
+    "wall": 85
    },
    "floor->east": {
     "both": 87,
@@ -732,7 +732,7 @@
     "wall": 44
    },
    "ceiling->east": {
-    "both": 206,
+    "both": 174,
     "dash": null,
     "none": null,
     "wall": null
@@ -744,7 +744,7 @@
     "wall": 154
    },
    "east->ceiling": {
-    "both": 201,
+    "both": 195,
     "dash": null,
     "none": null,
     "wall": null
@@ -756,7 +756,7 @@
     "wall": 6
    },
    "east->west": {
-    "both": 188,
+    "both": 180,
     "dash": null,
     "none": null,
     "wall": null
@@ -768,7 +768,7 @@
     "wall": 136
    },
    "west->east": {
-    "both": 224,
+    "both": 162,
     "dash": null,
     "none": null,
     "wall": null
@@ -1127,22 +1127,22 @@
     "wall": 6
    },
    "east->floor": {
-    "both": 41,
-    "dash": 41,
-    "none": 100,
-    "wall": 100
+    "both": 85,
+    "dash": 85,
+    "none": 85,
+    "wall": 85
    },
    "east->west": {
-    "both": 275,
+    "both": 310,
     "dash": null,
     "none": null,
-    "wall": 288
+    "wall": 310
    },
    "floor->east": {
-    "both": 68,
-    "dash": 68,
-    "none": 112,
-    "wall": 112
+    "both": 87,
+    "dash": 87,
+    "none": 87,
+    "wall": 87
    },
    "floor->floor": {
     "both": 8,
@@ -1157,10 +1157,10 @@
     "wall": 564
    },
    "west->east": {
-    "both": 269,
+    "both": 244,
     "dash": null,
     "none": null,
-    "wall": 269
+    "wall": 244
    },
    "west->floor": {
     "both": 156,
@@ -1444,9 +1444,9 @@
  "lantern-cross-a": {
   "coin_routes": {
    "0": {
-    "both": 85,
-    "dash": 60,
-    "none": null,
+    "both": 105,
+    "dash": 95,
+    "none": 95,
     "wall": 163
    },
    "1": {
@@ -1456,10 +1456,10 @@
     "wall": 103
    },
    "2": {
-    "both": 62,
-    "dash": 62,
-    "none": 19,
-    "wall": 19
+    "both": 76,
+    "dash": 76,
+    "none": 76,
+    "wall": 76
    }
   },
   "coins": 3,
@@ -1489,10 +1489,10 @@
     "wall": 56
    },
    "ceiling->west": {
-    "both": 119,
-    "dash": 60,
-    "none": 107,
-    "wall": 119
+    "both": 140,
+    "dash": 92,
+    "none": 92,
+    "wall": 140
    },
    "east->ceiling": {
     "both": 162,
@@ -1537,28 +1537,28 @@
     "wall": 8
    },
    "floor->west": {
-    "both": 62,
-    "dash": 62,
-    "none": 113,
-    "wall": 113
+    "both": 80,
+    "dash": 80,
+    "none": 80,
+    "wall": 80
    },
    "west->ceiling": {
-    "both": 284,
-    "dash": 284,
-    "none": 284,
-    "wall": 284
+    "both": 268,
+    "dash": 268,
+    "none": 268,
+    "wall": 268
    },
    "west->east": {
-    "both": 143,
-    "dash": 139,
-    "none": 200,
-    "wall": 200
+    "both": 258,
+    "dash": 174,
+    "none": 174,
+    "wall": 258
    },
    "west->floor": {
-    "both": 42,
-    "dash": 42,
-    "none": 112,
-    "wall": 112
+    "both": 85,
+    "dash": 85,
+    "none": 85,
+    "wall": 85
    },
    "west->west": {
     "both": 5,
@@ -2187,8 +2187,8 @@
     "wall": 123
    },
    "ceiling->floor": {
-    "both": 108,
-    "dash": 108,
+    "both": 152,
+    "dash": 152,
     "none": null,
     "wall": null
    },
@@ -2205,20 +2205,20 @@
     "wall": 6
    },
    "east->floor": {
-    "both": 58,
-    "dash": 58,
+    "both": 78,
+    "dash": 118,
     "none": null,
     "wall": null
    },
    "floor->ceiling": {
-    "both": 140,
+    "both": 152,
     "dash": null,
     "none": null,
     "wall": null
    },
    "floor->east": {
-    "both": 73,
-    "dash": 73,
+    "both": 95,
+    "dash": 86,
     "none": null,
     "wall": null
    },
@@ -2267,16 +2267,16 @@
     "wall": 88
    },
    "ceiling->floor": {
-    "both": 109,
-    "dash": 108,
+    "both": 148,
+    "dash": 150,
     "none": null,
     "wall": null
    },
    "east->ceiling": {
     "both": 196,
-    "dash": 230,
-    "none": 230,
-    "wall": 152
+    "dash": 240,
+    "none": 240,
+    "wall": 147
    },
    "east->east": {
     "both": 6,
@@ -2285,20 +2285,20 @@
     "wall": 6
    },
    "east->floor": {
-    "both": 58,
-    "dash": 58,
+    "both": 78,
+    "dash": 118,
     "none": null,
     "wall": null
    },
    "floor->ceiling": {
-    "both": 166,
-    "dash": 152,
+    "both": 165,
+    "dash": 195,
     "none": null,
     "wall": null
    },
    "floor->east": {
-    "both": 73,
-    "dash": 73,
+    "both": 95,
+    "dash": 86,
     "none": null,
     "wall": null
    },
@@ -2738,10 +2738,10 @@
     "wall": 86
    },
    "1": {
-    "both": 243,
+    "both": 204,
     "dash": 210,
     "none": 210,
-    "wall": 243
+    "wall": 204
    },
    "2": {
     "both": 150,
@@ -2771,7 +2771,7 @@
    "west->ceiling": {
     "both": 223,
     "dash": 139,
-    "none": 371,
+    "none": 507,
     "wall": 223
    },
    "west->west": {

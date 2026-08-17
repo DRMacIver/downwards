@@ -17,7 +17,8 @@ use std::{
 
 use downwards_ai::{SearchTarget, SolverConfig, TargetSolveOutcome, solve_target};
 use downwards_content::{
-    DEMO_DUNGEON_BOOT_PICKUP, DEMO_DUNGEON_GLOVE_PICKUP, DEMO_DUNGEON_GOAL_EXIT,
+    DEMO_DUNGEON_BOOT_PICKUP, DEMO_DUNGEON_CROWN_PICKUP, DEMO_DUNGEON_GLOVE_PICKUP,
+    DEMO_DUNGEON_GOAL_EXIT,
     DungeonV2Inventory, DungeonV2Requirement, dungeon_v2_definition, dungeon_v2_door_requirement,
     dungeon_v2_room, dungeon_v2_total_coins,
 };
@@ -39,7 +40,16 @@ fn loadout_bit(abilities: AbilitySet) -> u8 {
 }
 
 fn enter(instance: &str, door: &str, abilities: AbilitySet) -> Simulation {
-    let room = dungeon_v2_room(instance, &DungeonV2Inventory::default());
+    enter_with(instance, door, abilities, &DungeonV2Inventory::default())
+}
+
+fn enter_with(
+    instance: &str,
+    door: &str,
+    abilities: AbilitySet,
+    inventory: &DungeonV2Inventory,
+) -> Simulation {
+    let room = dungeon_v2_room(instance, inventory);
     let mut simulation = Simulation::enter_via_door(room, abilities, door)
         .unwrap_or_else(|error| panic!("{instance} cannot enter by {door}: {error:?}"));
     simulation.enable_current_player_movement();
@@ -114,16 +124,14 @@ fn main() {
     let mut special: BTreeMap<String, bool> = BTreeMap::new();
     let mut check_special = |cache: &mut BTreeMap<String, bool>,
                              label: String,
-                             instance: &str,
-                             entry: &str,
+                             initial: &Simulation,
                              abilities: AbilitySet,
                              target: SearchTarget| {
         let solved = if let Some(&cached) = cache.get(&label) {
             cached
         } else {
-            let initial = enter(instance, entry, abilities);
             matches!(
-                solve_target(&initial, target, &SolverConfig::for_abilities(abilities)),
+                solve_target(initial, target, &SolverConfig::for_abilities(abilities)),
                 Ok(TargetSolveOutcome::Solved(_))
             )
         };
@@ -146,19 +154,41 @@ fn main() {
             check_special(
                 &mut cache,
                 format!("pickup {room} {entry} {pickup} {}", loadout_bit(abilities)),
-                &room,
-                entry,
+                &enter(&room, entry, abilities),
                 abilities,
                 SearchTarget::pickup(pickup),
             );
         }
     }
+    // The crown must be collectable in the goal room at `both`...
     for entry in dungeon.instances[&dungeon.goal].connections.keys() {
         check_special(
             &mut cache,
             format!("goal {} {entry} 3", dungeon.goal),
-            &dungeon.goal,
+            &enter(&dungeon.goal, entry, AbilitySet::new(true, true)),
+            AbilitySet::new(true, true),
+            SearchTarget::pickup(DEMO_DUNGEON_CROWN_PICKUP),
+        );
+    }
+    // ...and the escape gate in the spawn room must be reachable with the
+    // crown held (the exit trigger only exists in the crowned room state).
+    let crowned = DungeonV2Inventory {
+        climbing_gloves: true,
+        winged_boots: true,
+        crown: true,
+        ..DungeonV2Inventory::default()
+    };
+    for entry in dungeon.instances[&dungeon.spawn].connections.keys() {
+        let initial = enter_with(
+            &dungeon.spawn,
             entry,
+            AbilitySet::new(true, true),
+            &crowned,
+        );
+        check_special(
+            &mut cache,
+            format!("escape {} {entry} 3", dungeon.spawn),
+            &initial,
             AbilitySet::new(true, true),
             SearchTarget::exit(DEMO_DUNGEON_GOAL_EXIT),
         );

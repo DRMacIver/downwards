@@ -497,6 +497,14 @@ impl DungeonV2Inventory {
 }
 
 /// Build one dungeon v2 room instance against the persistent inventory.
+/// Where the escape gate sits inside the spawn room (the bottom-west chamber
+/// of the strata sort): the run finishes here once the crown is held. The
+/// client draws the gate marking at this rectangle in every crown state.
+#[must_use]
+pub fn dungeon_v2_exit_gate_bounds() -> Rect {
+    Rect::new(10, 140, 8, 30)
+}
+
 /// Collected coins and owned ability pickups are omitted, matching the demo
 /// dungeon's reconstruction contract.
 #[must_use]
@@ -508,10 +516,15 @@ pub fn dungeon_v2_room(instance_id: &str, inventory: &DungeonV2Inventory) -> Roo
         .unwrap_or_else(|| panic!("unknown dungeon v2 room {instance_id}"));
     let spec = &dungeon.specs[instance.slug.as_str()];
     let is_goal = instance_id == dungeon.goal;
-    let exits = (is_goal && !inventory.crown)
+    // The run ends by climbing back OUT: the exit gate sits in the spawn
+    // room and only opens (exists as a trigger) once the crown is held.
+    // The gate marking itself is always drawn by the client so the player
+    // learns the exit's location on the way in.
+    let is_spawn = instance_id == dungeon.spawn;
+    let exits = (is_spawn && inventory.crown)
         .then(|| Exit {
             id: DEMO_DUNGEON_GOAL_EXIT.to_owned(),
-            bounds: Rect::new(302, 12, 8, 18),
+            bounds: dungeon_v2_exit_gate_bounds(),
             destination: None,
             destination_entrance: None,
         })
@@ -640,7 +653,36 @@ mod tests {
                 .any(|pickup| pickup.id() == DEMO_DUNGEON_BOOT_PICKUP)
         );
         let goal_room = dungeon_v2_room(&dungeon.goal, &bare);
-        assert!(!goal_room.exits().is_empty());
+        assert!(
+            goal_room
+                .pickups()
+                .iter()
+                .any(|pickup| pickup.id() == DEMO_DUNGEON_CROWN_PICKUP)
+        );
+    }
+
+    #[test]
+    fn the_escape_gate_opens_in_the_spawn_room_only_with_the_crown() {
+        let dungeon = dungeon_v2_definition();
+        let bare = DungeonV2Inventory::default();
+        for instance_id in dungeon.instances.keys() {
+            assert!(
+                dungeon_v2_room(instance_id, &bare).exits().is_empty(),
+                "no exit anywhere before the crown ({instance_id})"
+            );
+        }
+        let mut crowned = DungeonV2Inventory::default();
+        crowned.climbing_gloves = true;
+        crowned.winged_boots = true;
+        crowned.crown = true;
+        let spawn_room = dungeon_v2_room(&dungeon.spawn, &crowned);
+        let exit = spawn_room.exits().first().expect("spawn hosts the escape");
+        assert_eq!(exit.id, DEMO_DUNGEON_GOAL_EXIT);
+        assert_eq!(exit.bounds, dungeon_v2_exit_gate_bounds());
+        assert!(
+            dungeon_v2_room(&dungeon.goal, &crowned).exits().is_empty(),
+            "the crown room is no longer terminal"
+        );
     }
 
     #[test]

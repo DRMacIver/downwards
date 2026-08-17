@@ -4,12 +4,12 @@
 # is bare: a starter step against the wall and a zig-zag of one-way
 # shingles climbs straight to the ceiling door, while the bell's shadow
 # (a quick pulse across the middle of the shingle ladder) sweeps the climb
-# on a six-count. West of the belfry wall is the postern trick: a full-height
+# on a nine-in-45 count. West of the belfry wall is the postern trick: a full-height
 # partition flanked by two sheer walk-in bays, joined only by a two-row
 # crossover gallery at the very top - wall-kicks or nothing, in both
 # directions. The east and ceiling doors trade freely; the west door is
 # the lock.
-hazard 200 110 50 20 30 6 0
+hazard 200 110 50 20 45 9 0
 door west
 door east
 door ceiling

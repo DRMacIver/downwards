@@ -50,7 +50,8 @@ pub use demo_dungeon::{
 };
 pub use dungeon_v2::{
     DungeonV2, DungeonV2Instance, DungeonV2Inventory, DungeonV2Requirement, dungeon_v2_coin_id,
-    dungeon_v2_definition, dungeon_v2_door_requirement, dungeon_v2_room, dungeon_v2_total_coins,
+    dungeon_v2_definition, dungeon_v2_door_requirement, dungeon_v2_exit_gate_bounds,
+    dungeon_v2_room, dungeon_v2_total_coins,
 };
 pub use generated_demo_dungeon_witnesses::demo_dungeon_witness_actions;
 pub use rooms_v2::{rooms_v2_room, rooms_v2_slugs};

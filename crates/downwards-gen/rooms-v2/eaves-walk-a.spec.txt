@@ -8,8 +8,8 @@
 # drips teach the two-count that the deeper sandglass rooms will demand.
 # Coins: one on the loft (a 20px hop up via the walkway), one past the far
 # drip.
-hazard 70 100 20 70 48 12 0
-hazard 240 100 20 70 48 12 24
+hazard 70 100 20 70 72 18 0
+hazard 240 100 20 70 72 18 36
 door floor
 door west
 door east

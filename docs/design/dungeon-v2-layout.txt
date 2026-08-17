@@ -13,24 +13,26 @@
 #   y4:  kvc1(1) lca(2) lc2(3) owc(4) kvc3(5) swb(6)
 #   y5:                 kvc2(3) asl(4) crown(5)
 #
-# Acts: A (bare) - roof, spawn column, upper halls; glove one door east of
-# spawn. B (wall) - the north-west quarter behind the chimney-lock gate,
-# with the boots vault at the roof's west end behind the postern. C (dash) -
-# the low vault behind the low-ceiling crawl and the sandglass trapdoor.
+# Acts: A (bare) - roof, spawn column, upper halls; the glove waits at the
+# bottom of the bare descent, mid-walk in the under-eaves (ew1, y3). B
+# (wall) - the north-west quarter behind the chimney-lock gate; the boots
+# sit at the quarter's far crossroads (sb), reached around the gable loop.
+# C (dash) - the low vault behind the low-ceiling crawl and the sandglass
+# trapdoor.
 # The south-east pocket needs dash to enter (sandglass-b) and the astral
 # seal before the crown needs both.
 
 # --- rooms -------------------------------------------------------------
 room s1    strata-sort-a          # spawn hub, under the greed roof-cap
 room ga    greed-loop-a           # roof cap over spawn
-room bv    keep-boots-vault       # boots, top-left roof corner (wall-sealed)
+room bv    keep-boots-vault       # coin vault, top-left roof corner (wall-sealed)
 room kwp   keep-west-postern      # roof gate: wall-kick bays seal the vault
 room gr1   gable-run-a            # north-west gable (wall quarter)
 room owp   one-way-loop-c         # vault under-stair (duplicate grid #1)
 room t1    tide-shaft-a           # spawn-side shaft, climbable bare
-room ob    keep-observatory       # glove, one door from spawn
+room ob    keep-observatory       # east upper hall (observatory keep)
 room gb    greed-loop-b           # east roof step
-room sb    strata-sort-b          # wall-quarter crossroads
+room sb    strata-sort-b          # wall-quarter crossroads; BOOTS on the drop platform
 room lcc   low-ceiling-arena-c    # wall-quarter crawl junction
 room chl   chimney-lock-a         # THE wall gate into the north-west quarter
 room lc1   lantern-cross-a        # central crossing (duplicate grid #2)
@@ -40,7 +42,7 @@ room sd1   sandglass-drop-a       # sealed-bulb sandglass: dash trapdoor to the 
 room mr    keep-meteor-run        # dash curtains on the vault's east exit
 room gx    greed-loop-a           # under-hall step (duplicate grid #3)
 room sd2   sandglass-drop-b       # open-bulb sandglass: dash trapdoor to the deep
-room ew1   eaves-walk-a           # east under-eaves walk
+room ew1   eaves-walk-a           # east under-eaves walk; GLOVE mid-walk
 room gc    greed-loop-c           # east wall-hatch step down
 room kvc1  keyhole-vault-c        # dash vault (coins), west deep
 room lca   low-ceiling-arena-a    # dash crawl into the deep
@@ -101,7 +103,7 @@ edge asl east crown west
 gate asl east coins 58         # crown coin door (one direction only)
 
 # --- pickups / endpoints ----------------------------------------------
-pickup glove ob 100 140
-pickup boots bv
+pickup glove ew1 190 150
+pickup boots sb 152 148
 spawn s1
 goal crown

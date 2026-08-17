@@ -5,11 +5,11 @@
 # glassed sand - no ledges, walk-in from the low hall below, wall-kicks or
 # nothing to climb it, though anything dropped in falls freely to the hall.
 # The floor tunnel is unchanged: two broad sand-curtains on a staggered
-# 96-count that only a dash can cross. So the floor door talks to the east
+# 72-count that only a dash can cross. So the floor door talks to the east
 # door with boots alone, but climbing from the floor door all the way back
 # to the ceiling needs boots for the curtains and the glove for the bay -
 # the room is the descent's one-way valve, honest in both halves.
-hazard 215 130 36 40 48 34 0
+hazard 215 130 36 40 72 51 0
 door ceiling
 door east
 door floor

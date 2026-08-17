@@ -5,14 +5,14 @@
 # curtain is one chamber, and the seal chute drops out of the ceiling into
 # it between sheer twelve-row walls (the way back up is a wall-kick, but the
 # way onward does not care). Eastward the corridor is barred by a broad
-# star-curtain on a 48-count, too wide to walk through in its dry window -
+# star-curtain on a 72-count, too wide to walk through in its dry window -
 # boots or nothing. Beyond it, the second test: a full-height partition
 # flanked by two sheer walk-in bays joined only by a two-row gallery at the
 # crown of the seal - the glove or nothing, and the east door waits at the
 # far bay's foot. Dash through the curtain, wall out of the bay: both, or
 # the crown stays sealed, in either direction. The lone coin hangs in the
 # gallery, a taunt visible the whole climb.
-hazard 190 130 36 40 48 34 0
+hazard 190 130 36 40 72 51 0
 door ceiling
 door west
 door east

@@ -8,7 +8,7 @@
 # the room is a crossroads, not a test - but the lantern (a slow hazard
 # pulse over the west walkway) sets a strolling rhythm, and the shingle
 # climb back up to the ceiling is an honest 30px-per-hop ladder.
-hazard 60 130 40 40 48 14 0
+hazard 60 130 40 40 72 21 0
 door ceiling
 door floor
 door west

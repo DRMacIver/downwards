@@ -29,10 +29,12 @@ crossings genuinely require the ability, each verified by the room auditor
 - **Wall act (north-west quarter).** `chimney-lock-a` is the gate: its
   west door sits behind a full-height partition flanked by sheer wall-kick
   bays (crossable at wall/both only, in both directions - dash gets no
-  height there). The boots vault (`bv`) hangs at the roof's west corner
-  behind `keep-west-postern` (the same bay mechanism) and above a
-  `one-way-loop-c` under-stair whose climbs need wall. At bare or
-  dash-only loadouts the quarter, and the boots, are sealed.
+  height there). The old boots vault (`bv`, now a coin vault) hangs at the
+  roof's west corner behind `keep-west-postern` (the same bay mechanism)
+  and above a `one-way-loop-c` under-stair whose climbs need wall. The
+  boots themselves sit at the quarter's far crossroads (`sb`), reached the
+  long way around the gable loop (chl -> lcc -> owp -> gr1 -> sb). At bare
+  or dash-only loadouts the quarter, and the boots, are sealed.
 - **Dash act (the deep).** `sandglass-drop-a/b` are trapdoor rooms: their
   floor doors sit behind a broad timed sand-curtain that only a dash
   crosses (both ways), and the sealed bulb (`sd1`) additionally hides its
@@ -52,23 +54,27 @@ opens them, so nothing one-ways a player into a pocket they cannot leave.
 
 ## Acts, backtracking, loops
 
-Bare: the roof walk, spawn column, upper halls and east gallery (glove one
-door east of spawn in the observatory; the wall-gate keep on the gallery
-loop shows a wall lock in the first minutes). Wall: back up and west
-through the chimney lock into the gable quarter - boots at the roof corner
-via the postern. Dash: down the sandglass trapdoors into the deep vaults.
-Both: the astral seal, then the crown. Fourteen-plus geometric locks are
+Bare: the roof walk, spawn column, upper halls and east gallery; after
+playtest feedback the glove now waits at the BOTTOM of the bare descent,
+mid-walk in the under-eaves (`ew1`, three rooms down the mainline), so the
+first unlock is earned by real descent. Wall: back up and west through the
+chimney lock into the gable quarter - the boots sit at the quarter's far
+crossroads (`sb`), the whole loop deep. Dash: down the sandglass trapdoors
+into the deep vaults. Both: the astral seal, then the crown - and then the
+climb back out: the run only ends at the escape gate in the spawn room,
+marked in-room and on the map from the first minute. Fourteen-plus geometric locks are
 seen before they open, so the backtrack-unlock metric stays comfortably
 above target; cycle rank 8 keeps two-to-three live loops per act.
 
 ## Crown coin gate arithmetic
 
-Coins bankable at fixed loadouts (per the regenerated passability table):
-bare 36, wall 50 (the wall quarter's 14 coins arrive with the glove), dash
-57 (the deep's vaults arrive with the boots), both 69. The crown door
-costs **58**: strictly more than anything bankable below `both` (max 57,
-at dash), and 11 under the full-clear total, so the seal always demands
-the complete descent but never demands perfection.
+Coins bankable at fixed loadouts (per the regenerated passability table,
+after the hazard slow-down retune and with both ability pickups placed at
+explicit coordinates so no room trades a coin away): bare 32, wall 46,
+dash 54, both 69. The crown door costs **58**: strictly more than
+anything bankable below `both` (max 54, at dash), and 11 under the
+full-clear total, so the seal always demands the complete descent but
+never demands perfection.
 
 ## New vocabulary rooms
 

@@ -1,6 +1,9 @@
 schema dungeon-v2-traversal-v1
 player-movement-policy 10
 
+escape s1 ceiling 3 solved
+escape s1 east 3 solved
+escape s1 floor 3 solved
 goal crown west 3 solved
 pair asl ceiling ceiling 0 inconclusive
 pair asl ceiling ceiling 1 solved
@@ -66,7 +69,7 @@ pair chl ceiling west 0 inconclusive
 pair chl ceiling west 1 solved
 pair chl ceiling west 2 inconclusive
 pair chl ceiling west 3 solved
-pair chl east ceiling 0 solved
+pair chl east ceiling 0 inconclusive
 pair chl east ceiling 1 solved
 pair chl east ceiling 2 solved
 pair chl east ceiling 3 solved
@@ -786,7 +789,9 @@ pair wg west west 0 solved
 pair wg west west 1 solved
 pair wg west west 2 solved
 pair wg west west 3 solved
-pickup bv east winged-boots 1 solved
-pickup bv floor winged-boots 1 solved
-pickup ob east climbing-gloves 0 solved
-pickup ob west climbing-gloves 0 solved
+pickup ew1 east climbing-gloves 0 solved
+pickup ew1 floor climbing-gloves 0 solved
+pickup ew1 west climbing-gloves 0 solved
+pickup sb ceiling winged-boots 1 solved
+pickup sb east winged-boots 1 solved
+pickup sb floor winged-boots 1 solved

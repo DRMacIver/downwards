@@ -25,7 +25,8 @@ use downwards_content::{
     TraversalMethod, calibrated_generator_playtest, calibration_gallery, demo_dungeon_definition,
     demo_dungeon_door_requirement, demo_dungeon_room, demo_dungeon_route_specs,
     demo_dungeon_witness_actions, dungeon_v2_definition, dungeon_v2_door_requirement,
-    dungeon_v2_room, dungeon_v2_total_coins, first_steps_room, hard_no_dash_scenario,
+    dungeon_v2_exit_gate_bounds, dungeon_v2_room, dungeon_v2_total_coins, first_steps_room,
+    hard_no_dash_scenario,
     hard_no_dash_witness_actions, medium_no_dash_scenario, medium_no_dash_witness_actions,
 };
 use downwards_core::{
@@ -4297,12 +4298,13 @@ impl ClientState {
             self.perform_pickup_solve(initial, None, DEMO_DUNGEON_BOOT_PICKUP.to_owned());
             return;
         }
-        if run.room == dungeon.goal {
-            if !run.inventory.crown {
-                self.perform_pickup_solve(initial, None, DEMO_DUNGEON_CROWN_PICKUP.to_owned());
-            } else {
-                self.perform_exit_solve(initial, None);
-            }
+        if run.room == dungeon.goal && !run.inventory.crown {
+            self.perform_pickup_solve(initial, None, DEMO_DUNGEON_CROWN_PICKUP.to_owned());
+            return;
+        }
+        if run.room == dungeon.spawn && run.inventory.crown {
+            // With the crown held the spawn room hosts the escape gate.
+            self.perform_exit_solve(initial, None);
             return;
         }
         if let Some(coin_id) = self
@@ -5192,7 +5194,7 @@ impl ClientState {
                 changed = true;
                 self.replay_notice = Some(ReplayNotice {
                     title: "THE CROWN".to_owned(),
-                    detail: "Reach the goal light to finish the dungeon".to_owned(),
+                    detail: "Climb back out · the exit gate at the start is open".to_owned(),
                     is_error: false,
                 });
             }
@@ -5216,7 +5218,9 @@ impl ClientState {
             .find(|door| door.id == exit_id)
             .cloned()
         else {
-            // The crown goal is a terminal legacy Exit, not a room transition.
+            // The spawn room's escape gate is a terminal legacy Exit, not a
+            // room transition; it only exists in the room once the crown is
+            // held, so reaching it ends the run.
             if run.inventory.crown {
                 self.dungeon_v2_victory = true;
                 self.persist_dungeon_v2_progress();
@@ -6386,6 +6390,9 @@ fn render(client: &ClientState, visual_assets: &VisualAssets) {
         focus,
         visual_assets,
     );
+    if client.selection.mode == RoomMode::DungeonV2 {
+        draw_dungeon_v2_exit_gate(&room_viewport, client);
+    }
     draw_dungeon_coin_gates(&room_viewport, client);
     draw_player_effects(
         &room_viewport,
@@ -6663,6 +6670,34 @@ fn draw_dungeon_v2_pause(viewport: &PixelViewport, client: &ClientState) {
     );
 }
 
+/// The escape gate marking in the dungeon v2 spawn room. Drawn in every
+/// crown state so the player learns where the run will end: dim and inert
+/// before the crown, bright once the crown is held and the exit trigger
+/// exists.
+fn draw_dungeon_v2_exit_gate(viewport: &PixelViewport, client: &ClientState) {
+    let Some(run) = client.dungeon_v2_run.as_ref() else {
+        return;
+    };
+    if run.room != dungeon_v2_definition().spawn {
+        return;
+    }
+    let bounds = dungeon_v2_exit_gate_bounds();
+    let crowned = run.inventory.crown;
+    let accent = if crowned { EXIT } else { UI_DIM };
+    viewport.rectangle(bounds, if crowned { EXIT_DARK } else { DEBUG_PANEL });
+    viewport.rectangle_outline(bounds, 1, accent);
+    // Chevron pointing out through the west wall.
+    let centre_y = bounds.y + bounds.height / 2;
+    let arrow_x = bounds.x + bounds.width - 2;
+    viewport.triangle(
+        (arrow_x, centre_y - 3),
+        (arrow_x - 3, centre_y),
+        (arrow_x, centre_y + 3),
+        accent,
+    );
+    viewport.text("EXIT", bounds.x + bounds.width + 3, centre_y + 2, 5, accent);
+}
+
 fn draw_dungeon_v2_victory(viewport: &PixelViewport, client: &ClientState) {
     viewport.rectangle(CoreRect::new(0, 0, 320, 180), MENU_BACKGROUND);
     viewport.centered_text("DUNGEON COMPLETE", 30, 12, PLAYER);
@@ -6917,15 +6952,35 @@ fn draw_dungeon_v2_map(viewport: &PixelViewport, client: &ClientState) {
             continue;
         }
         let current = *instance_id == run.room;
+        // The spawn room doubles as the exit node: always outlined in the
+        // exit colour, filled bright once the crown is held and the escape
+        // gate is live.
+        let is_exit_node = *instance_id == dungeon.spawn;
         viewport.rectangle(
             CoreRect::new(x, y, CELL_W, CELL_H),
-            if current { MENU_SELECTED } else { DEBUG_PANEL },
+            if current {
+                MENU_SELECTED
+            } else if is_exit_node && run.inventory.crown {
+                EXIT_DARK
+            } else {
+                DEBUG_PANEL
+            },
         );
         viewport.rectangle_outline(
             CoreRect::new(x, y, CELL_W, CELL_H),
             1,
-            if current { PLAYER_ACCENT } else { UI_DIM },
+            if is_exit_node {
+                EXIT
+            } else if current {
+                PLAYER_ACCENT
+            } else {
+                UI_DIM
+            },
         );
+        if is_exit_node {
+            // Door glyph on the cell's west edge, mirroring the in-room gate.
+            viewport.rectangle(CoreRect::new(x + 1, y + 2, 2, CELL_H - 4), EXIT);
+        }
         let remaining = dungeon_v2_room(instance_id, &run.inventory)
             .pickups()
             .iter()
@@ -6936,6 +6991,17 @@ fn draw_dungeon_v2_map(viewport: &PixelViewport, client: &ClientState) {
         }
     }
 
+    // Exit legend, drawn after the cells so it stays legible.
+    viewport.centered_text(
+        if run.inventory.crown {
+            "THE CROWN IS YOURS · ESCAPE THROUGH THE GREEN EXIT DOOR"
+        } else {
+            "GREEN DOOR = EXIT · RETURN THERE WITH THE CROWN"
+        },
+        160,
+        5,
+        if run.inventory.crown { EXIT } else { UI_DIM },
+    );
     viewport.centered_text(&run.room.to_ascii_uppercase(), 168, 7, UI_TEXT);
     viewport.centered_text("TAB/ESC CLOSE", 177, 5, UI_DIM);
 }

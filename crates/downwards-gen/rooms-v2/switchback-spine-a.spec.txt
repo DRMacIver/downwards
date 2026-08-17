@@ -34,8 +34,8 @@ coin 80 102
 # missing any hop costs the entire spine.
 coin 292 78
 
-# One fast shutter in the low channel (on 12 ticks in every 40): the middle
+# One fast shutter in the low channel (on 16 ticks in every 56): the middle
 # run is a timing walk, so a demotion from the top run costs cadence as well
 # as distance. It sits mid-channel, where the player is already committed and
 # cannot jump out of the 20px ceiling.
-hazard 120 100 10 20 40 12 0
+hazard 120 100 10 20 56 16 0
