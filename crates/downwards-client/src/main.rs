@@ -19,11 +19,12 @@ use downwards_content::{
     AuthoredDoorRequirement, CalibratedGeneratorPlaytestLevel, CalibrationLevel,
     DEMO_DUNGEON_BOOT_PICKUP, DEMO_DUNGEON_CROWN_PICKUP, DEMO_DUNGEON_GLOVE_PICKUP,
     DEMO_DUNGEON_GOAL_EXIT, DEMO_DUNGEON_TOTAL_COINS, DemoDungeonInventory, DemoDungeonRoom,
-    DemoDungeonRouteSpec, DemoDungeonRouteTarget, HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET,
-    MEDIUM_NO_DASH_ABILITIES, MEDIUM_NO_DASH_TARGET, TraversalMethod,
-    calibrated_generator_playtest, calibration_gallery, demo_dungeon_definition,
+    DemoDungeonRouteSpec, DemoDungeonRouteTarget, DungeonV2Inventory, DungeonV2Requirement,
+    HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET, MEDIUM_NO_DASH_ABILITIES, MEDIUM_NO_DASH_TARGET,
+    TraversalMethod, calibrated_generator_playtest, calibration_gallery, demo_dungeon_definition,
     demo_dungeon_door_requirement, demo_dungeon_room, demo_dungeon_route_specs,
-    demo_dungeon_witness_actions, first_steps_room, hard_no_dash_scenario,
+    demo_dungeon_witness_actions, dungeon_v2_definition, dungeon_v2_door_requirement,
+    dungeon_v2_room, dungeon_v2_total_coins, first_steps_room, hard_no_dash_scenario,
     hard_no_dash_witness_actions, medium_no_dash_scenario, medium_no_dash_witness_actions,
 };
 use downwards_core::{
@@ -59,6 +60,7 @@ const HUMAN_HISTORY_SCHEMA: &str = "downwards-human-attempt-v2";
 const DEFAULT_HUMAN_HISTORY_PATH: &str = "playtest-history/human-attempts-v1.jsonl";
 const DUNGEON_SAVE_SCHEMA: &str = "downwards-demo-dungeon-save-v1";
 const DEFAULT_DUNGEON_SAVE_PATH: &str = "playtest-history/demo-dungeon-save-v1.json";
+const DEFAULT_DUNGEON_V2_SAVE_PATH: &str = "playtest-history/dungeon-v2-save-v1.json";
 // The ordinary level browser starts at the first offline-curated baseline route. Raw seeds remain
 // available only through the explicit developer command-line mode.
 const DEFAULT_SEED: u64 = 0;
@@ -79,6 +81,7 @@ Usage: downwards [--seed <u64>] [--tier <1|2|3|4>] [--development]
        downwards --calibrated [seed]
        downwards --dungeon [--dungeon-save <path>]
        downwards --dungeon-new [--dungeon-save <path>]
+       downwards --dungeon-v2 | --dungeon-v2-new [--dungeon-save <path>]
        downwards --dungeon-floor <number|id>
 
   (no options)   open the offline-curated v6 route catalogue
@@ -92,6 +95,8 @@ Usage: downwards [--seed <u64>] [--tier <1|2|3|4>] [--development]
                  play the generated WallJump-only calibration batch
   --dungeon      resume the 101-floor dungeon (or begin it if no save exists)
   --dungeon-new  archive the current save and begin a fresh dungeon run
+  --dungeon-v2   play the redesigned dungeon (resumes its own save)
+  --dungeon-v2-new  archive the v2 save and begin a fresh v2 run
   --dungeon-floor FLOOR
                  non-persistent lab play of one authored floor (1..101 or room id)
   --dungeon-save PATH
@@ -219,8 +224,11 @@ async fn main() {
         return;
     }
 
-    let dungeon_save = (options.selection.mode == RoomMode::Dungeon)
-        .then_some((options.dungeon_save_path.as_path(), options.fresh_dungeon));
+    let dungeon_save = matches!(
+        options.selection.mode,
+        RoomMode::Dungeon | RoomMode::DungeonV2
+    )
+    .then_some((options.dungeon_save_path.as_path(), options.fresh_dungeon));
     let mut client = ClientState::new_with_persistence(
         options.selection,
         options.corpus_manifest.as_deref(),
@@ -727,6 +735,8 @@ enum RoomMode {
     CalibratedGenerated,
     /// Persistent multi-room dungeon vertical slice. The selection seed is unused.
     Dungeon,
+    /// The redesigned data-driven dungeon (dungeon v2). The selection seed is unused.
+    DungeonV2,
     /// A fixed, hand-authored validation level. Its loadout is locked by content.
     Challenge(ChallengeKind),
 }
@@ -739,6 +749,7 @@ impl RoomMode {
             | Self::DeveloperGenerated
             | Self::Development
             | Self::Gallery
+            | Self::DungeonV2
             | Self::CalibratedGenerated
             | Self::Dungeon => None,
         }
@@ -782,6 +793,7 @@ impl LevelMenuState {
             | RoomMode::Gallery
             | RoomMode::CalibratedGenerated
             | RoomMode::Dungeon
+            | RoomMode::DungeonV2
             | RoomMode::Challenge(_) => {
                 // A raw command-line seed stays loaded behind the browser. Opening the menu
                 // focuses the nearest real catalogue row, never a fabricated seed row.
@@ -1037,6 +1049,7 @@ impl ScenarioSelection {
             RoomMode::Gallery => RoomMode::Gallery,
             RoomMode::CalibratedGenerated => RoomMode::CalibratedGenerated,
             RoomMode::Dungeon => RoomMode::Dungeon,
+            RoomMode::DungeonV2 => RoomMode::DungeonV2,
             RoomMode::Challenge(kind) => RoomMode::Challenge(kind),
         };
     }
@@ -1050,6 +1063,7 @@ impl ScenarioSelection {
             | RoomMode::Gallery
             | RoomMode::CalibratedGenerated
             | RoomMode::Dungeon
+            | RoomMode::DungeonV2
             | RoomMode::Challenge(_) => 0,
         };
         Self {
@@ -1153,6 +1167,16 @@ where
                 dungeon_requested = true;
                 options.fresh_dungeon = true;
                 options.selection.mode = RoomMode::Dungeon;
+                options.selection.seed = 0;
+                options.selection.tier = AbilityTier::Baseline;
+            }
+            "--dungeon-v2" | "--dungeon-v2-new" => {
+                if dungeon_requested {
+                    return Err("dungeon modes may be specified only once".to_owned());
+                }
+                dungeon_requested = true;
+                options.fresh_dungeon = argument == "--dungeon-v2-new";
+                options.selection.mode = RoomMode::DungeonV2;
                 options.selection.seed = 0;
                 options.selection.tier = AbilityTier::Baseline;
             }
@@ -1336,7 +1360,10 @@ where
         return Err("--allow-provisional-corpus requires --corpus".to_owned());
     }
     if dungeon_save_explicit && !dungeon_requested {
-        return Err("--dungeon-save requires --dungeon or --dungeon-new".to_owned());
+        return Err("--dungeon-save requires a dungeon mode".to_owned());
+    }
+    if options.selection.mode == RoomMode::DungeonV2 && !dungeon_save_explicit {
+        options.dungeon_save_path = PathBuf::from(DEFAULT_DUNGEON_V2_SAVE_PATH);
     }
     if options.corpus_manifest.is_some() && options.selection.mode != RoomMode::Generated {
         return Err("--corpus cannot be combined with --seed or --development".to_owned());
@@ -1470,7 +1497,9 @@ fn selection_from_hotkeys(
             RoomMode::CalibratedGenerated => {
                 unreachable!("calibrated hotkeys return above")
             }
-            RoomMode::Dungeon => unreachable!("dungeon hotkeys return above"),
+            RoomMode::Dungeon | RoomMode::DungeonV2 => {
+                unreachable!("dungeon hotkeys return above")
+            }
             RoomMode::Challenge(_) => unreachable!("challenge hotkeys return above"),
         }
     }
@@ -1496,7 +1525,9 @@ fn selection_from_hotkeys(
             RoomMode::CalibratedGenerated => {
                 unreachable!("calibrated hotkeys return above")
             }
-            RoomMode::Dungeon => unreachable!("dungeon hotkeys return above"),
+            RoomMode::Dungeon | RoomMode::DungeonV2 => {
+                unreachable!("dungeon hotkeys return above")
+            }
             RoomMode::Challenge(_) => unreachable!("challenge hotkeys return above"),
         }
     }
@@ -2538,6 +2569,9 @@ struct ClientState {
     replay_notice: Option<ReplayNotice>,
     dungeon_run: Option<DungeonRunState>,
     dungeon_persistence: Option<DungeonPersistence>,
+    dungeon_v2_run: Option<DungeonV2RunState>,
+    dungeon_v2_persistence: Option<DungeonV2Persistence>,
+    explored_v2_rooms: BTreeSet<String>,
     death_pause_ticks: u8,
     explored_rooms: BTreeSet<DemoDungeonRoom>,
     map_visible: bool,
@@ -2560,6 +2594,164 @@ impl Default for DungeonRunState {
             room: DemoDungeonRoom::HollowLanding,
             inventory: DemoDungeonInventory::default(),
         }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct DungeonV2RunState {
+    room: String,
+    inventory: DungeonV2Inventory,
+}
+
+impl Default for DungeonV2RunState {
+    fn default() -> Self {
+        Self {
+            room: dungeon_v2_definition().spawn.clone(),
+            inventory: DungeonV2Inventory::default(),
+        }
+    }
+}
+
+const DUNGEON_V2_SAVE_SCHEMA: &str = "downwards-dungeon-v2-save-v1";
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+struct DungeonV2SaveV1 {
+    schema: String,
+    room_id: String,
+    entry_door: Option<String>,
+    climbing_gloves: bool,
+    winged_boots: bool,
+    crown: bool,
+    collected_coins: Vec<String>,
+    explored_rooms: Vec<String>,
+    saved_at_unix_ms: u64,
+}
+
+type LoadedDungeonV2Progress = (DungeonV2RunState, Option<String>, BTreeSet<String>);
+
+impl DungeonV2SaveV1 {
+    fn from_run(
+        run: &DungeonV2RunState,
+        entry_door: Option<&str>,
+        explored: &BTreeSet<String>,
+    ) -> Self {
+        Self {
+            schema: DUNGEON_V2_SAVE_SCHEMA.to_owned(),
+            room_id: run.room.clone(),
+            entry_door: entry_door.map(str::to_owned),
+            climbing_gloves: run.inventory.climbing_gloves,
+            winged_boots: run.inventory.winged_boots,
+            crown: run.inventory.crown,
+            collected_coins: run.inventory.coins.iter().cloned().collect(),
+            explored_rooms: explored.iter().cloned().collect(),
+            saved_at_unix_ms: unix_time_ms(),
+        }
+    }
+
+    fn validate(&self) -> Result<LoadedDungeonV2Progress, String> {
+        if self.schema != DUNGEON_V2_SAVE_SCHEMA {
+            return Err(format!(
+                "dungeon v2 save schema {:?} is not current {:?}",
+                self.schema, DUNGEON_V2_SAVE_SCHEMA
+            ));
+        }
+        let dungeon = dungeon_v2_definition();
+        if !dungeon.instances.contains_key(&self.room_id) {
+            return Err(format!(
+                "dungeon v2 save references unknown room {:?}",
+                self.room_id
+            ));
+        }
+        let run = DungeonV2RunState {
+            room: self.room_id.clone(),
+            inventory: DungeonV2Inventory {
+                climbing_gloves: self.climbing_gloves,
+                winged_boots: self.winged_boots,
+                crown: self.crown,
+                coins: self.collected_coins.iter().cloned().collect(),
+            },
+        };
+        Ok((
+            run,
+            self.entry_door.clone(),
+            self.explored_rooms.iter().cloned().collect(),
+        ))
+    }
+}
+
+struct DungeonV2Persistence {
+    path: PathBuf,
+}
+
+impl DungeonV2Persistence {
+    fn open(path: &Path, fresh: bool) -> Result<(Self, Option<LoadedDungeonV2Progress>), String> {
+        if let Some(parent) = path.parent()
+            && !parent.as_os_str().is_empty()
+        {
+            fs::create_dir_all(parent).map_err(|error| {
+                format!(
+                    "could not create dungeon-save directory {}: {error}",
+                    parent.display()
+                )
+            })?;
+        }
+        if fresh && path.exists() {
+            let file_name = path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or("dungeon-v2-save-v1.json");
+            let archive = path.with_file_name(format!("{file_name}.{}.bak", unix_time_ms()));
+            fs::rename(path, &archive).map_err(|error| {
+                format!(
+                    "could not archive dungeon save {} as {}: {error}",
+                    path.display(),
+                    archive.display()
+                )
+            })?;
+            eprintln!("archived previous dungeon v2 save: {}", archive.display());
+        }
+        let loaded = if path.exists() {
+            let bytes = fs::read(path).map_err(|error| {
+                format!("could not read dungeon v2 save {}: {error}", path.display())
+            })?;
+            let save: DungeonV2SaveV1 = serde_json::from_slice(&bytes).map_err(|error| {
+                format!(
+                    "could not parse dungeon v2 save {}: {error}",
+                    path.display()
+                )
+            })?;
+            Some(save.validate()?)
+        } else {
+            None
+        };
+        Ok((
+            Self {
+                path: path.to_owned(),
+            },
+            loaded,
+        ))
+    }
+
+    fn persist(
+        &self,
+        run: &DungeonV2RunState,
+        entry_door: Option<&str>,
+        explored: &BTreeSet<String>,
+    ) -> Result<(), String> {
+        let save = DungeonV2SaveV1::from_run(run, entry_door, explored);
+        let mut bytes = serde_json::to_vec_pretty(&save)
+            .map_err(|error| format!("could not serialize dungeon v2 save: {error}"))?;
+        bytes.push(b'\n');
+        let temporary = self.path.with_extension("tmp");
+        fs::write(&temporary, &bytes)
+            .map_err(|error| format!("could not write dungeon v2 save: {error}"))?;
+        fs::rename(&temporary, &self.path).map_err(|error| {
+            format!(
+                "could not publish dungeon v2 save {}: {error}",
+                self.path.display()
+            )
+        })?;
+        Ok(())
     }
 }
 
@@ -2864,10 +3056,44 @@ impl ClientState {
                 Some(persistence)
             }
             (RoomMode::Dungeon, None) => None,
+            (RoomMode::DungeonV2, _) => None,
             (_, Some(_)) => {
                 return Err("dungeon persistence requires dungeon mode".to_owned());
             }
             (_, None) => None,
+        };
+        let mut dungeon_v2_run =
+            (selection.mode == RoomMode::DungeonV2).then(DungeonV2RunState::default);
+        let mut explored_v2_rooms = BTreeSet::new();
+        if dungeon_v2_run.is_some() {
+            explored_v2_rooms.insert(dungeon_v2_definition().spawn.clone());
+        }
+        let dungeon_v2_persistence = if selection.mode == RoomMode::DungeonV2
+            && let Some((path, fresh)) = dungeon_save
+        {
+            let (persistence, loaded) = DungeonV2Persistence::open(path, fresh)?;
+            if let Some((loaded_run, entry_door, loaded_explored)) = loaded {
+                explored_v2_rooms = loaded_explored;
+                explored_v2_rooms.insert(loaded_run.room.clone());
+                let room = dungeon_v2_room(&loaded_run.room, &loaded_run.inventory);
+                simulation = match entry_door.as_deref() {
+                    Some(door) => {
+                        Simulation::enter_via_door(room, loaded_run.inventory.abilities(), door)
+                            .map_err(|error| {
+                                format!("could not restore dungeon v2 entry: {error}")
+                            })?
+                    }
+                    None => Simulation::with_abilities(room, loaded_run.inventory.abilities()),
+                };
+                dungeon_v2_run = Some(loaded_run);
+            }
+            let run = dungeon_v2_run
+                .as_ref()
+                .expect("dungeon v2 mode initializes run state");
+            persistence.persist(run, simulation.entry_door(), &explored_v2_rooms)?;
+            Some(persistence)
+        } else {
+            None
         };
         let movement_tuning = MovementTuning::GAMEPLAY_DEFAULT;
         configure_live_simulation(&mut simulation, movement_tuning);
@@ -2889,9 +3115,10 @@ impl ClientState {
         let level_menu_preview = LevelMenuPreview::load(preview_selection, &catalogue);
         let browser_mode = match selection.mode {
             RoomMode::Gallery => BrowserMode::Gallery,
-            RoomMode::Challenge(_) | RoomMode::CalibratedGenerated | RoomMode::Dungeon => {
-                BrowserMode::Closed
-            }
+            RoomMode::Challenge(_)
+            | RoomMode::CalibratedGenerated
+            | RoomMode::Dungeon
+            | RoomMode::DungeonV2 => BrowserMode::Closed,
             RoomMode::Generated | RoomMode::DeveloperGenerated | RoomMode::Development => {
                 BrowserMode::Catalogue
             }
@@ -2917,6 +3144,9 @@ impl ClientState {
             replay_notice: None,
             dungeon_run,
             dungeon_persistence,
+            dungeon_v2_run,
+            dungeon_v2_persistence,
+            explored_v2_rooms,
             death_pause_ticks: 0,
             explored_rooms,
             map_visible: false,
@@ -2939,6 +3169,10 @@ impl ClientState {
         self.movement_tuning_menu = None;
         self.dungeon_run = (selection.mode == RoomMode::Dungeon).then(DungeonRunState::default);
         self.dungeon_persistence = None;
+        self.dungeon_v2_run =
+            (selection.mode == RoomMode::DungeonV2).then(DungeonV2RunState::default);
+        self.dungeon_v2_persistence = None;
+        self.explored_v2_rooms = BTreeSet::new();
         self.explored_rooms = if selection.mode == RoomMode::Dungeon {
             BTreeSet::from([DemoDungeonRoom::HollowLanding])
         } else {
@@ -3144,6 +3378,10 @@ impl ClientState {
                 || "MISSING DUNGEON RUN".to_owned(),
                 |run| format!("DUNGEON · {}", run.room.title()),
             ),
+            RoomMode::DungeonV2 => self.dungeon_v2_run.as_ref().map_or_else(
+                || "DUNGEON V2".to_owned(),
+                |run| format!("DUNGEON V2 · {}", run.room.to_ascii_uppercase()),
+            ),
             RoomMode::Challenge(kind) => kind.level_identifier().to_owned(),
         }
     }
@@ -3171,6 +3409,10 @@ impl ClientState {
             RoomMode::Dungeon => self.dungeon_run.map_or_else(
                 || "dungeon:missing".to_owned(),
                 |run| format!("dungeon:{}", run.room.id()),
+            ),
+            RoomMode::DungeonV2 => self.dungeon_v2_run.as_ref().map_or_else(
+                || "dungeon-v2".to_owned(),
+                |run| format!("dungeon-v2:{}", run.room),
             ),
             RoomMode::Challenge(kind) => kind.stats_key(),
         }
@@ -4226,8 +4468,9 @@ impl ClientState {
         }
         // AI progress is as real as human progress: persist coins and follow
         // door transitions, and hand control back the moment a goal lands.
-        let boundary =
-            self.observe_dungeon_progress(&report) || self.observe_floor_lab_progress(&report);
+        let boundary = self.observe_dungeon_progress(&report)
+            || self.observe_dungeon_v2_progress(&report)
+            || self.observe_floor_lab_progress(&report);
         if boundary {
             self.replay_mode = ReplayMode::Human;
             self.human_recorder = HumanRecorder::new(&self.simulation);
@@ -4378,8 +4621,9 @@ impl ClientState {
         } else {
             None
         };
-        let dungeon_boundary =
-            self.observe_dungeon_progress(&report) || self.observe_floor_lab_progress(&report);
+        let dungeon_boundary = self.observe_dungeon_progress(&report)
+            || self.observe_dungeon_v2_progress(&report)
+            || self.observe_floor_lab_progress(&report);
         if !dungeon_boundary && let Some(notice) = completed_notice {
             self.replay_notice = Some(notice);
         }
@@ -4441,6 +4685,183 @@ impl ClientState {
     /// In the non-persistent floor lab, a reached connected door continues
     /// into the destination room's floor lab (entered via the mate door, with
     /// that room's analysis loadout) instead of ending the session.
+    fn persist_dungeon_v2_progress(&mut self) {
+        if let (Some(run), Some(persistence)) = (
+            self.dungeon_v2_run.as_ref(),
+            self.dungeon_v2_persistence.as_ref(),
+        ) && let Err(error) =
+            persistence.persist(run, self.simulation.entry_door(), &self.explored_v2_rooms)
+        {
+            eprintln!("dungeon v2 save failed: {error}");
+        }
+    }
+
+    fn observe_dungeon_v2_progress(&mut self, report: &StepReport) -> bool {
+        let Some(mut run) = self.dungeon_v2_run.clone() else {
+            return false;
+        };
+
+        // Dying after touching a persistent pickup restores it in the live
+        // simulation, but coins already banked must stay gone: rebind the room
+        // against the inventory on any reset.
+        if report
+            .events
+            .iter()
+            .any(|event| matches!(event, SimulationEvent::Reset))
+        {
+            let entry_door = self.simulation.entry_door().map(str::to_owned);
+            let room = dungeon_v2_room(&run.room, &run.inventory);
+            let mut rebound = match entry_door.as_deref() {
+                Some(door) => Simulation::enter_via_door(room, run.inventory.abilities(), door)
+                    .expect("persistent dungeon v2 entry door remains valid"),
+                None => Simulation::with_abilities(room, run.inventory.abilities()),
+            };
+            configure_live_simulation(&mut rebound, self.movement_tuning);
+            self.simulation = rebound;
+            self.human_recorder = HumanRecorder::new(&self.simulation);
+            return true;
+        }
+
+        let mut changed = false;
+        for id in report.events.iter().filter_map(|event| match event {
+            SimulationEvent::PickupCollected { id } => Some(id.as_str()),
+            _ => None,
+        }) {
+            if id.starts_with("v2-coin-") {
+                if run.inventory.coins.insert(id.to_owned()) {
+                    changed = true;
+                    self.replay_notice = Some(ReplayNotice {
+                        title: format!(
+                            "COIN {}/{}",
+                            run.inventory.coins.len(),
+                            dungeon_v2_total_coins()
+                        ),
+                        detail: "Coins persist across rooms and open sealed doors".to_owned(),
+                        is_error: false,
+                    });
+                }
+            } else if id == DEMO_DUNGEON_GLOVE_PICKUP && !run.inventory.climbing_gloves {
+                run.inventory.climbing_gloves = true;
+                changed = true;
+                self.simulation.grant_abilities(run.inventory.abilities());
+                self.replay_notice = Some(ReplayNotice {
+                    title: "CLIMBING GLOVES".to_owned(),
+                    detail: "Wall-jumps unlocked · sealed wall doors now open".to_owned(),
+                    is_error: false,
+                });
+            } else if id == DEMO_DUNGEON_BOOT_PICKUP && !run.inventory.winged_boots {
+                run.inventory.winged_boots = true;
+                changed = true;
+                self.simulation.grant_abilities(run.inventory.abilities());
+                self.replay_notice = Some(ReplayNotice {
+                    title: "WINGED BOOTS".to_owned(),
+                    detail: "Dash unlocked · sealed dash doors now open".to_owned(),
+                    is_error: false,
+                });
+            } else if id == DEMO_DUNGEON_CROWN_PICKUP && !run.inventory.crown {
+                run.inventory.crown = true;
+                changed = true;
+                self.replay_notice = Some(ReplayNotice {
+                    title: "THE CROWN".to_owned(),
+                    detail: "Reach the goal light to finish the dungeon".to_owned(),
+                    is_error: false,
+                });
+            }
+        }
+        if changed {
+            self.dungeon_v2_run = Some(run.clone());
+            self.persist_dungeon_v2_progress();
+        }
+
+        let Some(exit_id) = report.events.iter().find_map(|event| match event {
+            SimulationEvent::ExitReached { id } => Some(id.as_str()),
+            _ => None,
+        }) else {
+            return changed;
+        };
+        let Some(door) = self
+            .simulation
+            .room()
+            .doors()
+            .iter()
+            .find(|door| door.id == exit_id)
+            .cloned()
+        else {
+            // The crown goal is a terminal legacy Exit, not a room transition.
+            if run.inventory.crown {
+                self.replay_notice = Some(ReplayNotice {
+                    title: "DUNGEON COMPLETE".to_owned(),
+                    detail: format!(
+                        "Crowned with {}/{} coins",
+                        run.inventory.coins.len(),
+                        dungeon_v2_total_coins()
+                    ),
+                    is_error: false,
+                });
+                self.persist_dungeon_v2_progress();
+            }
+            return true;
+        };
+        if let Some(requirement) = dungeon_v2_door_requirement(&run.room, &door.id)
+            && !run.inventory.satisfies(requirement)
+        {
+            let _ = self.simulation.reject_reached_door(&door.id);
+            self.human_recorder.resume_at(&self.simulation);
+            let label = match requirement {
+                DungeonV2Requirement::ClimbingGloves => "CLIMBING GLOVES".to_owned(),
+                DungeonV2Requirement::WingedBoots => "WINGED BOOTS".to_owned(),
+                DungeonV2Requirement::Coins(count) => format!("{count} COINS"),
+            };
+            self.replay_notice = Some(ReplayNotice {
+                title: format!("SEALED · {label} REQUIRED"),
+                detail: format!(
+                    "you have {}/{} coins; explore another branch",
+                    run.inventory.coins.len(),
+                    dungeon_v2_total_coins()
+                ),
+                is_error: true,
+            });
+            return true;
+        }
+        let Some(destination_room) = door.destination_room.clone() else {
+            return false;
+        };
+        let destination_door = door
+            .destination_door
+            .as_deref()
+            .expect("dungeon v2 doors always name their mate");
+        run.room = destination_room.clone();
+        self.explored_v2_rooms.insert(destination_room.clone());
+        let room = dungeon_v2_room(&run.room, &run.inventory);
+        let mut simulation =
+            Simulation::enter_via_door(room, run.inventory.abilities(), destination_door)
+                .expect("dungeon v2 graph points at a validated destination door");
+        configure_live_simulation(&mut simulation, self.movement_tuning);
+        self.dungeon_v2_run = Some(run.clone());
+        self.simulation = simulation;
+        self.feedback = SimulationFeedback::default();
+        self.human_recorder = HumanRecorder::new(&self.simulation);
+        self.replay_mode = ReplayMode::Human;
+        self.replay_notice = Some(ReplayNotice {
+            title: destination_room.to_ascii_uppercase(),
+            detail: format!(
+                "coins {}/{}{}",
+                run.inventory.coins.len(),
+                dungeon_v2_total_coins(),
+                if !run.inventory.climbing_gloves {
+                    " · find the Climbing Gloves"
+                } else if !run.inventory.winged_boots {
+                    " · find the Winged Boots"
+                } else {
+                    " · find the Crown"
+                }
+            ),
+            is_error: false,
+        });
+        self.persist_dungeon_v2_progress();
+        true
+    }
+
     fn observe_floor_lab_progress(&mut self, report: &StepReport) -> bool {
         let RoomMode::Challenge(ChallengeKind::DungeonFloor(_)) = self.selection.mode else {
             return false;
@@ -4930,6 +5351,16 @@ fn load_scenario(
                 None,
             )
         }
+        RoomMode::DungeonV2 => {
+            let run = DungeonV2RunState::default();
+            (
+                Simulation::with_abilities(
+                    dungeon_v2_room(&run.room, &run.inventory),
+                    run.inventory.abilities(),
+                ),
+                None,
+            )
+        }
         RoomMode::Challenge(kind) => {
             let simulation = kind.scenario();
             let expected_abilities = kind.abilities();
@@ -5181,6 +5612,7 @@ fn room_mode_label(mode: RoomMode) -> &'static str {
         RoomMode::Gallery => "GALLERY",
         RoomMode::CalibratedGenerated => "CALIBRATED",
         RoomMode::Dungeon => "DUNGEON",
+        RoomMode::DungeonV2 => "DUNGEON V2",
         RoomMode::Challenge(ChallengeKind::DungeonFloor(_)) => "DUNGEON FLOOR LAB",
         RoomMode::Challenge(ChallengeKind::Hard | ChallengeKind::Medium) => "CHALLENGE",
     }
@@ -6194,6 +6626,11 @@ fn draw_level_menu_preview(
             "FIND BOOTS · CROSS GALE CHASM · CLAIM CROWN".to_owned(),
             "ROOM EXITS TRAVERSE THE DUNGEON GRAPH".to_owned(),
         ),
+        RoomMode::DungeonV2 => (
+            "REDESIGNED DATA-DRIVEN DUNGEON".to_owned(),
+            "FIND GLOVES AND BOOTS · BANK COINS · CLAIM CROWN".to_owned(),
+            "ROOM EXITS TRAVERSE THE DUNGEON GRAPH".to_owned(),
+        ),
         RoomMode::Generated => client.catalogue_entry(selection).map_or_else(
             || {
                 (
@@ -6971,6 +7408,28 @@ fn draw_hud(viewport: &PixelViewport, client: &ClientState) {
                 )
             },
         ),
+        RoomMode::DungeonV2 => client.dungeon_v2_run.as_ref().map_or_else(
+            || "MISSING DUNGEON V2 RUN".to_owned(),
+            |run| {
+                format!(
+                    "{} / COINS:{}/{} / GLOVES:{} / BOOTS:{} / CROWN:{}",
+                    run.room.to_ascii_uppercase(),
+                    run.inventory.coins.len(),
+                    dungeon_v2_total_coins(),
+                    if run.inventory.climbing_gloves {
+                        "ON"
+                    } else {
+                        "OFF"
+                    },
+                    if run.inventory.winged_boots {
+                        "YES"
+                    } else {
+                        "NO"
+                    },
+                    if run.inventory.crown { "YES" } else { "NO" }
+                )
+            },
+        ),
         RoomMode::Challenge(kind) => kind.level_identifier().to_owned(),
     };
     let displayed_tier = if client.selection.mode == RoomMode::Dungeon {
@@ -7086,7 +7545,7 @@ fn draw_win_feedback(viewport: &PixelViewport, client: &ClientState) {
         RoomMode::Development => DEVELOPMENT_LEVEL_IDENTIFIER.to_owned(),
         RoomMode::Gallery => client.level_name(client.selection),
         RoomMode::CalibratedGenerated => client.level_name(client.selection),
-        RoomMode::Dungeon => client.level_name(client.selection),
+        RoomMode::Dungeon | RoomMode::DungeonV2 => client.level_name(client.selection),
         RoomMode::Challenge(kind) => kind.level_identifier().to_owned(),
     };
     viewport.centered_text(&result, 84, 7, UI_TEXT);
@@ -7953,6 +8412,99 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(archives.len(), 1);
         assert_eq!(fs::read(&archives[0]).unwrap(), original);
+    }
+
+    use downwards_content::dungeon_v2_coin_id;
+
+    #[test]
+    fn dungeon_v2_client_transitions_gates_and_persists() {
+        let save_path = temporary_test_path("dungeon-v2-client", "save.json");
+        let selection = ScenarioSelection {
+            mode: RoomMode::DungeonV2,
+            seed: 0,
+            tier: AbilityTier::Baseline,
+        };
+        let mut client = ClientState::new_with_persistence(
+            selection,
+            None,
+            false,
+            None,
+            Some((&save_path, false)),
+        )
+        .unwrap();
+        let spawn = dungeon_v2_definition().spawn.clone();
+        assert_eq!(
+            client.dungeon_v2_run.as_ref().map(|run| run.room.clone()),
+            Some(spawn.clone())
+        );
+        let report = |client: &ClientState, events: Vec<SimulationEvent>| StepReport {
+            tick: client.simulation.tick(),
+            events,
+            digest: client.simulation.digest(),
+        };
+
+        // A banked coin persists into the save.
+        let coin = dungeon_v2_coin_id(&spawn, 0);
+        assert!(client.observe_dungeon_v2_progress(&report(
+            &client,
+            vec![SimulationEvent::PickupCollected { id: coin.clone() }],
+        )));
+        assert!(
+            client
+                .dungeon_v2_run
+                .as_ref()
+                .unwrap()
+                .inventory
+                .coins
+                .contains(&coin)
+        );
+
+        // A wall-sealed door bounces a bare player; the glove opens it.
+        let (gated_room, gated_door) = ("ob".to_owned(), "east".to_owned());
+        assert_eq!(
+            dungeon_v2_door_requirement(&gated_room, &gated_door),
+            Some(DungeonV2Requirement::ClimbingGloves)
+        );
+        client.dungeon_v2_run.as_mut().unwrap().room = gated_room.clone();
+        let room = dungeon_v2_room(
+            &gated_room,
+            &client.dungeon_v2_run.as_ref().unwrap().inventory,
+        );
+        client.simulation = Simulation::enter_via_door(room, AbilitySet::NONE, "west").unwrap();
+        assert!(client.observe_dungeon_v2_progress(&report(
+            &client,
+            vec![SimulationEvent::ExitReached {
+                id: gated_door.clone(),
+            }],
+        )));
+        assert_eq!(
+            client.dungeon_v2_run.as_ref().unwrap().room,
+            gated_room,
+            "a sealed door must not transition"
+        );
+        assert!(client.replay_notice.as_ref().unwrap().is_error);
+
+        // Collect the glove, then the same door transitions.
+        assert!(client.observe_dungeon_v2_progress(&report(
+            &client,
+            vec![SimulationEvent::PickupCollected {
+                id: DEMO_DUNGEON_GLOVE_PICKUP.to_owned(),
+            }],
+        )));
+        assert!(client.observe_dungeon_v2_progress(&report(
+            &client,
+            vec![SimulationEvent::ExitReached { id: gated_door }],
+        )));
+        let destination = client.dungeon_v2_run.as_ref().unwrap().room.clone();
+        assert_ne!(destination, gated_room);
+        assert!(client.explored_v2_rooms.contains(&destination));
+
+        // The save round-trips the full run state.
+        let saved: DungeonV2SaveV1 =
+            serde_json::from_slice(&fs::read(&save_path).unwrap()).unwrap();
+        let (run, _, explored) = saved.validate().unwrap();
+        assert_eq!(run, *client.dungeon_v2_run.as_ref().unwrap());
+        assert_eq!(explored, client.explored_v2_rooms);
     }
 
     #[test]

@@ -430,6 +430,11 @@ pub struct DungeonV2Inventory {
 
 impl DungeonV2Inventory {
     #[must_use]
+    pub const fn abilities(&self) -> downwards_core::AbilitySet {
+        downwards_core::AbilitySet::new(self.climbing_gloves, self.winged_boots)
+    }
+
+    #[must_use]
     pub fn satisfies(&self, requirement: DungeonV2Requirement) -> bool {
         match requirement {
             DungeonV2Requirement::ClimbingGloves => self.climbing_gloves,
