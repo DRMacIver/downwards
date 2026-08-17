@@ -28,7 +28,7 @@ const MASTER_VOLUME: f32 = 0.5;
 /// merely re-basing by whole hazard cycles.
 pub const FADE_OUT_SECONDS: f64 = 0.4;
 pub const TRANSITION_GAP_SECONDS: f64 = 0.12;
-pub const FADE_IN_SECONDS: f64 = 0.4;
+pub const FADE_IN_SECONDS: f64 = 1.5;
 /// Mute toggle ramp.
 const MUTE_SECONDS: f64 = 0.03;
 /// Maximum slew per block, as a fraction of the block length (§7.3).
@@ -378,12 +378,12 @@ mod tests {
     #[allow(clippy::assertions_on_constants)]
     fn transition_lengths_are_gentle() {
         // Designer feedback 2026-08: substantially longer than the old 150 ms
-        // halves, with a total (fade-out + gap + fade-in) in ~0.6–1.0 s.
+        // halves, and the fade-in specifically "a second or two".
         assert!(FADE_OUT_SECONDS >= 0.3);
-        assert!(FADE_IN_SECONDS >= 0.3);
+        assert!((1.0..=2.0).contains(&FADE_IN_SECONDS));
         assert!(TRANSITION_GAP_SECONDS >= 0.05);
         let total = FADE_OUT_SECONDS + TRANSITION_GAP_SECONDS + FADE_IN_SECONDS;
-        assert!((0.6..=1.0).contains(&total), "total transition {total}s");
+        assert!((1.4..=2.6).contains(&total), "total transition {total}s");
     }
 
     fn test_shared() -> Arc<Shared> {

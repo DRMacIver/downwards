@@ -4764,13 +4764,15 @@ fn load_scenario(
         }
         RoomMode::DungeonV2 => {
             let run = DungeonV2RunState::default();
-            (
-                Simulation::with_abilities(
-                    dungeon_v2_room(&run.room, &run.inventory),
-                    run.inventory.abilities(),
-                ),
-                None,
+            // A fresh run begins as an arrival: the delver drops in through the
+            // ceiling door they will eventually escape from.
+            let simulation = Simulation::enter_via_door(
+                dungeon_v2_room(&run.room, &run.inventory),
+                run.inventory.abilities(),
+                "ceiling",
             )
+            .map_err(|error| format!("dungeon spawn room has no ceiling entry: {error}"))?;
+            (simulation, None)
         }
         RoomMode::Challenge(kind) => {
             let simulation = kind.scenario();
