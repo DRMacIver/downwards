@@ -6229,27 +6229,49 @@ fn draw_dungeon_v2_map(viewport: &PixelViewport, client: &ClientState) {
     let on_screen =
         |(x, y): (i32, i32)| (-CELL_W..320).contains(&x) && (30 - CELL_H..168).contains(&y);
 
-    // Connection stubs between explored neighbours first, so cells draw over
-    // them. A sealed door the player cannot yet open draws its stub in the
-    // hazard tint as a reminder of where to come back to.
+    // Connections first, so cells draw over them. Between two explored rooms
+    // the connector follows the rooms' actual map cells (an L-shaped line when
+    // the layout displaced a room off its natural neighbour cell); a door into
+    // unexplored space draws a short stub in the door's direction. Sealed
+    // doors the player cannot yet open use the hazard tint as a reminder of
+    // where to come back to.
     for instance_id in &client.explored_v2_rooms {
         let (x, y) = cell_origin(instance_id);
-        if !on_screen((x, y)) {
-            continue;
-        }
-        for door_id in dungeon.instances[instance_id].connections.keys() {
-            let (stub_x, stub_y, stub_w, stub_h) = match door_id.as_str() {
-                "west" => (x - (PITCH_X - CELL_W), y + CELL_H / 2, PITCH_X - CELL_W, 1),
-                "east" => (x + CELL_W, y + CELL_H / 2, PITCH_X - CELL_W, 1),
-                "ceiling" => (x + CELL_W / 2, y - (PITCH_Y - CELL_H), 1, PITCH_Y - CELL_H),
-                _ => (x + CELL_W / 2, y + CELL_H, 1, PITCH_Y - CELL_H),
-            };
+        let center = (x + CELL_W / 2, y + CELL_H / 2);
+        for (door_id, (destination, mate_door)) in &dungeon.instances[instance_id].connections {
             let sealed = dungeon_v2_door_requirement(instance_id, door_id)
-                .is_some_and(|requirement| !run.inventory.satisfies(requirement));
-            viewport.rectangle(
-                CoreRect::new(stub_x, stub_y, stub_w, stub_h),
-                if sealed { HAZARD_DARK } else { UI_DIM },
-            );
+                .is_some_and(|requirement| !run.inventory.satisfies(requirement))
+                || dungeon_v2_door_requirement(destination, mate_door)
+                    .is_some_and(|requirement| !run.inventory.satisfies(requirement));
+            let colour = if sealed { HAZARD_DARK } else { UI_DIM };
+            if client.explored_v2_rooms.contains(destination) {
+                // Draw each explored-explored connector once.
+                if destination < instance_id {
+                    continue;
+                }
+                let (dest_x, dest_y) = cell_origin(destination);
+                let dest_center = (dest_x + CELL_W / 2, dest_y + CELL_H / 2);
+                let (left, right) = (center.0.min(dest_center.0), center.0.max(dest_center.0));
+                let (top, bottom) = (center.1.min(dest_center.1), center.1.max(dest_center.1));
+                // Horizontal run at this room's height, then vertical drop at
+                // the destination's column.
+                viewport.rectangle(CoreRect::new(left, center.1, right - left + 1, 1), colour);
+                viewport.rectangle(
+                    CoreRect::new(dest_center.0, top, 1, bottom - top + 1),
+                    colour,
+                );
+            } else {
+                if !on_screen((x, y)) {
+                    continue;
+                }
+                let (stub_x, stub_y, stub_w, stub_h) = match door_id.as_str() {
+                    "west" => (x - (PITCH_X - CELL_W), y + CELL_H / 2, PITCH_X - CELL_W, 1),
+                    "east" => (x + CELL_W, y + CELL_H / 2, PITCH_X - CELL_W, 1),
+                    "ceiling" => (x + CELL_W / 2, y - (PITCH_Y - CELL_H), 1, PITCH_Y - CELL_H),
+                    _ => (x + CELL_W / 2, y + CELL_H, 1, PITCH_Y - CELL_H),
+                };
+                viewport.rectangle(CoreRect::new(stub_x, stub_y, stub_w, stub_h), colour);
+            }
         }
     }
 
