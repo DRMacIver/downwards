@@ -10,6 +10,18 @@ door east
 # floor-door drop platform. Right lane: 20-21 -> 24-25 -> 27-28 -> 29-30 lands
 # in the east-door pocket. Both lanes reach an exit: the choice is routing.
 
+# The west flue: the strata now stop short of the west wall, sealed off by a
+# hanging pillar (col 3, rows 1-11). Dropping off the west hole of the bottom
+# stratum (col 3, past the pillar's foot) lands in the flue pocket on the
+# sorting floor. From there the WINGED BOOTS demand a sustained wall-kick
+# climb between the west wall and the pillar: floor to the rest stub at row 9
+# (~70px, the lower reach is three tiles wide against the postern-block face,
+# narrowing to two above), then a second sheer reach past a timed steam vent
+# (rows 4-6, 24-in-90) to the boots at the flue's throat. Undershoot falls
+# clean back to the flat pocket floor; only crossing the vent on the wrong
+# beat kills. Gloves required; no dash. All through-lanes are untouched.
+hazard 10 40 20 30 90 24 0
+
 # Easy coin: pedestal in the right-hand sorting floor, on the retreat step that
 # also lets an east-door entrant climb back up the strata.
 coin 226 140

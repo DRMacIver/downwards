@@ -65,7 +65,7 @@
    "1": {
     "both": 259,
     "dash": 122,
-    "none": 140,
+    "none": 144,
     "wall": 259
    },
    "2": {
@@ -118,10 +118,10 @@
     "wall": 79
    },
    "1": {
-    "both": 170,
+    "both": 177,
     "dash": 132,
-    "none": 172,
-    "wall": 170
+    "none": 177,
+    "wall": 177
    },
    "2": {
     "both": 100,
@@ -412,16 +412,16 @@
  "eaves-walk-a": {
   "coin_routes": {
    "0": {
-    "both": 80,
-    "dash": 80,
-    "none": 80,
-    "wall": 80
+    "both": 42,
+    "dash": 42,
+    "none": 42,
+    "wall": 42
    },
    "1": {
-    "both": 95,
-    "dash": 95,
-    "none": 11,
-    "wall": 11
+    "both": 78,
+    "dash": 38,
+    "none": null,
+    "wall": 188
    }
   },
   "coins": 2,
@@ -468,10 +468,10 @@
     "wall": 80
    },
    "west->east": {
-    "both": 165,
-    "dash": 165,
-    "none": 165,
-    "wall": 165
+    "both": 172,
+    "dash": 172,
+    "none": 172,
+    "wall": 172
    },
    "west->floor": {
     "both": 85,
@@ -486,7 +486,16 @@
     "wall": 5
    }
   },
-  "shaky": {},
+  "shaky": {
+   "0": {
+    "family": "CorrelatedTiming",
+    "worst": 0.15625
+   },
+   "1": {
+    "family": "CorrelatedTiming",
+    "worst": 0.0
+   }
+  },
   "verdict_ok": true
  },
  "gable-run-a": {
@@ -645,8 +654,8 @@
     "wall": 389
    },
    "2": {
-    "both": 118,
-    "dash": 118,
+    "both": 132,
+    "dash": 132,
     "none": null,
     "wall": 389
    }
@@ -1910,10 +1919,10 @@
  "metronome-gallery-c": {
   "coin_routes": {
    "0": {
-    "both": 61,
-    "dash": 61,
-    "none": 61,
-    "wall": 61
+    "both": 64,
+    "dash": 64,
+    "none": 64,
+    "wall": 64
    },
    "1": {
     "both": 208,
@@ -2468,10 +2477,10 @@
     "wall": 100
    },
    "2": {
-    "both": 195,
-    "dash": 111,
+    "both": 234,
+    "dash": 141,
     "none": null,
-    "wall": 234
+    "wall": null
    }
   },
   "coins": 3,
@@ -2653,10 +2662,10 @@
     "wall": 84
    },
    "floor->ceiling": {
-    "both": 119,
-    "dash": 119,
-    "none": 119,
-    "wall": 119
+    "both": 148,
+    "dash": 142,
+    "none": 142,
+    "wall": 148
    },
    "floor->east": {
     "both": 129,
@@ -2671,7 +2680,16 @@
     "wall": 8
    }
   },
-  "shaky": {},
+  "shaky": {
+   "0": {
+    "family": "BoundaryTiming",
+    "worst": 0.75
+   },
+   "1": {
+    "family": "BoundaryTiming",
+    "worst": 0.48717948717948717
+   }
+  },
   "verdict_ok": true
  },
  "strata-sort-c": {
@@ -2934,16 +2952,16 @@
     "wall": 77
    },
    "1": {
-    "both": 99,
-    "dash": 99,
-    "none": 99,
-    "wall": 99
+    "both": 71,
+    "dash": 71,
+    "none": null,
+    "wall": null
    },
    "2": {
-    "both": 94,
-    "dash": 94,
-    "none": 94,
-    "wall": 94
+    "both": 83,
+    "dash": 83,
+    "none": 132,
+    "wall": 132
    }
   },
   "coins": 3,
@@ -2983,22 +3001,22 @@
  "tide-shaft-b": {
   "coin_routes": {
    "0": {
-    "both": 139,
-    "dash": 128,
-    "none": 128,
-    "wall": 139
+    "both": 210,
+    "dash": 235,
+    "none": 235,
+    "wall": 210
    },
    "1": {
-    "both": 105,
-    "dash": 88,
-    "none": 265,
-    "wall": 105
+    "both": 396,
+    "dash": 202,
+    "none": null,
+    "wall": 406
    },
    "2": {
-    "both": 64,
-    "dash": 64,
-    "none": 64,
-    "wall": 64
+    "both": 75,
+    "dash": 75,
+    "none": null,
+    "wall": null
    }
   },
   "coins": 3,
@@ -3038,22 +3056,22 @@
  "tide-shaft-c": {
   "coin_routes": {
    "0": {
-    "both": 44,
-    "dash": 44,
-    "none": 400,
-    "wall": 480
+    "both": 294,
+    "dash": null,
+    "none": null,
+    "wall": null
    },
    "1": {
-    "both": 117,
-    "dash": 124,
-    "none": 124,
-    "wall": 117
+    "both": null,
+    "dash": null,
+    "none": null,
+    "wall": null
    },
    "2": {
-    "both": 84,
-    "dash": 65,
+    "both": null,
+    "dash": null,
     "none": null,
-    "wall": 84
+    "wall": null
    }
   },
   "coins": 3,
@@ -3154,8 +3172,8 @@
     "wall": null
    },
    "2": {
-    "both": 138,
-    "dash": 91,
+    "both": 156,
+    "dash": 97,
     "none": null,
     "wall": null
    }

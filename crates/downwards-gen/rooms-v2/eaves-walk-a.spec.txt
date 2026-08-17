@@ -8,10 +8,20 @@
 # drips teach the two-count that the deeper sandglass rooms will demand.
 # Coins: one on the loft (a 20px hop up via the walkway), one past the far
 # drip.
+#
+# Above the loft the roof is broken open into the icicle shaft (rows 3-9,
+# cols 12-20): four staggered one-way shingle stubs climb it (rows 11, 9, 7,
+# 5), every transfer a full left/right reversal onto a two-tile pad, and a
+# third, faster icicle drip (12-in-48) falls through the shaft core. The
+# CLIMBING GLOVE sits on the topmost stub. Undershooting any transfer drops
+# the player back to the loft (or the walkway) unhurt; the drip punishes
+# crossing the core on the wrong beat. A shingle step by each side door
+# (row 15) mounts the loft. The walkway through-route is untouched.
 hazard 70 100 20 70 72 18 0
 hazard 240 100 20 70 72 18 36
+hazard 150 30 20 40 48 12 0
 door floor
 door west
 door east
-coin 120 115
-coin 290 145
+coin 170 95
+coin 185 52

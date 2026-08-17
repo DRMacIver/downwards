@@ -15,9 +15,11 @@
 #   y5:                 kvc2(3) asl(4) crown(5)
 #
 # Acts: A (bare) - roof, spawn column, upper halls; the glove waits at the
-# bottom of the bare descent, mid-walk in the under-eaves (ew1, y3). B
+# bottom of the bare descent, atop the icicle-shaft climb over the
+# under-eaves loft (ew1, y3). B
 # (wall) - the north-west quarter behind the chimney-lock gate; the boots
-# sit at the quarter's far crossroads (sb), reached around the gable loop.
+# crown the west-flue wall-kick climb at the quarter's far crossroads (sb),
+# reached around the gable loop.
 # C (dash) - the low vault behind the low-ceiling crawl and the sandglass
 # trapdoor.
 # The south-east pocket needs dash to enter (sandglass-b) and the astral
@@ -33,7 +35,7 @@ room owp   one-way-loop-c         # vault under-stair (duplicate grid #1)
 room t1    tide-shaft-a           # spawn-side shaft, climbable bare
 room ob    keep-observatory       # east upper hall (observatory keep)
 room gb    greed-loop-b           # east roof step
-room sb    strata-sort-b          # wall-quarter crossroads; BOOTS on the drop platform
+room sb    strata-sort-b          # wall-quarter crossroads; BOOTS atop the west flue wall-kick climb
 room lcc   low-ceiling-arena-c    # wall-quarter crawl junction
 room chl   chimney-lock-a         # THE wall gate into the north-west quarter
 room lc1   lantern-cross-a        # central crossing (duplicate grid #2)
@@ -43,7 +45,7 @@ room sd1   sandglass-drop-a       # sealed-bulb sandglass: dash trapdoor to the 
 room mr    keep-meteor-run        # dash curtains on the vault's east exit
 room gx    greed-loop-b           # under-hall step (duplicate grid #3)
 room sd2   sandglass-drop-b       # open-bulb sandglass: dash trapdoor to the deep
-room ew1   eaves-walk-a           # east under-eaves walk; GLOVE mid-walk
+room ew1   eaves-walk-a           # east under-eaves walk; GLOVE atop the icicle-shaft climb
 room gc    greed-loop-c           # east wall-hatch step down
 room kvc1  keyhole-vault-c        # dash vault (coins), west deep
 room lca   low-ceiling-arena-a    # dash crawl into the deep
@@ -110,8 +112,8 @@ gate asl east coins 58         # crown coin door (one direction only)
 # so the door leads out of the dungeon.
 
 # --- pickups / endpoints ----------------------------------------------
-pickup glove ew1 190 150
-pickup boots sb 152 148
+pickup glove ew1 135 32
+pickup boots sb 12 15
 spawn s1
 goal crown
 exit ga
