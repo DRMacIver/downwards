@@ -1,0 +1,32 @@
+# Millrace Walk: the low underpass where the race floods on the half-beat.
+#
+# A pressed-flat service passage — solid stone from the ceiling down to
+# row 10 — carrying west-east traffic on a broken towpath (one-ways at
+# row 14) over a floodable channel floor. Two counter-phased sluice
+# surges drown stretches of the channel bed (west cols 3-6, east cols
+# 25-28, same 108-tick cycle half a beat apart), so the low road is a
+# timed wade and the high road is dry but broken: gaps at cols 10-11
+# and 20-21 drop a careless walker back into the channel, where a
+# one-tile step block (cols 8-9 west, 22-23 east) is the dry re-mount
+# point just beyond each surge.
+#
+# Mid-room, two masonry piers (cols 12-13 and 18-19) box the floor
+# hatch into a proper vestibule: a one-way sill at row 16 catches
+# floor-door entrants, a short bridge at row 13 spans pier-top to
+# pier-top over it, and pressing down twice — through bridge, then
+# sill — is the deliberate, two-stage commitment that takes you out
+# the bottom. A coin sits on the sill itself; the two sluice coins
+# sit in the flood zones and are grabbed on the surge's off-beat.
+door west
+door east
+door floor
+# west sluice surge, phase 0
+hazard 30 150 40 20 108 36 0
+# east sluice surge, half a beat later
+hazard 250 150 40 20 108 36 54
+# west flood-zone coin, grabbed between surges
+coin 45 158
+# vestibule coin on the floor-hatch sill
+coin 156 148
+# east flood-zone coin
+coin 265 158

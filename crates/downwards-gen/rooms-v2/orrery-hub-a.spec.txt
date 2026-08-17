@@ -1,0 +1,38 @@
+# Orrery Hub: the four-way crossing where two planets keep opposite time.
+#
+# A full crossroads (all four doors) that stays kind to through-traffic
+# because dungeon routes will cross it again and again. The ground
+# floor is one straight walk west-east over a one-way sill bridging
+# the floor mouth (row 16, cols 14-17): walk across it, or press down
+# mid-bridge to take the floor door. Two "planet" pulses orbit the
+# walk out of phase — a west pulse (x 30-90) and an east pulse
+# (x 230-290) on the same 72-tick year, half a cycle apart — so
+# crossing the room is two beats taken in rhythm, never a wall of
+# fire, and the sill between them is always a safe survey stand.
+#
+# The vertical axis is the hub's second hand: entrants from the
+# ceiling land on the axle shingle (row 3, cols 12-17) and can drop
+# the clean central shaft (cols 14-17) straight to the sill — a
+# mid-shaft coin pays the committed fall — while the climb out is the
+# west bay's tower: a masonry step (cols 9-10) planted just clear of
+# the west pulse's arc, then three rungs (rows 12/9/6) zig-zagging up
+# in honest 30px hops to a final hop east onto the axle shingle.
+door ceiling
+door floor
+door west
+door east
+# inner planet: pulse between the tower's base and the floor sill,
+# phase 0. Keep it off the tower bay (cols 1-8): a pulse there puts
+# the whole bare climb inside its phase space and the solver's node
+# budget dies before the proof (recorded artifact). Keep periods
+# short (<= 72) for the same reason.
+hazard 110 130 30 40 72 24 0
+# outer planet: same year, opposite phase, over the east walk
+hazard 230 130 60 40 72 24 36
+# perihelion coin: inside the inner pulse's ground track, grabbed on
+# the off-beat
+coin 118 158
+# shaft coin: hangs in the central drop lane, collected mid-fall
+coin 156 100
+# aphelion coin: on the top rung of the west tower
+coin 92 48

@@ -1,0 +1,49 @@
+# Sump Corner: the gallery over the sump, with an overflow loft nobody
+# has to visit.
+#
+# Authored 2026-08-17 for the portfolio's loadout axis. West-floor
+# corners are the shape a descent needs most (a passage that turns
+# down) and the vocabulary had exactly one that a bare-handed player
+# can cross, greed-loop-b, which the no-repeat rule then spends on the
+# first such cell in the dungeon. This is the second, and where the
+# greed loop is a lap with a bank, this one is a decision about how
+# much of the room you are willing to climb.
+#
+# THE FLOOR OF IT (rows 13-16). The west door opens onto a short
+# gallery; the hatch sits six tiles east of it under a one-way sill,
+# with a spike pair at cols 7-8 in between, so even the shortest
+# possible route through the room — walk in, drop out — is a hop and
+# then a timed press-down. Two counter-phased drain gates (hazards 1
+# and 2) flood the floor either side of the sill on a 108-tick cycle:
+# the fastest exit from this room is the one thing in it you cannot
+# rush, and the sill you leave from is the one dry tile.
+#
+# THE STACK (rows 1-12). Three one-way floors — cols 1-12 at rows 12
+# and 4, cols 19-30 at row 8 — braid a climb out of the sump that
+# crosses the room twice. It is entirely optional: nothing above row
+# 13 is on any route between the two doors. What is up there is money,
+# arranged so that the deeper you climb the further from the doors you
+# have to walk: the mid-gallery coin sits at the east end of the
+# second storey, the loft coin at the east end of the third, and the
+# overflow sluice (hazard 2) cuts the mid-gallery run at cols 19-24 on
+# a 132-tick cycle out of phase with the drain gate below.
+#
+# THE POINT. In a coin-gated dungeon this room is where a player
+# decides whether the gate is close enough to skip the loft, and it
+# reads that way from the door: you can see the stack, you can see it
+# is a dead end, and you can see it is three storeys. Descent rooms
+# that only descend make the map feel like a slide; one that offers a
+# climb you may refuse makes the coin gate a live question.
+door west
+door floor
+# the drain gates, west and east approaches to the sill
+hazard 90 140 40 20 108 36 0
+hazard 190 140 40 20 108 36 54
+# the overflow sluice across the mid-gallery run, counter-phased
+hazard 190 60 60 20 132 44 54
+# coin 0 -- the loft's east end: the full three-storey climb
+coin 285 20
+# coin 1 -- the mid gallery's east end, past the sluice
+coin 285 110
+# coin 2 -- the sump floor east of the hatch, past the second spike pair
+coin 245 150

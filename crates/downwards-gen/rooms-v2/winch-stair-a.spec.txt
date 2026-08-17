@@ -1,0 +1,67 @@
+# Winch Stair: the service stair wrapped round the winch drum.
+#
+# Authored 2026-08-17 for the dungeon portfolio's loadout axis. The
+# vocabulary had four west-east-ceiling junctions (chimney-lock, both
+# keyhole vaults, low-ceiling-arena-c) and NOT ONE of them can be
+# crossed door-to-door bare-handed: every three-door junction in the
+# set demands a wall jump or a dash somewhere. That is fine for a
+# dungeon built around traversal pickups and fatal for one built
+# without them, so the skeleton search could not seat a single
+# junction cell in a no-item dungeon. This room is that missing piece:
+# a junction whose every ordered pair is a walk, so the ascent is a
+# matter of reading the stair rather than owning the kit.
+#
+# THE DRUM. Columns 1-11 and 20-30, rows 1-12, are the winch housing:
+# solid stone, no way through, no way in. It exists to make the room a
+# genuine T-junction instead of an open hall — the bottom passage and
+# the roof are connected by exactly one thing, the stair, and the
+# stair hangs dead centre so both side doors pay the same toll for the
+# roof. (The first cut of this room put the stair in the east shaft
+# and the bare climb from the west door ran past the solver's horizon:
+# a junction nobody can prove is crossable is not a junction.)
+#
+# THE BOTTOM PASSAGE (rows 13-16, both side doors). A 30-tile run
+# under the drum. It is not empty: a two-tile mound at cols 4-5 breaks
+# the west stride, and two spike beds (cols 8-9 and 22-23) sit either
+# side of the stair's foot. The reward coin sits on the floor
+# BETWEEN them, so taking it means clearing a bed and then clearing it
+# again on the way back — the room's cheapest coin still costs two
+# committed hops, and the passage reads as a place rather than a
+# corridor.
+#
+# THE STAIR (central shaft, cols 12-19). Six one-way treads in two
+# alternating bands, 20px apart, starting with a 30px step up out of
+# the passage and ending on a tread directly under the roof hatch. Alternating bands mean every step is a small sideways
+# decision as well as a jump, and one-ways mean the descent is the
+# same stair taken by pressing down — the room is symmetric in use
+# without being symmetric in shape.
+#
+# THE COUNTERWEIGHT (hazard 1) drops through the east band of the
+# shaft on a 132-tick cycle, 44 of them lethal. It covers one tread
+# and the air above it and nothing else, so the climb has a rhythm: safe step, timed
+# step, safe step, timed step. There is a full tread to stand and wait
+# on before each timed one — resynchronisation geometry, not a
+# one-tick window.
+#
+# THE GRIT FALL (hazard 2) meters the passage itself, 60 ticks out of
+# phase with the counterweight: it lands on the floor between the
+# mound and the stair's foot, so the walk to the stair is a beat and
+# the climb is the opposite beat. Together they give the room its
+# character: the way out of the top of the dungeon is metered, and the
+# meter is legible from the passage floor, where you can stand still
+# for as long as you like.
+door west
+door east
+door ceiling
+# the counterweight, east band of the shaft
+hazard 160 50 40 50 132 44 0
+# the grit fall across the passage, counter-phased
+hazard 80 140 30 30 120 40 60
+# coin 0 -- the top run's west end, past the shutter: the deepest point
+# of the climb and the last thing between you and the roof hatch
+coin 124 30
+# coin 1 -- on the second tread, inside the counterweight's sweep: the
+# only coin in the room that has to be taken on the beat
+coin 165 50
+# coin 2 -- the passage floor between the two spike beds
+coin 155 160

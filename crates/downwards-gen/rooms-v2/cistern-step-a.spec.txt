@@ -1,0 +1,56 @@
+# Cistern Step: the drained cistern with a stepped rim and a chimney.
+#
+# Authored 2026-08-17 alongside winch-stair-a for the same reason: of
+# the two west-ceiling-floor junctions in the vocabulary only one
+# (greed-loop-a) can be crossed bare, so a dungeon with no traversal
+# items had a single grid to seat every such cell and the no-repeat
+# rule then made those skeletons unfillable. This is the second, and
+# it is deliberately a different animal from the greed loop: no lap,
+# no bank, just a tank you climb out of.
+#
+# THE TANK (cols 1-18, rows 3-15). Six one-way rim steps in two
+# alternating bands, 20px apart: cols 12-17 at rows 4, 8, 12 and cols
+# 4-9 at rows 6, 10, 14. Bare-handed the climb is six deliberate steps
+# with a full ledge to stand on between each; the descent is the same
+# steps taken by pressing down, or one straight drop if you are in a
+# hurry, because the rim steps are one-ways and the basin below is
+# open floor. The ceiling hatch sits directly over the top step, so
+# the last step and the exit are the same jump.
+#
+# THE DRAIN (floor hatch, cols 14-17). A one-way sill at row 16 spans
+# the hatch: you land on it coming in from below, you press down on it
+# going out. Two counter-phased surges (hazards 1 and 2) flood the
+# basin floor either side of it, so reaching the drain is a timed
+# commitment from either direction while the sill itself stays dry —
+# the safe tile is the one you are trying to leave from.
+#
+# THE CHIMNEY (cols 28-30, rows 3-11). Thirty pixels of bare facing
+# wall from the east basin up to the top corridor, no ledge in it. A
+# wall-jumper climbs it and skips the entire rim; bare-handed it is a
+# way DOWN only, and taking it commits you to the bottom of the tank.
+# That is the room's loadout gradient: same grid, three different
+# shapes depending on what you are carrying, and no crossing that
+# needs an ability to complete.
+#
+# THE RIM SHUTTER (hazard 3) cuts the gap between the two step bands
+# at cols 10-11, half a beat out of phase with the drain. Every
+# band-to-band step in the lower half of the tank is therefore taken
+# on a beat, and the beat is the opposite of the one governing the way
+# out — the room asks you to hold two clocks, which is what makes it
+# worth a junction cell in a hard dungeon.
+door west
+door ceiling
+door floor
+# the drain surges, west and east approaches to the sill: the sill
+# itself stays dry, so it is the spot you stand on to read the beat
+hazard 90 140 40 20 120 40 0
+hazard 190 140 40 20 120 40 60
+# the rim shutter between the step bands, counter-phased
+hazard 100 90 20 40 132 44 66
+# coin 0 -- the head of the chimney: a wall-jump climb, or a step in
+# from the top corridor that drops you to the bottom of the tank
+coin 285 30
+# coin 1 -- on the middle west step, under the rim shutter's beat
+coin 45 50
+# coin 2 -- the east basin, past the sump spikes
+coin 245 150

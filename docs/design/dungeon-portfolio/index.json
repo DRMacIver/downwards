@@ -1,0 +1,78 @@
+{
+ "scale": {
+  "tool": "tools/dungeon_difficulty.py",
+  "bands": {
+   "low": [
+    12.0,
+    20.0
+   ],
+   "mid": [
+    20.0,
+    28.0
+   ],
+   "high": [
+    28.0,
+    120.0
+   ]
+  },
+  "note": "Scores are comparable only at equal shaky coverage in docs/design/rooms-v2-passability.json; regenerate with tools/room_passability.py --shaky before recalibrating bands."
+ },
+ "dungeons": [
+  {
+   "id": "000",
+   "file": "docs/design/dungeon-v2-layout.txt",
+   "name": "The Descent (dungeon v2, rev 3)",
+   "status": "shipped baseline (referenced in place, not copied)",
+   "seed": null,
+   "params": {
+    "authored": "hand-authored with tools/dungeon_layout_solver.py"
+   },
+   "band": "mid",
+   "difficulty": {
+    "score": 27.16,
+    "order": [
+     "glove",
+     "boots"
+    ],
+    "total_ticks": 11684,
+    "total_seconds": 194.7,
+    "crossings": 52,
+    "peak_crossing_ticks": 252,
+    "mean_crossing_ticks": 91.8,
+    "ascent_crossings": 16,
+    "coin_gate_requirement": 58,
+    "coin_collection_ticks": 6909,
+    "shaky_penalty": 2.607,
+    "route_rooms": 24
+   },
+   "rooms": [
+    "chimney-lock-a",
+    "eaves-walk-a",
+    "gable-run-a",
+    "greed-loop-a",
+    "greed-loop-b",
+    "greed-loop-c",
+    "keep-astral-seal",
+    "keep-boots-vault",
+    "keep-crown-sanctum",
+    "keep-meteor-run",
+    "keep-observatory",
+    "keep-wall-gate",
+    "keep-west-postern",
+    "keyhole-vault-c",
+    "lantern-cross-a",
+    "low-ceiling-arena-a",
+    "low-ceiling-arena-c",
+    "one-way-loop-c",
+    "sandglass-drop-a",
+    "sandglass-drop-b",
+    "strata-sort-a",
+    "strata-sort-b",
+    "switchback-spine-a",
+    "switchback-spine-b",
+    "tide-shaft-a"
+   ],
+   "date": "2026-08-17"
+  }
+ ]
+}

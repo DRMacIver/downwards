@@ -1,0 +1,36 @@
+# Pendulum Loft: the corner belfry where the weight still swings.
+#
+# A ceiling-east corner room built around one honest trade: the drop
+# lane is free and the climb is metered. Entering from the ceiling you
+# land on the belfry shingle (row 3, cols 12-19); pressing down drops
+# you clean through an empty lane (cols 14-17) all the way to the
+# floor walk, no hazard in the lane, and the east door is a stroll.
+# Climbing back out is the dry side of the room: a step block by the
+# east door (cols 26-27) and three hanging rungs (rows 12/9/6) zig-
+# zagging up the east bay in honest 30px hops, finishing with a hop
+# across to the shingle. The ladder stays out of the pendulum's arc;
+# the arc owns the west half and the drop lane, so the fall is the
+# timed move and the climb is the long one.
+#
+# West of the lane the loft keeps its salvage: a spiked floor pocket
+# in the far corner (coin behind a two-spike hedge, hop in and out)
+# and a hanging shelf (row 5, cols 5-9) reachable only by stepping
+# west off the belfry shingle — a descent-only detour whose coin you
+# pay for by re-running the whole ladder.
+door ceiling
+door east
+# the pendulum: one wide band swinging through the drop lane and the
+# west end of the low walk, rows ~10-13. The belfry shingle above and
+# the ladder bay to the east are both outside its arc, so you survey
+# from the shingle, release on the beat, and fall through clean; the
+# climb out is untimed. Keep the period at 56 or shorter: longer
+# periods make the bare east->ceiling climb inconclusive purely by
+# blowing up the solver's state space (same artifact recorded in
+# switchback-spine-a's notes).
+hazard 30 102 160 36 56 18 0
+# corner coin behind the spike hedge at cols 3-4
+coin 12 158
+# shelf coin: descent-only detour off the west edge of the shingle
+coin 62 38
+# ladder coin on the row-9 rung, just above the pendulum's reach
+coin 262 78
