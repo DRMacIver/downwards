@@ -115,10 +115,31 @@ preserve that cloneable, hashable authority boundary.
 The pinned toolchain is selected automatically by `rustup` when commands are run in the
 repository.
 
-Commands that work with the current scaffold:
+### Playing the game
 
 ```sh
 cargo run
+```
+
+launches Downwards itself: a title screen for the current dungeon. CONTINUE appears whenever the
+save at `playtest-history/dungeon-v2-save-v1.json` exists and parses; NEW GAME renames any existing
+save to a timestamped `.bak` before starting over, and asks for a second confirming press when it
+would archive a run; CONTROLS lists the real bindings; QUIT exits. Progress is checkpointed
+continuously during play, `Tab` opens the dungeon map, and `Esc` opens the pause menu
+(RESUME / MAP / CONTROLS / QUIT TO TITLE). Claiming the crown and reaching the goal shows a
+completion screen with time, deaths, coins banked, and rooms explored, then returns to the title.
+`cargo run -- --dungeon-v2` and `--dungeon-v2-new` skip the title screen and enter play directly;
+`--dungeon-save PATH` selects a separate save file.
+
+### Development
+
+The level lab, legacy dungeon, and every other developer mode keep their explicit flags exactly as
+before; `cargo run -- --generated` opens the curated level browser that used to be the default.
+
+Commands that work with the current scaffold:
+
+```sh
+cargo run -- --generated
 cargo test --workspace
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
@@ -490,7 +511,7 @@ cargo run -p downwards-content --example retune_gallery
 cargo run -p downwards-content --example retune_gallery -- --check
 ```
 
-`cargo run` opens the level browser. Its normal generated entries come from four separately
+`cargo run -- --generated` opens the level browser. Its normal generated entries come from four separately
 checked manifests, one per ability loadout, rather than from an arbitrary range of raw seeds. The
 Rust-authored First Steps mechanics room remains a normal row in the same continuously scrolling
 list. Every curated entry has a stable, unique three-word playtest name and retains its exact v6

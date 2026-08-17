@@ -72,9 +72,10 @@ const LEVEL_MENU_VISIBLE_ROWS: usize = 9;
 const GALLERY_MENU_VISIBLE_ROWS: usize = 10;
 const LEVEL_IDENTIFIER_VERSION: u32 = 2;
 
-const USAGE: &str = "Downwards level lab
+const USAGE: &str = "Downwards
 
-Usage: downwards [--seed <u64>] [--tier <1|2|3|4>] [--development]
+Usage: downwards
+       downwards [--seed <u64>] [--tier <1|2|3|4>] [--development] [--generated]
        downwards --corpus <manifest> [--tier <1|2|3|4>]
        downwards --challenge [hard|tutorial]
        downwards --gallery
@@ -84,7 +85,7 @@ Usage: downwards [--seed <u64>] [--tier <1|2|3|4>] [--development]
        downwards --dungeon-v2 | --dungeon-v2-new [--dungeon-save <path>]
        downwards --dungeon-floor <number|id>
 
-  (no options)   open the offline-curated v6 route catalogue
+  (no options)   open the Downwards title screen (dungeon v2, the full game)
   --seed N       explicit developer mode: uncurated v6 seed
   --tier T       1 baseline, 2 wall jump, 3 dash, 4 wall jump + dash
   --development  start in the fixed First Steps mechanics room
@@ -101,7 +102,7 @@ Usage: downwards [--seed <u64>] [--tier <1|2|3|4>] [--development]
                  non-persistent lab play of one authored floor (1..101 or room id)
   --dungeon-save PATH
                  use PATH for durable dungeon progress
-  --generated    return to the curated catalogue (the default)
+  --generated    open the offline-curated v6 route catalogue (the level lab)
   --corpus PATH  play the strict native-keyed corpus playtest manifest
   --history PATH append completed human attempts and input timings to PATH
   --allow-provisional-corpus
@@ -200,8 +201,21 @@ impl VisualAssets {
 }
 
 fn window_conf() -> Conf {
+    // The plain game (title screen and both dungeon modes) is titled
+    // "Downwards"; explicitly requested lab modes keep the lab title.
+    let lab_mode = parse_launch_options(env::args().skip(1)).is_ok_and(|options| {
+        !options.title_screen
+            && !matches!(
+                options.selection.mode,
+                RoomMode::Dungeon | RoomMode::DungeonV2
+            )
+    });
     Conf {
-        window_title: "Downwards — Level Lab".to_owned(),
+        window_title: if lab_mode {
+            "Downwards — Level Lab".to_owned()
+        } else {
+            "Downwards".to_owned()
+        },
         window_width: 960,
         window_height: 600,
         high_dpi: false,
@@ -224,11 +238,75 @@ async fn main() {
         return;
     }
 
+    let visual_assets = VisualAssets::load();
+    let mut at_title = options.title_screen;
+    let mut fresh_dungeon = options.fresh_dungeon;
+    loop {
+        if at_title {
+            match run_title_screen(&options).await {
+                TitleAction::Continue => fresh_dungeon = false,
+                TitleAction::NewGame => fresh_dungeon = true,
+                TitleAction::Quit => return,
+                TitleAction::ShowControls => {
+                    unreachable!("the title loop handles the controls screen itself")
+                }
+            }
+        }
+        run_play_session(&options, fresh_dungeon, &visual_assets).await;
+        at_title = true;
+    }
+}
+
+/// The title menu loop. Only returns an action that leaves the title screen.
+async fn run_title_screen(options: &LaunchOptions) -> TitleAction {
+    let mut menu = TitleMenuState::new(dungeon_v2_save_playable(&options.dungeon_save_path));
+    let mut controls_visible = false;
+    loop {
+        if controls_visible {
+            if is_key_pressed(KeyCode::Escape) || is_key_pressed(KeyCode::Enter) {
+                controls_visible = false;
+            }
+        } else {
+            if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
+                menu.move_up();
+            } else if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
+                menu.move_down();
+            }
+            if is_key_pressed(KeyCode::Enter) {
+                match menu.activate() {
+                    Some(TitleAction::ShowControls) => controls_visible = true,
+                    Some(action) => return action,
+                    None => {}
+                }
+            } else if is_key_pressed(KeyCode::Escape) {
+                menu.confirm_new_game = false;
+            }
+        }
+
+        clear_background(LETTERBOX);
+        let viewport = PixelViewport::for_window(screen_width(), screen_height());
+        viewport.fill_logical_screen(ROOM_BACKGROUND);
+        let menu_viewport = viewport.translated(0, ROOM_TOP);
+        if controls_visible {
+            draw_controls_screen(&menu_viewport);
+        } else {
+            draw_title_screen(&menu_viewport, &menu);
+        }
+        next_frame().await;
+    }
+}
+
+/// One playtest/dungeon session; returns when the player quits to the title.
+async fn run_play_session(
+    options: &LaunchOptions,
+    fresh_dungeon: bool,
+    visual_assets: &VisualAssets,
+) {
     let dungeon_save = matches!(
         options.selection.mode,
         RoomMode::Dungeon | RoomMode::DungeonV2
     )
-    .then_some((options.dungeon_save_path.as_path(), options.fresh_dungeon));
+    .then_some((options.dungeon_save_path.as_path(), fresh_dungeon));
     let mut client = ClientState::new_with_persistence(
         options.selection,
         options.corpus_manifest.as_deref(),
@@ -236,8 +314,7 @@ async fn main() {
         Some(&options.history_path),
         dungeon_save,
     )
-    .unwrap_or_else(|error| panic!("could not start level lab: {error}"));
-    let visual_assets = VisualAssets::load();
+    .unwrap_or_else(|error| panic!("could not start downwards: {error}"));
     eprintln!("human attempt history: {}", options.history_path.display());
     if options.selection.mode == RoomMode::Dungeon {
         eprintln!("dungeon progress: {}", options.dungeon_save_path.display());
@@ -251,8 +328,24 @@ async fn main() {
     let mut replay_frame_queued = false;
 
     loop {
+        if client.quit_to_title {
+            return;
+        }
         let render_frame = render_frame_index;
         render_frame_index = render_frame_index.saturating_add(1);
+        if client.dungeon_v2_victory {
+            if is_key_pressed(KeyCode::Enter) {
+                client.quit_to_title = true;
+            }
+            accumulated_seconds = 0.0;
+            dash_queued = false;
+            jump_input.reset();
+            restart_queued = false;
+            replay_frame_queued = false;
+            render(&client, visual_assets);
+            next_frame().await;
+            continue;
+        }
         if client.level_menu_visible() {
             if client.gallery_menu_visible() {
                 if is_key_pressed(KeyCode::Up)
@@ -340,7 +433,7 @@ async fn main() {
             jump_input.reset();
             restart_queued = false;
             replay_frame_queued = false;
-            render(&client, &visual_assets);
+            render(&client, visual_assets);
             next_frame().await;
             continue;
         }
@@ -351,7 +444,7 @@ async fn main() {
             jump_input.reset();
             restart_queued = false;
             replay_frame_queued = false;
-            render(&client, &visual_assets);
+            render(&client, visual_assets);
             next_frame().await;
             continue;
         }
@@ -380,7 +473,7 @@ async fn main() {
             jump_input.reset();
             restart_queued = false;
             replay_frame_queued = false;
-            render(&client, &visual_assets);
+            render(&client, visual_assets);
             next_frame().await;
             continue;
         }
@@ -410,7 +503,7 @@ async fn main() {
             jump_input.reset();
             restart_queued = false;
             replay_frame_queued = false;
-            render(&client, &visual_assets);
+            render(&client, visual_assets);
             next_frame().await;
             continue;
         }
@@ -424,19 +517,43 @@ async fn main() {
             client.map_visible = !client.map_visible;
         }
         if client.pause_visible {
-            if is_key_pressed(KeyCode::Escape) || is_key_pressed(KeyCode::Enter) {
-                client.pause_visible = false;
-            }
-            if is_key_pressed(KeyCode::Tab) {
-                client.pause_visible = false;
-                client.map_visible = true;
+            if client.controls_visible {
+                if is_key_pressed(KeyCode::Escape) || is_key_pressed(KeyCode::Enter) {
+                    client.controls_visible = false;
+                }
+            } else {
+                if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
+                    client.pause_menu_index = (client.pause_menu_index + PAUSE_MENU_ITEMS.len()
+                        - 1)
+                        % PAUSE_MENU_ITEMS.len();
+                } else if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
+                    client.pause_menu_index =
+                        (client.pause_menu_index + 1) % PAUSE_MENU_ITEMS.len();
+                }
+                if is_key_pressed(KeyCode::Enter) {
+                    match PAUSE_MENU_ITEMS[client.pause_menu_index] {
+                        "MAP" => {
+                            client.pause_visible = false;
+                            client.map_visible = true;
+                        }
+                        "CONTROLS" => client.controls_visible = true,
+                        "QUIT TO TITLE" => client.quit_to_title = true,
+                        _ => client.pause_visible = false,
+                    }
+                } else if is_key_pressed(KeyCode::Escape) {
+                    client.pause_visible = false;
+                }
+                if is_key_pressed(KeyCode::Tab) {
+                    client.pause_visible = false;
+                    client.map_visible = true;
+                }
             }
             accumulated_seconds = 0.0;
             dash_queued = false;
             jump_input.reset();
             restart_queued = false;
             replay_frame_queued = false;
-            render(&client, &visual_assets);
+            render(&client, visual_assets);
             next_frame().await;
             continue;
         }
@@ -449,7 +566,7 @@ async fn main() {
             jump_input.reset();
             restart_queued = false;
             replay_frame_queued = false;
-            render(&client, &visual_assets);
+            render(&client, visual_assets);
             next_frame().await;
             continue;
         }
@@ -469,6 +586,8 @@ async fn main() {
                 replay_frame_queued = false;
             } else if client.selection.mode == RoomMode::DungeonV2 {
                 client.pause_visible = true;
+                client.pause_menu_index = 0;
+                client.controls_visible = false;
                 accumulated_seconds = 0.0;
                 dash_queued = false;
                 jump_input.reset();
@@ -530,7 +649,7 @@ async fn main() {
         }
 
         if client.level_menu_visible() {
-            render(&client, &visual_assets);
+            render(&client, visual_assets);
             next_frame().await;
             continue;
         }
@@ -600,7 +719,7 @@ async fn main() {
             accumulated_seconds -= FIXED_STEP_SECONDS;
         }
 
-        render(&client, &visual_assets);
+        render(&client, visual_assets);
         next_frame().await;
     }
 }
@@ -1147,6 +1266,101 @@ struct LaunchOptions {
     history_path: PathBuf,
     dungeon_save_path: PathBuf,
     fresh_dungeon: bool,
+    title_screen: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum TitleMenuItem {
+    Continue,
+    NewGame,
+    Controls,
+    Quit,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum TitleAction {
+    Continue,
+    NewGame,
+    ShowControls,
+    Quit,
+}
+
+/// The title menu over the persistent dungeon v2 save. Selecting NEW GAME
+/// while a save exists demands a second confirming press before archiving it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct TitleMenuState {
+    save_available: bool,
+    selected_index: usize,
+    confirm_new_game: bool,
+}
+
+impl TitleMenuState {
+    const fn new(save_available: bool) -> Self {
+        Self {
+            save_available,
+            selected_index: 0,
+            confirm_new_game: false,
+        }
+    }
+
+    fn items(self) -> &'static [TitleMenuItem] {
+        if self.save_available {
+            &[
+                TitleMenuItem::Continue,
+                TitleMenuItem::NewGame,
+                TitleMenuItem::Controls,
+                TitleMenuItem::Quit,
+            ]
+        } else {
+            &[
+                TitleMenuItem::NewGame,
+                TitleMenuItem::Controls,
+                TitleMenuItem::Quit,
+            ]
+        }
+    }
+
+    fn selected_item(self) -> TitleMenuItem {
+        self.items()[self.selected_index]
+    }
+
+    fn move_up(&mut self) {
+        let count = self.items().len();
+        self.selected_index = (self.selected_index + count - 1) % count;
+        self.confirm_new_game = false;
+    }
+
+    fn move_down(&mut self) {
+        self.selected_index = (self.selected_index + 1) % self.items().len();
+        self.confirm_new_game = false;
+    }
+
+    fn activate(&mut self) -> Option<TitleAction> {
+        match self.selected_item() {
+            TitleMenuItem::Continue => Some(TitleAction::Continue),
+            TitleMenuItem::NewGame => {
+                if self.save_available && !self.confirm_new_game {
+                    self.confirm_new_game = true;
+                    None
+                } else {
+                    Some(TitleAction::NewGame)
+                }
+            }
+            TitleMenuItem::Controls => Some(TitleAction::ShowControls),
+            TitleMenuItem::Quit => Some(TitleAction::Quit),
+        }
+    }
+}
+
+const PAUSE_MENU_ITEMS: [&str; 4] = ["RESUME", "MAP", "CONTROLS", "QUIT TO TITLE"];
+
+/// True when the default dungeon v2 save both parses and validates, i.e.
+/// CONTINUE on the title screen has something to resume.
+fn dungeon_v2_save_playable(path: &Path) -> bool {
+    fs::read(path)
+        .ok()
+        .and_then(|bytes| serde_json::from_slice::<DungeonV2SaveV1>(&bytes).ok())
+        .is_some_and(|save| save.validate().is_ok())
 }
 
 fn parse_launch_options<I, S>(arguments: I) -> Result<LaunchOptions, String>
@@ -1162,6 +1376,7 @@ where
         history_path: PathBuf::from(DEFAULT_HUMAN_HISTORY_PATH),
         dungeon_save_path: PathBuf::from(DEFAULT_DUNGEON_SAVE_PATH),
         fresh_dungeon: false,
+        title_screen: false,
     };
     let mut arguments = arguments.into_iter().map(Into::into).peekable();
     let mut challenge_requested = false;
@@ -1418,6 +1633,22 @@ where
     if calibrated_requested {
         options.selection.seed %= calibrated_generator_playtest().len() as u64;
         options.selection.tier = AbilityTier::WallJump;
+    }
+
+    // With no mode-selecting flag the client boots the dungeon v2 title screen;
+    // every lab and legacy mode stays reachable through its explicit flag.
+    if !(challenge_requested
+        || gallery_requested
+        || calibrated_requested
+        || dungeon_requested
+        || dungeon_floor_requested
+        || authored_mode_conflict
+        || tier_explicit)
+    {
+        options.title_screen = true;
+        options.selection.mode = RoomMode::DungeonV2;
+        options.selection.seed = 0;
+        options.selection.tier = AbilityTier::Baseline;
     }
 
     if options.allow_provisional_corpus && options.corpus_manifest.is_none() {
@@ -2640,6 +2871,10 @@ struct ClientState {
     explored_rooms: BTreeSet<DemoDungeonRoom>,
     map_visible: bool,
     pause_visible: bool,
+    pause_menu_index: usize,
+    controls_visible: bool,
+    dungeon_v2_victory: bool,
+    quit_to_title: bool,
     notice_seen: Option<(String, String)>,
     notice_age: u32,
 }
@@ -3228,6 +3463,10 @@ impl ClientState {
             explored_rooms,
             map_visible: false,
             pause_visible: false,
+            pause_menu_index: 0,
+            controls_visible: false,
+            dungeon_v2_victory: false,
+            quit_to_title: false,
             notice_seen: None,
             notice_age: 0,
         })
@@ -3258,6 +3497,9 @@ impl ClientState {
         };
         self.map_visible = false;
         self.pause_visible = false;
+        self.pause_menu_index = 0;
+        self.controls_visible = false;
+        self.dungeon_v2_victory = false;
         Ok(())
     }
 
@@ -4960,15 +5202,7 @@ impl ClientState {
         else {
             // The crown goal is a terminal legacy Exit, not a room transition.
             if run.inventory.crown {
-                self.replay_notice = Some(ReplayNotice {
-                    title: "DUNGEON COMPLETE".to_owned(),
-                    detail: format!(
-                        "Crowned with {}/{} coins",
-                        run.inventory.coins.len(),
-                        dungeon_v2_total_coins()
-                    ),
-                    is_error: false,
-                });
+                self.dungeon_v2_victory = true;
                 self.persist_dungeon_v2_progress();
             }
             return true;
@@ -6100,8 +6334,17 @@ fn render(client: &ClientState, visual_assets: &VisualAssets) {
         return;
     }
 
+    if client.dungeon_v2_victory {
+        draw_dungeon_v2_victory(&viewport.translated(0, ROOM_TOP), client);
+        return;
+    }
     if client.pause_visible {
-        draw_dungeon_v2_pause(&viewport.translated(0, ROOM_TOP), client);
+        let menu_viewport = viewport.translated(0, ROOM_TOP);
+        if client.controls_visible {
+            draw_controls_screen(&menu_viewport);
+        } else {
+            draw_dungeon_v2_pause(&menu_viewport, client);
+        }
         return;
     }
     if client.map_visible {
@@ -6385,9 +6628,125 @@ fn draw_dungeon_v2_pause(viewport: &PixelViewport, client: &ClientState) {
         ),
     ];
     for (index, line) in lines.iter().enumerate() {
-        viewport.text(line, 70, 44 + index as i32 * 14, 6, UI_TEXT);
+        viewport.text(line, 70, 33 + index as i32 * 11, 6, UI_TEXT);
     }
-    viewport.centered_text("ESC RESUME · TAB MAP", 168, 6, UI_DIM);
+    for (index, item) in PAUSE_MENU_ITEMS.iter().enumerate() {
+        let selected = index == client.pause_menu_index;
+        let y = 118 + index as i32 * 12;
+        if selected {
+            viewport.rectangle(CoreRect::new(110, y - 8, 100, 10), MENU_SELECTED);
+            viewport.rectangle_outline(CoreRect::new(110, y - 8, 100, 10), 1, PLAYER_ACCENT);
+        }
+        viewport.centered_text(item, y, 6, if selected { PLAYER } else { UI_DIM });
+    }
+    viewport.centered_text(
+        "UP/DOWN SELECT · ENTER CONFIRM · ESC RESUME · TAB MAP",
+        172,
+        5,
+        UI_DIM,
+    );
+}
+
+fn draw_dungeon_v2_victory(viewport: &PixelViewport, client: &ClientState) {
+    viewport.rectangle(CoreRect::new(0, 0, 320, 180), MENU_BACKGROUND);
+    viewport.centered_text("DUNGEON COMPLETE", 30, 12, PLAYER);
+    viewport.centered_text("THE CROWN IS YOURS", 44, 6, PLAYER_ACCENT);
+    let Some(run) = client.dungeon_v2_run.as_ref() else {
+        return;
+    };
+    let dungeon = dungeon_v2_definition();
+    let seconds = run.play_ticks / 60;
+    let lines = [
+        format!(
+            "TIME             {}:{:02}:{:02}",
+            seconds / 3600,
+            (seconds / 60) % 60,
+            seconds % 60
+        ),
+        format!("DEATHS           {}", run.deaths),
+        format!(
+            "COINS BANKED     {}/{}",
+            run.inventory.coins.len(),
+            dungeon_v2_total_coins()
+        ),
+        format!(
+            "ROOMS EXPLORED   {}/{}",
+            client.explored_v2_rooms.len(),
+            dungeon.instances.len()
+        ),
+    ];
+    for (index, line) in lines.iter().enumerate() {
+        viewport.text(line, 82, 70 + index as i32 * 14, 6, UI_TEXT);
+    }
+    viewport.centered_text("ENTER  RETURN TO TITLE", 160, 6, UI_DIM);
+}
+
+fn draw_title_screen(viewport: &PixelViewport, menu: &TitleMenuState) {
+    viewport.rectangle(CoreRect::new(0, 0, 320, 180), MENU_BACKGROUND);
+    viewport.centered_text("DOWNWARDS", 44, 18, PLAYER);
+    viewport.centered_text(
+        "DESCEND · BANK COINS · CLAIM THE CROWN",
+        60,
+        6,
+        PLAYER_ACCENT,
+    );
+    for (index, item) in menu.items().iter().enumerate() {
+        let selected = index == menu.selected_index;
+        let y = 92 + index as i32 * 14;
+        if selected {
+            viewport.rectangle(CoreRect::new(105, y - 9, 110, 12), MENU_SELECTED);
+            viewport.rectangle_outline(CoreRect::new(105, y - 9, 110, 12), 1, PLAYER_ACCENT);
+        }
+        let label = match item {
+            TitleMenuItem::Continue => "CONTINUE",
+            TitleMenuItem::NewGame => {
+                if menu.confirm_new_game {
+                    "NEW GAME?"
+                } else {
+                    "NEW GAME"
+                }
+            }
+            TitleMenuItem::Controls => "CONTROLS",
+            TitleMenuItem::Quit => "QUIT",
+        };
+        viewport.centered_text(label, y, 7, if selected { PLAYER } else { UI_DIM });
+    }
+    if menu.confirm_new_game {
+        viewport.centered_text(
+            "THIS ARCHIVES YOUR RUN · ENTER AGAIN TO CONFIRM · ESC KEEPS IT",
+            156,
+            6,
+            HAZARD,
+        );
+    }
+    viewport.centered_text("UP/DOWN SELECT   ENTER CONFIRM", 170, 6, UI_DIM);
+}
+
+fn draw_controls_screen(viewport: &PixelViewport) {
+    viewport.rectangle(CoreRect::new(0, 0, 320, 180), MENU_BACKGROUND);
+    viewport.centered_text("CONTROLS", 14, 9, PLAYER);
+    let dungeon_lines = [
+        "MOVE       LEFT/RIGHT OR A/D",
+        "JUMP       SPACE, Z, OR UP · TAP=LOW HOLD=HIGH",
+        "WALL JUMP  HOLD TOWARD WALL + JUMP (NEEDS GLOVES)",
+        "DASH       X OR SHIFT + A DIRECTION (NEEDS BOOTS)",
+        "R          RESTART THE ROOM",
+        "TAB        DUNGEON MAP",
+        "ESC        PAUSE MENU",
+    ];
+    for (index, line) in dungeon_lines.iter().enumerate() {
+        viewport.text(line, 26, 32 + index as i32 * 12, 6, UI_TEXT);
+    }
+    viewport.text("LAB EXTRAS", 26, 126, 6, PLAYER_ACCENT);
+    let lab_lines = [
+        "V / C      AI ROUTE / AI COIN SOLVE",
+        "H  P  N    REPLAY LAST ATTEMPT · PAUSE · STEP",
+        "F1 / F2    DEBUG OVERLAY / MOVEMENT TUNING",
+    ];
+    for (index, line) in lab_lines.iter().enumerate() {
+        viewport.text(line, 26, 138 + index as i32 * 10, 5, UI_DIM);
+    }
+    viewport.centered_text("ESC/ENTER BACK", 172, 6, UI_DIM);
 }
 
 fn draw_dungeon_v2_map(viewport: &PixelViewport, client: &ClientState) {
@@ -7890,12 +8249,18 @@ fn draw_hud(viewport: &PixelViewport, client: &ClientState) {
     } else {
         client.selection.tier
     };
-    let level_line = format!(
-        "{}   T{} {}",
-        room_label,
-        tier_number(displayed_tier),
-        tier_label(displayed_tier)
-    );
+    // The v2 dungeon rail permanently advertises the two meta keys instead of
+    // the lab tier tag, keeping the room viewport itself unobstructed.
+    let level_line = if client.selection.mode == RoomMode::DungeonV2 {
+        format!("{room_label}   TAB MAP  ESC MENU")
+    } else {
+        format!(
+            "{}   T{} {}",
+            room_label,
+            tier_number(displayed_tier),
+            tier_label(displayed_tier)
+        )
+    };
     viewport.text(&fit_win_line(&level_line), 5, 197, 6, UI_TEXT);
 }
 
@@ -8608,9 +8973,11 @@ mod tests {
     }
 
     #[test]
-    fn command_line_defaults_are_deterministic_and_generated() {
+    fn command_line_defaults_to_the_dungeon_v2_title_screen() {
         let options = parse_launch_options(Vec::<String>::new()).unwrap();
-        assert_eq!(options.selection, ScenarioSelection::default());
+        assert!(options.title_screen);
+        assert_eq!(options.selection.mode, RoomMode::DungeonV2);
+        assert_eq!(options.selection.tier, AbilityTier::Baseline);
         assert!(!options.show_help);
         assert_eq!(
             options.history_path,
@@ -8618,9 +8985,104 @@ mod tests {
         );
         assert_eq!(
             options.dungeon_save_path,
-            PathBuf::from(DEFAULT_DUNGEON_SAVE_PATH)
+            PathBuf::from(DEFAULT_DUNGEON_V2_SAVE_PATH)
         );
         assert!(!options.fresh_dungeon);
+    }
+
+    #[test]
+    fn explicit_lab_and_dungeon_flags_skip_the_title_screen() {
+        for arguments in [
+            vec!["--generated"],
+            vec!["--development"],
+            vec!["--seed", "9"],
+            vec!["--tier", "2"],
+            vec!["--gallery"],
+            vec!["--calibrated"],
+            vec!["--challenge"],
+            vec!["--dungeon"],
+            vec!["--dungeon-v2"],
+            vec!["--dungeon-v2-new"],
+            vec!["--dungeon-floor", "1"],
+        ] {
+            let options = parse_launch_options(arguments.clone()).unwrap();
+            assert!(!options.title_screen, "{arguments:?} must skip the title");
+        }
+        assert_eq!(
+            parse_launch_options(["--generated"]).unwrap().selection,
+            ScenarioSelection::default()
+        );
+    }
+
+    #[test]
+    fn title_menu_hides_continue_without_a_save() {
+        let menu = TitleMenuState::new(false);
+        assert_eq!(
+            menu.items(),
+            &[
+                TitleMenuItem::NewGame,
+                TitleMenuItem::Controls,
+                TitleMenuItem::Quit
+            ]
+        );
+        let menu = TitleMenuState::new(true);
+        assert_eq!(menu.items()[0], TitleMenuItem::Continue);
+        assert_eq!(menu.selected_item(), TitleMenuItem::Continue);
+    }
+
+    #[test]
+    fn title_menu_navigation_wraps_and_activates() {
+        let mut menu = TitleMenuState::new(true);
+        menu.move_up();
+        assert_eq!(menu.selected_item(), TitleMenuItem::Quit);
+        assert_eq!(menu.activate(), Some(TitleAction::Quit));
+        menu.move_down();
+        assert_eq!(menu.selected_item(), TitleMenuItem::Continue);
+        assert_eq!(menu.activate(), Some(TitleAction::Continue));
+        menu.move_down();
+        menu.move_down();
+        assert_eq!(menu.selected_item(), TitleMenuItem::Controls);
+        assert_eq!(menu.activate(), Some(TitleAction::ShowControls));
+    }
+
+    #[test]
+    fn title_new_game_requires_confirmation_only_over_an_existing_save() {
+        let mut fresh = TitleMenuState::new(false);
+        assert_eq!(fresh.selected_item(), TitleMenuItem::NewGame);
+        assert_eq!(fresh.activate(), Some(TitleAction::NewGame));
+
+        let mut menu = TitleMenuState::new(true);
+        menu.move_down();
+        assert_eq!(menu.selected_item(), TitleMenuItem::NewGame);
+        assert_eq!(menu.activate(), None);
+        assert!(menu.confirm_new_game);
+        assert_eq!(menu.activate(), Some(TitleAction::NewGame));
+
+        // Navigating away withdraws the pending confirmation.
+        let mut menu = TitleMenuState::new(true);
+        menu.move_down();
+        assert_eq!(menu.activate(), None);
+        menu.move_down();
+        menu.move_up();
+        assert_eq!(menu.selected_item(), TitleMenuItem::NewGame);
+        assert_eq!(menu.activate(), None);
+    }
+
+    #[test]
+    fn dungeon_v2_save_playability_gates_continue() {
+        let path = temporary_test_path("title-save", "dungeon-v2-save-v1.json");
+        assert!(!dungeon_v2_save_playable(&path));
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::write(&path, b"not json").unwrap();
+        assert!(!dungeon_v2_save_playable(&path));
+        let save = DungeonV2SaveV1::from_run(
+            &DungeonV2RunState::default(),
+            None,
+            &BTreeSet::from([dungeon_v2_definition().spawn.clone()]),
+        );
+        fs::write(&path, serde_json::to_vec(&save).unwrap()).unwrap();
+        assert!(dungeon_v2_save_playable(&path));
+        fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
     #[test]
@@ -8912,18 +9374,33 @@ mod tests {
                 .contains(&coin)
         );
 
-        // A wall-sealed door bounces a bare player; the glove opens it.
-        let (gated_room, gated_door) = ("ob".to_owned(), "east".to_owned());
-        assert_eq!(
-            dungeon_v2_door_requirement(&gated_room, &gated_door),
-            Some(DungeonV2Requirement::ClimbingGloves)
-        );
+        // A sealed door bounces an unequipped player; meeting its requirement
+        // opens it. The gated door is discovered from the live layout so
+        // redesigns keep the test honest.
+        let dungeon = dungeon_v2_definition();
+        let (gated_room, gated_door, requirement) = dungeon
+            .instances
+            .iter()
+            .find_map(|(instance_id, instance)| {
+                instance.connections.keys().find_map(|door_id| {
+                    dungeon_v2_door_requirement(instance_id, door_id)
+                        .map(|requirement| (instance_id.clone(), door_id.clone(), requirement))
+                })
+            })
+            .expect("the layout seals at least one door");
+        let entry_door = dungeon.instances[&gated_room]
+            .connections
+            .keys()
+            .find(|door_id| **door_id != gated_door)
+            .unwrap_or(&gated_door)
+            .clone();
         client.dungeon_v2_run.as_mut().unwrap().room = gated_room.clone();
         let room = dungeon_v2_room(
             &gated_room,
             &client.dungeon_v2_run.as_ref().unwrap().inventory,
         );
-        client.simulation = Simulation::enter_via_door(room, AbilitySet::NONE, "west").unwrap();
+        client.simulation =
+            Simulation::enter_via_door(room, AbilitySet::NONE, &entry_door).unwrap();
         assert!(client.observe_dungeon_v2_progress(&report(
             &client,
             vec![SimulationEvent::ExitReached {
@@ -8937,13 +9414,20 @@ mod tests {
         );
         assert!(client.replay_notice.as_ref().unwrap().is_error);
 
-        // Collect the glove, then the same door transitions.
-        assert!(client.observe_dungeon_v2_progress(&report(
-            &client,
-            vec![SimulationEvent::PickupCollected {
-                id: DEMO_DUNGEON_GLOVE_PICKUP.to_owned(),
-            }],
-        )));
+        // Satisfy the requirement, then the same door transitions.
+        {
+            let run = client.dungeon_v2_run.as_mut().unwrap();
+            match requirement {
+                DungeonV2Requirement::ClimbingGloves => run.inventory.climbing_gloves = true,
+                DungeonV2Requirement::WingedBoots => run.inventory.winged_boots = true,
+                DungeonV2Requirement::Coins(count) => {
+                    for index in 0..count {
+                        run.inventory.coins.insert(format!("v2-coin-test-{index}"));
+                    }
+                }
+            }
+            assert!(run.inventory.satisfies(requirement));
+        }
         assert!(client.observe_dungeon_v2_progress(&report(
             &client,
             vec![SimulationEvent::ExitReached { id: gated_door }],
@@ -8958,6 +9442,91 @@ mod tests {
         let (run, _, explored) = saved.validate().unwrap();
         assert_eq!(run, *client.dungeon_v2_run.as_ref().unwrap());
         assert_eq!(explored, client.explored_v2_rooms);
+    }
+
+    #[test]
+    fn crown_goal_exit_triggers_the_victory_screen_and_keeps_the_save() {
+        let save_path = temporary_test_path("dungeon-v2-victory", "save.json");
+        let selection = ScenarioSelection {
+            mode: RoomMode::DungeonV2,
+            seed: 0,
+            tier: AbilityTier::Baseline,
+        };
+        let mut client = ClientState::new_with_persistence(
+            selection,
+            None,
+            false,
+            None,
+            Some((&save_path, false)),
+        )
+        .unwrap();
+        let report = |client: &ClientState, events: Vec<SimulationEvent>| StepReport {
+            tick: client.simulation.tick(),
+            events,
+            digest: client.simulation.digest(),
+        };
+
+        // Without the crown, the terminal exit does nothing.
+        assert!(client.observe_dungeon_v2_progress(&report(
+            &client,
+            vec![SimulationEvent::ExitReached {
+                id: DEMO_DUNGEON_GOAL_EXIT.to_owned(),
+            }],
+        )));
+        assert!(!client.dungeon_v2_victory);
+
+        client.dungeon_v2_run.as_mut().unwrap().inventory.crown = true;
+        assert!(client.observe_dungeon_v2_progress(&report(
+            &client,
+            vec![SimulationEvent::ExitReached {
+                id: DEMO_DUNGEON_GOAL_EXIT.to_owned(),
+            }],
+        )));
+        assert!(client.dungeon_v2_victory);
+
+        // The finished run stays on disk as continuable history.
+        assert!(dungeon_v2_save_playable(&save_path));
+        fs::remove_dir_all(save_path.parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn quit_to_title_state_resets_when_a_new_session_starts() {
+        let save_path = temporary_test_path("dungeon-v2-quit", "save.json");
+        let selection = ScenarioSelection {
+            mode: RoomMode::DungeonV2,
+            seed: 0,
+            tier: AbilityTier::Baseline,
+        };
+        let mut client = ClientState::new_with_persistence(
+            selection,
+            None,
+            false,
+            None,
+            Some((&save_path, false)),
+        )
+        .unwrap();
+        client.pause_visible = true;
+        client.pause_menu_index = PAUSE_MENU_ITEMS.len() - 1;
+        client.controls_visible = true;
+        client.quit_to_title = true;
+        drop(client);
+
+        // Continuing from the title rebuilds a clean session over the same save.
+        let resumed = ClientState::new_with_persistence(
+            selection,
+            None,
+            false,
+            None,
+            Some((&save_path, false)),
+        )
+        .unwrap();
+        assert!(!resumed.quit_to_title);
+        assert!(!resumed.pause_visible);
+        assert!(!resumed.controls_visible);
+        assert!(!resumed.dungeon_v2_victory);
+        assert_eq!(resumed.pause_menu_index, 0);
+        assert!(resumed.dungeon_v2_run.is_some());
+        fs::remove_dir_all(save_path.parent().unwrap()).unwrap();
     }
 
     #[test]
