@@ -1,81 +1,81 @@
-# Dungeon v2 layout — braided three-column keep
-# Columns of shafts (strata/one-way-loop/tide/shutter) tied by horizontal
-# corridors. Spawn mid-west, crown sanctum east behind a coin door.
+# Dungeon v2 layout (rev 2) — keep of three themed columns + deep wing
+# Mainline runs east along the spawn row: spawn -> observatory (glove) ->
+# wall-gate -> east vault stack -> astral seal (needs BOTH abilities) -> crown.
+# West column: rhythm-free climbs (tide/switchback). Mid column: shutter
+# cascade with one-way rings. East stack: greed/strata vaults. Deep wing:
+# dash-era braid (both one-way-loop-b copies live here, off the mainline).
 
 # --- rooms -------------------------------------------------------------
 room s1   strata-sort-a          # spawn hub (easy)
-room ga   greed-loop-a
-room met  metronome-gallery-a
+room ga   greed-loop-a           # coin ring above spawn
+room met  metronome-gallery-a    # boots-vault approach corridor
 room bv   keep-boots-vault       # boots live here
-room sh   shutter-chute-a
-room s3   strata-sort-b
-room o4   one-way-loop-b
-room s5   strata-sort-c          # hard, guards the shard vault
-room sv   keep-shard-vault       # dead-end treasure
-room ob   keep-observatory       # glove lives here
-room ap   antiphase-airlock-a
-room gb   greed-loop-b
-room t2   tide-shaft-b
-room oc   one-way-loop-c
-room sb2  strata-sort-b          # duplicate instance of the grid
-room swb  switchback-spine-a
+room ob   keep-observatory       # glove lives here, one door from spawn
+room wg   keep-wall-gate         # wall showcase, ON the mainline
+room t1   tide-shaft-a           # west climb shaft (easy)
+room swa  switchback-spine-a     # west basement climber (easy)
+room tcb  two-clock-fork-b       # basement timing corridor
+room sha  shutter-chute-a        # mid cascade, easy aperture
+room owc  one-way-loop-c         # mid cascade junction (hard, wall-up)
+room shb  shutter-chute-b        # mid cascade, medium aperture
+room owb  one-way-loop-b         # duplicate grid #1 — optional wing only
+room lcc  low-ceiling-arena-c    # deep crawl junction (hard)
+room gb   greed-loop-b           # east stack head (medium)
+room sb   strata-sort-b          # east stack crossroads (medium)
+room tb   tide-shaft-b           # east stack shaft (medium)
+room ssc  strata-sort-c          # basement gatehouse (hard)
+room ap   antiphase-airlock-a    # braid corridor ssc <-> owc
+room asl  keep-astral-seal       # final gauntlet: passable only with BOTH
 room crown keep-crown-sanctum    # goal
-room o2   one-way-loop-b         # duplicate instance of the grid
-room t1   tide-shaft-a
-room kv   keyhole-vault-a
-room br   braided-crossing-a
-room ga2  greed-loop-a           # duplicate instance of the grid
-room sa2  strata-sort-a          # duplicate instance of the grid
-room lcb  low-ceiling-arena-b
-room wg   keep-wall-gate
-room tc   two-clock-fork-b
-room lcc  low-ceiling-arena-c
-room gc   greed-loop-c
+room kva  keyhole-vault-a        # deep wing junction
+room kvb  keyhole-vault-b        # deep wing junction (wall-era shortcut)
+room lca  low-ceiling-arena-a    # dash corridor (easy teaching instance)
+room gc   greed-loop-c           # dash coin ring
+room tsc  tide-shaft-c           # deep wing shaft (hard)
+room ow2  one-way-loop-b         # duplicate grid #2 — optional wing only
 
 # --- vertical shafts ---------------------------------------------------
 edge ga floor s1 ceiling
-edge s1 floor o2 ceiling
-edge o2 floor t1 ceiling
-edge t1 floor kv ceiling
-edge bv floor sh ceiling
-edge sh floor s3 ceiling
-edge s3 floor o4 ceiling
-edge o4 floor s5 ceiling
-edge s5 floor sv ceiling
-edge gb floor t2 ceiling
-edge t2 floor oc ceiling
-edge oc floor sb2 ceiling
-edge sb2 floor swb ceiling
-edge ga2 floor sa2 ceiling
-edge sa2 floor lcb ceiling
-edge gc floor lcc ceiling
+edge s1 floor t1 ceiling
+edge t1 floor swa ceiling
+edge bv floor sha ceiling
+edge sha floor owc ceiling
+edge owc floor shb ceiling
+edge shb floor owb ceiling
+edge owb floor lcc ceiling
+edge gb floor sb ceiling
+edge sb floor tb ceiling
+edge tb floor ssc ceiling
+edge ssc floor kva ceiling
+edge gc floor tsc ceiling
+edge tsc floor ow2 ceiling
+edge ow2 floor kvb ceiling
 
 # --- horizontal corridors ---------------------------------------------
 edge bv east met west
 edge met east ga west
-edge s1 east ap west
-edge ap east gb west
-edge s3 east ob west
-edge ob east oc west
-edge o2 east br west
-edge br east ga2 west
-edge o4 east wg west
-edge wg east lcb west
-edge s5 east tc west
-edge tc east kv west
-edge kv east lcc west
-edge lcc east swb west
-edge sa2 east gc west
-edge sb2 east crown west
+edge s1 east ob west
+edge ob east wg west
+edge wg east gb west
+edge sb east asl west
+edge asl east crown west
+edge ssc east ap west
+edge ap east owc west
+edge owb east gc west
+edge ow2 east lca west
+edge lca east kva west
+edge kva east lcc west
+edge lcc east kvb west
+edge kvb east tcb west
+edge tcb east swa west
 
 # --- gates -------------------------------------------------------------
-gate o4 east ability wall      # seal on the wall-gate wing, seen bare
-gate met west ability wall     # boots vault upper seal
-gate sh ceiling ability wall   # boots vault lower seal
-gate s5 floor ability dash     # shard vault: also prevents soft-lock inside
-gate kv east ability dash      # dash wing seal, seen bare from the west
-gate gb floor coins 6          # toll into the east tide shaft (west retreat free)
-gate sb2 east coins 30         # crown sanctum coin door (one direction only)
+gate ob east ability wall      # mainline wall seal, seen bare from spawn row
+gate met west ability wall     # boots vault seal, seen bare from the coin ring
+gate ssc floor ability dash    # deep-wing seal, seen during the wall act
+gate gc floor ability dash     # greed ring hatch, seen during the wall act
+gate kvb west ability wall     # basement-side wing seal, seen bare from tcb
+gate asl east coins 58         # crown coin door (one direction only)
 
 # --- pickups / endpoints ----------------------------------------------
 pickup glove ob
