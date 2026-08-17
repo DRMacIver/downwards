@@ -43,25 +43,28 @@ pub struct RoomMusicInputs {
 }
 
 /// Tuning constants for the whole mapping, kept in one place (§11 step 4).
+/// Retuned 2026-08 after designer feedback: gentler mix, more headroom
+/// (peaks ~0.7–0.8 instead of riding the soft clipper), quieter percussion,
+/// softer hazard presence.
 pub mod defaults {
     /// Mixer gains 0..=15 (§6.3).
-    pub const LEAD_GAIN: u8 = 9;
-    pub const ARP_GAIN: u8 = 7;
-    pub const BASS_GAIN: u8 = 11;
-    pub const PERC_GAIN: u8 = 6;
-    pub const GLOVES_GAIN: u8 = 7;
-    pub const BOOTS_GAIN: u8 = 6;
+    pub const LEAD_GAIN: u8 = 7;
+    pub const ARP_GAIN: u8 = 5;
+    pub const BASS_GAIN: u8 = 10;
+    pub const PERC_GAIN: u8 = 3;
+    pub const GLOVES_GAIN: u8 = 6;
+    pub const BOOTS_GAIN: u8 = 5;
 
     /// Note velocities 0..=15.
-    pub const ARP_VEL: u8 = 8;
-    pub const BASS_VEL: u8 = 12;
-    pub const HAT_OFFBEAT_VEL: u8 = 6;
-    pub const HAT_BEAT3_VEL: u8 = 9;
-    pub const GLOVES_VEL: u8 = 9;
-    pub const BOOTS_VEL: u8 = 8;
+    pub const ARP_VEL: u8 = 6;
+    pub const BASS_VEL: u8 = 10;
+    pub const HAT_OFFBEAT_VEL: u8 = 4;
+    pub const HAT_BEAT3_VEL: u8 = 6;
+    pub const GLOVES_VEL: u8 = 7;
+    pub const BOOTS_VEL: u8 = 6;
 
     /// Default hazard bed level (0 disables the bed).
-    pub const BED_LEVEL: u8 = 4;
+    pub const BED_LEVEL: u8 = 2;
 }
 
 /// The chord progression as 1-based scale-degree roots (§6.1).
@@ -91,11 +94,13 @@ const fn tonic_for(ability: AbilityReq) -> u8 {
     }
 }
 
+/// Lead pulse duty: wide duties everywhere for a rounder, less nasal tone
+/// (designer feedback 2026-08); hard rooms keep a slightly reedier quarter
+/// duty as their edge.
 const fn lead_duty(difficulty: Difficulty) -> Duty {
     match difficulty {
-        Difficulty::Easy => Duty::Eighth,
-        Difficulty::Medium => Duty::Quarter,
-        Difficulty::Hard => Duty::Half,
+        Difficulty::Easy | Difficulty::Medium => Duty::Half,
+        Difficulty::Hard => Duty::Quarter,
     }
 }
 
@@ -197,15 +202,15 @@ pub fn compose(inputs: &RoomMusicInputs) -> Track {
         };
         let base = bar * bar_steps;
 
-        // Arp: chord tones at 8th-note rate, lowest-to-highest, restarting
-        // each bar, octave 3 (§6.3).
+        // Arp: chord tones at quarter-note rate (slowed from 8ths, designer
+        // feedback 2026-08), lowest-to-highest, restarting each bar, octave 3.
         let arp_tones = stacked(3);
-        for eighth_index in 0..8_u32 {
+        for beat in 0..4_u32 {
             notes.push(NoteEvent {
                 voice: "arp".to_owned(),
-                start_step: base + eighth_index * eighth,
-                len_steps: eighth.max(1),
-                pitch: Some(arp_tones[(eighth_index % 3) as usize]),
+                start_step: base + beat * grid.beat_steps,
+                len_steps: grid.beat_steps,
+                pitch: Some(arp_tones[(beat % 3) as usize]),
                 vel: defaults::ARP_VEL,
             });
         }
@@ -228,26 +233,35 @@ pub fn compose(inputs: &RoomMusicInputs) -> Track {
             vel: defaults::BASS_VEL,
         });
 
-        // Perc hats: vel-6 tick on every offbeat 8th, vel-9 on beat 3. Fire-
-        // hit suppression happens live in the sequencer, which knows the
-        // hazard clocks.
+        // Perc hats, density by difficulty (designer feedback 2026-08:
+        // sparse on easy rooms). Easy: soft ticks on beats 2 and 4 only.
+        // Medium/hard: offbeat 8ths plus a beat-3 accent. Fire-hit
+        // suppression happens live in the sequencer, which knows the hazard
+        // clocks.
         for eighth_index in 0..8_u32 {
             let step = base + eighth_index * eighth;
-            if eighth_index % 2 == 1 {
+            let vel = match inputs.difficulty {
+                Difficulty::Easy => match eighth_index {
+                    2 | 6 => Some(defaults::HAT_OFFBEAT_VEL),
+                    _ => None,
+                },
+                Difficulty::Medium | Difficulty::Hard => {
+                    if eighth_index % 2 == 1 {
+                        Some(defaults::HAT_OFFBEAT_VEL)
+                    } else if eighth_index == 4 {
+                        Some(defaults::HAT_BEAT3_VEL)
+                    } else {
+                        None
+                    }
+                }
+            };
+            if let Some(vel) = vel {
                 notes.push(NoteEvent {
                     voice: "perc".to_owned(),
                     start_step: step,
                     len_steps: 1,
                     pitch: None,
-                    vel: defaults::HAT_OFFBEAT_VEL,
-                });
-            } else if eighth_index == 4 {
-                notes.push(NoteEvent {
-                    voice: "perc".to_owned(),
-                    start_step: step,
-                    len_steps: 1,
-                    pitch: None,
-                    vel: defaults::HAT_BEAT3_VEL,
+                    vel,
                 });
             }
         }

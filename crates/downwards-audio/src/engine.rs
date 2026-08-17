@@ -19,8 +19,16 @@ use crate::{
 
 /// Overall output volume of the live engine.
 const MASTER_VOLUME: f32 = 0.5;
-/// Room transition fade halves (§7.6).
-const TRANSITION_SECONDS: f64 = 0.15;
+/// Room transition (§7.6, retuned 2026-08 — designer feedback: the 150 ms
+/// hard swap was too abrupt). The outgoing room fades over
+/// [`FADE_OUT_SECONDS`] on a raised-cosine curve, a breath of silence
+/// [`TRANSITION_GAP_SECONDS`] separates the rooms, then the new room fades in
+/// over [`FADE_IN_SECONDS`]. Respawn within a room never takes this path —
+/// the music free-runs straight through it (§7.3 as amended), the timeline
+/// merely re-basing by whole hazard cycles.
+pub const FADE_OUT_SECONDS: f64 = 0.4;
+pub const TRANSITION_GAP_SECONDS: f64 = 0.12;
+pub const FADE_IN_SECONDS: f64 = 0.4;
 /// Mute toggle ramp.
 const MUTE_SECONDS: f64 = 0.03;
 /// Maximum slew per block, as a fraction of the block length (§7.3).
@@ -37,7 +45,7 @@ struct Shared {
     muted: AtomicBool,
     /// While the simulation is not stepping (menus, pause screen) the music
     /// ducks to silence instead of drifting against a frozen clock; the
-    /// resume drift-snap then realigns inaudibly.
+    /// resume re-base/slew then realigns inaudibly.
     paused: AtomicBool,
 }
 
@@ -194,6 +202,12 @@ struct Callback {
     mute: crate::synth::voice::CosRamp,
     pause: crate::synth::voice::CosRamp,
     fading_out: bool,
+    /// Samples of deliberate quiet still to elapse between the old room's
+    /// fade-out and the new room's fade-in.
+    gap_remaining: u64,
+    /// Whole-hazard-cycle re-basing of the engine timeline versus the sim
+    /// clock (in ticks). Lets respawns play through without any seek.
+    tick_offset: f64,
     scratch: Vec<f32>,
 }
 
@@ -208,6 +222,8 @@ impl Callback {
             mute: crate::synth::voice::CosRamp::new(1.0),
             pause: crate::synth::voice::CosRamp::new(1.0),
             fading_out: false,
+            gap_remaining: 0,
+            tick_offset: 0.0,
             scratch: vec![0.0; 8192],
         }
     }
@@ -228,14 +244,23 @@ impl Callback {
             .try_lock()
             .map(|pending| pending.is_some())
             .unwrap_or(false);
-        let ramp_samples = TRANSITION_SECONDS * f64::from(self.sample_rate);
+        let fade_out_samples = FADE_OUT_SECONDS * f64::from(self.sample_rate);
+        let fade_in_samples = FADE_IN_SECONDS * f64::from(self.sample_rate);
         if pending_waiting && !self.fading_out && self.active.is_some() {
             self.fading_out = true;
-            self.transition.set_target(0.0, ramp_samples);
+            self.gap_remaining =
+                (TRANSITION_GAP_SECONDS * f64::from(self.sample_rate)) as u64;
+            self.transition.set_target(0.0, fade_out_samples);
         }
         let transition_closed = self.transition.value() <= 1.0e-3 && self.transition.done();
+        // Once the fade-out has completed, hold a short breath of silence
+        // before the swap so the rooms read as separate spaces.
+        if self.fading_out && transition_closed && self.gap_remaining > 0 {
+            self.gap_remaining = self.gap_remaining.saturating_sub(out.len() as u64);
+        }
         if pending_waiting
-            && (self.active.is_none() || (self.fading_out && transition_closed))
+            && (self.active.is_none()
+                || (self.fading_out && transition_closed && self.gap_remaining == 0))
             && let Ok(mut pending) = self.shared.pending.try_lock()
             && let Some(mut sequencer) = pending.take()
         {
@@ -244,9 +269,10 @@ impl Callback {
             let abilities = self.ability_mask();
             sequencer.set_layer_targets(abilities);
             self.active = Some(sequencer);
+            self.tick_offset = 0.0;
             self.fading_out = false;
             self.transition.snap(0.0);
-            self.transition.set_target(1.0, ramp_samples);
+            self.transition.set_target(1.0, fade_in_samples);
         }
 
         let est = self.estimated_sim_tick();
@@ -272,18 +298,23 @@ impl Callback {
             MUTE_SECONDS * f64::from(self.sample_rate),
         );
 
-        // Drift correction (§7.3).
+        // Drift correction (§7.3, amended 2026-08). A death respawn resets
+        // room_tick to 0 (simulation.rs); the music must play straight
+        // through it with NO interruption — no seek, no fade. Instead the
+        // engine re-bases its timeline by a whole number of hazard cycles
+        // (a shift that changes no hazard sound, so wind-ups and fires stay
+        // exactly aligned with the reset clocks) and lets the normal gentle
+        // slew absorb whatever sub-cycle residue remains.
         let engine_tick =
             sequencer.cursor() as f64 * 60.0 / f64::from(self.sample_rate);
-        let drift_ticks = engine_tick - est;
+        let drift_ticks = engine_tick - (est + self.tick_offset);
         let beat_ticks = f64::from(sequencer.grid().beat_ticks());
         let block = out.len();
         if !paused && drift_ticks.abs() > 2.0 * beat_ticks {
-            // Death respawn resets room_tick to 0 (simulation.rs) or a long
-            // hitch: hard-snap in lockstep with the reset hazards.
-            let target = est.max(0.0) as u64;
-            sequencer.seek(sample_index_for_tick(target, self.sample_rate));
+            let cycle = sequencer.hazard_cycle_ticks() as f64;
+            self.tick_offset = cycle * ((engine_tick - est) / cycle).round();
         }
+        let drift_ticks = engine_tick - (est + self.tick_offset);
         // One output sample expressed in ticks; drift below this is noise.
         let one_sample_ticks = 60.0 / f64::from(self.sample_rate);
         let slew: i64 = if drift_ticks.abs() < one_sample_ticks {
@@ -325,5 +356,169 @@ impl Callback {
             gloves: bits & 1 != 0,
             boots: bits & 2 != 0,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::compose::{AbilityReq, LayerGates, RoomMusicInputs, compose};
+    use crate::melody::DoorSet;
+
+    const RATE: u32 = 44_100;
+
+    fn fade_out_samples() -> u64 {
+        (FADE_OUT_SECONDS * f64::from(RATE)) as u64
+    }
+    fn gap_samples() -> u64 {
+        (TRANSITION_GAP_SECONDS * f64::from(RATE)) as u64
+    }
+
+    #[test]
+    #[allow(clippy::assertions_on_constants)]
+    fn transition_lengths_are_gentle() {
+        // Designer feedback 2026-08: substantially longer than the old 150 ms
+        // halves, with a total (fade-out + gap + fade-in) in ~0.6–1.0 s.
+        assert!(FADE_OUT_SECONDS >= 0.3);
+        assert!(FADE_IN_SECONDS >= 0.3);
+        assert!(TRANSITION_GAP_SECONDS >= 0.05);
+        let total = FADE_OUT_SECONDS + TRANSITION_GAP_SECONDS + FADE_IN_SECONDS;
+        assert!((0.6..=1.0).contains(&total), "total transition {total}s");
+    }
+
+    fn test_shared() -> Arc<Shared> {
+        Arc::new(Shared {
+            pending: Mutex::new(None),
+            published_tick: AtomicU64::new(0),
+            published_at_micros: AtomicU64::new(0),
+            abilities: AtomicU64::new(0),
+            muted: AtomicBool::new(false),
+            paused: AtomicBool::new(false),
+        })
+    }
+
+    fn test_sequencer_with(slug: &str, hazards: Vec<crate::tempo::HazardTiming>) -> Box<Sequencer> {
+        let inputs = RoomMusicInputs {
+            slug: slug.to_owned(),
+            difficulty: crate::tempo::Difficulty::Easy,
+            ability_requirement: AbilityReq::None,
+            coin_count: 2,
+            doors: DoorSet::default(),
+            hazards: hazards.clone(),
+            layer_gates: LayerGates::default(),
+        };
+        let track = compose(&inputs);
+        Box::new(Sequencer::new(&track, &hazards, RATE))
+    }
+
+    fn test_sequencer(slug: &str) -> Box<Sequencer> {
+        test_sequencer_with(slug, Vec::new())
+    }
+
+    /// A same-room respawn (sim room_tick jumping back to 0) must not
+    /// interrupt the music at all: no seek, no fade — playback free-runs and
+    /// the timeline re-bases by whole hazard cycles.
+    #[test]
+    fn respawn_plays_straight_through() {
+        let shared = test_shared();
+        let mut callback = Callback::new(Arc::clone(&shared), Instant::now(), RATE);
+        let block = 512_usize;
+        let mut out = vec![0.0_f32; block];
+        let hazard = crate::tempo::HazardTiming {
+            period: 90,
+            active: 30,
+            phase: 0,
+        };
+
+        // Enter a room 60 simulated seconds in.
+        shared.published_tick.store(3600, Ordering::Relaxed);
+        *shared.pending.lock().unwrap() =
+            Some(test_sequencer_with("respawn-room", vec![hazard]));
+        for _ in 0..100 {
+            callback.render(&mut out);
+        }
+        let cursor_before = callback.active.as_ref().unwrap().cursor();
+        let last_sample = out[block - 1];
+
+        // Respawn: the sim clock snaps back to zero.
+        shared.published_tick.store(0, Ordering::Relaxed);
+        callback.render(&mut out);
+
+        // No seek: the sequencer cursor advanced by at most the rendered
+        // block plus the ±1-sample slew, never jumped.
+        let cursor_after = callback.active.as_ref().unwrap().cursor();
+        let advanced = cursor_after - cursor_before;
+        assert!(
+            (advanced as i64 - block as i64).abs() <= 2,
+            "cursor must advance continuously through a respawn (advanced {advanced})"
+        );
+        // No click at the boundary.
+        let boundary_jump = (out[0] - last_sample).abs();
+        assert!(
+            boundary_jump < 0.2,
+            "respawn must not produce a discontinuity (jump {boundary_jump})"
+        );
+        // The timeline re-based by a whole number of hazard cycles, so the
+        // hazard voices stay exactly aligned with the reset clocks.
+        let cycles = callback.tick_offset / 90.0;
+        assert!(callback.tick_offset > 0.0, "respawn must re-base the timeline");
+        assert!(
+            (cycles - cycles.round()).abs() < 1.0e-9,
+            "re-base must be a whole number of hazard cycles ({})",
+            callback.tick_offset
+        );
+        // And the music keeps sounding.
+        for _ in 0..20 {
+            callback.render(&mut out);
+        }
+        assert!(out.iter().any(|sample| sample.abs() > 0.01));
+    }
+
+    /// Push a pending session into an already-playing callback and verify the
+    /// swap happens only after the full fade-out plus the silent gap, with
+    /// output actually quiet at the swap point.
+    #[test]
+    fn room_swap_waits_for_fade_out_and_gap() {
+        let shared = test_shared();
+        let mut callback = Callback::new(Arc::clone(&shared), Instant::now(), RATE);
+        let block = 512_usize;
+        let mut out = vec![0.0_f32; block];
+
+        // First room: swaps in immediately (no previous session).
+        *shared.pending.lock().unwrap() = Some(test_sequencer("engine-room-a"));
+        callback.render(&mut out);
+        assert!(callback.active.is_some(), "first room must start playing");
+
+        // Let it run past its own fade-in.
+        for _ in 0..200 {
+            callback.render(&mut out);
+        }
+
+        // Now request a room change.
+        *shared.pending.lock().unwrap() = Some(test_sequencer("engine-room-b"));
+        let earliest = fade_out_samples() + gap_samples();
+        let mut rendered = 0_u64;
+        let mut swap_at = None;
+        let mut quiet_at_swap = true;
+        for _ in 0..1000 {
+            let was_fading = callback.fading_out;
+            callback.render(&mut out);
+            rendered += block as u64;
+            if was_fading && !callback.fading_out {
+                swap_at = Some(rendered);
+                quiet_at_swap = out.iter().all(|sample| sample.abs() < 0.05);
+                break;
+            }
+        }
+        let swap_at = swap_at.expect("the pending room must eventually swap in");
+        assert!(
+            swap_at + (block as u64) >= earliest,
+            "swap after {swap_at} samples, before fade-out + gap ({earliest})"
+        );
+        assert!(
+            swap_at <= earliest + 20 * block as u64,
+            "swap after {swap_at} samples: gap far longer than intended ({earliest})"
+        );
+        assert!(quiet_at_swap, "the swap block must be near-silent");
     }
 }

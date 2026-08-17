@@ -98,21 +98,21 @@ fn parser_rejects_malformed_tracks() {
     assert!(parse_error(&bad_voice).contains("undeclared voice"));
 
     // Voice referencing an undeclared layer.
-    let bad_layer = text.replace("layer base gain 9", "layer wings gain 9");
+    let bad_layer = text.replace("layer base gain 7", "layer wings gain 7");
     assert!(parse_error(&bad_layer).contains("undeclared layer"));
 
     // Out-of-range velocity.
     let (_, _) = Track::parse(&text).unwrap();
-    let bad_vel = text.replace("hat perc 1 6", "hat perc 1 99");
+    let bad_vel = text.replace("hat perc 1 4", "hat perc 1 99");
     assert!(parse_error(&bad_vel).contains("velocity"));
 
     // Out-of-range step (edit an existing hat so section order stays legal).
     assert!(track.grid.loop_steps() < 999);
-    let bad_step = text.replace("hat perc 1 6", "hat perc 999 6");
+    let bad_step = text.replace("hat perc 1 4", "hat perc 999 4");
     assert!(parse_error(&bad_step).contains("start-step"));
 
     // Directives after the hazard section violate the fixed section order.
-    let out_of_order = format!("{text}\nhat perc 1 6\n");
+    let out_of_order = format!("{text}\nhat perc 1 4\n");
     assert!(parse_error(&out_of_order).contains("section order"));
 
     // Missing base layer.

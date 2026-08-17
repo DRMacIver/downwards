@@ -113,16 +113,18 @@ fn seek_restarts_in_lockstep_with_a_room_tick() {
         let sum: f64 = samples.iter().map(|&s| f64::from(s) * f64::from(s)).sum();
         (sum / samples.len().max(1) as f64).sqrt()
     };
-    // The strongest local energy jump in a ±1024-sample neighbourhood must
-    // sit at the expected fire sample (the surrounding music is loud, so an
-    // absolute ratio threshold would be fragile — the *position* is the
-    // claim under test).
+    // The strongest local energy jump in a ±512-sample neighbourhood must
+    // sit at the expected fire sample, and be a clear rise. (The 2026-08
+    // gentler mix no longer saturates the clipper, so ordinary melodic
+    // rests further out produce comparable short-RMS jumps — the
+    // neighbourhood is kept tight around the fire, whose *position* is the
+    // claim under test.)
     let jump_at = |samples: &[f32], position: usize| {
         rms(&samples[position..position + 256]) / rms(&samples[position - 256..position]).max(1e-9)
     };
     let best_position = |samples: &[f32]| {
-        (0..9)
-            .map(|index| expected - 1024 + index * 256)
+        (0..5)
+            .map(|index| expected - 512 + index * 256)
             .max_by(|&x, &y| {
                 jump_at(samples, x)
                     .partial_cmp(&jump_at(samples, y))
@@ -136,4 +138,6 @@ fn seek_restarts_in_lockstep_with_a_room_tick() {
         expected,
         "sought path must fire at tick 180 in lockstep"
     );
+    assert!(jump_at(&a, expected) > 1.25, "fresh fire must be a clear rise");
+    assert!(jump_at(&b, expected) > 1.25, "sought fire must be a clear rise");
 }

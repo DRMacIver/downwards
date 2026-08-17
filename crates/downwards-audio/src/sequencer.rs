@@ -39,11 +39,27 @@ pub const fn tick_for_sample(sample: u64, sample_rate: u32) -> u64 {
     sample * 60 / sample_rate as u64
 }
 
-/// Pre-gain before the soft clipper; tuned so a full mix stays musical.
-const PRE_GAIN: f32 = 0.55;
-/// Melodic attack/release slew times in seconds.
-const ATTACK_SECONDS: f64 = 0.0012;
-const RELEASE_SECONDS: f64 = 0.004;
+const fn gcd(mut a: u64, mut b: u64) -> u64 {
+    while b != 0 {
+        let r = a % b;
+        a = b;
+        b = r;
+    }
+    a
+}
+
+/// Pre-gain before the soft clipper. Retuned 2026-08: with the gentler
+/// composed gains this keeps mix peaks near 0.7–0.8 in the clipper's almost-
+/// linear region — headroom instead of saturation (designer feedback).
+const PRE_GAIN: f32 = 0.38;
+/// Melodic attack/release slew times in seconds; softened 2026-08 so note
+/// edges bloom instead of clicking.
+const ATTACK_SECONDS: f64 = 0.006;
+const RELEASE_SECONDS: f64 = 0.05;
+/// The pooled hazard stab keeps a crisp percussive envelope so wind-up notes
+/// and fires stay rhythmically legible against the softened pattern voices.
+const STAB_ATTACK_SECONDS: f64 = 0.002;
+const STAB_RELEASE_SECONDS: f64 = 0.012;
 /// Layer enable/disable ramp (§7.4).
 const LAYER_RAMP_SECONDS: f64 = 0.4;
 /// Bed gate and hard-reset fade time (§6.6, §7.3).
@@ -57,14 +73,15 @@ const BED_NOISE: (f64, bool) = (1_400.0, true);
 const SWEEP_LOW_HZ: f64 = 500.0;
 const SWEEP_HIGH_HZ: f64 = 8_000.0;
 
-/// Pooled hazard voice gains (§6.3).
+/// Pooled hazard voice gains (§6.3). Softened 2026-08: hazard voices blend
+/// into the mix — still audibly telegraphing timing, no longer dominating.
 const STAB_GAIN: f32 = 10.0 / 15.0;
 const SNARE_GAIN: f32 = 10.0 / 15.0;
-const CRASH_GAIN: f32 = 12.0 / 15.0;
+const CRASH_GAIN: f32 = 9.0 / 15.0;
 const HIT_VEL: f32 = 12.0 / 15.0;
-const WINDUP_VEL: f32 = 8.0 / 15.0;
+const WINDUP_VEL: f32 = 5.0 / 15.0;
 const STAB_VEL: f32 = 10.0 / 15.0;
-const SWEEP_VEL: f32 = 9.0 / 15.0;
+const SWEEP_VEL: f32 = 5.0 / 15.0;
 
 #[derive(Clone, Debug)]
 struct PatternNote {
@@ -296,6 +313,28 @@ impl Sequencer {
         self.cursor
     }
 
+    /// The period, in ticks, after which every sounding hazard clock repeats
+    /// (lcm of the hazard periods; 1 when the room has none). Shifting the
+    /// engine timeline by a whole multiple of this changes no hazard sound,
+    /// which is what lets a respawn keep the music running uninterrupted
+    /// while staying exactly aligned with the reset hazard clocks.
+    #[must_use]
+    pub fn hazard_cycle_ticks(&self) -> u64 {
+        let mut cycle: u64 = 1;
+        for slot in &self.hazards {
+            if slot.voice.is_none() {
+                continue;
+            }
+            let period = u64::from(slot.timing.period).max(1);
+            let g = gcd(cycle, period);
+            match (cycle / g).checked_mul(period) {
+                Some(next) => cycle = next,
+                None => return cycle, // astronomically long already
+            }
+        }
+        cycle
+    }
+
     /// Slew the inventory layers toward the ownership targets (§7.4). Voices
     /// keep synthesizing regardless, so enabling a layer never causes a phase
     /// discontinuity.
@@ -323,7 +362,7 @@ impl Sequencer {
         }
     }
 
-    /// Hard-reposition the musical clock (death respawn, room entry drift
+    /// Hard-reposition the musical clock (room entry drift
     /// snap). Kills all sounding voices and fades back in over 5 ms.
     pub fn seek(&mut self, sample: u64) {
         self.cursor = sample;
@@ -499,10 +538,11 @@ impl Sequencer {
         self.stab.frequency_hz = pitch.frequency_hz();
         self.stab.level = velocity;
         self.stab.gated = true;
-        self.stab.off_sample = sample_index_for_tick(
-            tick + u64::from(self.grid.step_ticks),
-            self.sample_rate,
-        );
+        // Staccato: half a step, at most 12 ticks (200 ms). Softened 2026-08 —
+        // a full-step sustain droned against the pattern and blurred the fire
+        // onset; short plucks telegraph the rhythm and then get out of the way.
+        let len_ticks = (u64::from(self.grid.step_ticks) / 2).clamp(1, 12);
+        self.stab.off_sample = sample_index_for_tick(tick + len_ticks, self.sample_rate);
     }
 
     fn synthesize_sample(&mut self) -> f32 {
@@ -566,7 +606,9 @@ impl Sequencer {
                 stab.gated = false;
             }
             let target = if stab.gated { stab.level } else { 0.0 };
-            let amp = stab.env.next(target, attack, release);
+            let stab_attack = (1.0 / (STAB_ATTACK_SECONDS * rate)) as f32;
+            let stab_release = (1.0 / (STAB_RELEASE_SECONDS * rate)) as f32;
+            let amp = stab.env.next(target, stab_attack, stab_release);
             let value = stab.pulse.next(stab.frequency_hz, 0.25, rate);
             mix += value * amp * stab.gain;
         }

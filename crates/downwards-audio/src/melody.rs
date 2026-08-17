@@ -1,10 +1,9 @@
 //! Seeded constrained-walk melody generation (§6.5 of the soundtrack spec).
 //!
 //! Deterministic: the only randomness is xorshift64* seeded with
-//! `fnv1a64(slug)`, consumed in a fixed order — the eight phrase downbeats
-//! first, then fills bar by bar, then the bars 15–16 variation with the
-//! stream continued. Changing a later rule can therefore never reshuffle
-//! earlier choices.
+//! `fnv1a64(slug)`, consumed in a fixed order — the sixteen loop downbeats
+//! first, then fills bar by bar. Changing a later rule can therefore never
+//! reshuffle earlier choices.
 
 use crate::{
     theory::{Key, XorShift64Star, fnv1a64},
@@ -24,7 +23,7 @@ pub struct DoorSet {
 const RANGE_LOW_MIDI: u8 = 60;
 const RANGE_HIGH_MIDI: u8 = 84;
 
-const PHRASE_BARS: u32 = 8;
+const LOOP_BARS: u32 = 16;
 
 /// Downbeat and fill velocities (tuning constants live here; see
 /// `compose::defaults` for the mixer gains).
@@ -40,9 +39,9 @@ struct Walk<'a> {
     doors: DoorSet,
 }
 
-/// Generate the full 16-bar lead-voice pattern: an 8-bar phrase played twice,
-/// bars 15–16 re-running the fill of bars 7–8 with the RNG stream continued
-/// and the final note forced to the tonic.
+/// Generate the full 16-bar lead-voice pattern: a constrained walk whose
+/// downbeats are chord tones of each bar's actual chord, fills tethered
+/// between neighbouring downbeats, and the final note forced to the tonic.
 #[must_use]
 pub fn generate_melody(
     slug: &str,
@@ -62,37 +61,34 @@ pub fn generate_melody(
         doors,
     };
 
-    // Phase 1: the eight phrase downbeats (scale-lattice indices).
-    let mut downbeats = [0_i32; PHRASE_BARS as usize];
-    for bar in 1..PHRASE_BARS as usize {
+    // Phase 1: the sixteen loop downbeats (scale-lattice indices), each a
+    // chord tone of its *loop* bar's chord. (Redesigned 2026-08: the original
+    // 8-bar phrase repeated over the 16-bar progression put the second pass's
+    // downbeats on the wrong chords — audibly dissonant against the
+    // accompaniment, part of the designer's "annoying" complaint.)
+    let mut downbeats = [0_i32; LOOP_BARS as usize];
+    for bar in 1..LOOP_BARS as usize {
         // Bar 0 starts on the tonic in octave 4 (index 0).
         downbeats[bar] = walk.choose_downbeat(bar, downbeats[bar - 1]);
     }
 
-    // Phase 2: fills, bar by bar, over the 8-bar phrase.
-    let mut phrase_fills: Vec<Vec<(u32, i32)>> = Vec::with_capacity(PHRASE_BARS as usize);
-    for &downbeat in &downbeats {
-        phrase_fills.push(walk.fill_bar(downbeat));
+    // Phase 2: fills, bar by bar. Each fill is tethered to its own downbeat
+    // and the *next* downbeat (wrapping), so no consecutive interval anywhere
+    // — including across the barline — exceeds a fifth (designer feedback
+    // 2026-08: gentler, more stepwise motion).
+    let mut fills: Vec<Vec<(u32, i32)>> = Vec::with_capacity(LOOP_BARS as usize);
+    for bar in 0..LOOP_BARS as usize {
+        let next = downbeats[(bar + 1) % LOOP_BARS as usize];
+        fills.push(walk.fill_bar(downbeats[bar], next));
     }
 
-    // Phase 3: bars 15–16 variation — re-run the fill of phrase bars 7–8 with
-    // the RNG stream continued (not reset).
-    let variation: [Vec<(u32, i32)>; 2] = [walk.fill_bar(downbeats[6]), walk.fill_bar(downbeats[7])];
-
-    // Assemble the 16-bar loop: bars 0..8 and 8..14 replay the phrase; bars
-    // 14..16 take the variation fills over the phrase's bar-7/8 downbeats.
+    // Assemble the 16-bar loop.
     let bar_steps = grid.bar_steps();
     let mut placed: Vec<(u32, i32)> = Vec::new();
-    for loop_bar in 0..16_u32 {
-        let phrase_bar = (loop_bar % PHRASE_BARS) as usize;
+    for loop_bar in 0..LOOP_BARS {
         let base_step = loop_bar * bar_steps;
-        let fill = if loop_bar >= 14 {
-            &variation[(loop_bar - 14) as usize]
-        } else {
-            &phrase_fills[phrase_bar]
-        };
-        placed.push((base_step, downbeats[phrase_bar]));
-        for &(offset, index) in fill {
+        placed.push((base_step, downbeats[loop_bar as usize]));
+        for &(offset, index) in &fills[loop_bar as usize] {
             placed.push((base_step + offset, index));
         }
     }
@@ -127,17 +123,17 @@ impl Walk<'_> {
         (RANGE_LOW_MIDI..=RANGE_HIGH_MIDI).contains(&midi)
     }
 
-    /// Chord (1-based scale degree root) for a phrase bar, using the first
-    /// pass through the progression (bars 0..4 → chord 0, 4..8 → chord 1).
-    fn phrase_chord(&self, phrase_bar: usize) -> u8 {
-        self.progression[phrase_bar / 4]
+    /// Chord (1-based scale degree root) for a loop bar: one chord per four
+    /// bars of the 16-bar loop, matching the accompaniment exactly.
+    fn bar_chord(&self, bar: usize) -> u8 {
+        self.progression[bar / 4]
     }
 
     /// Rule 3 + rule 7: a chord tone within a fifth (7 semitones) of the
     /// previous downbeat, biased downward with a floor door (or upward with
-    /// only a ceiling door) in phrase bars 5–8.
-    fn choose_downbeat(&mut self, phrase_bar: usize, previous: i32) -> i32 {
-        let chord = self.phrase_chord(phrase_bar);
+    /// only a ceiling door) in the loop's second half.
+    fn choose_downbeat(&mut self, bar: usize, previous: i32) -> i32 {
+        let chord = self.bar_chord(bar);
         let chord_indices = Key::triad_scale_indices(chord);
         let previous_midi = i32::from(self.key.scale_pitch(previous).midi());
         let mut candidates: Vec<i32> = Vec::new();
@@ -156,19 +152,32 @@ impl Walk<'_> {
         }
         candidates.sort_unstable();
         candidates.dedup();
-        if phrase_bar >= 4 {
+        if bar >= LOOP_BARS as usize / 2 {
             if self.doors.floor {
                 candidates.retain(|&index| index <= previous);
             } else if self.doors.ceiling {
                 candidates.retain(|&index| index >= previous);
             }
         }
+        // The final phrase downbeat cadences home: stay within a fifth of
+        // the tonic so the forced tonic ending (rule 6) never leaps.
+        if bar == LOOP_BARS as usize - 1 {
+            let tonic_midi = i32::from(self.key.scale_pitch(0).midi());
+            candidates.retain(|&index| {
+                (i32::from(self.key.scale_pitch(index).midi()) - tonic_midi).abs() <= 7
+            });
+        }
         if candidates.is_empty() {
-            // Deterministic fallback: nearest chord tone to the previous
+            // Deterministic fallback: nearest *chord tone* to the previous
             // downbeat, no RNG consumed.
             return (-21..=21)
                 .map(|offset| previous + offset)
-                .filter(|&index| self.in_range(index))
+                .filter(|&index| {
+                    self.in_range(index)
+                        && chord_indices
+                            .iter()
+                            .any(|&chord| chord.rem_euclid(7) == index.rem_euclid(7))
+                })
                 .min_by_key(|&index| {
                     let midi = i32::from(self.key.scale_pitch(index).midi());
                     ((midi - previous_midi).abs(), index)
@@ -206,23 +215,26 @@ impl Walk<'_> {
         positions
     }
 
-    /// Fill one bar with a constrained walk starting from the bar's downbeat.
-    fn fill_bar(&mut self, downbeat: i32) -> Vec<(u32, i32)> {
+    /// Fill one bar with a constrained walk starting from the bar's downbeat,
+    /// tethered within a fifth of both the bar's downbeat and the next bar's
+    /// downbeat so no interval — including across the barline — leaps wide.
+    fn fill_bar(&mut self, downbeat: i32, next_downbeat: i32) -> Vec<(u32, i32)> {
         let sixteenth_percent = match self.coin_count {
             0 | 1 => 0,
-            2 => 25,
-            _ => 40,
+            2 => 15,
+            _ => 25,
         };
         let mut notes = Vec::new();
         let mut current = downbeat;
         // 0 = previous move was a step (or none); ±1 = a leap in that direction.
         let mut leap_direction = 0_i32;
         for (offset, is_sixteenth) in self.fill_positions() {
-            let percent = if is_sixteenth { sixteenth_percent } else { 60 };
+            let percent = if is_sixteenth { sixteenth_percent } else { 50 };
             if !self.rng.percent(percent) {
                 continue;
             }
-            let (next, new_leap_direction) = self.walk_step(current, leap_direction);
+            let (next, new_leap_direction) =
+                self.walk_step(current, leap_direction, downbeat, next_downbeat);
             current = next;
             leap_direction = new_leap_direction;
             notes.push((offset, current));
@@ -230,22 +242,34 @@ impl Walk<'_> {
         notes
     }
 
-    /// Rule 4: ±1/±2 scale steps (weights 4:2) or a leap of a 4th/5th
-    /// (±3/±4 scale steps, weight 1). Hard rule: a leap MUST be followed by a
-    /// step in the opposite direction, so after a leap the candidate set is
-    /// only opposite-direction steps.
-    fn walk_step(&mut self, current: i32, leap_direction: i32) -> (i32, i32) {
-        let after_up_leap: [(i32, u32); 2] = [(-1, 4), (-2, 2)];
-        let after_down_leap: [(i32, u32); 2] = [(1, 4), (2, 2)];
-        let free: [(i32, u32); 8] = [
-            (1, 4),
-            (-1, 4),
+    /// Whether MIDI distance from `index` to `anchor` is within a fifth.
+    fn near(&self, index: i32, anchor: i32) -> bool {
+        let a = i32::from(self.key.scale_pitch(index).midi());
+        let b = i32::from(self.key.scale_pitch(anchor).midi());
+        (a - b).abs() <= 7
+    }
+
+    /// Rule 4, gentled (designer feedback 2026-08): ±1/±2 scale steps
+    /// (weights 6:2) or a leap of a 4th (±3 scale steps, weight 1) — wider
+    /// leaps removed. A leap MUST be followed by a step in the opposite
+    /// direction. Every candidate must stay within a fifth of both tether
+    /// anchors so consecutive sounded intervals never exceed a fifth.
+    fn walk_step(
+        &mut self,
+        current: i32,
+        leap_direction: i32,
+        anchor: i32,
+        next_anchor: i32,
+    ) -> (i32, i32) {
+        let after_up_leap: [(i32, u32); 2] = [(-1, 6), (-2, 2)];
+        let after_down_leap: [(i32, u32); 2] = [(1, 6), (2, 2)];
+        let free: [(i32, u32); 6] = [
+            (1, 6),
+            (-1, 6),
             (2, 2),
             (-2, 2),
             (3, 1),
             (-3, 1),
-            (4, 1),
-            (-4, 1),
         ];
         let moves: &[(i32, u32)] = match leap_direction {
             1 => &after_up_leap,
@@ -255,15 +279,24 @@ impl Walk<'_> {
         let legal: Vec<(i32, u32)> = moves
             .iter()
             .copied()
-            .filter(|&(delta, _)| self.in_range(current + delta))
+            .filter(|&(delta, _)| {
+                let next = current + delta;
+                self.in_range(next) && self.near(next, anchor) && self.near(next, next_anchor)
+            })
             .collect();
         if legal.is_empty() {
-            // Cornered against the range edge: move one scale step toward the
-            // centre without consuming RNG. This still satisfies the leap rule
-            // (a leap into the range edge always leaves the opposite step
-            // available, so this branch only triggers for step moves).
-            let towards_centre = if current > 7 { -1 } else { 1 };
-            return (current + towards_centre, 0);
+            // Cornered (range edge or tether): move one scale step toward the
+            // next anchor without consuming RNG; standing still is legal too.
+            let towards = (next_anchor - current).signum();
+            let candidate = current + towards;
+            if towards != 0
+                && self.in_range(candidate)
+                && self.near(candidate, anchor)
+                && self.near(candidate, next_anchor)
+            {
+                return (candidate, 0);
+            }
+            return (current, 0);
         }
         let delta = self.rng.pick_weighted(&legal);
         let new_leap_direction = if delta.abs() >= 3 { delta.signum() } else { 0 };
