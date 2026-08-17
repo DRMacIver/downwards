@@ -1,3 +1,4 @@
+mod audio;
 mod playable_catalogue;
 
 use std::{
@@ -105,6 +106,7 @@ Usage: downwards
   --generated    open the offline-curated v6 route catalogue (the level lab)
   --corpus PATH  play the strict native-keyed corpus playtest manifest
   --history PATH append completed human attempts and input timings to PATH
+  --no-audio     disable the soundtrack engine entirely
   --allow-provisional-corpus
                  explicit development opt-in for a provisional corpus export
   -h, --help     show this help
@@ -239,6 +241,7 @@ async fn main() {
     }
 
     let visual_assets = VisualAssets::load();
+    let mut audio = audio::AudioDirector::new(options.no_audio);
     let mut at_title = options.title_screen;
     let mut fresh_dungeon = options.fresh_dungeon;
     loop {
@@ -252,7 +255,7 @@ async fn main() {
                 }
             }
         }
-        run_play_session(&options, fresh_dungeon, &visual_assets).await;
+        run_play_session(&options, fresh_dungeon, &visual_assets, &mut audio).await;
         at_title = true;
     }
 }
@@ -301,6 +304,7 @@ async fn run_play_session(
     options: &LaunchOptions,
     fresh_dungeon: bool,
     visual_assets: &VisualAssets,
+    audio: &mut audio::AudioDirector,
 ) {
     let dungeon_save = matches!(
         options.selection.mode,
@@ -326,11 +330,19 @@ async fn run_play_session(
     let mut jump_input = HumanJumpInput::default();
     let mut restart_queued = false;
     let mut replay_frame_queued = false;
+    let mut simulation_stepped_last_frame = false;
 
     loop {
         if client.quit_to_title {
             return;
         }
+        if is_key_pressed(KeyCode::F3) {
+            audio.toggle_mute();
+        }
+        // Soundtrack: follow the live room, abilities, and clock. Frames
+        // that never step the simulation (menus, pauses) duck the music.
+        audio.observe(&client.simulation, simulation_stepped_last_frame);
+        simulation_stepped_last_frame = false;
         let render_frame = render_frame_index;
         render_frame_index = render_frame_index.saturating_add(1);
         if client.dungeon_v2_victory {
@@ -690,6 +702,7 @@ async fn run_play_session(
         }
 
         while accumulated_seconds >= FIXED_STEP_SECONDS {
+            simulation_stepped_last_frame = true;
             if client.human_controlled() {
                 let report = client.step_human(Action {
                     move_x: horizontal_input(),
@@ -1267,6 +1280,7 @@ struct LaunchOptions {
     dungeon_save_path: PathBuf,
     fresh_dungeon: bool,
     title_screen: bool,
+    no_audio: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1377,6 +1391,7 @@ where
         dungeon_save_path: PathBuf::from(DEFAULT_DUNGEON_SAVE_PATH),
         fresh_dungeon: false,
         title_screen: false,
+        no_audio: false,
     };
     let mut arguments = arguments.into_iter().map(Into::into).peekable();
     let mut challenge_requested = false;
@@ -1501,6 +1516,7 @@ where
                 );
             }
             "--allow-provisional-corpus" => options.allow_provisional_corpus = true,
+            "--no-audio" => options.no_audio = true,
             "--history" => {
                 let path = arguments
                     .next()
@@ -6732,6 +6748,7 @@ fn draw_controls_screen(viewport: &PixelViewport) {
         "DASH       X OR SHIFT + A DIRECTION (NEEDS BOOTS)",
         "R          RESTART THE ROOM",
         "TAB        DUNGEON MAP",
+        "F3         MUTE / UNMUTE MUSIC",
         "ESC        PAUSE MENU",
     ];
     for (index, line) in dungeon_lines.iter().enumerate() {

@@ -7,10 +7,15 @@ license.workspace = true
 
 [dependencies]
 downwards-ai.workspace = true
+downwards-audio = { workspace = true, default-features = false }
 downwards-content.workspace = true
 downwards-core.workspace = true
 downwards-gen.workspace = true
 downwards-validation.workspace = true
+serde_json = "=1.0.151"
+
+[lib]
+path = "src/lib.rs"
 
 [[bin]]
 name = "downwards-tools"

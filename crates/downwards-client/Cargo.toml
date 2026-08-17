@@ -7,6 +7,7 @@ license.workspace = true
 
 [dependencies]
 downwards-ai.workspace = true
+downwards-audio = { workspace = true, features = ["live"] }
 downwards-catalogue.workspace = true
 downwards-content.workspace = true
 downwards-core.workspace = true

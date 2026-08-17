@@ -3432,3 +3432,116 @@ const fn ability_tier_tag(tier: AbilityTier) -> u8 {
         AbilityTier::WallJumpAndDash => 3,
     }
 }
+
+/// Severity of a soundtrack sync-lint finding.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MusicSyncSeverity {
+    Warn,
+    Info,
+}
+
+/// One finding from the soundtrack tempo-lock lint (soundtrack spec §9).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MusicSyncFinding {
+    pub severity: MusicSyncSeverity,
+    pub message: String,
+}
+
+/// Run the tempo-grid derivation over one room's timed hazards and report:
+/// a warning when not every hazard can be tempo-locked (designers may be
+/// choosing awkward periods unintentionally — never a hard failure), a
+/// warning when the alignment forces a 32nd-note grid, and an info line with
+/// the chosen BPM so content PRs surface their tempo consequences.
+#[must_use]
+pub fn audit_room_music_sync(
+    slug: &str,
+    hazards: &[downwards_core::TimedHazard],
+    difficulty: downwards_audio::Difficulty,
+) -> Vec<MusicSyncFinding> {
+    let timings: Vec<downwards_audio::HazardTiming> = hazards
+        .iter()
+        .map(|hazard| downwards_audio::HazardTiming {
+            period: hazard.period_ticks(),
+            active: hazard.active_ticks(),
+            phase: hazard.phase_ticks(),
+        })
+        .collect();
+    let choice = downwards_audio::derive_grid(&timings, difficulty);
+    let mut findings = Vec::new();
+    if choice.locked.len() != timings.len() {
+        let unlocked: Vec<String> = (0..timings.len())
+            .filter(|index| !choice.locked.contains(index))
+            .map(|index| format!("#{index} (period {})", timings[index].period))
+            .collect();
+        findings.push(MusicSyncFinding {
+            severity: MusicSyncSeverity::Warn,
+            message: format!(
+                "{slug}: hazards {} cannot be tempo-locked and will sound as off-grid noise",
+                unlocked.join(", ")
+            ),
+        });
+    }
+    if !timings.is_empty() && choice.grid.beat_steps == 8 {
+        findings.push(MusicSyncFinding {
+            severity: MusicSyncSeverity::Warn,
+            message: format!(
+                "{slug}: hazard alignment forces a 32nd-note grid (step {} ticks) — dense but legal",
+                choice.grid.step_ticks
+            ),
+        });
+    }
+    findings.push(MusicSyncFinding {
+        severity: MusicSyncSeverity::Info,
+        message: format!(
+            "{slug}: soundtrack {:.2} BPM (step {} ticks x {}, offset {}), {} of {} hazards locked",
+            choice.grid.bpm(),
+            choice.grid.step_ticks,
+            choice.grid.beat_steps,
+            choice.grid.grid_offset,
+            choice.locked.len(),
+            timings.len()
+        ),
+    });
+    findings
+}
+
+#[cfg(test)]
+mod music_sync_tests {
+    use downwards_core::{Rect, TimedHazard};
+
+    use super::*;
+
+    #[test]
+    fn coprime_periods_warn_and_report_bpm() {
+        let hazards = vec![
+            TimedHazard::new(Rect::new(10, 10, 10, 10), 70, 20, 0).unwrap(),
+            TimedHazard::new(Rect::new(30, 10, 10, 10), 157, 20, 0).unwrap(),
+        ];
+        let findings =
+            audit_room_music_sync("two-clock-fork-c", &hazards, downwards_audio::Difficulty::Hard);
+        assert!(
+            findings
+                .iter()
+                .any(|finding| finding.severity == MusicSyncSeverity::Warn
+                    && finding.message.contains("period 157"))
+        );
+        assert!(
+            findings
+                .iter()
+                .any(|finding| finding.severity == MusicSyncSeverity::Info
+                    && finding.message.contains("BPM"))
+        );
+    }
+
+    #[test]
+    fn fully_locked_rooms_only_report_info() {
+        let hazards = vec![TimedHazard::new(Rect::new(10, 10, 10, 10), 120, 30, 0).unwrap()];
+        let findings =
+            audit_room_music_sync("metronome", &hazards, downwards_audio::Difficulty::Easy);
+        assert!(
+            findings
+                .iter()
+                .all(|finding| finding.severity == MusicSyncSeverity::Info)
+        );
+    }
+}

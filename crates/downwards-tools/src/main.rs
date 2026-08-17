@@ -18,6 +18,9 @@ USAGE:
     downwards-tools solve-first-steps [baseline|wall|dash|all]
     downwards-tools generate <seed> [baseline|wall|dash|all]
     downwards-tools validate-seeds <start-seed> <count> [baseline|wall|dash|all]
+    downwards-tools compose-tracks [--check|--diff|--force] [--slug S] [--print-digests]
+    downwards-tools render-track <slug> [--gloves] [--boots] [--loops N] [--rate 44100] [-o out.wav]
+    downwards-tools render-track --all -o <dir> [--gloves] [--boots] [--loops N] [--rate 44100]
 ";
 
 fn main() -> ExitCode {
@@ -47,6 +50,8 @@ fn run(arguments: Vec<String>) -> Result<ExitCode, Box<dyn Error>> {
             [_, seed, tier] => generate_one(parse_seed(seed)?, parse_tier(tier)?.abilities()),
             _ => Err(format!("invalid generate arguments\n\n{USAGE}").into()),
         },
+        "compose-tracks" => compose_tracks_command(&arguments[1..]),
+        "render-track" => render_track_command(&arguments[1..]),
         "validate-seeds" => match arguments.as_slice() {
             [_, start_seed, count] => validate_seeds(
                 parse_seed(start_seed)?,
@@ -66,6 +71,182 @@ fn run(arguments: Vec<String>) -> Result<ExitCode, Box<dyn Error>> {
 
 fn solve_first_steps(abilities: AbilitySet) -> Result<ExitCode, Box<dyn Error>> {
     solve_and_print(Simulation::with_abilities(first_steps_room(), abilities))
+}
+
+/// `compose-tracks`: run the pure composer over every rooms-v2 room and
+/// write/refresh the checked-in `.track` artifacts plus the generated index,
+/// honouring the hand-tune protection protocol (soundtrack spec §5.3).
+fn compose_tracks_command(arguments: &[String]) -> Result<ExitCode, Box<dyn Error>> {
+    use downwards_tools::tracks::{WriteMode, compose_tracks, generated_index_source, golden_digests};
+
+    let mut mode = WriteMode::Write;
+    let mut slug_filter: Option<String> = None;
+    let mut print_digests = false;
+    let mut iter = arguments.iter();
+    while let Some(argument) = iter.next() {
+        match argument.as_str() {
+            "--check" => mode = WriteMode::Check,
+            "--diff" => mode = WriteMode::Diff,
+            "--force" => mode = WriteMode::Force,
+            "--print-digests" => print_digests = true,
+            "--slug" => {
+                slug_filter = Some(
+                    iter.next()
+                        .ok_or("--slug needs a room slug")?
+                        .clone(),
+                );
+            }
+            other => return Err(format!("unknown compose-tracks argument {other:?}").into()),
+        }
+    }
+
+    let root = downwards_tools::music_inputs::repo_root();
+    let records = downwards_tools::music_inputs::all_room_inputs()?;
+    let rooms: Vec<downwards_audio::RoomMusicInputs> =
+        records.into_iter().map(|record| record.inputs).collect();
+
+    // Sync lint (soundtrack spec §9): surfaced on every run so a content PR
+    // shows the tempo consequences of its hazard periods.
+    for inputs in &rooms {
+        if slug_filter.as_deref().is_some_and(|filter| filter != inputs.slug) {
+            continue;
+        }
+        let room = downwards_content::rooms_v2_room(&inputs.slug)
+            .expect("composer inputs come from catalogue rooms");
+        for finding in downwards_validation::audit_room_music_sync(
+            &inputs.slug,
+            room.timed_hazards(),
+            inputs.difficulty,
+        ) {
+            let tag = match finding.severity {
+                downwards_validation::MusicSyncSeverity::Warn => "warn",
+                downwards_validation::MusicSyncSeverity::Info => "info",
+            };
+            println!("{tag}: {}", finding.message);
+        }
+    }
+
+    let tracks_dir = root.join("crates/downwards-content/tracks/rooms-v2");
+    let report = compose_tracks(&tracks_dir, &rooms, mode, slug_filter.as_deref())?;
+    for (slug, diff) in &report.diffs {
+        println!("--- {slug}\n{diff}");
+    }
+    for slug in &report.forced {
+        eprintln!("WARNING: --force overwrote hand-edited track {slug}");
+    }
+    for slug in &report.protected {
+        println!("protected (hand-edited, not rewritten): {slug}");
+    }
+
+    if matches!(mode, WriteMode::Write | WriteMode::Force) && !report.written.is_empty() {
+        // Regenerate the include_str index over every artifact on disk.
+        let mut slugs: Vec<String> = std::fs::read_dir(&tracks_dir)?
+            .filter_map(|entry| {
+                let name = entry.ok()?.file_name().into_string().ok()?;
+                name.strip_suffix(".track").map(str::to_owned)
+            })
+            .collect();
+        slugs.sort();
+        std::fs::write(
+            root.join("crates/downwards-content/src/generated_tracks.rs"),
+            generated_index_source(&slugs),
+        )?;
+        println!("regenerated generated_tracks.rs ({} tracks)", slugs.len());
+    }
+    if print_digests {
+        let golden_path = root.join("crates/downwards-audio/tests/golden/track-digests-v1.txt");
+        std::fs::create_dir_all(golden_path.parent().expect("golden dir has a parent"))?;
+        std::fs::write(&golden_path, golden_digests(&rooms))?;
+        println!("wrote {}", golden_path.display());
+    }
+
+    println!("{}", report.summary());
+    if mode == WriteMode::Check && report.check_failed() {
+        return Ok(ExitCode::from(3));
+    }
+    Ok(ExitCode::SUCCESS)
+}
+
+/// `render-track`: render a room's track (checked-in artifact if present,
+/// composed on the fly otherwise) to a WAV file for human listening.
+fn render_track_command(arguments: &[String]) -> Result<ExitCode, Box<dyn Error>> {
+    let mut slug: Option<String> = None;
+    let mut all = false;
+    let mut gloves = false;
+    let mut boots = false;
+    let mut loops = 2_u32;
+    let mut rate = 44_100_u32;
+    let mut out: Option<String> = None;
+    let mut iter = arguments.iter();
+    while let Some(argument) = iter.next() {
+        match argument.as_str() {
+            "--all" => all = true,
+            "--gloves" => gloves = true,
+            "--boots" => boots = true,
+            "--loops" => loops = iter.next().ok_or("--loops needs a count")?.parse()?,
+            "--rate" => rate = iter.next().ok_or("--rate needs a sample rate")?.parse()?,
+            "-o" | "--out" => out = Some(iter.next().ok_or("-o needs a path")?.clone()),
+            other if !other.starts_with('-') && slug.is_none() => slug = Some(other.to_owned()),
+            other => return Err(format!("unknown render-track argument {other:?}").into()),
+        }
+    }
+
+    let records = downwards_tools::music_inputs::all_room_inputs()?;
+    let abilities = downwards_audio::AbilityMask { gloves, boots };
+    let selected: Vec<_> = if all {
+        records.iter().collect()
+    } else {
+        let slug = slug.ok_or("render-track needs a slug or --all")?;
+        vec![
+            records
+                .iter()
+                .find(|record| record.inputs.slug == slug)
+                .ok_or_else(|| format!("unknown rooms-v2 slug {slug:?}"))?,
+        ]
+    };
+
+    let root = downwards_tools::music_inputs::repo_root();
+    for record in selected {
+        let inputs = &record.inputs;
+        let artifact = root.join(format!(
+            "crates/downwards-content/tracks/rooms-v2/{}.track",
+            inputs.slug
+        ));
+        let track = match std::fs::read_to_string(&artifact) {
+            Ok(source) => {
+                let (track, _) = downwards_audio::Track::parse(&source)
+                    .map_err(|error| format!("{}: {error}", artifact.display()))?;
+                track.check_hazard_sync(&inputs.hazards)?;
+                track
+            }
+            Err(_) => {
+                eprintln!(
+                    "warning: no checked-in artifact for {}, composing in-memory",
+                    inputs.slug
+                );
+                downwards_audio::compose(inputs)
+            }
+        };
+        let samples = downwards_audio::offline::render(&track, &inputs.hazards, abilities, loops, rate);
+        let path = if all {
+            let directory = out.clone().ok_or("--all needs -o <dir>")?;
+            std::fs::create_dir_all(&directory)?;
+            std::path::PathBuf::from(directory).join(format!("{}.wav", inputs.slug))
+        } else {
+            std::path::PathBuf::from(
+                out.clone().unwrap_or_else(|| format!("{}.wav", inputs.slug)),
+            )
+        };
+        downwards_audio::wav::write(&path, &samples, rate)?;
+        println!(
+            "wrote {} ({:.1}s at {} Hz, {:.2} BPM)",
+            path.display(),
+            samples.len() as f64 / f64::from(rate),
+            rate,
+            track.grid.bpm()
+        );
+    }
+    Ok(ExitCode::SUCCESS)
 }
 
 fn generate_one(seed: u64, abilities: AbilitySet) -> Result<ExitCode, Box<dyn Error>> {

@@ -11,9 +11,11 @@ mod demo_dungeon;
 mod dungeon_v2;
 mod generated_calibration_witnesses;
 mod generated_demo_dungeon_witnesses;
+pub mod generated_tracks;
 mod hard_no_dash;
 mod medium_no_dash;
 mod movement_obstacle_courses;
+mod rooms_v2;
 
 pub use authored_dungeon::{
     AUTHORED_DUNGEON_MAX_COINS, AUTHORED_DUNGEON_SCHEMA_VERSION, AuthoredConnection,
@@ -51,6 +53,7 @@ pub use dungeon_v2::{
     dungeon_v2_definition, dungeon_v2_door_requirement, dungeon_v2_room, dungeon_v2_total_coins,
 };
 pub use generated_demo_dungeon_witnesses::demo_dungeon_witness_actions;
+pub use rooms_v2::{rooms_v2_room, rooms_v2_slugs};
 pub use hard_no_dash::{
     HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET, hard_no_dash_room, hard_no_dash_scenario,
     hard_no_dash_witness_actions,

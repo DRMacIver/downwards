@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/downwards-ai",
+    "crates/downwards-audio",
     "crates/downwards-catalogue",
     "crates/downwards-client",
     "crates/downwards-content",
@@ -20,6 +21,7 @@ license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
 downwards-ai = { path = "crates/downwards-ai" }
+downwards-audio = { path = "crates/downwards-audio", default-features = false }
 downwards-catalogue = { path = "crates/downwards-catalogue" }
 downwards-content = { path = "crates/downwards-content" }
 downwards-core = { path = "crates/downwards-core" }

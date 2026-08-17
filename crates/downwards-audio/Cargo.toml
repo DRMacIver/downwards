@@ -1,15 +1,17 @@
 [package]
-name = "downwards-validation"
+name = "downwards-audio"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
-downwards-ai.workspace = true
-downwards-audio = { workspace = true, default-features = false }
 downwards-core.workspace = true
-downwards-gen.workspace = true
+cpal = { version = "=0.18.2", optional = true }
+
+[features]
+default = ["live"]
+live = ["dep:cpal"]
 
 [lib]
 path = "src/lib.rs"
