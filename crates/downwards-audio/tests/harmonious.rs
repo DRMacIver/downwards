@@ -144,11 +144,13 @@ fn rendered_mix_keeps_headroom() {
 fn percussion_is_sparse_on_easy_rooms() {
     let easy = compose(&inputs("perc-density-easy", Difficulty::Easy, Vec::new()));
     let hard = compose(&inputs("perc-density-hard", Difficulty::Hard, Vec::new()));
+    // Count both noise voices: since v4 the medium/hard groove lives on the
+    // soft `shaker` voice with the crisp `perc` tick kept sparse.
     let count = |track: &downwards_audio::Track| {
         track
             .notes
             .iter()
-            .filter(|note| note.voice == "perc")
+            .filter(|note| note.voice == "perc" || note.voice == "shaker")
             .count()
     };
     let easy_count = count(&easy);

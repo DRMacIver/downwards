@@ -16,13 +16,13 @@
 //!
 //! | Hear... | Means... |
 //! |---|---|
-//! | Mode colour (open / flat-7 / dorian) | difficulty easy / medium / hard |
+//! | Mode colour (mixolydian / dorian / aeolian) | difficulty easy / medium / hard |
 //! | Tonal centre (C/D/E/G) | ability requirement none/wall/dash/both |
 //! | Tempo family | hazard period family (derived, exact) |
 //! | Rising pickup → snare + low stab | a locked hazard arming → firing, on the beat |
 //! | Noise sweep → crash, off the grid | an incommensurate hazard arming → firing |
 //! | Low crackle bed | some timed hazard is live right now |
-//! | Extra triangle/pulse counter-melody | you own gloves/boots AND they matter here |
+//! | Extra pulse counter-melody / riff | you own gloves/boots AND they matter here |
 //! | Busier lead | more coins to find here |
 
 #![forbid(unsafe_code)]

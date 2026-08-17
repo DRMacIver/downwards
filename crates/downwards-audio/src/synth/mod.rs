@@ -3,4 +3,5 @@
 //! conditioning chain.
 
 pub mod mixer;
+pub mod reverb;
 pub mod voice;

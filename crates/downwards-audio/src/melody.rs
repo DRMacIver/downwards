@@ -19,9 +19,11 @@ pub struct DoorSet {
     pub floor: bool,
 }
 
-/// Melody range: C4..=C6 as scale-lattice bounds are enforced in MIDI space.
-const RANGE_LOW_MIDI: u8 = 60;
-const RANGE_HIGH_MIDI: u8 = 84;
+/// Melody range, enforced in MIDI space. Dropped an octave in the v4 vibe
+/// pass (C4..C6 → C3..C5): the old ceiling parked the lead in a piercing
+/// register the designer flagged as "higher than I'd like".
+const RANGE_LOW_MIDI: u8 = 48;
+const RANGE_HIGH_MIDI: u8 = 72;
 
 const LOOP_BARS: u32 = 16;
 
@@ -111,9 +113,22 @@ pub fn generate_melody(
         step + eighth < boundary || step.is_multiple_of(phrase_steps)
     });
 
-    // Force the final note of the loop to the tonic (rule 6).
-    if let Some(last) = placed.last_mut() {
-        last.1 = 0;
+    // Force the final note of the loop to the tonic (rule 6) — since the v4
+    // register drop, in whichever octave is nearest the line's arrival point
+    // so the resolution never leaps.
+    if let Some(position) = placed.len().checked_sub(1) {
+        let previous = position
+            .checked_sub(1)
+            .map_or(placed[position].1, |before| placed[before].1);
+        let previous_midi = i32::from(key.scale_pitch(previous).midi());
+        let tonic = [0, -7]
+            .into_iter()
+            .filter(|&index| in_range_for(key, index))
+            .min_by_key(|&index| {
+                (i32::from(key.scale_pitch(index).midi()) - previous_midi).abs()
+            })
+            .unwrap_or(0);
+        placed[position].1 = tonic;
     }
 
     // Pickups: an eighth-note lower neighbour into a phrase downbeat (and
@@ -296,11 +311,17 @@ impl Walk<'_> {
             }
         }
         // The final phrase downbeat cadences home: stay within a fifth of
-        // the tonic so the forced tonic ending (rule 6) never leaps.
+        // some in-range tonic octave so the forced tonic ending (rule 6)
+        // never leaps.
         if bar == LOOP_BARS as usize - 1 {
-            let tonic_midi = i32::from(self.key.scale_pitch(0).midi());
+            let tonics: Vec<i32> = [0, -7]
+                .into_iter()
+                .filter(|&index| self.in_range(index))
+                .map(|index| i32::from(self.key.scale_pitch(index).midi()))
+                .collect();
             candidates.retain(|&index| {
-                (i32::from(self.key.scale_pitch(index).midi()) - tonic_midi).abs() <= 7
+                let midi = i32::from(self.key.scale_pitch(index).midi());
+                tonics.iter().any(|&tonic| (midi - tonic).abs() <= 7)
             });
         }
         if candidates.is_empty() {

@@ -89,20 +89,38 @@ impl Duty {
 }
 
 /// Oscillator family of a pattern voice.
+///
+/// Format v2 additions: `Pad` (two detuned saws through a low-pass — the
+/// hybrid chip-plus-pad palette of the research survey §5) and `NoiseSoft`
+/// (a darker, longer shaker timbre for groove percussion, where `Noise`
+/// stays the crisp tick).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum VoiceKind {
     Pulse { duty: Duty },
     Triangle,
     Noise,
+    NoiseSoft,
+    Pad,
 }
 
-/// A named pattern voice bound to a layer, with a 0..=15 mixer gain.
+/// Delayed-onset pitch vibrato of a melodic voice (format v2): depth in
+/// cents (0..=50) and rate in deci-Hz (e.g. 55 = 5.5 Hz, 1..=120).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct Vibrato {
+    pub cents: u8,
+    pub rate_dhz: u8,
+}
+
+/// A named pattern voice bound to a layer, with a 0..=15 mixer gain, a
+/// 0..=15 reverb send (format v2, default 0), and optional vibrato.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct VoiceDef {
     pub name: String,
     pub kind: VoiceKind,
     pub layer: String,
     pub gain: u8,
+    pub send: u8,
+    pub vibrato: Option<Vibrato>,
 }
 
 /// One pattern event. `pitch: Some` is a `note` line; `pitch: None` is a
@@ -170,7 +188,7 @@ impl Track {
         let body = self.serialize_body();
         let digest = fnv1a64(canonical_body(&body).as_bytes());
         format!(
-            "downwards-track v1\nslug {}\ngenerated-digest {digest:016x}\nhand-tuned {}\n\n{body}",
+            "downwards-track v2\nslug {}\ngenerated-digest {digest:016x}\nhand-tuned {}\n\n{body}",
             self.slug, self.hand_tuned
         )
     }
@@ -194,23 +212,24 @@ impl Track {
         }
         out.push('\n');
         for voice in &self.voices {
-            match voice.kind {
-                VoiceKind::Pulse { duty } => out.push_str(&format!(
-                    "voice {} pulse {} layer {} gain {}\n",
-                    voice.name,
-                    duty.keyword(),
-                    voice.layer,
-                    voice.gain
-                )),
-                VoiceKind::Triangle => out.push_str(&format!(
-                    "voice {} triangle layer {} gain {}\n",
-                    voice.name, voice.layer, voice.gain
-                )),
-                VoiceKind::Noise => out.push_str(&format!(
-                    "voice {} noise layer {} gain {}\n",
-                    voice.name, voice.layer, voice.gain
-                )),
+            let kind = match voice.kind {
+                VoiceKind::Pulse { duty } => format!("pulse {}", duty.keyword()),
+                VoiceKind::Triangle => "triangle".to_owned(),
+                VoiceKind::Noise => "noise".to_owned(),
+                VoiceKind::NoiseSoft => "noise-soft".to_owned(),
+                VoiceKind::Pad => "pad".to_owned(),
+            };
+            out.push_str(&format!(
+                "voice {} {kind} layer {} gain {}",
+                voice.name, voice.layer, voice.gain
+            ));
+            if voice.send > 0 {
+                out.push_str(&format!(" send {}", voice.send));
             }
+            if let Some(vibrato) = voice.vibrato {
+                out.push_str(&format!(" vib {} {}", vibrato.cents, vibrato.rate_dhz));
+            }
+            out.push('\n');
         }
         out.push('\n');
         for note in &self.notes {
@@ -394,8 +413,10 @@ impl<'a> Parser<'a> {
 
     fn parse(mut self) -> Result<(Track, u64), TrackParseError> {
         let (line, header) = self.expect_line("header")?;
-        if header != "downwards-track v1" {
-            return Err(self.error(line, "expected `downwards-track v1` header"));
+        // v2 added pad voices, per-voice reverb sends, vibrato, the soft
+        // noise timbre, and the aeolian mode; v1 files remain parseable.
+        if header != "downwards-track v2" && header != "downwards-track v1" {
+            return Err(self.error(line, "expected `downwards-track v1|v2` header"));
         }
         let slug = self.keyword_value("slug")?;
         let digest_text = self.keyword_value("generated-digest")?;
@@ -574,19 +595,46 @@ impl<'a> Parser<'a> {
             }
             [name, "triangle", tail @ ..] => (*name, VoiceKind::Triangle, tail),
             [name, "noise", tail @ ..] => (*name, VoiceKind::Noise, tail),
-            _ => return Err(self.error(line, "expected `voice <name> <pulse|triangle|noise> ...`")),
+            [name, "noise-soft", tail @ ..] => (*name, VoiceKind::NoiseSoft, tail),
+            [name, "pad", tail @ ..] => (*name, VoiceKind::Pad, tail),
+            _ => {
+                return Err(self.error(
+                    line,
+                    "expected `voice <name> <pulse|triangle|noise|noise-soft|pad> ...`",
+                ));
+            }
         };
-        let ["layer", layer, "gain", gain] = tail else {
-            return Err(self.error(line, "voice must end with `layer <layer> gain <0..15>`"));
+        let ["layer", layer, "gain", gain, options @ ..] = tail else {
+            return Err(self.error(line, "voice must carry `layer <layer> gain <0..15>`"));
         };
         if !layers.iter().any(|known| known == layer) {
             return Err(self.error(line, format!("voice references undeclared layer {layer:?}")));
+        }
+        // v2 optional suffixes, in fixed order: `send <0..15>`, `vib <cents> <dhz>`.
+        let mut send = 0_u8;
+        let mut vibrato = None;
+        let mut options = options;
+        if let ["send", value, rest @ ..] = options {
+            send = self.parse_number(line, value, 0, 15, "send")? as u8;
+            options = rest;
+        }
+        if let ["vib", cents, rate, rest @ ..] = options {
+            vibrato = Some(Vibrato {
+                cents: self.parse_number(line, cents, 1, 50, "vibrato cents")? as u8,
+                rate_dhz: self.parse_number(line, rate, 1, 120, "vibrato rate")? as u8,
+            });
+            options = rest;
+        }
+        if !options.is_empty() {
+            return Err(self.error(line, format!("trailing voice tokens {options:?}")));
         }
         Ok(VoiceDef {
             name: name.to_owned(),
             kind,
             layer: (*layer).to_owned(),
             gain: self.parse_number(line, gain, 0, 15, "gain")? as u8,
+            send,
+            vibrato,
         })
     }
 

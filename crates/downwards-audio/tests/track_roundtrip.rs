@@ -101,14 +101,23 @@ fn parser_rejects_malformed_tracks() {
     let bad_layer = text.replace("layer base gain 7", "layer wings gain 7");
     assert!(parse_error(&bad_layer).contains("undeclared layer"));
 
-    // Out-of-range velocity.
+    // Out-of-range velocity / step (edit an existing hat line so section
+    // order stays legal; find one instead of hard-coding the pattern).
     let (_, _) = Track::parse(&text).unwrap();
-    let bad_vel = text.replace("hat perc 1 4", "hat perc 1 99");
+    let hat_line = text
+        .lines()
+        .find(|line| line.starts_with("hat "))
+        .expect("composed tracks carry hats")
+        .to_owned();
+    let parts: Vec<&str> = hat_line.split_whitespace().collect();
+    let bad_vel = text.replace(
+        &hat_line,
+        &format!("hat {} {} 99", parts[1], parts[2]),
+    );
     assert!(parse_error(&bad_vel).contains("velocity"));
 
-    // Out-of-range step (edit an existing hat so section order stays legal).
     assert!(track.grid.loop_steps() < 999);
-    let bad_step = text.replace("hat perc 1 4", "hat perc 999 4");
+    let bad_step = text.replace(&hat_line, &format!("hat {} 999 {}", parts[1], parts[3]));
     assert!(parse_error(&bad_step).contains("start-step"));
 
     // Directives after the hazard section violate the fixed section order.

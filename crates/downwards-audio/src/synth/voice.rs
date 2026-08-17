@@ -77,6 +77,42 @@ impl NoiseLfsr {
     }
 }
 
+/// The pad voice (format v2): two saw oscillators detuned ±0.4 % averaged
+/// through a one-pole low-pass — a soft, slowly beating sustain layer under
+/// the chip voices. Sample-at-a-time and bit-identical like everything else.
+#[derive(Clone, Debug, Default)]
+pub struct PadOsc {
+    phase_a: f64,
+    phase_b: f64,
+    low_pass: f32,
+}
+
+impl PadOsc {
+    /// Low-pass cutoff: dark enough to sit under the pulses, bright enough
+    /// to read as harmony rather than rumble.
+    const CUTOFF_HZ: f64 = 950.0;
+    const DETUNE: f64 = 0.004;
+
+    pub fn next(&mut self, frequency_hz: f64, sample_rate: f64) -> f32 {
+        let saw_a = (self.phase_a * 2.0 - 1.0) as f32;
+        let saw_b = (self.phase_b * 2.0 - 1.0) as f32;
+        self.phase_a += frequency_hz * (1.0 + Self::DETUNE) / sample_rate;
+        self.phase_b += frequency_hz * (1.0 - Self::DETUNE) / sample_rate;
+        if self.phase_a >= 1.0 {
+            self.phase_a -= self.phase_a.floor();
+        }
+        if self.phase_b >= 1.0 {
+            self.phase_b -= self.phase_b.floor();
+        }
+        let input = (saw_a + saw_b) * 0.5;
+        let alpha = (1.0
+            - (-2.0 * std::f64::consts::PI * Self::CUTOFF_HZ / sample_rate).exp())
+            as f32;
+        self.low_pass += alpha * (input - self.low_pass);
+        self.low_pass
+    }
+}
+
 /// A raised-cosine ramp between gain targets; retargeting mid-ramp restarts
 /// the cosine from the current value, so it can never pop.
 #[derive(Clone, Debug)]

@@ -296,11 +296,16 @@ fn loop_seam_is_intentional() {
         }
         let lead = voice_notes(&track, "lead");
         let last = lead.last().expect("lead is non-empty");
-        let tonic = track.key.tonic_in_octave(4).midi();
         let last_midi = last.pitch.expect("lead is pitched").midi();
+        // v4: the resolution lands on the tonic in whichever octave the line
+        // arrives at (3 or 4), or a pickup just below it.
+        let resolves = [3, 4].iter().any(|&octave| {
+            let tonic = track.key.tonic_in_octave(octave).midi();
+            last_midi == tonic || (tonic.saturating_sub(4)..tonic).contains(&last_midi)
+        });
         assert!(
-            last_midi == tonic || (tonic.saturating_sub(4)..tonic).contains(&last_midi),
-            "{}: loop ends on {last_midi}, neither tonic {tonic} nor a pickup below it",
+            resolves,
+            "{}: loop ends on {last_midi}, neither a tonic octave nor a pickup below one",
             room.slug
         );
     }

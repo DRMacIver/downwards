@@ -98,13 +98,15 @@ impl fmt::Display for Pitch {
     }
 }
 
-/// The three modes used by the difficulty ladder (§6.1 of the soundtrack
-/// spec): easy = Ionian, medium = Mixolydian, hard = Dorian.
+/// The modes used by the difficulty ladder (§6.1 of the soundtrack spec,
+/// darkened in the v4 vibe pass): easy = Mixolydian, medium = Dorian,
+/// hard = Aeolian. Ionian remains parseable for hand-tuned v1 artifacts.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Mode {
     Ionian,
     Mixolydian,
     Dorian,
+    Aeolian,
 }
 
 impl Mode {
@@ -115,6 +117,7 @@ impl Mode {
             Self::Ionian => [0, 2, 4, 5, 7, 9, 11],
             Self::Mixolydian => [0, 2, 4, 5, 7, 9, 10],
             Self::Dorian => [0, 2, 3, 5, 7, 9, 10],
+            Self::Aeolian => [0, 2, 3, 5, 7, 8, 10],
         }
     }
 
@@ -124,6 +127,7 @@ impl Mode {
             Self::Ionian => "ionian",
             Self::Mixolydian => "mixolydian",
             Self::Dorian => "dorian",
+            Self::Aeolian => "aeolian",
         }
     }
 
@@ -133,6 +137,7 @@ impl Mode {
             "ionian" => Some(Self::Ionian),
             "mixolydian" => Some(Self::Mixolydian),
             "dorian" => Some(Self::Dorian),
+            "aeolian" => Some(Self::Aeolian),
             _ => None,
         }
     }

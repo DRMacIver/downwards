@@ -13,7 +13,8 @@
 use crate::{
     synth::{
         mixer::{DcBlocker, soft_clip},
-        voice::{CosRamp, GateEnv, NoiseLfsr, PulseOsc, TriangleOsc},
+        reverb::Reverb,
+        voice::{CosRamp, GateEnv, NoiseLfsr, PadOsc, PulseOsc, TriangleOsc},
     },
     tempo::HazardTiming,
     theory::Key,
@@ -56,10 +57,18 @@ const PRE_GAIN: f32 = 0.38;
 /// edges bloom instead of clicking.
 const ATTACK_SECONDS: f64 = 0.006;
 const RELEASE_SECONDS: f64 = 0.05;
-/// The pooled hazard stab keeps a crisp percussive envelope so wind-up notes
-/// and fires stay rhythmically legible against the softened pattern voices.
-const STAB_ATTACK_SECONDS: f64 = 0.002;
-const STAB_RELEASE_SECONDS: f64 = 0.012;
+/// Pad voices bloom and linger much more slowly than the chip voices.
+const PAD_ATTACK_SECONDS: f64 = 0.09;
+const PAD_RELEASE_SECONDS: f64 = 0.30;
+/// The pooled hazard stab keeps a percussive envelope so wind-up notes and
+/// fires stay rhythmically legible; softened in the v4 de-clack pass (the
+/// 2 ms attack pluck repeating every hazard period read as mechanical
+/// clacking) while staying fast enough to telegraph the beat.
+const STAB_ATTACK_SECONDS: f64 = 0.004;
+const STAB_RELEASE_SECONDS: f64 = 0.03;
+/// Vibrato onset: silent for the delay, then depth ramps in.
+const VIBRATO_DELAY_SECONDS: f64 = 0.12;
+const VIBRATO_RAMP_SECONDS: f64 = 0.15;
 /// Layer enable/disable ramp (§7.4).
 const LAYER_RAMP_SECONDS: f64 = 0.4;
 /// Bed gate and hard-reset fade time (§6.6, §7.3).
@@ -67,6 +76,9 @@ const SHORT_RAMP_SECONDS: f64 = 0.005;
 
 /// Noise timbre parameters: (clock Hz, short mode, decay time constant s).
 const HAT_NOISE: (f64, bool, f64) = (12_000.0, false, 0.025);
+/// The `noise-soft` shaker (v4 de-clack): darker clock, longer decay — a
+/// brushed texture where the hat is a tick.
+const SHAKER_NOISE: (f64, bool, f64) = (4_200.0, false, 0.09);
 const SNARE_NOISE: (f64, bool, f64) = (6_000.0, false, 0.06);
 const CRASH_NOISE: (f64, bool, f64) = (3_000.0, false, 0.2);
 const BED_NOISE: (f64, bool) = (1_400.0, true);
@@ -75,7 +87,7 @@ const SWEEP_HIGH_HZ: f64 = 8_000.0;
 
 /// Pooled hazard voice gains (§6.3). Softened 2026-08: hazard voices blend
 /// into the mix — still audibly telegraphing timing, no longer dominating.
-const STAB_GAIN: f32 = 10.0 / 15.0;
+const STAB_GAIN: f32 = 8.0 / 15.0;
 const SNARE_GAIN: f32 = 10.0 / 15.0;
 const CRASH_GAIN: f32 = 9.0 / 15.0;
 const HIT_VEL: f32 = 12.0 / 15.0;
@@ -97,16 +109,24 @@ struct MelVoice {
     kind: VoiceKind,
     layer: usize,
     gain: f32,
+    /// Reverb-send fraction 0..=1 of the voice's post-gain signal.
+    send: f32,
+    /// Delayed vibrato: (depth as a frequency ratio deviation, rate Hz).
+    vibrato: Option<(f64, f64)>,
     pulse: PulseOsc,
     triangle: TriangleOsc,
+    pad: PadOsc,
     noise: NoiseLfsr,
     env: GateEnv,
     frequency_hz: f64,
     level: f32,
     gated: bool,
+    note_on_sample: u64,
     off_sample: u64,
     shot_amp: f32,
     shot_decay: f32,
+    shot_clock_hz: f64,
+    shot_short: bool,
 }
 
 impl MelVoice {
@@ -115,17 +135,37 @@ impl MelVoice {
             kind,
             layer,
             gain,
+            send: 0.0,
+            vibrato: None,
             pulse: PulseOsc::default(),
             triangle: TriangleOsc::default(),
+            pad: PadOsc::default(),
             noise: NoiseLfsr::default(),
             env: GateEnv::default(),
             frequency_hz: 440.0,
             level: 0.0,
             gated: false,
+            note_on_sample: 0,
             off_sample: 0,
             shot_amp: 0.0,
             shot_decay: 0.0,
+            shot_clock_hz: HAT_NOISE.0,
+            shot_short: HAT_NOISE.1,
         }
+    }
+
+    /// The voice's current oscillator frequency including delayed vibrato.
+    fn vibrato_frequency(&self, cursor: u64, sample_rate: f64) -> f64 {
+        let Some((depth, rate_hz)) = self.vibrato else {
+            return self.frequency_hz;
+        };
+        let elapsed = cursor.saturating_sub(self.note_on_sample) as f64 / sample_rate;
+        let ramp = ((elapsed - VIBRATO_DELAY_SECONDS) / VIBRATO_RAMP_SECONDS).clamp(0.0, 1.0);
+        if ramp <= 0.0 {
+            return self.frequency_hz;
+        }
+        let lfo = (std::f64::consts::TAU * rate_hz * elapsed).sin();
+        self.frequency_hz * (1.0 + depth * ramp * lfo)
     }
 }
 
@@ -199,6 +239,7 @@ pub struct Sequencer {
     sweeps: Vec<Sweep>,
     bed: NoiseLfsr,
     bed_ramp: CosRamp,
+    reverb: Reverb,
     fade_in: CosRamp,
     dc: DcBlocker,
     cursor: u64,
@@ -217,11 +258,18 @@ impl Sequencer {
                 .iter()
                 .position(|name| *name == definition.layer)
                 .expect("parsed tracks only reference declared layers");
-            voices.push(MelVoice::new(
+            let mut voice = MelVoice::new(
                 definition.kind,
                 layer,
                 f32::from(definition.gain) / 15.0,
-            ));
+            );
+            voice.send = f32::from(definition.send) / 15.0;
+            voice.vibrato = definition.vibrato.map(|vibrato| {
+                // cents → frequency-ratio deviation: 2^(c/1200) − 1.
+                let depth = 2.0_f64.powf(f64::from(vibrato.cents) / 1200.0) - 1.0;
+                (depth, f64::from(vibrato.rate_dhz) / 10.0)
+            });
+            voices.push(voice);
         }
 
         let mut step_events: Vec<Vec<PatternNote>> =
@@ -232,7 +280,10 @@ impl Sequencer {
                 .iter()
                 .position(|definition| definition.name == note.voice)
                 .expect("parsed tracks only reference declared voices");
-            let is_noise = matches!(track.voices[voice_index].kind, VoiceKind::Noise);
+            let is_noise = matches!(
+                track.voices[voice_index].kind,
+                VoiceKind::Noise | VoiceKind::NoiseSoft
+            );
             step_events[note.start_step as usize].push(PatternNote {
                 voice: voice_index,
                 frequency_hz: note.pitch.map_or(0.0, |pitch| pitch.frequency_hz()),
@@ -290,6 +341,7 @@ impl Sequencer {
             sweeps,
             bed: NoiseLfsr::default(),
             bed_ramp: CosRamp::new(0.0),
+            reverb: Reverb::new(sample_rate),
             fade_in: CosRamp::new(1.0),
             dc: DcBlocker::default(),
             cursor: 0,
@@ -385,6 +437,7 @@ impl Sequencer {
             sweep.active = false;
         }
         self.bed_ramp.snap(0.0);
+        self.reverb.reset();
         self.fade_in.snap(0.0);
         self.fade_in
             .set_target(1.0, SHORT_RAMP_SECONDS * f64::from(self.sample_rate));
@@ -521,14 +574,21 @@ impl Sequencer {
     fn trigger_pattern_note(&mut self, note: &PatternNote, tick: u64) {
         let voice = &mut self.voices[note.voice];
         if note.is_hat {
-            // Noise voices are one-shots with a fixed hat timbre.
+            // Noise voices are one-shots; the timbre follows the voice kind.
+            let params = match voice.kind {
+                VoiceKind::NoiseSoft => SHAKER_NOISE,
+                _ => HAT_NOISE,
+            };
             voice.shot_amp = note.level * voice.gain;
+            voice.shot_clock_hz = params.0;
+            voice.shot_short = params.1;
             voice.shot_decay =
-                (-1.0 / (HAT_NOISE.2 * f64::from(self.sample_rate))).exp() as f32;
+                (-1.0 / (params.2 * f64::from(self.sample_rate))).exp() as f32;
         } else {
             voice.frequency_hz = note.frequency_hz;
             voice.level = note.level;
             voice.gated = true;
+            voice.note_on_sample = sample_index_for_tick(tick, self.sample_rate);
             voice.off_sample =
                 sample_index_for_tick(tick + note.len_ticks, self.sample_rate);
         }
@@ -555,48 +615,61 @@ impl Sequencer {
             layer_gains[index] = ramp.advance();
         }
 
+        let pad_attack = (1.0 / (PAD_ATTACK_SECONDS * rate)) as f32;
+        let pad_release = (1.0 / (PAD_RELEASE_SECONDS * rate)) as f32;
+
         let cursor = self.cursor;
         let mut mix = 0.0_f32;
+        // The reverb-send bus: each voice contributes `send` × its post-gain
+        // signal; the bus feeds one shared Schroeder reverb (format v2).
+        let mut send_bus = 0.0_f32;
         for voice in &mut self.voices {
             if voice.gated && cursor >= voice.off_sample {
                 voice.gated = false;
             }
             let layer_gain = layer_gains[voice.layer];
+            let mut value = 0.0_f32;
             match voice.kind {
-                VoiceKind::Noise => {
+                VoiceKind::Noise | VoiceKind::NoiseSoft => {
                     if voice.shot_amp > 1.0e-4 {
-                        let value =
+                        let sample =
                             voice
                                 .noise
-                                .next(HAT_NOISE.0, HAT_NOISE.1, rate);
-                        mix += value * voice.shot_amp * layer_gain;
+                                .next(voice.shot_clock_hz, voice.shot_short, rate);
+                        value = sample * voice.shot_amp * layer_gain;
                         voice.shot_amp *= voice.shot_decay;
                     }
                 }
                 VoiceKind::Pulse { duty } => {
                     let target = if voice.gated { voice.level } else { 0.0 };
                     let amp = voice.env.next(target, attack, release);
+                    let frequency = voice.vibrato_frequency(cursor, rate);
+                    let sample = voice.pulse.next(frequency, duty.fraction(), rate);
                     if amp > 0.0 {
-                        let value =
-                            voice
-                                .pulse
-                                .next(voice.frequency_hz, duty.fraction(), rate);
-                        mix += value * amp * voice.gain * layer_gain;
-                    } else {
-                        voice.pulse.next(voice.frequency_hz, duty.fraction(), rate);
+                        value = sample * amp * voice.gain * layer_gain;
                     }
                 }
                 VoiceKind::Triangle => {
                     let target = if voice.gated { voice.level } else { 0.0 };
                     let amp = voice.env.next(target, attack, release);
+                    let frequency = voice.vibrato_frequency(cursor, rate);
+                    let sample = voice.triangle.next(frequency, rate);
                     if amp > 0.0 {
-                        let value = voice.triangle.next(voice.frequency_hz, rate);
-                        mix += value * amp * voice.gain * layer_gain;
-                    } else {
-                        voice.triangle.next(voice.frequency_hz, rate);
+                        value = sample * amp * voice.gain * layer_gain;
+                    }
+                }
+                VoiceKind::Pad => {
+                    let target = if voice.gated { voice.level } else { 0.0 };
+                    let amp = voice.env.next(target, pad_attack, pad_release);
+                    let frequency = voice.vibrato_frequency(cursor, rate);
+                    let sample = voice.pad.next(frequency, rate);
+                    if amp > 0.0 {
+                        value = sample * amp * voice.gain * layer_gain;
                     }
                 }
             }
+            mix += value;
+            send_bus += value * voice.send;
         }
 
         // Pooled hazard stab (base layer).
@@ -638,6 +711,9 @@ impl Sequencer {
         } else {
             self.bed.next(BED_NOISE.0, BED_NOISE.1, rate);
         }
+
+        // The reverb always runs so its state never depends on block sizes.
+        mix += self.reverb.next(send_bus);
 
         let faded = mix * self.fade_in.advance();
         self.dc.next(soft_clip(faded * PRE_GAIN))

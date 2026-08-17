@@ -1,302 +1,317 @@
-downwards-track v1
+downwards-track v2
 slug one-way-loop-b
-generated-digest 5caf025a802e4e36
+generated-digest 1d8c079033ed064f
 hand-tuned false
 
 grid step-ticks 15 beat-steps 2 offset 0 loop-bars 16
-key E mixolydian
+key E dorian
 
 layer base
 layer boots
 
-voice lead pulse 0.5 layer base gain 7
-voice arp pulse 0.5 layer base gain 5
-voice bass triangle layer base gain 10
+voice lead pulse 0.5 layer base gain 7 send 4 vib 8 55
+voice arp pulse 0.5 layer base gain 4 send 3
+voice pad pad layer base gain 6 send 11
+voice bass triangle layer base gain 8
 voice perc noise layer base gain 3
-voice boots-arp pulse 0.125 layer boots gain 5
+voice shaker noise-soft layer base gain 4
+voice boots-arp pulse 0.25 layer boots gain 8 send 4
 
-note lead 0 2 E4 12
-note lead 2 1 F#4 9
-note lead 3 2 G#4 9
-note lead 6 1 D4 9
-note lead 7 1 E4 9
-note lead 8 1 G#4 12
-note lead 9 1 F#4 9
-note lead 10 1 E4 9
-note lead 11 1 F#4 9
+note lead 0 1 E4 13
+note lead 1 1 F#4 11
+note lead 2 2 B4 13
+note lead 5 1 G4 10
+note lead 6 1 A4 11
+note lead 7 1 B4 10
+note lead 8 1 B4 13
+note lead 9 1 G4 10
+note lead 10 1 E4 10
+note lead 11 1 F#4 10
 note lead 12 1 E4 9
-note lead 13 2 G#4 9
 note lead 16 2 B4 12
-note lead 19 1 C#5 9
-note lead 20 1 D5 9
-note lead 21 2 C#5 9
-note lead 23 1 D5 9
-note lead 24 2 G#4 12
-note lead 26 2 C#5 9
-note lead 28 1 A4 9
-note lead 29 2 B4 9
-note lead 32 1 F#4 12
-note lead 33 2 G#4 9
-note lead 36 1 A4 9
-note lead 37 1 G#4 9
-note lead 38 2 E4 9
-note lead 40 1 F#4 12
-note lead 41 1 G#4 9
-note lead 42 1 E4 9
-note lead 43 2 F#4 9
-note lead 48 2 A4 12
-note lead 50 2 G#4 9
-note lead 54 1 A4 9
-note lead 55 1 B4 9
-note lead 56 1 D5 12
-note lead 57 1 C#5 9
-note lead 58 2 A4 9
-note lead 61 2 G#4 9
-note lead 64 2 A4 12
-note lead 68 1 D5 9
-note lead 69 1 C#5 9
-note lead 70 2 B4 9
-note lead 72 1 A4 12
-note lead 73 1 B4 9
-note lead 74 1 A4 9
-note lead 75 2 G#4 9
-note lead 77 2 B4 9
-note lead 80 2 E4 12
-note lead 85 1 D4 9
-note lead 86 1 G#4 9
-note lead 87 1 F#4 9
-note lead 88 1 C#4 12
-note lead 89 1 D4 9
-note lead 90 2 G#4 9
-note lead 92 2 F#4 9
-note lead 94 1 C#4 9
-note lead 95 1 D4 9
-note lead 96 1 E4 12
-note lead 97 2 F#4 9
-note lead 99 2 G#4 9
-note lead 103 1 B4 9
-note lead 104 1 E4 12
-note lead 105 2 F#4 9
-note lead 111 1 E4 9
-note lead 112 2 E4 12
-note lead 114 1 F#4 9
-note lead 115 2 D4 9
-note lead 118 1 E4 9
-note lead 119 1 D4 9
-note lead 120 1 E4 12
-note lead 121 1 D4 9
-note lead 122 1 E4 9
-note lead 123 1 F#4 9
-note lead 124 1 G#4 9
-note lead 125 1 A4 9
-note lead 126 2 E4 9
-note arp 0 2 E3 6
-note arp 2 2 G#3 6
+note lead 18 1 G4 8
+note lead 19 1 A4 9
+note lead 20 2 B4 8
+note lead 22 2 A4 9
+note lead 24 1 B4 11
+note lead 25 2 G4 8
+note lead 27 1 F#4 9
+note lead 28 3 G4 8
+note lead 32 2 B4 14
+note lead 35 1 A4 11
+note lead 36 1 B4 10
+note lead 37 2 G4 10
+note lead 39 1 F#4 11
+note lead 40 1 B4 13
+note lead 41 1 G4 9
+note lead 42 2 B4 9
+note lead 48 1 G4 11
+note lead 49 2 F#4 9
+note lead 53 1 G4 8
+note lead 54 1 D4 8
+note lead 55 1 E4 9
+note lead 56 1 G4 11
+note lead 57 2 A4 9
+note lead 60 2 G4 8
+note lead 64 1 D4 13
+note lead 67 1 G4 13
+note lead 68 1 F#4 10
+note lead 69 2 E4 11
+note lead 71 1 D4 10
+note lead 72 1 D4 13
+note lead 73 1 C#4 11
+note lead 74 2 D4 10
+note lead 76 1 E4 10
+note lead 80 2 A3 12
+note lead 84 1 G3 9
+note lead 85 1 F#3 8
+note lead 86 1 G3 9
+note lead 87 1 B3 9
+note lead 88 1 F#3 11
+note lead 89 2 G3 9
+note lead 91 2 E3 9
+note lead 93 1 D3 8
+note lead 94 1 E3 9
+note lead 96 2 E3 11
+note lead 98 2 D3 9
+note lead 102 1 E3 8
+note lead 103 1 F#3 9
+note lead 104 2 E3 11
+note lead 110 2 D3 10
+note lead 112 1 E3 12
+note lead 113 1 F#3 10
+note lead 114 2 D3 11
+note lead 117 1 E3 10
+note lead 118 1 D3 11
+note lead 119 1 G3 10
+note lead 120 1 E3 13
+note lead 121 1 A3 11
+note lead 122 1 B3 13
+note lead 123 1 A3 11
+note lead 124 1 B3 10
+note lead 125 1 A3 11
+note lead 126 1 E3 10
+note arp 0 2 E3 7
+note arp 2 2 E4 5
 note arp 4 2 B3 6
-note arp 6 2 E3 6
-note bass 0 4 E2 10
-note bass 4 4 B2 10
-hat perc 1 4
-hat perc 3 4
-hat perc 4 6
-hat perc 5 4
-hat perc 7 4
-note boots-arp 6 1 E4 6
-note boots-arp 7 1 G#4 6
-note arp 8 2 E3 6
-note arp 10 2 G#3 6
+note arp 6 2 G3 5
+note pad 0 16 E3 9
+note bass 0 4 E2 11
+note bass 4 1 B2 8
+note bass 5 1 E2 7
+note bass 6 2 B2 9
+hat shaker 1 3
+hat shaker 3 4
+hat shaker 5 3
+hat shaker 6 4
+note boots-arp 6 1 E3 5
+note boots-arp 7 1 G3 6
+note arp 8 2 E3 7
+note arp 10 2 E4 5
 note arp 12 2 B3 6
-note arp 14 2 E3 6
-note bass 8 4 E2 10
-note bass 12 4 B2 10
-hat perc 9 4
-hat perc 11 4
+note arp 14 2 G3 5
+note bass 8 4 E2 11
+note bass 12 1 B2 8
+note bass 13 1 E2 7
+note bass 14 2 B2 9
+hat shaker 9 4
+hat shaker 11 3
 hat perc 12 6
-hat perc 13 4
-hat perc 15 4
-note boots-arp 14 1 E4 6
-note boots-arp 15 1 G#4 6
-note arp 16 2 E3 6
-note arp 18 2 G#3 6
+hat shaker 14 4
+note boots-arp 14 1 E3 5
+note boots-arp 15 1 G3 6
+note arp 16 2 E3 7
+note arp 18 2 E4 5
 note arp 20 2 B3 6
-note arp 22 2 E3 6
-note bass 16 4 E2 10
-note bass 20 4 B2 10
-hat perc 17 4
-hat perc 19 4
-hat perc 20 6
-hat perc 21 4
-hat perc 23 4
-note boots-arp 22 1 E4 6
-note boots-arp 23 1 G#4 6
-note arp 24 2 E3 6
-note arp 26 2 G#3 6
+note arp 22 2 G3 5
+note pad 16 16 E3 9
+note bass 16 4 E2 11
+note bass 20 1 B2 8
+note bass 21 1 E2 7
+note bass 22 2 B2 9
+hat shaker 17 3
+hat shaker 19 4
+hat shaker 21 3
+hat shaker 22 4
+note boots-arp 22 1 E3 5
+note boots-arp 23 1 G3 6
+note arp 24 2 E3 7
+note arp 26 2 E4 5
 note arp 28 2 B3 6
-note arp 30 2 E3 6
-note bass 24 4 E2 10
-note bass 28 4 B2 10
-hat perc 25 4
-hat perc 27 4
+note arp 30 2 G3 5
+note bass 24 4 E2 11
+note bass 28 1 B2 8
+note bass 29 1 E2 7
+note bass 30 1 E2 8
+note bass 31 1 F#2 9
+hat shaker 25 4
+hat shaker 27 3
 hat perc 28 6
-hat perc 29 4
-hat perc 31 4
-note boots-arp 30 1 E4 6
-note boots-arp 31 1 G#4 6
-note arp 32 2 D3 6
-note arp 34 2 F#3 6
-note arp 36 2 A3 6
-note arp 38 2 D3 6
-note bass 32 4 D2 10
-note bass 36 4 A2 10
-hat perc 33 4
-hat perc 35 4
-hat perc 36 6
-hat perc 37 4
-hat perc 39 4
-note boots-arp 38 1 D4 6
-note boots-arp 39 1 F#4 6
-note arp 40 2 D3 6
-note arp 42 2 F#3 6
-note arp 44 2 A3 6
-note arp 46 2 D3 6
-note bass 40 4 D2 10
-note bass 44 4 A2 10
-hat perc 41 4
-hat perc 43 4
+hat shaker 30 4
+note boots-arp 30 1 E3 5
+note boots-arp 31 1 G3 6
+note arp 32 2 G3 7
+note arp 34 2 G4 5
+note arp 36 2 D4 6
+note arp 38 2 B3 5
+note pad 32 16 G3 9
+note bass 32 4 G2 11
+note bass 36 1 D3 8
+note bass 37 1 G2 7
+note bass 38 2 D3 9
+hat shaker 33 3
+hat shaker 35 4
+hat shaker 37 3
+hat shaker 38 4
+note boots-arp 38 1 G3 5
+note boots-arp 39 1 B3 6
+note arp 40 2 G3 7
+note arp 42 2 G4 5
+note arp 44 2 D4 6
+note arp 46 2 B3 5
+note bass 40 4 G2 11
+note bass 44 1 D3 8
+note bass 45 1 G2 7
+note bass 46 2 D3 9
+hat shaker 41 4
+hat shaker 43 3
 hat perc 44 6
-hat perc 45 4
-hat perc 47 4
-note boots-arp 46 1 D4 6
-note boots-arp 47 1 F#4 6
-note arp 48 2 D3 6
-note arp 50 2 F#3 6
-note arp 52 2 A3 6
-note arp 54 2 D3 6
-note bass 48 4 D2 10
-note bass 52 4 A2 10
-hat perc 49 4
-hat perc 51 4
-hat perc 52 6
-hat perc 53 4
-hat perc 55 4
-note boots-arp 54 1 D4 6
-note boots-arp 55 1 F#4 6
-note arp 56 2 D3 6
-note arp 58 2 F#3 6
-note arp 60 2 A3 6
-note arp 62 2 D3 6
-note bass 56 4 D2 10
-note bass 60 4 A2 10
-hat perc 57 4
-hat perc 59 4
+hat shaker 46 4
+note boots-arp 46 1 G3 5
+note boots-arp 47 1 B3 6
+note arp 48 2 G3 7
+note arp 50 2 G4 5
+note arp 52 2 D4 6
+note arp 54 2 B3 5
+note pad 48 16 G3 9
+note bass 48 4 G2 11
+note bass 52 1 D3 8
+note bass 53 1 G2 7
+note bass 54 2 D3 9
+hat shaker 49 3
+hat shaker 51 4
+hat shaker 53 3
+hat shaker 54 4
+note boots-arp 54 1 G3 5
+note boots-arp 55 1 B3 6
+note arp 56 2 G3 7
+note arp 58 2 G4 5
+note arp 60 2 D4 6
+note arp 62 2 B3 5
+note bass 56 4 G2 11
+note bass 60 1 D3 8
+note bass 61 1 G2 7
+note bass 62 1 B2 8
+note bass 63 1 C#3 9
+hat shaker 57 4
+hat shaker 59 3
 hat perc 60 6
-hat perc 61 4
-hat perc 63 4
-note boots-arp 62 1 D4 6
-note boots-arp 63 1 F#4 6
-note arp 64 2 A3 6
-note arp 66 2 C#4 6
-note arp 68 2 E4 6
-note arp 70 2 A3 6
-note bass 64 4 A2 10
-note bass 68 4 E3 10
-hat perc 65 4
-hat perc 67 4
-hat perc 68 6
-hat perc 69 4
-hat perc 71 4
-note boots-arp 70 1 A4 6
-note boots-arp 71 1 C#5 6
-note arp 72 2 A3 6
-note arp 74 2 C#4 6
-note arp 76 2 E4 6
-note arp 78 2 A3 6
-note bass 72 4 A2 10
-note bass 76 4 E3 10
-hat perc 73 4
-hat perc 75 4
-hat perc 76 6
-hat perc 77 4
-hat perc 79 4
-note boots-arp 78 1 A4 6
-note boots-arp 79 1 C#5 6
-note arp 80 2 A3 6
-note arp 82 2 C#4 6
-note arp 84 2 E4 6
-note arp 86 2 A3 6
-note bass 80 4 A2 10
-note bass 84 4 E3 10
-hat perc 81 4
-hat perc 83 4
-hat perc 84 6
-hat perc 85 4
-hat perc 87 4
-note boots-arp 86 1 A4 6
-note boots-arp 87 1 C#5 6
-note arp 88 2 A3 6
-note arp 90 2 C#4 6
-note arp 92 2 E4 6
-note arp 94 2 A3 6
-note bass 88 4 A2 10
-note bass 92 4 E3 10
-hat perc 89 4
-hat perc 91 4
+hat shaker 62 4
+note boots-arp 62 1 G3 5
+note boots-arp 63 1 B3 6
+note pad 64 16 D3 9
+note bass 64 4 D3 7
+note bass 68 4 A2 6
+hat shaker 66 3
+hat shaker 70 3
+note bass 72 4 D3 7
+note bass 76 4 A2 6
+hat shaker 74 3
+hat shaker 78 3
+note arp 80 2 D3 7
+note arp 82 2 D4 5
+note arp 84 2 A3 6
+note arp 86 2 F#3 5
+note pad 80 16 D3 9
+note bass 80 2 D3 11
+note bass 82 2 A2 8
+note bass 84 2 D3 9
+note bass 86 1 A2 8
+note bass 87 1 D3 7
+hat shaker 81 4
+hat shaker 83 3
+hat perc 84 5
+hat shaker 85 4
+hat shaker 87 3
+note boots-arp 86 1 D3 5
+note boots-arp 87 1 F#3 6
+note arp 88 2 D3 7
+note arp 90 2 D4 5
+note arp 92 2 A3 6
+note arp 94 2 F#3 5
+note bass 88 2 D3 11
+note bass 90 2 A2 8
+note bass 92 2 D3 9
+note bass 94 1 C#2 8
+note bass 95 1 D2 9
+hat shaker 89 4
+hat shaker 91 3
 hat perc 92 6
-hat perc 93 4
-hat perc 95 4
-note boots-arp 94 1 A4 6
-note boots-arp 95 1 C#5 6
-note arp 96 2 E3 6
-note arp 98 2 G#3 6
-note arp 100 2 B3 6
-note arp 102 2 E3 6
-note bass 96 4 E2 10
-note bass 100 4 B2 10
-hat perc 97 4
-hat perc 99 4
-hat perc 100 6
-hat perc 101 4
-hat perc 103 4
-note boots-arp 102 1 E4 6
-note boots-arp 103 1 G#4 6
-note arp 104 2 E3 6
-note arp 106 2 G#3 6
-note arp 108 2 B3 6
-note arp 110 2 E3 6
-note bass 104 4 E2 10
-note bass 108 4 B2 10
-hat perc 105 4
-hat perc 107 4
+hat shaker 93 4
+hat shaker 95 3
+note boots-arp 94 1 D3 5
+note boots-arp 95 1 F#3 6
+note arp 96 2 E3 8
+note arp 98 2 E4 6
+note arp 100 2 B3 7
+note arp 102 2 G3 6
+note pad 96 16 E3 10
+note bass 96 4 E2 12
+note bass 100 1 B2 9
+note bass 101 1 E2 8
+note bass 102 2 B2 10
+hat shaker 97 3
+hat shaker 99 4
+hat shaker 101 3
+hat shaker 102 4
+hat perc 96 5
+note boots-arp 102 1 E3 5
+note boots-arp 103 1 G3 6
+note arp 104 2 E3 8
+note arp 106 2 E4 6
+note arp 108 2 B3 7
+note arp 110 2 G3 6
+note bass 104 4 E2 12
+note bass 108 1 B2 9
+note bass 109 1 E2 8
+note bass 110 2 B2 10
+hat shaker 105 4
+hat shaker 107 3
 hat perc 108 6
-hat perc 109 4
-hat perc 111 4
-note boots-arp 110 1 E4 6
-note boots-arp 111 1 G#4 6
-note arp 112 2 E3 6
-note arp 114 2 G#3 6
-note arp 116 2 B3 6
-note arp 118 2 E3 6
-note bass 112 4 E2 10
-note bass 116 4 B2 10
-hat perc 113 4
-hat perc 115 4
-hat perc 116 6
-hat perc 117 4
-hat perc 119 4
-note boots-arp 118 1 E4 6
-note boots-arp 119 1 G#4 6
-note arp 120 2 E3 6
-note arp 122 2 G#3 6
+hat shaker 110 4
+hat perc 104 5
+note boots-arp 110 1 E3 5
+note boots-arp 111 1 G3 6
+note arp 112 2 E3 8
+note arp 114 2 E4 6
+note arp 116 2 B3 7
+note arp 118 2 G3 6
+note pad 112 16 E3 10
+note bass 112 4 E2 12
+note bass 116 1 B2 9
+note bass 117 1 E2 8
+note bass 118 2 B2 10
+hat shaker 113 3
+hat shaker 115 4
+hat shaker 117 3
+hat shaker 118 4
+hat perc 112 5
+note boots-arp 118 1 E3 5
+note boots-arp 119 1 G3 6
+note arp 120 2 E3 7
+note arp 122 2 E4 5
 note arp 124 2 B3 6
-note arp 126 2 E3 6
-note bass 120 4 E2 10
-note bass 124 4 B2 10
-hat perc 121 4
-hat perc 123 4
+note arp 126 2 G3 5
+note bass 120 2 E2 11
+note bass 122 2 B2 10
+note bass 124 2 C#2 10
+note bass 126 2 D2 11
+hat shaker 121 4
+hat shaker 123 3
 hat perc 124 6
-hat perc 125 4
-hat perc 127 4
-note boots-arp 126 1 E4 6
-note boots-arp 127 1 G#4 6
+hat shaker 126 4
+hat perc 126 5
+note boots-arp 126 1 E3 5
+note boots-arp 127 1 G3 6
 
 hazard 0 locked windup 2 degrees 5,7 fire snare stab E2 bed 2
