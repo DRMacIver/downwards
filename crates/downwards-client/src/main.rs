@@ -6324,7 +6324,7 @@ fn draw_dungeon_v2_map(viewport: &PixelViewport, client: &ClientState) {
     viewport.centered_text("DUNGEON MAP", 12, 9, PLAYER);
     viewport.centered_text(
         &format!(
-            "COINS {}/{}   GOLD DOT = COINS LEFT IN A ROOM YOU HAVE SEEN",
+            "COINS {}/{}   GOLD DOT = COINS LEFT   MATCHING MARKS = LINKED DOORS",
             run.inventory.coins.len(),
             dungeon_v2_total_coins()
         ),
@@ -6346,49 +6346,111 @@ fn draw_dungeon_v2_map(viewport: &PixelViewport, client: &ClientState) {
     let on_screen =
         |(x, y): (i32, i32)| (-CELL_W..320).contains(&x) && (30 - CELL_H..168).contains(&y);
 
-    // Connections first, so cells draw over them. Between two explored rooms
-    // the connector follows the rooms' actual map cells (an L-shaped line when
-    // the layout displaced a room off its natural neighbour cell); a door into
-    // unexplored space draws a short stub in the door's direction. Sealed
-    // doors the player cannot yet open use the hazard tint as a reminder of
-    // where to come back to.
-    for instance_id in &client.explored_v2_rooms {
+    // Links draw before cells. A straight stub is drawn ONLY when the two
+    // rooms actually occupy adjacent map cells, so a stub touching a cell edge
+    // always corresponds to a real door of that room. Connections whose rooms
+    // were displaced apart by the layout draw as a pair of matching-colour
+    // portal markers on the two door edges instead of a (lying) line. Sealed
+    // doors the player cannot yet open use the hazard tint.
+    const PORTAL_COLOURS: [Color; 6] = [
+        Color::new(0.95, 0.55, 0.25, 1.0),
+        Color::new(0.45, 0.85, 0.45, 1.0),
+        Color::new(0.85, 0.45, 0.85, 1.0),
+        Color::new(0.35, 0.82, 0.95, 1.0),
+        Color::new(0.95, 0.85, 0.35, 1.0),
+        Color::new(0.60, 0.60, 0.95, 1.0),
+    ];
+    let door_step = |door_id: &str| match door_id {
+        "west" => (-1, 0),
+        "east" => (1, 0),
+        "ceiling" => (0, -1),
+        _ => (0, 1),
+    };
+    let door_edge_midpoint = |instance_id: &str, door_id: &str| {
         let (x, y) = cell_origin(instance_id);
-        let center = (x + CELL_W / 2, y + CELL_H / 2);
-        for (door_id, (destination, mate_door)) in &dungeon.instances[instance_id].connections {
-            let sealed = dungeon_v2_door_requirement(instance_id, door_id)
-                .is_some_and(|requirement| !run.inventory.satisfies(requirement))
-                || dungeon_v2_door_requirement(destination, mate_door)
-                    .is_some_and(|requirement| !run.inventory.satisfies(requirement));
-            let colour = if sealed { HAZARD_DARK } else { UI_DIM };
-            if client.explored_v2_rooms.contains(destination) {
-                // Draw each explored-explored connector once.
-                if destination < instance_id {
-                    continue;
-                }
-                let (dest_x, dest_y) = cell_origin(destination);
-                let dest_center = (dest_x + CELL_W / 2, dest_y + CELL_H / 2);
-                let (left, right) = (center.0.min(dest_center.0), center.0.max(dest_center.0));
-                let (top, bottom) = (center.1.min(dest_center.1), center.1.max(dest_center.1));
-                // Horizontal run at this room's height, then vertical drop at
-                // the destination's column.
-                viewport.rectangle(CoreRect::new(left, center.1, right - left + 1, 1), colour);
-                viewport.rectangle(
-                    CoreRect::new(dest_center.0, top, 1, bottom - top + 1),
-                    colour,
-                );
-            } else {
-                if !on_screen((x, y)) {
-                    continue;
-                }
-                let (stub_x, stub_y, stub_w, stub_h) = match door_id.as_str() {
-                    "west" => (x - (PITCH_X - CELL_W), y + CELL_H / 2, PITCH_X - CELL_W, 1),
-                    "east" => (x + CELL_W, y + CELL_H / 2, PITCH_X - CELL_W, 1),
-                    "ceiling" => (x + CELL_W / 2, y - (PITCH_Y - CELL_H), 1, PITCH_Y - CELL_H),
-                    _ => (x + CELL_W / 2, y + CELL_H, 1, PITCH_Y - CELL_H),
-                };
-                viewport.rectangle(CoreRect::new(stub_x, stub_y, stub_w, stub_h), colour);
+        match door_id {
+            "west" => (x - 1, y + CELL_H / 2),
+            "east" => (x + CELL_W, y + CELL_H / 2),
+            "ceiling" => (x + CELL_W / 2, y - 1),
+            _ => (x + CELL_W / 2, y + CELL_H),
+        }
+    };
+    let mut portal_edges: Vec<(String, String)> = dungeon
+        .instances
+        .values()
+        .flat_map(|instance| {
+            instance
+                .connections
+                .keys()
+                .map(move |door_id| (instance.id.clone(), door_id.clone()))
+        })
+        .collect();
+    portal_edges.sort();
+    let displaced_edges: Vec<(String, String)> = portal_edges
+        .iter()
+        .filter(|(instance_id, door_id)| {
+            let (destination, mate_door) = &dungeon.instances[instance_id].connections[door_id];
+            let (sx, sy) = layout[instance_id];
+            let (dx, dy) = layout[destination];
+            (dx - sx, dy - sy) != door_step(door_id)
+                && (destination.as_str(), mate_door.as_str())
+                    > (instance_id.as_str(), door_id.as_str())
+        })
+        .cloned()
+        .collect();
+    for (instance_id, door_id) in &portal_edges {
+        if !client.explored_v2_rooms.contains(instance_id) {
+            continue;
+        }
+        let (destination, mate_door) = &dungeon.instances[instance_id].connections[door_id];
+        let sealed = dungeon_v2_door_requirement(instance_id, door_id)
+            .is_some_and(|requirement| !run.inventory.satisfies(requirement))
+            || dungeon_v2_door_requirement(destination, mate_door)
+                .is_some_and(|requirement| !run.inventory.satisfies(requirement));
+        let (sx, sy) = layout[instance_id];
+        let (dx, dy) = layout[destination];
+        let step = door_step(door_id);
+        let adjacent = (dx - sx, dy - sy) == step;
+        if adjacent {
+            // Straight stub across the inter-cell gap; each explored-explored
+            // pair draws it once, an explored-unexplored edge draws it as the
+            // usual hint stub.
+            if client.explored_v2_rooms.contains(destination) && destination < instance_id {
+                continue;
             }
+            let (x, y) = cell_origin(instance_id);
+            let (stub_x, stub_y, stub_w, stub_h) = match door_id.as_str() {
+                "west" => (x - (PITCH_X - CELL_W), y + CELL_H / 2, PITCH_X - CELL_W, 1),
+                "east" => (x + CELL_W, y + CELL_H / 2, PITCH_X - CELL_W, 1),
+                "ceiling" => (x + CELL_W / 2, y - (PITCH_Y - CELL_H), 1, PITCH_Y - CELL_H),
+                _ => (x + CELL_W / 2, y + CELL_H, 1, PITCH_Y - CELL_H),
+            };
+            viewport.rectangle(
+                CoreRect::new(stub_x, stub_y, stub_w, stub_h),
+                if sealed { HAZARD_DARK } else { UI_DIM },
+            );
+        } else {
+            // Displaced link: a portal marker on this room's door edge. The
+            // colour is keyed to the canonical edge identity, so the marker on
+            // the other room (drawn when that room is explored) matches.
+            let canonical = if (destination.as_str(), mate_door.as_str())
+                < (instance_id.as_str(), door_id.as_str())
+            {
+                (destination.clone(), mate_door.clone())
+            } else {
+                (instance_id.clone(), door_id.clone())
+            };
+            let palette_slot = displaced_edges
+                .iter()
+                .position(|edge| *edge == canonical)
+                .expect("displaced edge is enumerated");
+            let colour = if sealed {
+                HAZARD_DARK
+            } else {
+                PORTAL_COLOURS[palette_slot % PORTAL_COLOURS.len()]
+            };
+            let (px, py) = door_edge_midpoint(instance_id, door_id);
+            viewport.rectangle(CoreRect::new(px - 1, py - 1, 3, 3), colour);
         }
     }
 
