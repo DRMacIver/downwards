@@ -7293,18 +7293,43 @@ fn draw_spikes(
     draw_environment_sprite(viewport, bounds, sprite, assets, flip_x);
 }
 
+/// Ticks of visible wind-up before a timed hazard turns deadly (~0.4s).
+const TIMED_HAZARD_WARNING_TICKS: u64 = 24;
+
+#[derive(Clone, Copy, PartialEq)]
+enum TimedHazardVisual {
+    Idle,
+    /// About to turn deadly; progress runs 0.0 -> 1.0 up to the flip.
+    Arming {
+        progress: f32,
+    },
+    Deadly,
+}
+
 /// Deliberately procedural stand-in for the timed shutters: chunky diagonal
 /// hazard stripes that stay crisp at any bounds size, until real pixel art
-/// exists for large timed hazards.
-fn draw_timed_hazard_placeholder(viewport: &PixelViewport, bounds: CoreRect, active: bool) {
+/// exists for large timed hazards. Deadly is a solid unmistakable fill;
+/// the wind-up brightens amber so the flip is never a surprise.
+fn draw_timed_hazard_placeholder(
+    viewport: &PixelViewport,
+    bounds: CoreRect,
+    state: TimedHazardVisual,
+) {
     const STRIPE_PERIOD: i32 = 16;
     const STRIPE_WIDTH: i32 = 8;
     const ROW_STEP: i32 = 2;
-    let (stripe, outline) = if active {
-        viewport.rectangle(bounds, HAZARD_DARK);
-        (HAZARD, HAZARD)
-    } else {
-        (HAZARD_DARK, HAZARD_DARK)
+    let (stripe, outline) = match state {
+        TimedHazardVisual::Deadly => {
+            // Solid lethal fill first so no part of the zone reads as safe.
+            viewport.rectangle(bounds, Color::new(0.72, 0.16, 0.22, 1.0));
+            (HAZARD, HAZARD)
+        }
+        TimedHazardVisual::Arming { progress } => {
+            let ramp = progress.clamp(0.0, 1.0);
+            let amber = Color::new(0.95, 0.65 + 0.15 * ramp, 0.15, 0.35 + 0.65 * ramp);
+            (amber, amber)
+        }
+        TimedHazardVisual::Idle => (HAZARD_DARK, HAZARD_DARK),
     };
     let mut row = 0;
     while row < bounds.height {
@@ -7327,12 +7352,23 @@ fn draw_timed_hazard_placeholder(viewport: &PixelViewport, bounds: CoreRect, act
 }
 
 fn draw_room_objects(viewport: &PixelViewport, simulation: &Simulation, assets: &VisualAssets) {
-    for (index, hazard) in simulation.room().timed_hazards().iter().enumerate() {
-        let active = simulation
-            .timed_hazard_is_active(index)
-            .expect("hazard index came from the room");
-        let bounds = hazard.bounds();
-        draw_timed_hazard_placeholder(viewport, bounds, active);
+    for hazard in simulation.room().timed_hazards() {
+        let period = u64::from(hazard.period_ticks());
+        let cycle = (simulation.room_tick() % period + u64::from(hazard.phase_ticks())) % period;
+        let state = if cycle < u64::from(hazard.active_ticks()) {
+            TimedHazardVisual::Deadly
+        } else {
+            let until_active = period - cycle;
+            if until_active <= TIMED_HAZARD_WARNING_TICKS {
+                TimedHazardVisual::Arming {
+                    // 0.0 at the start of the wind-up, 1.0 at the flip.
+                    progress: 1.0 - until_active as f32 / TIMED_HAZARD_WARNING_TICKS as f32,
+                }
+            } else {
+                TimedHazardVisual::Idle
+            }
+        };
+        draw_timed_hazard_placeholder(viewport, hazard.bounds(), state);
     }
 
     for (index, pickup) in simulation.room().pickups().iter().enumerate() {
