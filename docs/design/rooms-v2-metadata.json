@@ -474,5 +474,103 @@
   "description": "Five floor-bearing chambers separated by four shutter gates whose phases march eastward as a travelling wave (72/48/24/0, period 120, active 66), so an eastbound player can ride one continuous sprint through every gate while a westbound player meets the wave head-on and must bank a full cycle in each chamber. The twist is the middle partition: a true airlock with two valves half a period apart -- an upper lane over a solid slab and a lower lane at floor level -- never open together, so crossing the room's centre means picking a lane on the beat and paying a 30px climb if you pick wrong.",
   "coin_count": 3,
   "notes": "Grid: partitions cols 6/12/18/24; gates are 20px floor-level run-throughs at rows 15-16 (no spikes, no gaps, danger is 100% temporal). Airlock at col 18 has slab at row 14, upper valve rows 12-13 (phase 24) and lower valve rows 15-16 (phase 84); step blocks at (16,16)/(20,16) and ledges at (17,14)/(19,14) are the only lane-change, two 20px hops. Hazard cadence: period 120, active 66 (shut more than open), 54-tick window, opening rolls east one gate every 24 ticks. Both intended pairs (west<->east) and both self-pairs solve at loadout none; wall/dash add nothing structurally, they only shave ticks. Coins: coin 0 (90,160) EASY, chamber B, worst shaky 32/32 from west; coin 1 (180,130) HARD BONUS sitting inside the upper valve's own footprint on the slab (grab-and-retreat), 7/32 from west, 9/32 from east -- comfortably >=1 success; coin 2 (270,160) chamber E past all four gates, 19/32 (59%) from east, inconclusive from west at none because the full west-to-east coin route exceeds the solver's 600-tick path horizon, not because it is gated. Nothing in the room is a spike hop or a chimney."
+ },
+ {
+  "slug": "gable-run-a",
+  "verdict_ok": true,
+  "doors": [
+   "floor",
+   "east"
+  ],
+  "ability_requirement": "none",
+  "difficulty": "easy",
+  "description": "The dungeon's north-west roof corner: a walkway to the east door, a floor hatch under a one-way shingle mid-walk, and a small shingle-floored attic under the roof slope for coin detours. Nothing is gated; a chimney-smoke plume pulses over the walk.",
+  "coin_count": 3,
+  "notes": "Doors: floor, east. Authored for dungeon v2 rev 3 (the descent). Solved pairs: floor->east: none,wall,dash,both; east->floor: none,wall,dash,both."
+ },
+ {
+  "slug": "eaves-walk-a",
+  "verdict_ok": true,
+  "doors": [
+   "floor",
+   "west",
+   "east"
+  ],
+  "ability_requirement": "none",
+  "difficulty": "easy",
+  "description": "A covered walk under the roofline joining west and east doors, with a one-way-shingled loft above and the floor door under its own shingle mid-walk. Two icicle drips on a shared 48-beat teach the timing the sandglass rooms later demand.",
+  "coin_count": 2,
+  "notes": "Doors: floor, west, east. Authored for dungeon v2 rev 3 (the descent). Solved pairs: floor->west: none,wall,dash,both; floor->east: none,wall,dash,both; west->floor: none,wall,dash,both; west->east: none,wall,dash,both; east->floor: none,wall,dash,both; east->west: none,wall,dash,both."
+ },
+ {
+  "slug": "lantern-cross-a",
+  "verdict_ok": true,
+  "doors": [
+   "ceiling",
+   "floor",
+   "west",
+   "east"
+  ],
+  "ability_requirement": "none",
+  "difficulty": "easy",
+  "description": "The four-door crossing: a tall atrium of zig-zag one-way shingles under the ceiling door, a full-width walkway joining west and east, and the floor door under a shingle mid-walk. Every pair is bare; the lantern pulse over the west walk sets the strolling rhythm.",
+  "coin_count": 3,
+  "notes": "Doors: ceiling, floor, west, east. Authored for dungeon v2 rev 3 (the descent). Solved pairs: ceiling->floor: none,wall,dash,both; ceiling->west: none,wall,dash,both; ceiling->east: none,wall,dash,both; floor->ceiling: wall,dash,both; floor->west: none,wall,dash,both; floor->east: none,wall,dash,both; west->ceiling: none,wall,dash,both; west->floor: none,wall,dash,both; west->east: none,wall,dash,both; east->ceiling: none,wall,dash,both; east->floor: none,wall,dash,both; east->west: none,wall,dash,both."
+ },
+ {
+  "slug": "chimney-lock-a",
+  "verdict_ok": true,
+  "doors": [
+   "west",
+   "east",
+   "ceiling"
+  ],
+  "ability_requirement": "wall",
+  "difficulty": "medium",
+  "description": "A bell tower split in two. East of the rope wall everything is bare: starter step, shingle ladder to the ceiling door, bell-shadow pulse over the ladder's middle. West of it, a full-height partition flanked by two sheer walk-in bays joined only by a top gallery: the west door is wall-kicks or nothing, in both directions.",
+  "coin_count": 3,
+  "notes": "Doors: west, east, ceiling. Authored for dungeon v2 rev 3 (the descent). Solved pairs: west->east: wall,both; west->ceiling: wall,both; east->west: wall,both; east->ceiling: none,wall,dash,both; ceiling->west: wall,both; ceiling->east: none,wall,dash,both."
+ },
+ {
+  "slug": "keep-west-postern",
+  "verdict_ok": true,
+  "doors": [
+   "west",
+   "east",
+   "floor"
+  ],
+  "ability_requirement": "wall",
+  "difficulty": "medium",
+  "description": "The keep's western postern: the same twin-bay partition as the chimney lock guarding the west door, with a bare hall, floor hatch and east door on the free side. Seals the boots vault's roof approach to glove-holders only.",
+  "coin_count": 1,
+  "notes": "Doors: west, east, floor. Authored for dungeon v2 rev 3 (the descent). Solved pairs: west->east: wall,both; west->floor: wall,both; east->west: wall,both; east->floor: none,wall,dash,both; floor->west: wall,both; floor->east: none,wall,dash,both."
+ },
+ {
+  "slug": "sandglass-drop-a",
+  "verdict_ok": true,
+  "doors": [
+   "ceiling",
+   "east",
+   "floor"
+  ],
+  "ability_requirement": "both",
+  "difficulty": "hard",
+  "description": "The sealed bulb of the hourglass. The ceiling door tops a sheer nine-row bay (wall-kicks only, though anything dropped falls freely); the floor door hides behind a broad sand-curtain on a 48-count that only a dash crosses. Floor to ceiling is therefore both-only: the descent's one-way valve.",
+  "coin_count": 2,
+  "notes": "Doors: ceiling, east, floor. Authored for dungeon v2 rev 3 (the descent). Solved pairs: ceiling->east: none,wall,dash,both; ceiling->floor: dash,both; east->ceiling: wall,both; east->floor: dash,both; floor->ceiling: both; floor->east: dash,both."
+ },
+ {
+  "slug": "sandglass-drop-b",
+  "verdict_ok": true,
+  "doors": [
+   "ceiling",
+   "east",
+   "floor"
+  ],
+  "ability_requirement": "dash",
+  "difficulty": "medium",
+  "description": "The open bulb of the hourglass: a bare chamber with a shingle ladder to the ceiling door, and the same dash-only sand-curtain over the floor-door tunnel. Everything that touches the floor door needs boots; everything else is bare.",
+  "coin_count": 2,
+  "notes": "Doors: ceiling, east, floor. Authored for dungeon v2 rev 3 (the descent). Solved pairs: ceiling->east: none,wall,dash,both; ceiling->floor: dash,both; east->ceiling: none,wall,dash,both; east->floor: dash,both; floor->ceiling: dash,both; floor->east: dash,both."
  }
 ]

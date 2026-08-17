@@ -1,0 +1,16 @@
+# Keep West Postern: the sealed stair beside the boots vault.
+#
+# West of the hall a full-height partition (col 8) seals the postern
+# chamber. Either side of it is a sheer walk-in bay - four tiles of smooth
+# stone between partition and outer wall, no ledges, joined only by a
+# two-row crossover gallery at the very top. A bare jump reaches nothing on
+# these faces and a dash has no height to give: the only way up either bay
+# is wall-kicking between its walls to the gallery and dropping the far
+# side, so the west door is sealed both ways without the glove. The hall,
+# the floor hatch and the east door are bare and free; the drip over the
+# hall keeps the bare side honest.
+hazard 220 130 20 40 48 12 0
+door west
+door east
+door floor
+coin 15 145

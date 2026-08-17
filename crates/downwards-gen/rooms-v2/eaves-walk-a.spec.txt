@@ -1,0 +1,17 @@
+# Eaves Walk: the covered walk under the roofline.
+#
+# A single walkway (rows 13-16) runs between the west and east doors with a
+# low loft above it (rows 10-12) floored in one-way shingles, and the floor
+# door sits mid-walk under its own shingle - press down to leave through the
+# floor, walk flat to pass over it. Two icicle drips fall on a shared beat
+# from the loft's edge beams; the walk is bare in every direction, but the
+# drips teach the two-count that the deeper sandglass rooms will demand.
+# Coins: one on the loft (a 20px hop up via the walkway), one past the far
+# drip.
+hazard 70 100 20 70 48 12 0
+hazard 240 100 20 70 48 12 24
+door floor
+door west
+door east
+coin 120 115
+coin 290 145

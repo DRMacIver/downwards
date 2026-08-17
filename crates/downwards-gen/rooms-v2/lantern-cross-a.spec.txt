@@ -1,0 +1,18 @@
+# Lantern Cross: the four-way crossing of the descent.
+#
+# A tall atrium hangs under the ceiling door with a zig-zag of one-way
+# shingles (rows 3/6/9/12, alternating sides), and a full-width walkway
+# (rows 13-16) joins the west and east doors underneath it. The floor door
+# opens under a one-way shingle in the middle of the walkway: walk straight
+# over it, or press down to drop out of the room. Every door pair is bare -
+# the room is a crossroads, not a test - but the lantern (a slow hazard
+# pulse over the west walkway) sets a strolling rhythm, and the shingle
+# climb back up to the ceiling is an honest 30px-per-hop ladder.
+hazard 60 130 40 40 48 14 0
+door ceiling
+door floor
+door west
+door east
+coin 85 25
+coin 200 50
+coin 25 145

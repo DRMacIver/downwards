@@ -1,0 +1,15 @@
+# Gable Run: the top-left corner of the keep's roof.
+#
+# The dungeon's north-west gable: a walkway to the east door, a floor hatch
+# under a one-way shingle mid-walk, and above the walk a small attic under
+# the slope of the roof, floored with shingles and entered by a two-step
+# climb at its west end. Nothing here is gated - it is the first room of the
+# wall act's upper loop - but the attic coins ask for a detour a bare player
+# can commit to, and the single chimney-smoke plume on the walkway keeps the
+# run honest on the way back out.
+hazard 200 130 20 40 48 12 0
+door floor
+door east
+coin 40 95
+coin 120 95
+coin 25 145

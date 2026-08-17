@@ -323,6 +323,227 @@
   "shaky": {},
   "verdict_ok": true
  },
+ "chimney-lock-a": {
+  "coin_routes": {
+   "0": {
+    "both": 36,
+    "dash": 36,
+    "none": 36,
+    "wall": 36
+   },
+   "1": {
+    "both": 88,
+    "dash": 105,
+    "none": 86,
+    "wall": 88
+   },
+   "2": {
+    "both": 245,
+    "dash": null,
+    "none": null,
+    "wall": 221
+   }
+  },
+  "coins": 3,
+  "doors": [
+   "west",
+   "east",
+   "ceiling"
+  ],
+  "pairs": {
+   "ceiling->ceiling": {
+    "both": 2,
+    "dash": 2,
+    "none": 27,
+    "wall": 14
+   },
+   "ceiling->east": {
+    "both": 88,
+    "dash": 88,
+    "none": 88,
+    "wall": 88
+   },
+   "ceiling->west": {
+    "both": 273,
+    "dash": null,
+    "none": null,
+    "wall": 273
+   },
+   "east->ceiling": {
+    "both": 175,
+    "dash": 175,
+    "none": 357,
+    "wall": 178
+   },
+   "east->east": {
+    "both": 6,
+    "dash": 6,
+    "none": 6,
+    "wall": 6
+   },
+   "east->west": {
+    "both": 280,
+    "dash": null,
+    "none": null,
+    "wall": 252
+   },
+   "west->ceiling": {
+    "both": 222,
+    "dash": null,
+    "none": null,
+    "wall": 383
+   },
+   "west->east": {
+    "both": 335,
+    "dash": null,
+    "none": null,
+    "wall": 244
+   },
+   "west->west": {
+    "both": 5,
+    "dash": 5,
+    "none": 5,
+    "wall": 5
+   }
+  },
+  "shaky": {},
+  "verdict_ok": true
+ },
+ "eaves-walk-a": {
+  "coin_routes": {
+   "0": {
+    "both": 62,
+    "dash": 62,
+    "none": 32,
+    "wall": 32
+   },
+   "1": {
+    "both": 41,
+    "dash": 41,
+    "none": 11,
+    "wall": 11
+   }
+  },
+  "coins": 2,
+  "doors": [
+   "floor",
+   "west",
+   "east"
+  ],
+  "pairs": {
+   "east->east": {
+    "both": 6,
+    "dash": 6,
+    "none": 6,
+    "wall": 6
+   },
+   "east->floor": {
+    "both": 41,
+    "dash": 41,
+    "none": 87,
+    "wall": 87
+   },
+   "east->west": {
+    "both": 208,
+    "dash": 208,
+    "none": 208,
+    "wall": 208
+   },
+   "floor->east": {
+    "both": 87,
+    "dash": 87,
+    "none": 87,
+    "wall": 87
+   },
+   "floor->floor": {
+    "both": 8,
+    "dash": 8,
+    "none": 8,
+    "wall": 8
+   },
+   "floor->west": {
+    "both": 62,
+    "dash": 62,
+    "none": 107,
+    "wall": 107
+   },
+   "west->east": {
+    "both": 128,
+    "dash": 128,
+    "none": 174,
+    "wall": 174
+   },
+   "west->floor": {
+    "both": 85,
+    "dash": 85,
+    "none": 85,
+    "wall": 85
+   },
+   "west->west": {
+    "both": 5,
+    "dash": 5,
+    "none": 5,
+    "wall": 5
+   }
+  },
+  "shaky": {},
+  "verdict_ok": true
+ },
+ "gable-run-a": {
+  "coin_routes": {
+   "0": {
+    "both": 128,
+    "dash": 57,
+    "none": null,
+    "wall": 80
+   },
+   "1": {
+    "both": 88,
+    "dash": 54,
+    "none": null,
+    "wall": 88
+   },
+   "2": {
+    "both": 90,
+    "dash": 104,
+    "none": 104,
+    "wall": 90
+   }
+  },
+  "coins": 3,
+  "doors": [
+   "floor",
+   "east"
+  ],
+  "pairs": {
+   "east->east": {
+    "both": 6,
+    "dash": 6,
+    "none": 6,
+    "wall": 6
+   },
+   "east->floor": {
+    "both": 41,
+    "dash": 41,
+    "none": 90,
+    "wall": 90
+   },
+   "floor->east": {
+    "both": 87,
+    "dash": 87,
+    "none": 87,
+    "wall": 87
+   },
+   "floor->floor": {
+    "both": 8,
+    "dash": 8,
+    "none": 8,
+    "wall": 8
+   }
+  },
+  "shaky": {},
+  "verdict_ok": true
+ },
  "greed-loop-a": {
   "coin_routes": {
    "0": {
@@ -491,32 +712,63 @@
  "keep-astral-seal": {
   "coin_routes": {
    "0": {
-    "both": 310,
+    "both": 64,
     "dash": null,
     "none": null,
-    "wall": null
+    "wall": 64
    }
   },
   "coins": 1,
   "doors": [
+   "ceiling",
    "west",
    "east"
   ],
   "pairs": {
-   "east->east": {
-    "both": 5,
-    "dash": 5,
-    "none": 5,
-    "wall": 5
+   "ceiling->ceiling": {
+    "both": 44,
+    "dash": 2,
+    "none": null,
+    "wall": 44
    },
-   "east->west": {
-    "both": 435,
+   "ceiling->east": {
+    "both": 206,
     "dash": null,
     "none": null,
     "wall": null
    },
+   "ceiling->west": {
+    "both": 154,
+    "dash": 103,
+    "none": 103,
+    "wall": 154
+   },
+   "east->ceiling": {
+    "both": 201,
+    "dash": null,
+    "none": null,
+    "wall": null
+   },
+   "east->east": {
+    "both": 6,
+    "dash": 6,
+    "none": 6,
+    "wall": 6
+   },
+   "east->west": {
+    "both": 188,
+    "dash": null,
+    "none": null,
+    "wall": null
+   },
+   "west->ceiling": {
+    "both": 195,
+    "dash": null,
+    "none": null,
+    "wall": 136
+   },
    "west->east": {
-    "both": 174,
+    "both": 224,
     "dash": null,
     "none": null,
     "wall": null
@@ -852,6 +1104,80 @@
   "shaky": {},
   "verdict_ok": true
  },
+ "keep-west-postern": {
+  "coin_routes": {
+   "0": {
+    "both": 36,
+    "dash": 36,
+    "none": 36,
+    "wall": 36
+   }
+  },
+  "coins": 1,
+  "doors": [
+   "west",
+   "east",
+   "floor"
+  ],
+  "pairs": {
+   "east->east": {
+    "both": 6,
+    "dash": 6,
+    "none": 6,
+    "wall": 6
+   },
+   "east->floor": {
+    "both": 41,
+    "dash": 41,
+    "none": 100,
+    "wall": 100
+   },
+   "east->west": {
+    "both": 275,
+    "dash": null,
+    "none": null,
+    "wall": 288
+   },
+   "floor->east": {
+    "both": 68,
+    "dash": 68,
+    "none": 112,
+    "wall": 112
+   },
+   "floor->floor": {
+    "both": 8,
+    "dash": 8,
+    "none": 8,
+    "wall": 8
+   },
+   "floor->west": {
+    "both": 564,
+    "dash": null,
+    "none": null,
+    "wall": 564
+   },
+   "west->east": {
+    "both": 269,
+    "dash": null,
+    "none": null,
+    "wall": 269
+   },
+   "west->floor": {
+    "both": 156,
+    "dash": null,
+    "none": null,
+    "wall": 156
+   },
+   "west->west": {
+    "both": 5,
+    "dash": 5,
+    "none": 5,
+    "wall": 5
+   }
+  },
+  "shaky": {},
+  "verdict_ok": true
+ },
  "keep-zenith-shaft": {
   "coin_routes": {},
   "coins": 0,
@@ -1110,6 +1436,135 @@
     "dash": 6,
     "none": 6,
     "wall": 6
+   }
+  },
+  "shaky": {},
+  "verdict_ok": true
+ },
+ "lantern-cross-a": {
+  "coin_routes": {
+   "0": {
+    "both": 85,
+    "dash": 60,
+    "none": null,
+    "wall": 163
+   },
+   "1": {
+    "both": 103,
+    "dash": 59,
+    "none": 94,
+    "wall": 103
+   },
+   "2": {
+    "both": 62,
+    "dash": 62,
+    "none": 19,
+    "wall": 19
+   }
+  },
+  "coins": 3,
+  "doors": [
+   "ceiling",
+   "floor",
+   "west",
+   "east"
+  ],
+  "pairs": {
+   "ceiling->ceiling": {
+    "both": 12,
+    "dash": 12,
+    "none": 12,
+    "wall": 12
+   },
+   "ceiling->east": {
+    "both": 103,
+    "dash": 94,
+    "none": 94,
+    "wall": 103
+   },
+   "ceiling->floor": {
+    "both": 56,
+    "dash": 56,
+    "none": 56,
+    "wall": 56
+   },
+   "ceiling->west": {
+    "both": 119,
+    "dash": 60,
+    "none": 107,
+    "wall": 119
+   },
+   "east->ceiling": {
+    "both": 162,
+    "dash": 180,
+    "none": 180,
+    "wall": 162
+   },
+   "east->east": {
+    "both": 6,
+    "dash": 6,
+    "none": 6,
+    "wall": 6
+   },
+   "east->floor": {
+    "both": 83,
+    "dash": 83,
+    "none": 83,
+    "wall": 83
+   },
+   "east->west": {
+    "both": 217,
+    "dash": 162,
+    "none": 162,
+    "wall": 217
+   },
+   "floor->ceiling": {
+    "both": 53,
+    "dash": 53,
+    "none": null,
+    "wall": 567
+   },
+   "floor->east": {
+    "both": 190,
+    "dash": 108,
+    "none": 108,
+    "wall": 190
+   },
+   "floor->floor": {
+    "both": 8,
+    "dash": 8,
+    "none": 8,
+    "wall": 8
+   },
+   "floor->west": {
+    "both": 62,
+    "dash": 62,
+    "none": 113,
+    "wall": 113
+   },
+   "west->ceiling": {
+    "both": 284,
+    "dash": 284,
+    "none": 284,
+    "wall": 284
+   },
+   "west->east": {
+    "both": 143,
+    "dash": 139,
+    "none": 200,
+    "wall": 200
+   },
+   "west->floor": {
+    "both": 42,
+    "dash": 42,
+    "none": 112,
+    "wall": 112
+   },
+   "west->west": {
+    "both": 5,
+    "dash": 5,
+    "none": 5,
+    "wall": 5
    }
   },
   "shaky": {},
@@ -1692,6 +2147,166 @@
     "dash": 5,
     "none": 5,
     "wall": 5
+   }
+  },
+  "shaky": {},
+  "verdict_ok": true
+ },
+ "sandglass-drop-a": {
+  "coin_routes": {
+   "0": {
+    "both": 17,
+    "dash": 14,
+    "none": 14,
+    "wall": 17
+   },
+   "1": {
+    "both": 123,
+    "dash": 98,
+    "none": 98,
+    "wall": 123
+   }
+  },
+  "coins": 2,
+  "doors": [
+   "ceiling",
+   "east",
+   "floor"
+  ],
+  "pairs": {
+   "ceiling->ceiling": {
+    "both": 44,
+    "dash": 2,
+    "none": null,
+    "wall": 44
+   },
+   "ceiling->east": {
+    "both": 123,
+    "dash": 98,
+    "none": 98,
+    "wall": 123
+   },
+   "ceiling->floor": {
+    "both": 108,
+    "dash": 108,
+    "none": null,
+    "wall": null
+   },
+   "east->ceiling": {
+    "both": 207,
+    "dash": null,
+    "none": null,
+    "wall": 207
+   },
+   "east->east": {
+    "both": 6,
+    "dash": 6,
+    "none": 6,
+    "wall": 6
+   },
+   "east->floor": {
+    "both": 58,
+    "dash": 58,
+    "none": null,
+    "wall": null
+   },
+   "floor->ceiling": {
+    "both": 140,
+    "dash": null,
+    "none": null,
+    "wall": null
+   },
+   "floor->east": {
+    "both": 73,
+    "dash": 73,
+    "none": null,
+    "wall": null
+   },
+   "floor->floor": {
+    "both": 8,
+    "dash": 8,
+    "none": 8,
+    "wall": 8
+   }
+  },
+  "shaky": {},
+  "verdict_ok": true
+ },
+ "sandglass-drop-b": {
+  "coin_routes": {
+   "0": {
+    "both": 17,
+    "dash": 14,
+    "none": 14,
+    "wall": 17
+   },
+   "1": {
+    "both": 22,
+    "dash": 19,
+    "none": 143,
+    "wall": 22
+   }
+  },
+  "coins": 2,
+  "doors": [
+   "ceiling",
+   "east",
+   "floor"
+  ],
+  "pairs": {
+   "ceiling->ceiling": {
+    "both": 15,
+    "dash": 15,
+    "none": 15,
+    "wall": 15
+   },
+   "ceiling->east": {
+    "both": 88,
+    "dash": 93,
+    "none": 93,
+    "wall": 88
+   },
+   "ceiling->floor": {
+    "both": 109,
+    "dash": 108,
+    "none": null,
+    "wall": null
+   },
+   "east->ceiling": {
+    "both": 196,
+    "dash": 230,
+    "none": 230,
+    "wall": 152
+   },
+   "east->east": {
+    "both": 6,
+    "dash": 6,
+    "none": 6,
+    "wall": 6
+   },
+   "east->floor": {
+    "both": 58,
+    "dash": 58,
+    "none": null,
+    "wall": null
+   },
+   "floor->ceiling": {
+    "both": 166,
+    "dash": 152,
+    "none": null,
+    "wall": null
+   },
+   "floor->east": {
+    "both": 73,
+    "dash": 73,
+    "none": null,
+    "wall": null
+   },
+   "floor->floor": {
+    "both": 8,
+    "dash": 8,
+    "none": 8,
+    "wall": 8
    }
   },
   "shaky": {},

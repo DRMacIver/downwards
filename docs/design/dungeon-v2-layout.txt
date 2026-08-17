@@ -1,84 +1,107 @@
-# Dungeon v2 layout (rev 2) — keep of three themed columns + deep wing
-# Mainline runs east along the spawn row: spawn -> observatory (glove) ->
-# wall-gate -> east vault stack -> astral seal (needs BOTH abilities) -> crown.
-# West column: rhythm-free climbs (tide/switchback). Mid column: shutter
-# cascade with one-way rings. East stack: greed/strata vaults. Deep wing:
-# dash-era braid (both one-way-loop-b copies live here, off the mainline).
+# Dungeon v2 layout (rev 3) - THE DESCENT
+#
+# Grid-consistent embedding (every edge is a unit step; the in-game map is
+# exact). Spawn sits under the roof-cap on the top row; the crown is the
+# east end of the bottom row. All ability gating is geometric - no ability
+# door locks anywhere; the only explicit gate is the crown coin door.
+#
+# Cells (x east, y down):
+#   y0:            bv(2)  kwp(3)  ga(4)
+#   y1:  gr1(1) owp(2) t1(3)  s1(4)  ob(5)  gb(6)
+#   y2:  sb(1)  lcc(2) chl(3) lc1(4) wg(5)  swa(6)
+#   y3:  sd1(1) mr(2)  gx(3)  sd2(4) ew1(5) gc(6)
+#   y4:  kvc1(1) lca(2) lc2(3) owc(4) kvc3(5) swb(6)
+#   y5:                 kvc2(3) asl(4) crown(5)
+#
+# Acts: A (bare) - roof, spawn column, upper halls; glove one door east of
+# spawn. B (wall) - the north-west quarter behind the chimney-lock gate,
+# with the boots vault at the roof's west end behind the postern. C (dash) -
+# the low vault behind the low-ceiling crawl and the sandglass trapdoor.
+# The south-east pocket needs dash to enter (sandglass-b) and the astral
+# seal before the crown needs both.
 
 # --- rooms -------------------------------------------------------------
-room s1   strata-sort-a          # spawn hub (easy)
-room ga   greed-loop-a           # coin ring above spawn
-room met  metronome-gallery-a    # boots-vault approach corridor
-room bv   keep-boots-vault       # boots live here
-room ob   keep-observatory       # glove lives here, one door from spawn
-room wg   keep-wall-gate         # wall showcase, ON the mainline
-room t1   tide-shaft-a           # west climb shaft (easy)
-room swa  switchback-spine-a     # west basement climber (easy)
-room tcb  two-clock-fork-b       # basement timing corridor
-room sha  shutter-chute-a        # mid cascade, easy aperture
-room owc  one-way-loop-c         # mid cascade junction (hard, wall-up)
-room shb  shutter-chute-b        # mid cascade, medium aperture
-room owb  one-way-loop-b         # duplicate grid #1 — optional wing only
-room lcc  low-ceiling-arena-c    # deep crawl junction (hard)
-room gb   greed-loop-b           # east stack head (medium)
-room sb   strata-sort-b          # east stack crossroads (medium)
-room tb   tide-shaft-b           # east stack shaft (medium)
-room ssc  strata-sort-c          # basement gatehouse (hard)
-room ap   antiphase-airlock-a    # braid corridor ssc <-> owc
-room asl  keep-astral-seal       # final gauntlet: passable only with BOTH
-room crown keep-crown-sanctum    # goal
-room kva  keyhole-vault-a        # deep wing junction
-room kvb  keyhole-vault-b        # deep wing junction (wall-era shortcut)
-room lca  low-ceiling-arena-a    # dash corridor (easy teaching instance)
-room gc   greed-loop-c           # dash coin ring
-room tsc  tide-shaft-c           # deep wing shaft (hard)
-room ow2  one-way-loop-b         # duplicate grid #2 — optional wing only
+room s1    strata-sort-a          # spawn hub, under the greed roof-cap
+room ga    greed-loop-a           # roof cap over spawn
+room bv    keep-boots-vault       # boots, top-left roof corner (wall-sealed)
+room kwp   keep-west-postern      # roof gate: wall-kick bays seal the vault
+room gr1   gable-run-a            # north-west gable (wall quarter)
+room owp   one-way-loop-c         # vault under-stair (duplicate grid #1)
+room t1    tide-shaft-a           # spawn-side shaft, climbable bare
+room ob    keep-observatory       # glove, one door from spawn
+room gb    greed-loop-b           # east roof step
+room sb    strata-sort-b          # wall-quarter crossroads
+room lcc   low-ceiling-arena-c    # wall-quarter crawl junction
+room chl   chimney-lock-a         # THE wall gate into the north-west quarter
+room lc1   lantern-cross-a        # central crossing (duplicate grid #2)
+room wg    keep-wall-gate         # wall showcase on the east gallery loop
+room swa   switchback-spine-a     # east gallery pocket
+room sd1   sandglass-drop-a       # sealed-bulb sandglass: dash trapdoor to the vault
+room mr    keep-meteor-run        # dash curtains on the vault's east exit
+room gx    greed-loop-a           # under-hall step (duplicate grid #3)
+room sd2   sandglass-drop-b       # open-bulb sandglass: dash trapdoor to the deep
+room ew1   eaves-walk-a           # east under-eaves walk
+room gc    greed-loop-c           # east wall-hatch step down
+room kvc1  keyhole-vault-c        # dash vault (coins), west deep
+room lca   low-ceiling-arena-a    # dash crawl into the deep
+room lc2   lantern-cross-a        # deep crossing (duplicate grid #2)
+room owc   one-way-loop-c         # deep junction over the seal
+room kvc3  keyhole-vault-c        # east deep vault (duplicate grid #4)
+room swb   switchback-spine-b     # east deep cap
+room kvc2  keyhole-vault-c        # seal antechamber (duplicate grid #4)
+room asl   keep-astral-seal       # final gauntlet: passable only with BOTH
+room crown keep-crown-sanctum     # goal, bottom row east end
 
-# --- vertical shafts ---------------------------------------------------
+# --- roof --------------------------------------------------------------
+edge bv east kwp west
+edge kwp east ga west
+edge kwp floor t1 ceiling
 edge ga floor s1 ceiling
-edge s1 floor t1 ceiling
-edge t1 floor swa ceiling
-edge bv floor sha ceiling
-edge sha floor owc ceiling
-edge owc floor shb ceiling
-edge shb floor owb ceiling
-edge owb floor lcc ceiling
-edge gb floor sb ceiling
-edge sb floor tb ceiling
-edge tb floor ssc ceiling
-edge ssc floor kva ceiling
-edge gc floor tsc ceiling
-edge tsc floor ow2 ceiling
-edge ow2 floor kvb ceiling
+edge bv floor owp ceiling
 
-# --- horizontal corridors ---------------------------------------------
-edge bv east met west
-edge met east ga west
+# --- north-west quarter (wall act) -------------------------------------
+edge gr1 east owp west
+edge gr1 floor sb ceiling
+edge owp floor lcc ceiling
+edge sb east lcc west
+edge sb floor sd1 ceiling
+edge lcc east chl west
+edge sd1 east mr west
+
+# --- spawn column and upper halls (bare act) ---------------------------
+edge t1 floor chl ceiling
+edge chl east lc1 west
 edge s1 east ob west
-edge ob east wg west
-edge wg east gb west
-edge sb east asl west
+edge s1 floor lc1 ceiling
+edge ob east gb west
+edge gb floor swa ceiling
+edge lc1 east wg west
+edge wg east swa west
+edge lc1 floor sd2 ceiling
+edge mr east gx west
+edge gx floor lc2 ceiling
+edge sd2 east ew1 west
+edge ew1 east gc west
+edge ew1 floor kvc3 ceiling
+edge gc floor swb ceiling
+
+# --- the deep (dash act) and the seal ----------------------------------
+edge sd1 floor kvc1 ceiling
+edge kvc1 east lca west
+edge lca east lc2 west
+edge lc2 east owc west
+edge sd2 floor owc ceiling
+edge lc2 floor kvc2 ceiling
+edge kvc2 east asl west
+edge owc floor asl ceiling
+edge kvc3 east swb west
 edge asl east crown west
-edge ssc east ap west
-edge ap east owc west
-edge owb east gc west
-edge ow2 east lca west
-edge lca east kva west
-edge kva east lcc west
-edge lcc east kvb west
-edge kvb east tcb west
-edge tcb east swa west
 
 # --- gates -------------------------------------------------------------
-gate ob east ability wall      # mainline wall seal, seen bare from spawn row
-gate met west ability wall     # boots vault seal, seen bare from the coin ring
-gate ssc floor ability dash    # deep-wing seal, seen during the wall act
-gate gc floor ability dash     # greed ring hatch, seen during the wall act
-gate kvb west ability wall     # basement-side wing seal, seen bare from tcb
 gate asl east coins 58         # crown coin door (one direction only)
 
 # --- pickups / endpoints ----------------------------------------------
-pickup glove ob 100 140   # on the bare entry corridor; the upper coin stays ability-gated
+pickup glove ob 100 140
 pickup boots bv
 spawn s1
 goal crown

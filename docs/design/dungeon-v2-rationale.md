@@ -1,198 +1,102 @@
-# Dungeon v2 — layout rationale (rev 2, post-critique)
+# Dungeon v2 rationale (rev 3): the descent
 
-Rev 2 is a rebuild of the braided keep in response to the 2026-08-16 critique
-(15 confirmed findings: 5 blockers, 5 majors, 5 minors). The headline changes:
-the ability arc is now mandatory (the crown sits behind a room that is
-physically impassable without both abilities), the crown coin door is a real
-toll (58 > the 55 coins bankable below loadout `both`), the spawn and the
-antechamber have unique grids, and keep-wall-gate sits on the mainline.
+## Geometry: the dungeon is a descent, and the map is exact
 
-Metrics (tools/dungeon_layout_metrics.py): verdict ok; 27 rooms, 31 edges,
-cycle-rank 5, all-unlocked-diameter 8, dead-end-rooms 1 (crown),
-same-class-adjacent-edges 0, backtrack-unlock-events 5,
-goal-reachable-at none/wall/dash = False, at both = True, no absorbing traps
-at any loadout.
+The game is called *downwards*, and the layout now says so. The whole
+dungeon embeds on a 2D grid with no displacement: every edge joins two
+rooms in adjacent cells via matching door directions, no two rooms share a
+cell, and the in-game map can draw the dungeon exactly as it plays -
+connection lines never cross and never lie. The footprint is a compact
+6-wide, 6-deep block (30 rooms, 37 edges, cycle rank 8, all-unlocked
+diameter exactly 8).
 
-## Shape
+The spawn (`s1`) sits on the top row of rooms, directly under the
+greed-loop roof-cap; the crown is the east end of the bottom row, behind
+the astral seal. The mainline trends downward the whole run: roof, spawn
+column, upper halls, the sandglass trapdoors, the deep, the seal. Upward
+travel is what retreat and ability-powered backtracking look like - tide
+shafts and strata sorts climb bare, shutterless chimneys climb only with
+wall-kicks - so gravity is the geography and the abilities are the tools
+that fight it.
 
-Three themed columns joined by the spawn row on top and a basement row on the
-bottom, plus a dash-era deep wing:
+## No ability door locks: geometry gates everything
 
-- **West column (climbs):** greed-loop-a -> strata-sort-a (spawn) ->
-  tide-shaft-a -> switchback-spine-a. Everything here climbs bare in both
-  directions; it is the safety spine every retreat funnels into.
-- **Mid column (shutter cascade):** keep-boots-vault -> shutter-chute-a ->
-  one-way-loop-c -> shutter-chute-b -> one-way-loop-b -> low-ceiling-arena-c.
-  Alternates timed-aperture drops with one-way ring rooms; lateral exits at
-  one-way-loop-c (to the airlock braid) and one-way-loop-b (to the greed ring)
-  break the fall every two rooms.
-- **East stack (vaults):** greed-loop-b -> strata-sort-b -> tide-shaft-b ->
-  strata-sort-c. The mainline crosses its head; its foot is the basement
-  gatehouse.
-- **Deep wing (dash era):** keyhole-vault-a, low-ceiling-arena-a,
-  one-way-loop-b (2nd copy), tide-shaft-c, greed-loop-c, keyhole-vault-b —
-  the only part of the map that needs boots, and the only place a grid
-  repeats.
+Traversal abilities never lock doors. The five old `gate ... ability`
+lines are gone; ability progression is enforced by rooms whose door-pair
+crossings genuinely require the ability, each verified by the room auditor
+(`audit_room_grid`, all door pairs x loadouts, including retreats):
 
-**Mainline:** s1 -> ob (glove) -> wg (keep-wall-gate) -> gb -> sb -> asl
-(keep-astral-seal) -> crown — six edges, and every route to the crown crosses
-both wg (wall-only geometry, plus `gate ob east ability wall`) and asl
-(passable west->east only at loadout `both`). The coin door
-`gate asl east coins 58` is the single coin gate in the dungeon.
+- **Wall act (north-west quarter).** `chimney-lock-a` is the gate: its
+  west door sits behind a full-height partition flanked by sheer wall-kick
+  bays (crossable at wall/both only, in both directions - dash gets no
+  height there). The boots vault (`bv`) hangs at the roof's west corner
+  behind `keep-west-postern` (the same bay mechanism) and above a
+  `one-way-loop-c` under-stair whose climbs need wall. At bare or
+  dash-only loadouts the quarter, and the boots, are sealed.
+- **Dash act (the deep).** `sandglass-drop-a/b` are trapdoor rooms: their
+  floor doors sit behind a broad timed sand-curtain that only a dash
+  crosses (both ways), and the sealed bulb (`sd1`) additionally hides its
+  ceiling behind a wall-kick bay, so the wall quarter's vault cannot leak
+  back up at dash (floor->ceiling there is both-only). `keep-meteor-run`
+  and the `low-ceiling-arena-a` crawl gate the deep's side doors with
+  dash-symmetric crossings.
+- **Both (the seal).** `keep-astral-seal` was re-cut with a ceiling door:
+  the seal chute and west door share one chamber, and the east door lies
+  beyond a dash curtain *and* a wall-kick partition in sequence - every
+  crossing to the east door is both-only, in either direction. The crown
+  is reachable exactly at `both` and at no lesser loadout.
 
-## Acts
+Every reachable state at every fixed loadout can retreat to spawn (the
+metrics tool verifies this); the gates are symmetric at the loadout that
+opens them, so nothing one-ways a player into a pocket they cannot leave.
 
-**Act 1 — bare prologue (8 rooms).** The glove is one easy room from spawn:
-s1 (easy) -> keep-observatory, passable bare in both directions. Before
-grabbing it the player can lap the ga/met coin ring above spawn and the
-t1-swa-tcb basement loop below, and sees three locked doors bare: ob east
-(wall), met west (wall), kvb west (wall). Every bare state retreats to spawn:
-the west column climbs at `none` end to end.
+## Acts, backtracking, loops
 
-**Act 2 — wall (22 rooms).** The glove opens the mainline (ob east -> wg,
-the wall showcase, crossed head-on) and the boots wing (met west -> bv:
-**boots**). The east stack (gb, sb, tb, ssc) and the whole mid cascade open,
-including the wall-era shortcut lcc -> kvb -> tcb -> swa that loops the
-basement back to the west column. Three locked doors are seen during this
-act: ssc floor (dash), gc floor (dash), and the asl coin door.
+Bare: the roof walk, spawn column, upper halls and east gallery (glove one
+door east of spawn in the observatory; the wall-gate keep on the gallery
+loop shows a wall lock in the first minutes). Wall: back up and west
+through the chimney lock into the gable quarter - boots at the roof corner
+via the postern. Dash: down the sandglass trapdoors into the deep vaults.
+Both: the astral seal, then the crown. Fourteen-plus geometric locks are
+seen before they open, so the backtrack-unlock metric stays comfortably
+above target; cycle rank 8 keeps two-to-three live loops per act.
 
-**Act 3 — both (27 rooms).** Boots + glove open four rooms never seen
-before — kva, lca, tsc, ow2 — plus the crossing of asl itself: the deep wing
-is a braid of dash crawls (lca teaches the low-lid rule at the easy tier
-before lcc's 1-tile pinches are required), the tsc/gc hard ring, and the two
-keyhole junctions. Its 11 coins are what push the purse over the crown door.
-The finale ramps hard: ssc (hard) -> kva -> ... -> asl (both-ability
-gauntlet) -> crown.
+## Crown coin gate arithmetic
 
-## Coin arithmetic
+Coins bankable at fixed loadouts (per the regenerated passability table):
+bare 36, wall 50 (the wall quarter's 14 coins arrive with the glove), dash
+57 (the deep's vaults arrive with the boots), both 69. The crown door
+costs **58**: strictly more than anything bankable below `both` (max 57,
+at dash), and 11 under the full-clear total, so the seal always demands
+the complete descent but never demands perfection.
 
-Total coins on the map: **66**. Bankable by fixed loadout (rooms reachable
-per the metrics tool):
+## New vocabulary rooms
 
-| loadout | rooms | coins bankable |
-|---|---|---|
-| none | 8 | 22 |
-| wall | 22 | 55 |
-| dash | 8 | 22 |
-| both | 27 | 66 |
+The room set gained six reusable grids and one keep re-cut, all authored
+at rooms-v2 standard (32x18 grid + spec, audited across all door pairs x
+loadouts): `gable-run-a` (east+floor roof corner), `eaves-walk-a`
+(east+west+floor walk), `lantern-cross-a` (the four-door crossing),
+`chimney-lock-a` (three-door wall gate), `keep-west-postern` (roof wall
+gate), `sandglass-drop-a/b` (dash trapdoors), and the re-cut
+`keep-astral-seal` (three-door both gate). Rooms of rev 2 that the new
+embedding does not seat (`strata-sort-c`, `tide-shaft-b/c`,
+`shutter-chute-a/b`, `keyhole-vault-a/b`, `one-way-loop-b`,
+`antiphase-airlock-a`, `metronome-gallery-a`, `two-clock-fork-b`,
+`braided-crossing-*`) remain in the vocabulary for the layout generator.
 
-Crown door: **58 coins**. 58 > 55, so no sub-`both` loadout can bank the
-toll even sweeping everything it can reach; at `both` the margin is 8 coins
-(sweep ~88%), so the door demands the deep wing's 11 coins, not a full-clear.
-There is no small "teaching" coin door — coin doors appear exactly once, at
-the crown, so the vocabulary is not diluted (finding 7).
+Remaining door-signature coverage gaps (commissioning targets): only one
+`east+floor` room (gable-run-a) and one four-door room (lantern-cross-a)
+exist; there is no `ceiling+east+west` room with bare crossings besides
+the wall-gated chimney-lock, and no wall-symmetric `ceiling+floor` shaft
+(a wall-only descent seems physically awkward - dash or fall always
+leaks); a `west+floor` room outside the greed-loop family would also help
+roof-caps vary.
 
-## Backtrack payoffs
+## Layout tooling
 
-| Locked door seen | Opens with | Payoff |
-|---|---|---|
-| ob east (Act 1) | glove | the entire mainline east of spawn |
-| met west (Act 1) | glove | boots vault |
-| kvb west (Act 1) | glove | basement shortcut into the mid cascade |
-| ssc floor (Act 2) | boots | deep-wing junction (kva) and the wing braid |
-| gc floor (Act 2) | boots | tsc/ow2/lca dash ring and its coins |
-| asl east (Act 2) | 58 coins + both | crown |
-
-Metric: backtrack-unlock-events 5.
-
-## Retreat safety
-
-The metrics tool's absorbing-trap check passes at all four loadouts: every
-reachable (room, entry) state can walk back to spawn at its own loadout.
-Load-bearing choices: the west column and switchback/tcb basement climb bare
-both ways; one-way descents (owc, owb, shb) all sit behind wall gates, and
-each has a same-loadout return (owc floor->west at none, owb east->ceiling
-and shb floor->ceiling at wall); the dash-sealed wing is entered only at
-`both`, at which every wing pair needed for the walk home solves. Rooms whose
-grids cannot be re-ascended bare (kva, kvb interiors) are unreachable below
-the loadout that escapes them, and every gate bounce has a bare self-pair.
-
-## Room table
-
-| id | grid | difficulty | role |
-|---|---|---|---|
-| s1 | strata-sort-a | easy | spawn hub (unique grid — no duplicate) |
-| ga | greed-loop-a | easy | coin ring above spawn |
-| met | metronome-gallery-a | easy | boots-vault approach |
-| bv | keep-boots-vault | keep | boots pickup |
-| ob | keep-observatory | keep | glove pickup, 1 room from spawn |
-| wg | keep-wall-gate | keep | wall showcase, on the mainline |
-| gb | greed-loop-b | medium | east stack head |
-| sb | strata-sort-b | medium | east crossroads, crown antechamber approach |
-| tb | tide-shaft-b | medium | east stack shaft |
-| ssc | strata-sort-c | hard | basement gatehouse, dash seal |
-| ap | antiphase-airlock-a | easy | braid corridor ssc <-> owc |
-| asl | keep-astral-seal | keep | final gauntlet, both-only, coin door |
-| crown | keep-crown-sanctum | keep | goal (only dead end) |
-| t1 | tide-shaft-a | easy | west climb shaft |
-| swa | switchback-spine-a | easy | west basement climber |
-| tcb | two-clock-fork-b | medium | basement timing corridor |
-| sha | shutter-chute-a | easy | mid cascade aperture |
-| owc | one-way-loop-c | hard | mid cascade junction (wall-up ring) |
-| shb | shutter-chute-b | medium | mid cascade aperture |
-| owb | one-way-loop-b | medium | mid cascade ring — duplicate #1, optional wing |
-| lcc | low-ceiling-arena-c | hard | deep crawl junction |
-| kva | keyhole-vault-a | easy | deep wing junction (Act 3 only) |
-| kvb | keyhole-vault-b | medium | wing/basement junction |
-| lca | low-ceiling-arena-a | easy | dash teaching corridor (Act 3 only) |
-| gc | greed-loop-c | hard | dash coin ring (Act 3 only) |
-| tsc | tide-shaft-c | hard | deep wing shaft (Act 3 only) |
-| ow2 | one-way-loop-b | medium | deep wing ring — duplicate #2, optional wing |
-
-Class census (27 rooms): strata x3, tide x3, greed x3, one-way x3 (two of
-them the deliberate duplicate pair), shutter x2, keyhole x2, low-ceiling x2,
-metronome, antiphase, switchback, two-clock x1 each, keeps x6. The two
-largest classes together supply 6/27 = 22% of the dungeon.
-
-## Critique disposition (15 confirmed findings)
-
-1. **Ability arc optional (blocker).** Fixed. keep-astral-seal sits on the
-   only door into the crown and is impassable below `both`;
-   goal-reachable-at none/wall/dash all report False.
-2. **30-coin door not a toll (blocker).** Fixed. Door raised to 58 against
-   55 bankable below `both` (table above); the 6-coin toll is gone, so this
-   is the only coin door and it forces the Act 3 sweep.
-3. **Glove only via a hard room (major).** Fixed. The glove room
-   (keep-observatory) is adjacent to the easy spawn room and passable bare
-   both ways; no hard room stands before the first ability.
-4. **Act 4 fizzles, no new endgame rooms (major).** Fixed. Loadout `both`
-   newly opens kva, lca, gc, tsc, ow2 and the asl crossing — five rooms plus
-   the finale that no earlier act can touch — and the difficulty rises into
-   the crown (ssc hard -> wing -> asl gauntlet).
-5. **Duplicate grids at landmark junctions (blocker).** Fixed. Spawn and
-   antechamber grids are unique; the only duplicated grid is one-way-loop-b,
-   both copies in optional wing/cascade positions off the mainline.
-6. **Columns are class permutations (major).** Fixed. West = bare climbs
-   (tide/switchback), mid = shutter cascade with one-way rings, east =
-   greed/strata vault stack, deep wing = keyhole/low-ceiling braid; no two
-   columns share their sequence, and greed-loops no longer head 4/5 shafts.
-7. **6-coin toll dilutes coin-door vocabulary (minor).** Fixed by deletion:
-   exactly one coin door exists (the crown's), so the vocabulary is taught
-   once, where it matters.
-8. **Shard vault dead-end with no payoff (minor).** Fixed by removal. The
-   dungeon's only dead end is the crown; the dash treasure role moved to the
-   gc ring, which is a loop, not a cul-de-sac.
-9. **Absorbing trap {kv,tc,s5,o4} (blocker).** Fixed. The new topology
-   passes the tool's absorbing-trap check at every loadout (see Retreat
-   safety); the old kv funnel no longer exists.
-10. **Crown is a bare six-room walk (blocker).** Fixed. The bare-reachable
-    set is 8 rooms and does not contain wg's far side, let alone the crown;
-    both wall (wg) and both (asl) stand on the mainline.
-11. **Six consecutive mid-column descents (major).** Fixed. The mainline has
-    no consecutive descents; the optional cascade alternates shutter and
-    one-way verbs with lateral exits every two rooms, and the two remaining
-    strata siblings (sb, ssc) sit in different roles two rooms apart with a
-    tide shaft between them, in the east stack rather than a single chute.
-12. **Two classes supply a third of the dungeon (major).** Fixed. Largest
-    two classes are 6/27 = 22% (was 9/28 = 32%); seven classes appear once.
-13. **keep-wall-gate in an optional wing (major).** Fixed. wg is mainline
-    room three; every spawn->crown route crosses it head-on right after the
-    glove.
-14. **Long braid has no difficulty ramp (minor).** Fixed. Both long routes
-    ramp: mainline easy (s1/ob) -> keep/medium (wg/gb/sb) -> both-gauntlet
-    (asl); the basement braid runs easy west rooms into hard lcc/ssc before
-    rejoining, and Act 3's wing is uniformly late and hard except its
-    deliberate easy teaching rooms.
-15. **low-ceiling-arena has no teaching instance (minor).** Fixed.
-    low-ceiling-arena-a (easy) is the wing's entry corridor, met with boots
-    in hand before lcc's hard crawls are ever required.
+`tools/dungeon_layout_solver.py` holds the generator-shaped pipeline used
+to produce this layout: skeleton search (annealed grid edge-sets scored on
+diameter, cycle rank, dead-ends and door-shape supply), room selection per
+cell from the vocabulary by door signature and class-adjacency, then
+verdict via `tools/dungeon_layout_metrics.py`. Layouts are meant to be
+generated; rooms stay authored.

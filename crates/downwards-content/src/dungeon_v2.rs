@@ -29,6 +29,21 @@ const GRIDS: &[(&str, &str, &str)] = &[
         include_str!("../../downwards-gen/rooms-v2/antiphase-airlock-a.spec.txt"),
     ),
     (
+        "chimney-lock-a",
+        include_str!("../../downwards-gen/rooms-v2/chimney-lock-a.txt"),
+        include_str!("../../downwards-gen/rooms-v2/chimney-lock-a.spec.txt"),
+    ),
+    (
+        "eaves-walk-a",
+        include_str!("../../downwards-gen/rooms-v2/eaves-walk-a.txt"),
+        include_str!("../../downwards-gen/rooms-v2/eaves-walk-a.spec.txt"),
+    ),
+    (
+        "gable-run-a",
+        include_str!("../../downwards-gen/rooms-v2/gable-run-a.txt"),
+        include_str!("../../downwards-gen/rooms-v2/gable-run-a.spec.txt"),
+    ),
+    (
         "greed-loop-a",
         include_str!("../../downwards-gen/rooms-v2/greed-loop-a.txt"),
         include_str!("../../downwards-gen/rooms-v2/greed-loop-a.spec.txt"),
@@ -59,6 +74,11 @@ const GRIDS: &[(&str, &str, &str)] = &[
         include_str!("../../downwards-gen/rooms-v2/keep-crown-sanctum.spec.txt"),
     ),
     (
+        "keep-meteor-run",
+        include_str!("../../downwards-gen/rooms-v2/keep-meteor-run.txt"),
+        include_str!("../../downwards-gen/rooms-v2/keep-meteor-run.spec.txt"),
+    ),
+    (
         "keep-observatory",
         include_str!("../../downwards-gen/rooms-v2/keep-observatory.txt"),
         include_str!("../../downwards-gen/rooms-v2/keep-observatory.spec.txt"),
@@ -67,6 +87,11 @@ const GRIDS: &[(&str, &str, &str)] = &[
         "keep-wall-gate",
         include_str!("../../downwards-gen/rooms-v2/keep-wall-gate.txt"),
         include_str!("../../downwards-gen/rooms-v2/keep-wall-gate.spec.txt"),
+    ),
+    (
+        "keep-west-postern",
+        include_str!("../../downwards-gen/rooms-v2/keep-west-postern.txt"),
+        include_str!("../../downwards-gen/rooms-v2/keep-west-postern.spec.txt"),
     ),
     (
         "keyhole-vault-a",
@@ -82,6 +107,11 @@ const GRIDS: &[(&str, &str, &str)] = &[
         "keyhole-vault-c",
         include_str!("../../downwards-gen/rooms-v2/keyhole-vault-c.txt"),
         include_str!("../../downwards-gen/rooms-v2/keyhole-vault-c.spec.txt"),
+    ),
+    (
+        "lantern-cross-a",
+        include_str!("../../downwards-gen/rooms-v2/lantern-cross-a.txt"),
+        include_str!("../../downwards-gen/rooms-v2/lantern-cross-a.spec.txt"),
     ),
     (
         "low-ceiling-arena-a",
@@ -107,6 +137,16 @@ const GRIDS: &[(&str, &str, &str)] = &[
         "one-way-loop-c",
         include_str!("../../downwards-gen/rooms-v2/one-way-loop-c.txt"),
         include_str!("../../downwards-gen/rooms-v2/one-way-loop-c.spec.txt"),
+    ),
+    (
+        "sandglass-drop-a",
+        include_str!("../../downwards-gen/rooms-v2/sandglass-drop-a.txt"),
+        include_str!("../../downwards-gen/rooms-v2/sandglass-drop-a.spec.txt"),
+    ),
+    (
+        "sandglass-drop-b",
+        include_str!("../../downwards-gen/rooms-v2/sandglass-drop-b.txt"),
+        include_str!("../../downwards-gen/rooms-v2/sandglass-drop-b.spec.txt"),
     ),
     (
         "shutter-chute-a",
@@ -139,6 +179,11 @@ const GRIDS: &[(&str, &str, &str)] = &[
         include_str!("../../downwards-gen/rooms-v2/switchback-spine-a.spec.txt"),
     ),
     (
+        "switchback-spine-b",
+        include_str!("../../downwards-gen/rooms-v2/switchback-spine-b.txt"),
+        include_str!("../../downwards-gen/rooms-v2/switchback-spine-b.spec.txt"),
+    ),
+    (
         "tide-shaft-a",
         include_str!("../../downwards-gen/rooms-v2/tide-shaft-a.txt"),
         include_str!("../../downwards-gen/rooms-v2/tide-shaft-a.spec.txt"),
@@ -168,11 +213,13 @@ pub enum DungeonV2Requirement {
     Coins(u16),
 }
 
+/// Parsed room `.spec.txt` payload, shared with the rooms-v2 catalogue so
+/// hazard timing truth is only ever parsed in one place.
 #[derive(Clone, Debug)]
-struct SpecData {
-    doors: Vec<(&'static str, BoundarySide)>,
-    coins: Vec<Rect>,
-    hazards: Vec<TimedHazard>,
+pub(crate) struct SpecData {
+    pub(crate) doors: Vec<(&'static str, BoundarySide)>,
+    pub(crate) coins: Vec<Rect>,
+    pub(crate) hazards: Vec<TimedHazard>,
 }
 
 #[derive(Clone, Debug)]
@@ -215,7 +262,7 @@ pub fn dungeon_v2_total_coins() -> u16 {
         .sum()
 }
 
-fn parse_spec(source: &str) -> SpecData {
+pub(crate) fn parse_spec(source: &str) -> SpecData {
     let mut spec = SpecData {
         doors: Vec::new(),
         coins: Vec::new(),
@@ -267,7 +314,7 @@ fn parse_spec(source: &str) -> SpecData {
     spec
 }
 
-fn door_geometry(side: BoundarySide) -> (Rect, Point) {
+pub(crate) fn door_geometry(side: BoundarySide) -> (Rect, Point) {
     match side {
         BoundarySide::Left => (Rect::new(0, 130, 8, 40), Point::new(12, 148)),
         BoundarySide::Right => (Rect::new(312, 130, 8, 40), Point::new(300, 148)),
