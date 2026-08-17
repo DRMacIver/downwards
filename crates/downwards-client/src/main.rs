@@ -3908,6 +3908,10 @@ impl ClientState {
             self.perform_dungeon_solve(request);
             return;
         }
+        if self.selection.mode == RoomMode::DungeonV2 {
+            self.perform_dungeon_v2_solve(request);
+            return;
+        }
         let (mut initial, generated_provenance) =
             match load_scenario(self.selection, &self.catalogue) {
                 Ok(scenario) => scenario,
@@ -4007,6 +4011,83 @@ impl ClientState {
         candidates.sort();
         let target_door = candidates.into_iter().next().map(|(_, id)| id);
         if let Some(target) = target_door {
+            self.perform_target_door_solve(initial, None, target, None, 0, 0);
+        } else {
+            self.perform_exit_solve(initial, None);
+        }
+    }
+
+    fn perform_dungeon_v2_solve(&mut self, request: SolveRequest) {
+        let Some(run) = self.dungeon_v2_run.clone() else {
+            self.set_replay_error(
+                "DUNGEON STATE ERROR",
+                "persistent v2 run state is missing".to_owned(),
+            );
+            return;
+        };
+        let initial = self.simulation.clone();
+        if let SolveRequest::Pickup(pickup_id) = request {
+            self.perform_pickup_solve(initial, None, pickup_id);
+            return;
+        }
+        let dungeon = dungeon_v2_definition();
+        if run.room == dungeon.glove_room && !run.inventory.climbing_gloves {
+            self.perform_pickup_solve(initial, None, DEMO_DUNGEON_GLOVE_PICKUP.to_owned());
+            return;
+        }
+        if run.room == dungeon.boots_room && !run.inventory.winged_boots {
+            self.perform_pickup_solve(initial, None, DEMO_DUNGEON_BOOT_PICKUP.to_owned());
+            return;
+        }
+        if run.room == dungeon.goal {
+            if !run.inventory.crown {
+                self.perform_pickup_solve(initial, None, DEMO_DUNGEON_CROWN_PICKUP.to_owned());
+            } else {
+                self.perform_exit_solve(initial, None);
+            }
+            return;
+        }
+        if let Some(coin_id) = self
+            .simulation
+            .room()
+            .pickups()
+            .iter()
+            .enumerate()
+            .find(|(index, pickup)| {
+                pickup.id().starts_with("v2-coin-")
+                    && self.simulation.pickup_is_collected(*index) == Some(false)
+            })
+            .map(|(_, pickup)| pickup.id().to_owned())
+        {
+            self.perform_pickup_solve(initial, None, coin_id);
+            return;
+        }
+        // Nearest openable door that is not the entry door (which stays as a
+        // last resort so retreat is still offered).
+        let entry_door = self.simulation.entry_door().map(str::to_owned);
+        let player = self.simulation.player().bounds();
+        let mut candidates: Vec<(i64, String)> = self
+            .simulation
+            .room()
+            .doors()
+            .iter()
+            .filter(|door| {
+                dungeon_v2_door_requirement(&run.room, &door.id)
+                    .is_none_or(|requirement| run.inventory.satisfies(requirement))
+            })
+            .map(|door| {
+                let trigger = door.trigger_bounds;
+                let dx = i64::from(trigger.x + trigger.width / 2 - player.x - player.width / 2);
+                let dy = i64::from(trigger.y + trigger.height / 2 - player.y - player.height / 2);
+                let mut score = dx * dx + dy * dy;
+                if Some(door.id.as_str()) == entry_door.as_deref() {
+                    score += 1_000_000_000;
+                }
+                (score, door.id.clone())
+            })
+            .collect();
+        candidates.sort();
+        if let Some((_, target)) = candidates.into_iter().next() {
             self.perform_target_door_solve(initial, None, target, None, 0, 0);
         } else {
             self.perform_exit_solve(initial, None);
@@ -4555,7 +4636,7 @@ impl ClientState {
             self.human_recorder = HumanRecorder::new(&self.simulation);
         } else if complete
             && matches!(&self.replay_mode, ReplayMode::Playback(_))
-            && (self.selection.mode == RoomMode::Dungeon
+            && (matches!(self.selection.mode, RoomMode::Dungeon | RoomMode::DungeonV2)
                 || matches!(
                     self.selection.mode,
                     RoomMode::Challenge(ChallengeKind::DungeonFloor(_))
