@@ -100,6 +100,42 @@ def main() -> int:
         print_report(problems, {})
         return 1
 
+    # --- grid embedding ----------------------------------------------------
+    # The dungeon must embed on a 2D grid: every edge joins rooms in adjacent
+    # cells (unit step in the door's direction) and no two rooms share a cell,
+    # so the in-game map can draw the graph with no displacement and no
+    # crossing or lying connection lines.
+    step_of = {"west": (-1, 0), "east": (1, 0), "ceiling": (0, -1), "floor": (0, 1)}
+    adjacency: dict[str, list[tuple[str, str]]] = {r: [] for r in layout.rooms}
+    for a, da, b, db in layout.edges:
+        if a in adjacency and b in adjacency:
+            adjacency[a].append((da, b))
+            adjacency[b].append((db, a))
+    positions = {layout.spawn: (0, 0)}
+    order = deque([layout.spawn])
+    while order:
+        current = order.popleft()
+        for door, neighbour in adjacency[current]:
+            target = (
+                positions[current][0] + step_of[door][0],
+                positions[current][1] + step_of[door][1],
+            )
+            if neighbour in positions:
+                if positions[neighbour] != target:
+                    problems.append(
+                        f"problem grid-inconsistent edge {current}.{door} -> {neighbour}: "
+                        f"expected cell {target}, placed at {positions[neighbour]}"
+                    )
+            else:
+                positions[neighbour] = target
+                order.append(neighbour)
+    cell_owners: dict[tuple[int, int], list[str]] = {}
+    for room, cell in positions.items():
+        cell_owners.setdefault(cell, []).append(room)
+    for cell, owners in sorted(cell_owners.items()):
+        if len(owners) > 1:
+            problems.append(f"problem grid cell {cell} shared by rooms {sorted(owners)}")
+
     # --- progression model -------------------------------------------------
     # neighbour map: (room, entry_door) --edge--> (other_room, other_entry)
     step = {}
