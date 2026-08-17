@@ -24,7 +24,7 @@ pub const ONE_WAY_DROP_TICKS: u8 = 3;
 ///
 /// Historical corpus replays deliberately keep constructing an unconfigured `Simulation`; their
 /// digests therefore remain in the legacy policy domain until that corpus is regenerated.
-pub const PLAYER_MOVEMENT_POLICY_VERSION: u32 = 9;
+pub const PLAYER_MOVEMENT_POLICY_VERSION: u32 = 10;
 
 const GRAVITY: i32 = 96;
 const HELD_JUMP_GRAVITY: i32 = 48;
@@ -1533,10 +1533,19 @@ impl Simulation {
         if let Some(id) = &newly_reached {
             self.state.reached_exit = Some(id.clone());
         }
-        // Bank pending pickups once the player comes to rest on the ground, or
-        // automatically on leaving the room (exit or door) with the coin in
-        // hand; on a leaving tick the bank is reported before the exit event.
-        let at_rest = self.state.player.grounded && self.state.player.velocity_subpixels.x == 0;
+        // Bank pending pickups once the player comes to rest on the ground
+        // somewhere genuinely safe - a timed hazard's square is never safe,
+        // even while dormant - or automatically on leaving the room (exit or
+        // door) with the coin in hand; on a leaving tick the bank is reported
+        // before the exit event.
+        let inside_hazard_zone = self
+            .room
+            .timed_hazards
+            .iter()
+            .any(|hazard| bounds.intersects(hazard.bounds()));
+        let at_rest = self.state.player.grounded
+            && self.state.player.velocity_subpixels.x == 0
+            && !inside_hazard_zone;
         if at_rest || self.state.reached_exit.is_some() {
             for pickup_index in 0..self.state.pending_pickups.len() {
                 if self.state.pending_pickups[pickup_index] {

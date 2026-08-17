@@ -1864,6 +1864,82 @@ fn a_touched_coin_banks_when_leaving_through_a_door() {
 }
 
 #[test]
+fn a_dormant_hazard_zone_is_not_a_safe_place_to_bank() {
+    // Standing still inside a timed hazard's rectangle - even while it is
+    // inactive - must not bank a touched coin; stepping out and stopping does.
+    let mut tiles = vec![Tile::Empty; WIDTH * HEIGHT];
+    for x in 0..WIDTH {
+        tiles[16 * WIDTH + x] = Tile::Solid;
+    }
+    let room = Room::new(
+        "beam",
+        "Beam",
+        WIDTH as u16,
+        HEIGHT as u16,
+        TILE_SIZE,
+        tiles,
+        Point::new(40, 148),
+        vec![],
+    )
+    .unwrap()
+    .with_objects(
+        // A beam over the floor at x 80..140, almost always dormant so the
+        // scripted run below never dies in it.
+        vec![TimedHazard::new(Rect::new(80, 100, 60, 70), 100_000, 1, 50_000).unwrap()],
+        vec![Pickup::new("coin", Rect::new(100, 150, 8, 8)).unwrap()],
+    )
+    .unwrap();
+    let mut simulation = Simulation::new(room);
+    simulation.enable_current_player_movement();
+    let mut touched = false;
+    let mut banked_tick = None;
+    for tick in 0..400 {
+        // Walk right into the beam zone and rest there until tick 200, then
+        // walk clear of it and rest again.
+        let x = simulation.player().bounds().x;
+        let move_x = if tick < 200 {
+            i8::from(x < 100)
+        } else {
+            i8::from(x < 200)
+        };
+        let report = simulation.step(Action {
+            move_x,
+            ..Action::default()
+        });
+        for event in report.events {
+            match event {
+                SimulationEvent::PickupTouched { .. } => touched = true,
+                SimulationEvent::PickupCollected { .. } => {
+                    banked_tick.get_or_insert(tick);
+                }
+                SimulationEvent::Died(_) => panic!("dormant beam killed the walker at {tick}"),
+                _ => continue,
+            };
+        }
+        if tick < 200 && simulation.player().grounded() {
+            let bounds = simulation.player().bounds();
+            if bounds.x + bounds.width > 80 && bounds.x < 140 {
+                assert!(
+                    banked_tick.is_none(),
+                    "banked at tick {tick} while resting inside the hazard zone"
+                );
+            }
+        }
+    }
+    assert!(touched, "the walk should touch the coin");
+    let banked = banked_tick.expect("the coin should bank after leaving the beam zone");
+    assert!(
+        banked >= 200,
+        "banking must wait for a stop outside the zone"
+    );
+    let bounds = simulation.player().bounds();
+    assert!(
+        bounds.x >= 140 || bounds.x + bounds.width <= 80,
+        "the player should be clear of the zone when banked"
+    );
+}
+
+#[test]
 fn a_touched_coin_banks_only_once_the_player_stands_still() {
     // Landing is not enough: the player must actually come to rest (or leave
     // the room) before a touched coin is finalised.

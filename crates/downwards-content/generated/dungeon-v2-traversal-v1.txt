@@ -1,5 +1,5 @@
 schema dungeon-v2-traversal-v1
-player-movement-policy 9
+player-movement-policy 10
 
 goal crown west 3 solved
 pair ap east east 0 solved
