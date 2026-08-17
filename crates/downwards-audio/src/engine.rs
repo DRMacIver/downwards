@@ -19,16 +19,17 @@ use crate::{
 
 /// Overall output volume of the live engine.
 const MASTER_VOLUME: f32 = 0.5;
-/// Room transition (§7.6, retuned 2026-08 — designer feedback: the 150 ms
-/// hard swap was too abrupt). The outgoing room fades over
-/// [`FADE_OUT_SECONDS`] on a raised-cosine curve, a breath of silence
-/// [`TRANSITION_GAP_SECONDS`] separates the rooms, then the new room fades in
-/// over [`FADE_IN_SECONDS`]. Respawn within a room never takes this path —
-/// the music free-runs straight through it (§7.3 as amended), the timeline
-/// merely re-basing by whole hazard cycles.
-pub const FADE_OUT_SECONDS: f64 = 0.4;
-pub const TRANSITION_GAP_SECONDS: f64 = 0.12;
-pub const FADE_IN_SECONDS: f64 = 1.5;
+/// Room transition (§7.6, retuned 2026-08 twice — designer feedback: the
+/// 150 ms hard swap was too abrupt, and the fade-out/gap/fade-in that
+/// replaced it left an audible hole of silence). The two rooms now
+/// crossfade: the new room starts sounding immediately and ramps up over
+/// [`FADE_IN_SECONDS`] while the old room keeps playing underneath, ramping
+/// down over [`FADE_OUT_SECONDS`] — at no point is the output silent.
+/// Respawn within a room never takes this path — the music free-runs
+/// straight through it (§7.3 as amended), the timeline merely re-basing by
+/// whole hazard cycles.
+pub const FADE_OUT_SECONDS: f64 = 1.0;
+pub const FADE_IN_SECONDS: f64 = 1.0;
 /// Mute toggle ramp.
 const MUTE_SECONDS: f64 = 0.03;
 /// Maximum slew per block, as a fraction of the block length (§7.3).
@@ -197,18 +198,18 @@ struct Callback {
     epoch: Instant,
     sample_rate: u32,
     active: Option<Box<Sequencer>>,
-    /// Fade state for room transitions: 1.0 = fully open.
+    /// Fade-in gain of the active (incoming) room: 1.0 = fully open.
     transition: crate::synth::voice::CosRamp,
     mute: crate::synth::voice::CosRamp,
     pause: crate::synth::voice::CosRamp,
-    fading_out: bool,
-    /// Samples of deliberate quiet still to elapse between the old room's
-    /// fade-out and the new room's fade-in.
-    gap_remaining: u64,
+    /// The previous room's sequencer with its fade-out gain, kept sounding
+    /// underneath the incoming room for a seamless crossfade.
+    outgoing: Option<(Box<Sequencer>, crate::synth::voice::CosRamp)>,
     /// Whole-hazard-cycle re-basing of the engine timeline versus the sim
     /// clock (in ticks). Lets respawns play through without any seek.
     tick_offset: f64,
     scratch: Vec<f32>,
+    outgoing_scratch: Vec<f32>,
 }
 
 impl Callback {
@@ -221,11 +222,19 @@ impl Callback {
             transition: crate::synth::voice::CosRamp::new(1.0),
             mute: crate::synth::voice::CosRamp::new(1.0),
             pause: crate::synth::voice::CosRamp::new(1.0),
-            fading_out: false,
-            gap_remaining: 0,
+            outgoing: None,
             tick_offset: 0.0,
             scratch: vec![0.0; 8192],
+            outgoing_scratch: vec![0.0; 8192],
         }
+    }
+
+    /// Current fade-out gain of the outgoing room (0 when none is sounding).
+    #[cfg(test)]
+    fn outgoing_gain(&self) -> f32 {
+        self.outgoing
+            .as_ref()
+            .map_or(0.0, |(_, ramp)| ramp.value())
     }
 
     fn estimated_sim_tick(&self) -> f64 {
@@ -237,40 +246,28 @@ impl Callback {
     }
 
     fn render(&mut self, out: &mut [f32]) {
-        // Room swap protocol (§7.6): fade out, swap at zero, fade in.
-        let pending_waiting = self
-            .shared
-            .pending
-            .try_lock()
-            .map(|pending| pending.is_some())
-            .unwrap_or(false);
+        // Room swap protocol (§7.6): seamless crossfade. The pending room
+        // becomes active immediately, fading in, while the previous room
+        // moves to the outgoing slot and fades out underneath it.
         let fade_out_samples = FADE_OUT_SECONDS * f64::from(self.sample_rate);
         let fade_in_samples = FADE_IN_SECONDS * f64::from(self.sample_rate);
-        if pending_waiting && !self.fading_out && self.active.is_some() {
-            self.fading_out = true;
-            self.gap_remaining =
-                (TRANSITION_GAP_SECONDS * f64::from(self.sample_rate)) as u64;
-            self.transition.set_target(0.0, fade_out_samples);
-        }
-        let transition_closed = self.transition.value() <= 1.0e-3 && self.transition.done();
-        // Once the fade-out has completed, hold a short breath of silence
-        // before the swap so the rooms read as separate spaces.
-        if self.fading_out && transition_closed && self.gap_remaining > 0 {
-            self.gap_remaining = self.gap_remaining.saturating_sub(out.len() as u64);
-        }
-        if pending_waiting
-            && (self.active.is_none()
-                || (self.fading_out && transition_closed && self.gap_remaining == 0))
-            && let Ok(mut pending) = self.shared.pending.try_lock()
+        if let Ok(mut pending) = self.shared.pending.try_lock()
             && let Some(mut sequencer) = pending.take()
         {
             let target_tick = self.estimated_sim_tick().max(0.0) as u64;
             sequencer.seek(sample_index_for_tick(target_tick, self.sample_rate));
             let abilities = self.ability_mask();
             sequencer.set_layer_targets(abilities);
+            if let Some(previous) = self.active.take() {
+                // The old room keeps sounding at whatever gain the incoming
+                // fade had reached, ramping to silence from there.
+                let mut fade_out = crate::synth::voice::CosRamp::new(1.0);
+                fade_out.snap(self.transition.value());
+                fade_out.set_target(0.0, fade_out_samples);
+                self.outgoing = Some((previous, fade_out));
+            }
             self.active = Some(sequencer);
             self.tick_offset = 0.0;
-            self.fading_out = false;
             self.transition.snap(0.0);
             self.transition.set_target(1.0, fade_in_samples);
         }
@@ -345,8 +342,26 @@ impl Callback {
         }
 
         for sample in out.iter_mut() {
-            *sample *=
-                self.transition.advance() * self.mute.advance() * self.pause.advance() * MASTER_VOLUME;
+            *sample *= self.transition.advance();
+        }
+
+        // The outgoing room crossfades underneath the incoming one; once its
+        // fade-out has run to silence it is dropped.
+        if let Some((sequencer, fade_out)) = self.outgoing.as_mut() {
+            if self.outgoing_scratch.len() < block {
+                self.outgoing_scratch.resize(block, 0.0);
+            }
+            sequencer.render(&mut self.outgoing_scratch[..block]);
+            for (sample, &old) in out.iter_mut().zip(&self.outgoing_scratch[..block]) {
+                *sample += old * fade_out.advance();
+            }
+            if fade_out.done() && fade_out.value() <= 1.0e-3 {
+                self.outgoing = None;
+            }
+        }
+
+        for sample in out.iter_mut() {
+            *sample *= self.mute.advance() * self.pause.advance() * MASTER_VOLUME;
         }
     }
 
@@ -370,20 +385,17 @@ mod tests {
     fn fade_out_samples() -> u64 {
         (FADE_OUT_SECONDS * f64::from(RATE)) as u64
     }
-    fn gap_samples() -> u64 {
-        (TRANSITION_GAP_SECONDS * f64::from(RATE)) as u64
+    fn fade_in_samples() -> u64 {
+        (FADE_IN_SECONDS * f64::from(RATE)) as u64
     }
 
     #[test]
     #[allow(clippy::assertions_on_constants)]
     fn transition_lengths_are_gentle() {
-        // Designer feedback 2026-08: substantially longer than the old 150 ms
-        // halves, and the fade-in specifically "a second or two".
-        assert!(FADE_OUT_SECONDS >= 0.3);
-        assert!((1.0..=2.0).contains(&FADE_IN_SECONDS));
-        assert!(TRANSITION_GAP_SECONDS >= 0.05);
-        let total = FADE_OUT_SECONDS + TRANSITION_GAP_SECONDS + FADE_IN_SECONDS;
-        assert!((1.4..=2.6).contains(&total), "total transition {total}s");
+        // Designer feedback 2026-08: no hard swap, and no hole of silence —
+        // a gentle overlapped crossfade in the sub-two-second range.
+        assert!((0.5..=2.0).contains(&FADE_OUT_SECONDS));
+        assert!((0.5..=2.0).contains(&FADE_IN_SECONDS));
     }
 
     fn test_shared() -> Arc<Shared> {
@@ -474,11 +486,11 @@ mod tests {
         assert!(out.iter().any(|sample| sample.abs() > 0.01));
     }
 
-    /// Push a pending session into an already-playing callback and verify the
-    /// swap happens only after the full fade-out plus the silent gap, with
-    /// output actually quiet at the swap point.
+    /// Push a pending session into an already-playing callback and verify a
+    /// seamless crossfade: the new room starts sounding immediately while the
+    /// old one fades out on top of it — no silent gap anywhere.
     #[test]
-    fn room_swap_waits_for_fade_out_and_gap() {
+    fn room_swap_crossfades_without_silence() {
         let shared = test_shared();
         let mut callback = Callback::new(Arc::clone(&shared), Instant::now(), RATE);
         let block = 512_usize;
@@ -489,36 +501,43 @@ mod tests {
         callback.render(&mut out);
         assert!(callback.active.is_some(), "first room must start playing");
 
-        // Let it run past its own fade-in.
+        // Let it run well past its own fade-in.
         for _ in 0..200 {
             callback.render(&mut out);
         }
+        let last_sample = out[block - 1];
 
-        // Now request a room change.
+        // Now request a room change: the very next block must already be the
+        // new room (crossfading), not a fade-to-silence of the old one.
         *shared.pending.lock().unwrap() = Some(test_sequencer("engine-room-b"));
-        let earliest = fade_out_samples() + gap_samples();
-        let mut rendered = 0_u64;
-        let mut swap_at = None;
-        let mut quiet_at_swap = true;
-        for _ in 0..1000 {
-            let was_fading = callback.fading_out;
+        callback.render(&mut out);
+        assert!(
+            callback.outgoing.is_some(),
+            "the old room must keep sounding underneath the new one"
+        );
+        let boundary_jump = (out[0] - last_sample).abs();
+        assert!(
+            boundary_jump < 0.2,
+            "swap must not click (jump {boundary_jump})"
+        );
+
+        // Through the whole crossfade the combined fade gains must never dip
+        // toward silence — that dip is exactly the reported bug.
+        let crossfade_blocks =
+            (fade_out_samples().max(fade_in_samples()) / block as u64 + 2) as usize;
+        for _ in 0..crossfade_blocks {
+            let combined =
+                callback.transition.value() + callback.outgoing_gain();
+            assert!(
+                combined > 0.7,
+                "combined crossfade gain dipped to {combined}"
+            );
             callback.render(&mut out);
-            rendered += block as u64;
-            if was_fading && !callback.fading_out {
-                swap_at = Some(rendered);
-                quiet_at_swap = out.iter().all(|sample| sample.abs() < 0.05);
-                break;
-            }
         }
-        let swap_at = swap_at.expect("the pending room must eventually swap in");
+        // And once the fade-out has run its course the old room is dropped.
         assert!(
-            swap_at + (block as u64) >= earliest,
-            "swap after {swap_at} samples, before fade-out + gap ({earliest})"
+            callback.outgoing.is_none(),
+            "outgoing room must be released after the crossfade"
         );
-        assert!(
-            swap_at <= earliest + 20 * block as u64,
-            "swap after {swap_at} samples: gap far longer than intended ({earliest})"
-        );
-        assert!(quiet_at_swap, "the swap block must be near-silent");
     }
 }
