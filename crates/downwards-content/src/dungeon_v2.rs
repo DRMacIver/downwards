@@ -10,10 +10,14 @@ use std::{collections::BTreeMap, sync::OnceLock};
 use downwards_core::{BoundarySide, Door, Exit, Pickup, Point, Rect, Room, Tile, TimedHazard};
 use downwards_gen::parse_room_grid;
 
-use crate::{
-    DEMO_DUNGEON_BOOT_PICKUP, DEMO_DUNGEON_CROWN_PICKUP, DEMO_DUNGEON_GLOVE_PICKUP,
-    DEMO_DUNGEON_GOAL_EXIT,
-};
+/// Pickup ID for the climbing gloves.
+pub const DUNGEON_V2_GLOVE_PICKUP: &str = "climbing-gloves";
+/// Pickup ID for the winged boots.
+pub const DUNGEON_V2_BOOT_PICKUP: &str = "winged-boots";
+/// Pickup ID for the crown.
+pub const DUNGEON_V2_CROWN_PICKUP: &str = "crown";
+/// Exit ID for the crown goal exit.
+pub const DUNGEON_V2_GOAL_EXIT: &str = "crown-goal";
 
 const WIDTH: u16 = 32;
 const HEIGHT: u16 = 18;
@@ -523,7 +527,7 @@ pub fn dungeon_v2_room(instance_id: &str, inventory: &DungeonV2Inventory) -> Roo
     let is_spawn = instance_id == dungeon.spawn;
     let exits = (is_spawn && inventory.crown)
         .then(|| Exit {
-            id: DEMO_DUNGEON_GOAL_EXIT.to_owned(),
+            id: DUNGEON_V2_GOAL_EXIT.to_owned(),
             bounds: dungeon_v2_exit_gate_bounds(),
             destination: None,
             destination_entrance: None,
@@ -567,18 +571,18 @@ pub fn dungeon_v2_room(instance_id: &str, inventory: &DungeonV2Inventory) -> Roo
             from_coin(*spec.coins.first().expect("glove room has a coin position"))
         });
         pickups
-            .push(Pickup::new(DEMO_DUNGEON_GLOVE_PICKUP, bounds).expect("glove bounds are valid"));
+            .push(Pickup::new(DUNGEON_V2_GLOVE_PICKUP, bounds).expect("glove bounds are valid"));
     }
     if instance_id == dungeon.boots_room && !inventory.winged_boots {
         let bounds = dungeon.boots_bounds.unwrap_or_else(|| {
             from_coin(*spec.coins.first().expect("boots room has a coin position"))
         });
         pickups
-            .push(Pickup::new(DEMO_DUNGEON_BOOT_PICKUP, bounds).expect("boots bounds are valid"));
+            .push(Pickup::new(DUNGEON_V2_BOOT_PICKUP, bounds).expect("boots bounds are valid"));
     }
     if is_goal && !inventory.crown {
         pickups.push(
-            Pickup::new(DEMO_DUNGEON_CROWN_PICKUP, Rect::new(285, 14, 16, 16))
+            Pickup::new(DUNGEON_V2_CROWN_PICKUP, Rect::new(285, 14, 16, 16))
                 .expect("crown bounds are valid"),
         );
     }
@@ -643,21 +647,21 @@ mod tests {
             glove_room
                 .pickups()
                 .iter()
-                .any(|pickup| pickup.id() == DEMO_DUNGEON_GLOVE_PICKUP)
+                .any(|pickup| pickup.id() == DUNGEON_V2_GLOVE_PICKUP)
         );
         let boots_room = dungeon_v2_room(&dungeon.boots_room, &bare);
         assert!(
             boots_room
                 .pickups()
                 .iter()
-                .any(|pickup| pickup.id() == DEMO_DUNGEON_BOOT_PICKUP)
+                .any(|pickup| pickup.id() == DUNGEON_V2_BOOT_PICKUP)
         );
         let goal_room = dungeon_v2_room(&dungeon.goal, &bare);
         assert!(
             goal_room
                 .pickups()
                 .iter()
-                .any(|pickup| pickup.id() == DEMO_DUNGEON_CROWN_PICKUP)
+                .any(|pickup| pickup.id() == DUNGEON_V2_CROWN_PICKUP)
         );
     }
 
@@ -677,7 +681,7 @@ mod tests {
         crowned.crown = true;
         let spawn_room = dungeon_v2_room(&dungeon.spawn, &crowned);
         let exit = spawn_room.exits().first().expect("spawn hosts the escape");
-        assert_eq!(exit.id, DEMO_DUNGEON_GOAL_EXIT);
+        assert_eq!(exit.id, DUNGEON_V2_GOAL_EXIT);
         assert_eq!(exit.bounds, dungeon_v2_exit_gate_bounds());
         assert!(
             dungeon_v2_room(&dungeon.goal, &crowned).exits().is_empty(),
@@ -711,7 +715,7 @@ mod tests {
         assert!(
             room.pickups()
                 .iter()
-                .all(|pickup| pickup.id() != DEMO_DUNGEON_GLOVE_PICKUP)
+                .all(|pickup| pickup.id() != DUNGEON_V2_GLOVE_PICKUP)
         );
         let spawn_room = dungeon_v2_room(&dungeon.spawn, &inventory);
         assert!(

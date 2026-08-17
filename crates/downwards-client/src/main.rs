@@ -17,16 +17,12 @@ use downwards_ai::{
 };
 use downwards_catalogue::CatalogueBand;
 use downwards_content::{
-    AuthoredDoorRequirement, CalibratedGeneratorPlaytestLevel, CalibrationLevel,
-    DEMO_DUNGEON_BOOT_PICKUP, DEMO_DUNGEON_CROWN_PICKUP, DEMO_DUNGEON_GLOVE_PICKUP,
-    DEMO_DUNGEON_GOAL_EXIT, DEMO_DUNGEON_TOTAL_COINS, DemoDungeonInventory, DemoDungeonRoom,
-    DemoDungeonRouteSpec, DemoDungeonRouteTarget, DungeonV2Inventory, DungeonV2Requirement,
-    HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET, MEDIUM_NO_DASH_ABILITIES, MEDIUM_NO_DASH_TARGET,
-    TraversalMethod, calibrated_generator_playtest, calibration_gallery, demo_dungeon_definition,
-    demo_dungeon_door_requirement, demo_dungeon_room, demo_dungeon_route_specs,
-    demo_dungeon_witness_actions, dungeon_v2_definition, dungeon_v2_door_requirement,
-    dungeon_v2_exit_gate_bounds, dungeon_v2_room, dungeon_v2_total_coins, first_steps_room,
-    hard_no_dash_scenario,
+    CalibratedGeneratorPlaytestLevel, CalibrationLevel, DUNGEON_V2_BOOT_PICKUP,
+    DUNGEON_V2_CROWN_PICKUP, DUNGEON_V2_GLOVE_PICKUP, DUNGEON_V2_GOAL_EXIT, DungeonV2Inventory,
+    DungeonV2Requirement, HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET, MEDIUM_NO_DASH_ABILITIES,
+    MEDIUM_NO_DASH_TARGET, calibrated_generator_playtest, calibration_gallery,
+    dungeon_v2_definition, dungeon_v2_door_requirement, dungeon_v2_exit_gate_bounds,
+    dungeon_v2_room, dungeon_v2_total_coins, first_steps_room, hard_no_dash_scenario,
     hard_no_dash_witness_actions, medium_no_dash_scenario, medium_no_dash_witness_actions,
 };
 use downwards_core::{
@@ -36,8 +32,7 @@ use downwards_core::{
 };
 use downwards_gen::{
     AbilityTier, CALIBRATED_WALL_JUMP_GENERATION_VERSION, COMPOSITIONAL_GENERATION_VERSION,
-    DUNGEON_PALETTE_GENERATION_VERSION, experimental::GenerationStrategy, generate_compositional,
-    generate_uncurated,
+    experimental::GenerationStrategy, generate_compositional, generate_uncurated,
 };
 use macroquad::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -60,8 +55,6 @@ const HISTORICAL_CATALOGUE_WITNESS_MOVEMENT_POLICY_VERSION: u32 = 1;
 const HUMAN_JUMP_TAP_WINDOW_MICROS: u64 = 100_000;
 const HUMAN_HISTORY_SCHEMA: &str = "downwards-human-attempt-v2";
 const DEFAULT_HUMAN_HISTORY_PATH: &str = "playtest-history/human-attempts-v1.jsonl";
-const DUNGEON_SAVE_SCHEMA: &str = "downwards-demo-dungeon-save-v1";
-const DEFAULT_DUNGEON_SAVE_PATH: &str = "playtest-history/demo-dungeon-save-v1.json";
 const DEFAULT_DUNGEON_V2_SAVE_PATH: &str = "playtest-history/dungeon-v2-save-v1.json";
 // The ordinary level browser starts at the first offline-curated baseline route. Raw seeds remain
 // available only through the explicit developer command-line mode.
@@ -82,10 +75,7 @@ Usage: downwards
        downwards --challenge [hard|tutorial]
        downwards --gallery
        downwards --calibrated [seed]
-       downwards --dungeon [--dungeon-save <path>]
-       downwards --dungeon-new [--dungeon-save <path>]
        downwards --dungeon-v2 | --dungeon-v2-new [--dungeon-save <path>]
-       downwards --dungeon-floor <number|id>
 
   (no options)   open the Downwards title screen (dungeon v2, the full game)
   --seed N       explicit developer mode: uncurated v6 seed
@@ -96,12 +86,8 @@ Usage: downwards
   --gallery      open the authored no-Dash calibration gallery
   --calibrated [seed]
                  play the generated WallJump-only calibration batch
-  --dungeon      resume the 101-floor dungeon (or begin it if no save exists)
-  --dungeon-new  archive the current save and begin a fresh dungeon run
   --dungeon-v2   play the redesigned dungeon (resumes its own save)
   --dungeon-v2-new  archive the v2 save and begin a fresh v2 run
-  --dungeon-floor FLOOR
-                 non-persistent lab play of one authored floor (1..101 or room id)
   --dungeon-save PATH
                  use PATH for durable dungeon progress
   --generated    open the offline-curated v6 route catalogue (the level lab)
@@ -204,14 +190,10 @@ impl VisualAssets {
 }
 
 fn window_conf() -> Conf {
-    // The plain game (title screen and both dungeon modes) is titled
+    // The plain game (title screen and the dungeon mode) is titled
     // "Downwards"; explicitly requested lab modes keep the lab title.
     let lab_mode = parse_launch_options(env::args().skip(1)).is_ok_and(|options| {
-        !options.title_screen
-            && !matches!(
-                options.selection.mode,
-                RoomMode::Dungeon | RoomMode::DungeonV2
-            )
+        !options.title_screen && options.selection.mode != RoomMode::DungeonV2
     });
     Conf {
         window_title: if lab_mode {
@@ -307,11 +289,8 @@ async fn run_play_session(
     visual_assets: &VisualAssets,
     audio: &mut audio::AudioDirector,
 ) {
-    let dungeon_save = matches!(
-        options.selection.mode,
-        RoomMode::Dungeon | RoomMode::DungeonV2
-    )
-    .then_some((options.dungeon_save_path.as_path(), fresh_dungeon));
+    let dungeon_save = (options.selection.mode == RoomMode::DungeonV2)
+        .then_some((options.dungeon_save_path.as_path(), fresh_dungeon));
     let mut client = ClientState::new_with_persistence(
         options.selection,
         options.corpus_manifest.as_deref(),
@@ -321,9 +300,6 @@ async fn run_play_session(
     )
     .unwrap_or_else(|error| panic!("could not start downwards: {error}"));
     eprintln!("human attempt history: {}", options.history_path.display());
-    if options.selection.mode == RoomMode::Dungeon {
-        eprintln!("dungeon progress: {}", options.dungeon_save_path.display());
-    }
     let session_clock = Instant::now();
     let mut render_frame_index = 0_u64;
     let mut accumulated_seconds = 0.0;
@@ -521,10 +497,7 @@ async fn run_play_session(
             continue;
         }
         if is_key_pressed(KeyCode::Tab)
-            && matches!(
-                client.selection.mode,
-                RoomMode::Dungeon | RoomMode::DungeonV2
-            )
+            && client.selection.mode == RoomMode::DungeonV2
             && !client.level_menu_visible()
         {
             client.map_visible = !client.map_visible;
@@ -742,7 +715,6 @@ async fn run_play_session(
 enum ChallengeKind {
     Hard,
     Medium,
-    DungeonFloor(DemoDungeonRoom),
 }
 
 impl ChallengeKind {
@@ -750,7 +722,6 @@ impl ChallengeKind {
         match self {
             Self::Hard => HARD_NO_DASH_LEVEL_IDENTIFIER,
             Self::Medium => MEDIUM_NO_DASH_LEVEL_IDENTIFIER,
-            Self::DungeonFloor(room) => room.title(),
         }
     }
 
@@ -758,7 +729,6 @@ impl ChallengeKind {
         match self {
             Self::Hard => HARD_NO_DASH_TARGET,
             Self::Medium => MEDIUM_NO_DASH_TARGET,
-            Self::DungeonFloor(room) => dungeon_floor_route_spec(room).target.id(),
         }
     }
 
@@ -766,7 +736,6 @@ impl ChallengeKind {
         match self {
             Self::Hard => "challenge:hard-no-dash:v1".to_owned(),
             Self::Medium => "challenge:medium-no-dash:v1".to_owned(),
-            Self::DungeonFloor(room) => format!("dungeon-playtest:{}", room.id()),
         }
     }
 
@@ -774,7 +743,6 @@ impl ChallengeKind {
         match self {
             Self::Hard => "HIGH-END",
             Self::Medium => "TUTORIAL",
-            Self::DungeonFloor(_) => "FLOOR LAB · NON-PERSISTENT",
         }
     }
 
@@ -782,7 +750,6 @@ impl ChallengeKind {
         match self {
             Self::Hard => HARD_NO_DASH_ABILITIES,
             Self::Medium => MEDIUM_NO_DASH_ABILITIES,
-            Self::DungeonFloor(room) => dungeon_floor_route_spec(room).inventory.abilities(),
         }
     }
 
@@ -790,19 +757,6 @@ impl ChallengeKind {
         match self {
             Self::Hard => hard_no_dash_scenario(),
             Self::Medium => medium_no_dash_scenario(),
-            Self::DungeonFloor(room) => {
-                let spec = dungeon_floor_route_spec(room);
-                let room = demo_dungeon_room(room, spec.inventory);
-                match spec.entry_door {
-                    Some(door) => {
-                        Simulation::enter_via_door(room, spec.inventory.abilities(), door)
-                            .unwrap_or_else(|error| {
-                                panic!("{} playtest entry {door:?} is invalid: {error}", spec.id())
-                            })
-                    }
-                    None => Simulation::with_abilities(room, spec.inventory.abilities()),
-                }
-            }
         }
     }
 
@@ -810,30 +764,19 @@ impl ChallengeKind {
         match self {
             Self::Hard => hard_no_dash_witness_actions(),
             Self::Medium => medium_no_dash_witness_actions(),
-            Self::DungeonFloor(room) => demo_dungeon_witness_actions(room),
         }
     }
 
     fn objective(self) -> ReplayObjective {
         match self {
             Self::Hard | Self::Medium => ReplayObjective::Exit(self.target().to_owned()),
-            Self::DungeonFloor(room) => match dungeon_floor_route_spec(room).target {
-                DemoDungeonRouteTarget::Door(id) => ReplayObjective::Door(id.to_owned()),
-                DemoDungeonRouteTarget::Pickup(id) => ReplayObjective::Pickup(id.to_owned()),
-                DemoDungeonRouteTarget::GoalExit => {
-                    ReplayObjective::Exit(DEMO_DUNGEON_GOAL_EXIT.to_owned())
-                }
-            },
         }
     }
 }
 
-/// Stable 2D layout of the dungeon graph: BFS from Hollow Landing, stepping
-/// one cell per door direction and extending past occupied cells so every
-/// room gets a distinct coordinate.
-/// Stable 2D layout of the dungeon v2 graph, mirroring `dungeon_map_layout`:
-/// BFS from the spawn, one cell per door direction, extending past occupied
-/// cells so every instance gets a distinct coordinate.
+/// Stable 2D layout of the dungeon v2 graph: BFS from the spawn, one cell per
+/// door direction, extending past occupied cells so every instance gets a
+/// distinct coordinate.
 fn dungeon_v2_map_layout() -> &'static HashMap<String, (i32, i32)> {
     static LAYOUT: std::sync::OnceLock<HashMap<String, (i32, i32)>> = std::sync::OnceLock::new();
     LAYOUT.get_or_init(|| {
@@ -868,57 +811,6 @@ fn dungeon_v2_map_layout() -> &'static HashMap<String, (i32, i32)> {
     })
 }
 
-fn dungeon_map_layout() -> &'static HashMap<DemoDungeonRoom, (i32, i32)> {
-    static LAYOUT: std::sync::OnceLock<HashMap<DemoDungeonRoom, (i32, i32)>> =
-        std::sync::OnceLock::new();
-    LAYOUT.get_or_init(|| {
-        let definition = demo_dungeon_definition();
-        let room_by_key: HashMap<u16, DemoDungeonRoom> = DemoDungeonRoom::ALL
-            .into_iter()
-            .map(|room| (room.authored_key().0, room))
-            .collect();
-        let mut positions: HashMap<DemoDungeonRoom, (i32, i32)> = HashMap::new();
-        let mut occupied: HashSet<(i32, i32)> = HashSet::new();
-        let mut queue = VecDeque::from([DemoDungeonRoom::HollowLanding]);
-        positions.insert(DemoDungeonRoom::HollowLanding, (0, 0));
-        occupied.insert((0, 0));
-        while let Some(room) = queue.pop_front() {
-            let origin = positions[&room];
-            let floor = definition
-                .floor(room.authored_key())
-                .expect("room has a floor definition");
-            for connection in &floor.connections {
-                let destination = room_by_key[&connection.destination_floor.0];
-                if positions.contains_key(&destination) {
-                    continue;
-                }
-                let step = match connection.door_id.as_str() {
-                    "west" => (-1, 0),
-                    "east" => (1, 0),
-                    "ceiling" => (0, -1),
-                    "floor" => (0, 1),
-                    _ => (1, 0),
-                };
-                let mut cell = (origin.0 + step.0, origin.1 + step.1);
-                while occupied.contains(&cell) {
-                    cell = (cell.0 + step.0, cell.1 + step.1);
-                }
-                positions.insert(destination, cell);
-                occupied.insert(cell);
-                queue.push_back(destination);
-            }
-        }
-        positions
-    })
-}
-
-fn dungeon_floor_route_spec(room: DemoDungeonRoom) -> DemoDungeonRouteSpec {
-    demo_dungeon_route_specs()
-        .into_iter()
-        .find(|spec| spec.room == room)
-        .unwrap_or_else(|| panic!("dungeon route metadata is missing {room:?}"))
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 enum RoomMode {
     /// An offline-curated v6 entry. `ScenarioSelection::seed` is its tier-local index.
@@ -930,8 +822,6 @@ enum RoomMode {
     Gallery,
     /// One replay-certified key in the generated human-calibration batch.
     CalibratedGenerated,
-    /// Persistent multi-room dungeon vertical slice. The selection seed is unused.
-    Dungeon,
     /// The redesigned data-driven dungeon (dungeon v2). The selection seed is unused.
     DungeonV2,
     /// A fixed, hand-authored validation level. Its loadout is locked by content.
@@ -947,8 +837,7 @@ impl RoomMode {
             | Self::Development
             | Self::Gallery
             | Self::DungeonV2
-            | Self::CalibratedGenerated
-            | Self::Dungeon => None,
+            | Self::CalibratedGenerated => None,
         }
     }
 
@@ -989,7 +878,6 @@ impl LevelMenuState {
             | RoomMode::DeveloperGenerated
             | RoomMode::Gallery
             | RoomMode::CalibratedGenerated
-            | RoomMode::Dungeon
             | RoomMode::DungeonV2
             | RoomMode::Challenge(_) => {
                 // A raw command-line seed stays loaded behind the browser. Opening the menu
@@ -1165,8 +1053,6 @@ enum BrowserMode {
     Closed,
     Catalogue,
     Gallery,
-    /// Non-persistent floor-lab browser over every authored dungeon room.
-    DungeonFloors,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1196,9 +1082,6 @@ impl ScenarioSelection {
         } else if self.mode == RoomMode::CalibratedGenerated {
             self.seed %= calibrated_generator_playtest().len() as u64;
             self.tier = AbilityTier::WallJump;
-        } else if self.mode == RoomMode::Dungeon {
-            self.seed = 0;
-            self.tier = AbilityTier::WallJump;
         } else if self.mode == RoomMode::Gallery
             && let Ok(index) = usize::try_from(self.seed)
             && let Some(level) = calibration_gallery().get(index)
@@ -1210,10 +1093,7 @@ impl ScenarioSelection {
 
     fn select_tier(&mut self, tier: AbilityTier) {
         if self.mode.is_challenge()
-            || matches!(
-                self.mode,
-                RoomMode::Gallery | RoomMode::CalibratedGenerated | RoomMode::Dungeon
-            )
+            || matches!(self.mode, RoomMode::Gallery | RoomMode::CalibratedGenerated)
         {
             return;
         }
@@ -1225,10 +1105,7 @@ impl ScenarioSelection {
 
     fn select_available_tier(&mut self, tier: AbilityTier, catalogue: &PlayableCatalogue) {
         if self.mode.is_challenge()
-            || matches!(
-                self.mode,
-                RoomMode::Gallery | RoomMode::CalibratedGenerated | RoomMode::Dungeon
-            )
+            || matches!(self.mode, RoomMode::Gallery | RoomMode::CalibratedGenerated)
         {
             return;
         }
@@ -1245,7 +1122,6 @@ impl ScenarioSelection {
             RoomMode::Development => RoomMode::Generated,
             RoomMode::Gallery => RoomMode::Gallery,
             RoomMode::CalibratedGenerated => RoomMode::CalibratedGenerated,
-            RoomMode::Dungeon => RoomMode::Dungeon,
             RoomMode::DungeonV2 => RoomMode::DungeonV2,
             RoomMode::Challenge(kind) => RoomMode::Challenge(kind),
         };
@@ -1259,7 +1135,6 @@ impl ScenarioSelection {
             | RoomMode::DeveloperGenerated
             | RoomMode::Gallery
             | RoomMode::CalibratedGenerated
-            | RoomMode::Dungeon
             | RoomMode::DungeonV2
             | RoomMode::Challenge(_) => 0,
         };
@@ -1389,7 +1264,7 @@ where
         corpus_manifest: None,
         allow_provisional_corpus: false,
         history_path: PathBuf::from(DEFAULT_HUMAN_HISTORY_PATH),
-        dungeon_save_path: PathBuf::from(DEFAULT_DUNGEON_SAVE_PATH),
+        dungeon_save_path: PathBuf::from(DEFAULT_DUNGEON_V2_SAVE_PATH),
         fresh_dungeon: false,
         title_screen: false,
         no_audio: false,
@@ -1399,7 +1274,6 @@ where
     let mut gallery_requested = false;
     let mut calibrated_requested = false;
     let mut dungeon_requested = false;
-    let mut dungeon_floor_requested = false;
     let mut dungeon_save_explicit = false;
     let mut authored_mode_conflict = false;
     let mut tier_explicit = false;
@@ -1446,25 +1320,6 @@ where
                 options.selection.seed = seed;
                 options.selection.tier = AbilityTier::WallJump;
             }
-            "--dungeon" => {
-                if dungeon_requested {
-                    return Err("--dungeon may be specified only once".to_owned());
-                }
-                dungeon_requested = true;
-                options.selection.mode = RoomMode::Dungeon;
-                options.selection.seed = 0;
-                options.selection.tier = AbilityTier::Baseline;
-            }
-            "--dungeon-new" => {
-                if dungeon_requested {
-                    return Err("--dungeon/--dungeon-new may be specified only once".to_owned());
-                }
-                dungeon_requested = true;
-                options.fresh_dungeon = true;
-                options.selection.mode = RoomMode::Dungeon;
-                options.selection.seed = 0;
-                options.selection.tier = AbilityTier::Baseline;
-            }
             "--dungeon-v2" | "--dungeon-v2-new" => {
                 if dungeon_requested {
                     return Err("dungeon modes may be specified only once".to_owned());
@@ -1474,20 +1329,6 @@ where
                 options.selection.mode = RoomMode::DungeonV2;
                 options.selection.seed = 0;
                 options.selection.tier = AbilityTier::Baseline;
-            }
-            "--dungeon-floor" => {
-                if dungeon_floor_requested {
-                    return Err("--dungeon-floor may be specified only once".to_owned());
-                }
-                dungeon_floor_requested = true;
-                let value = arguments
-                    .next()
-                    .ok_or_else(|| "--dungeon-floor needs a floor number or id".to_owned())?;
-                let room = parse_dungeon_floor(&value)?;
-                options.selection.mode = RoomMode::Challenge(ChallengeKind::DungeonFloor(room));
-                options.selection.seed = 0;
-                options.selection.tier =
-                    tier_for_abilities(dungeon_floor_route_spec(room).inventory.abilities());
             }
             "--dungeon-save" => {
                 dungeon_save_explicit = true;
@@ -1593,17 +1434,6 @@ where
                 options.selection.seed = parse_seed(&argument[13..])?;
                 options.selection.tier = AbilityTier::WallJump;
             }
-            _ if argument.starts_with("--dungeon-floor=") => {
-                if dungeon_floor_requested {
-                    return Err("--dungeon-floor may be specified only once".to_owned());
-                }
-                dungeon_floor_requested = true;
-                let room = parse_dungeon_floor(&argument[16..])?;
-                options.selection.mode = RoomMode::Challenge(ChallengeKind::DungeonFloor(room));
-                options.selection.seed = 0;
-                options.selection.tier =
-                    tier_for_abilities(dungeon_floor_route_spec(room).inventory.abilities());
-            }
             _ => return Err(format!("unknown argument {argument:?}")),
         }
     }
@@ -1612,34 +1442,26 @@ where
         + usize::from(gallery_requested)
         + usize::from(calibrated_requested)
         + usize::from(dungeon_requested)
-        + usize::from(dungeon_floor_requested)
         > 1
     {
         return Err(
-            "--challenge, --gallery, --calibrated, --dungeon, and --dungeon-floor are mutually exclusive".to_owned(),
-        );
-    }
-    if (challenge_requested
-        || gallery_requested
-        || calibrated_requested
-        || dungeon_requested
-        || dungeon_floor_requested)
-        && authored_mode_conflict
-    {
-        return Err(
-            "--challenge/--gallery/--calibrated/--dungeon/--dungeon-floor cannot be combined with --seed, --development, --generated, or --corpus"
+            "--challenge, --gallery, --calibrated, and --dungeon-v2 are mutually exclusive"
                 .to_owned(),
         );
     }
-    if (challenge_requested
-        || gallery_requested
-        || calibrated_requested
-        || dungeon_requested
-        || dungeon_floor_requested)
+    if (challenge_requested || gallery_requested || calibrated_requested || dungeon_requested)
+        && authored_mode_conflict
+    {
+        return Err(
+            "--challenge/--gallery/--calibrated/--dungeon-v2 cannot be combined with --seed, --development, --generated, or --corpus"
+                .to_owned(),
+        );
+    }
+    if (challenge_requested || gallery_requested || calibrated_requested || dungeon_requested)
         && tier_explicit
     {
         return Err(
-            "--challenge/--gallery/--calibrated/--dungeon/--dungeon-floor use content-locked loadouts; omit --tier"
+            "--challenge/--gallery/--calibrated/--dungeon-v2 use content-locked loadouts; omit --tier"
                 .to_owned(),
         );
     }
@@ -1658,7 +1480,6 @@ where
         || gallery_requested
         || calibrated_requested
         || dungeon_requested
-        || dungeon_floor_requested
         || authored_mode_conflict
         || tier_explicit)
     {
@@ -1694,35 +1515,6 @@ fn parse_challenge_kind(value: &str) -> Result<ChallengeKind, String> {
     }
 }
 
-fn parse_dungeon_floor(value: &str) -> Result<DemoDungeonRoom, String> {
-    if let Ok(number) = value.parse::<usize>() {
-        return number
-            .checked_sub(1)
-            .and_then(|index| DemoDungeonRoom::ALL.get(index).copied())
-            .ok_or_else(|| {
-                format!(
-                    "invalid dungeon floor {value:?}; expected a number from 1 to {}",
-                    DemoDungeonRoom::ALL.len()
-                )
-            });
-    }
-    let slug = value.trim().to_ascii_lowercase().replace(['_', ' '], "-");
-    let short_slug = slug.strip_prefix("demo-dungeon.").unwrap_or(&slug);
-    DemoDungeonRoom::ALL
-        .into_iter()
-        .find(|room| {
-            room.id() == slug
-                || room.id().strip_prefix("demo-dungeon.") == Some(short_slug)
-                || room.title().to_ascii_lowercase().replace(' ', "-") == short_slug
-        })
-        .ok_or_else(|| {
-            format!(
-                "invalid dungeon floor {value:?}; use 1..={} or an id such as gale-chasm",
-                DemoDungeonRoom::ALL.len()
-            )
-        })
-}
-
 fn parse_seed(value: &str) -> Result<u64, String> {
     let compact = value.replace('_', "");
     let parsed = if let Some(hex) = compact
@@ -1752,7 +1544,7 @@ fn selection_from_hotkeys(
     mut selection: ScenarioSelection,
     catalogue: &PlayableCatalogue,
 ) -> ScenarioSelection {
-    if selection.mode.is_challenge() || selection.mode == RoomMode::Dungeon {
+    if selection.mode.is_challenge() {
         return selection;
     }
     if selection.mode == RoomMode::CalibratedGenerated {
@@ -1809,7 +1601,7 @@ fn selection_from_hotkeys(
             RoomMode::CalibratedGenerated => {
                 unreachable!("calibrated hotkeys return above")
             }
-            RoomMode::Dungeon | RoomMode::DungeonV2 => {
+            RoomMode::DungeonV2 => {
                 unreachable!("dungeon hotkeys return above")
             }
             RoomMode::Challenge(_) => unreachable!("challenge hotkeys return above"),
@@ -1837,7 +1629,7 @@ fn selection_from_hotkeys(
             RoomMode::CalibratedGenerated => {
                 unreachable!("calibrated hotkeys return above")
             }
-            RoomMode::Dungeon | RoomMode::DungeonV2 => {
+            RoomMode::DungeonV2 => {
                 unreachable!("dungeon hotkeys return above")
             }
             RoomMode::Challenge(_) => unreachable!("challenge hotkeys return above"),
@@ -2310,16 +2102,6 @@ struct PersistentHumanHistory {
     session_started_unix_ms: u64,
     next_attempt_index: u64,
     next_tuning_change_index: u64,
-    next_dungeon_event_index: u64,
-}
-
-#[derive(Clone, Copy)]
-struct DungeonEventContext<'a> {
-    event: &'a str,
-    room: DemoDungeonRoom,
-    destination: Option<DemoDungeonRoom>,
-    door: Option<&'a str>,
-    item_id: Option<&'a str>,
 }
 
 impl PersistentHumanHistory {
@@ -2355,7 +2137,6 @@ impl PersistentHumanHistory {
             session_started_unix_ms,
             next_attempt_index: 1,
             next_tuning_change_index: 1,
-            next_dungeon_event_index: 1,
         })
     }
 
@@ -2365,17 +2146,10 @@ impl PersistentHumanHistory {
         level_name: &str,
         attempt: &RecordedAttempt,
     ) -> Result<(), String> {
-        let dungeon_definition = (level_id.starts_with("dungeon:")
-            || level_id.starts_with("dungeon-playtest:"))
-        .then(demo_dungeon_definition);
         let record = PersistentAttemptV2 {
             schema: HUMAN_HISTORY_SCHEMA,
-            dungeon_definition_id: dungeon_definition
-                .as_ref()
-                .map(|definition| definition.id.as_str()),
-            palette_generation_version: dungeon_definition
-                .as_ref()
-                .map(|_| DUNGEON_PALETTE_GENERATION_VERSION),
+            dungeon_definition_id: None,
+            palette_generation_version: None,
             session_id: &self.session_id,
             session_started_unix_ms: self.session_started_unix_ms,
             recorded_at_unix_ms: unix_time_ms(),
@@ -2466,64 +2240,6 @@ impl PersistentHumanHistory {
             .and_then(|()| self.writer.flush())
             .map_err(|error| format!("could not persist movement-tuning change: {error}"))?;
         self.next_tuning_change_index = self.next_tuning_change_index.saturating_add(1);
-        Ok(())
-    }
-
-    fn append_dungeon_event(
-        &mut self,
-        context: DungeonEventContext<'_>,
-        inventory: DemoDungeonInventory,
-        movement_tuning: MovementTuning,
-    ) -> Result<(), String> {
-        #[derive(Serialize)]
-        struct PersistentDungeonEventV2<'a> {
-            schema: &'static str,
-            dungeon_definition_id: &'a str,
-            palette_generation_version: u32,
-            session_id: &'a str,
-            recorded_at_unix_ms: u64,
-            event_index: u64,
-            event: &'a str,
-            room_id: &'static str,
-            destination_room_id: Option<&'static str>,
-            door_id: Option<&'a str>,
-            item_id: Option<&'a str>,
-            coins: u8,
-            climbing_gloves: bool,
-            winged_boots: bool,
-            crown: bool,
-            player_movement_policy_version: u32,
-            movement_tuning: PersistentMovementTuningV1,
-        }
-
-        let definition = demo_dungeon_definition();
-        let record = PersistentDungeonEventV2 {
-            schema: "downwards-dungeon-progress-v2",
-            dungeon_definition_id: &definition.id,
-            palette_generation_version: DUNGEON_PALETTE_GENERATION_VERSION,
-            session_id: &self.session_id,
-            recorded_at_unix_ms: unix_time_ms(),
-            event_index: self.next_dungeon_event_index,
-            event: context.event,
-            room_id: context.room.id(),
-            destination_room_id: context.destination.map(DemoDungeonRoom::id),
-            door_id: context.door,
-            item_id: context.item_id,
-            coins: inventory.coin_count(),
-            climbing_gloves: inventory.climbing_gloves,
-            winged_boots: inventory.winged_boots,
-            crown: inventory.crown,
-            player_movement_policy_version: PLAYER_MOVEMENT_POLICY_VERSION,
-            movement_tuning: movement_tuning.into(),
-        };
-        let mut line = serde_json::to_vec(&record)
-            .map_err(|error| format!("could not serialize dungeon progress: {error}"))?;
-        line.push(b'\n');
-        self.writer
-            .write_all(&line)
-            .and_then(|()| self.writer.flush())
-            .map_err(|error| format!("could not persist dungeon progress: {error}"))?;
-        self.next_dungeon_event_index = self.next_dungeon_event_index.saturating_add(1);
         Ok(())
     }
 }
@@ -2879,13 +2595,10 @@ struct ClientState {
     level_stats: HashMap<String, LevelStats>,
     replay_mode: ReplayMode,
     replay_notice: Option<ReplayNotice>,
-    dungeon_run: Option<DungeonRunState>,
-    dungeon_persistence: Option<DungeonPersistence>,
     dungeon_v2_run: Option<DungeonV2RunState>,
     dungeon_v2_persistence: Option<DungeonV2Persistence>,
     explored_v2_rooms: BTreeSet<String>,
     death_pause_ticks: u8,
-    explored_rooms: BTreeSet<DemoDungeonRoom>,
     map_visible: bool,
     pause_visible: bool,
     pause_menu_index: usize,
@@ -2898,21 +2611,6 @@ struct ClientState {
 
 /// Ticks of zeroed human input after a death (~0.4s at 60Hz).
 const DEATH_PAUSE_TICKS: u8 = 24;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct DungeonRunState {
-    room: DemoDungeonRoom,
-    inventory: DemoDungeonInventory,
-}
-
-impl Default for DungeonRunState {
-    fn default() -> Self {
-        Self {
-            room: DemoDungeonRoom::HollowLanding,
-            inventory: DemoDungeonInventory::default(),
-        }
-    }
-}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct DungeonV2RunState {
@@ -3084,240 +2782,6 @@ impl DungeonV2Persistence {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-struct DungeonSaveV1 {
-    schema: String,
-    dungeon_id: String,
-    palette_generation_version: u32,
-    floor_count: u16,
-    total_coins: u8,
-    room_id: String,
-    entry_door: Option<String>,
-    climbing_gloves: bool,
-    winged_boots: bool,
-    crown: bool,
-    collected_coins: Vec<u8>,
-    #[serde(default)]
-    explored_rooms: Vec<String>,
-    saved_at_unix_ms: u64,
-}
-
-impl DungeonSaveV1 {
-    fn from_run(
-        run: DungeonRunState,
-        entry_door: Option<&str>,
-        explored: &BTreeSet<DemoDungeonRoom>,
-    ) -> Self {
-        Self {
-            schema: DUNGEON_SAVE_SCHEMA.to_owned(),
-            dungeon_id: demo_dungeon_definition().id,
-            palette_generation_version: DUNGEON_PALETTE_GENERATION_VERSION,
-            floor_count: DemoDungeonRoom::ALL.len() as u16,
-            total_coins: DEMO_DUNGEON_TOTAL_COINS,
-            room_id: run.room.id().to_owned(),
-            entry_door: entry_door.map(str::to_owned),
-            climbing_gloves: run.inventory.climbing_gloves,
-            winged_boots: run.inventory.winged_boots,
-            crown: run.inventory.crown,
-            collected_coins: (0..DEMO_DUNGEON_TOTAL_COINS)
-                .filter(|index| run.inventory.has_coin(&format!("dungeon-coin-{index:02}")))
-                .collect(),
-            explored_rooms: explored.iter().map(|room| room.id().to_owned()).collect(),
-            saved_at_unix_ms: unix_time_ms(),
-        }
-    }
-
-    fn validate(&self) -> Result<LoadedDungeonProgress, String> {
-        if self.schema != DUNGEON_SAVE_SCHEMA {
-            return Err(format!(
-                "dungeon save schema {:?} is not current {:?}",
-                self.schema, DUNGEON_SAVE_SCHEMA
-            ));
-        }
-        let definition = demo_dungeon_definition();
-        if self.dungeon_id != definition.id
-            || self.palette_generation_version != DUNGEON_PALETTE_GENERATION_VERSION
-            || self.floor_count != DemoDungeonRoom::ALL.len() as u16
-            || self.total_coins != DEMO_DUNGEON_TOTAL_COINS
-        {
-            return Err("dungeon save belongs to a different authored dungeon version".to_owned());
-        }
-        if self
-            .collected_coins
-            .windows(2)
-            .any(|pair| pair[0] >= pair[1])
-            || self
-                .collected_coins
-                .iter()
-                .any(|index| *index >= DEMO_DUNGEON_TOTAL_COINS)
-        {
-            return Err(
-                "dungeon save coin indices must be unique, sorted, and in range".to_owned(),
-            );
-        }
-        if self.winged_boots && !self.climbing_gloves {
-            return Err("dungeon save grants Dash without the earlier Wall Jump unlock".to_owned());
-        }
-        if self.crown
-            && (!self.winged_boots
-                || self.collected_coins.len()
-                    < usize::from(downwards_content::DEMO_DUNGEON_CROWN_GATE_REQUIREMENT))
-        {
-            return Err("dungeon save grants the Crown without full progression".to_owned());
-        }
-        let room = DemoDungeonRoom::from_id(&self.room_id)
-            .ok_or_else(|| format!("dungeon save names unknown room {:?}", self.room_id))?;
-        let mut inventory = DemoDungeonInventory::default();
-        inventory.climbing_gloves = self.climbing_gloves;
-        inventory.winged_boots = self.winged_boots;
-        inventory.crown = self.crown;
-        for index in &self.collected_coins {
-            let inserted = inventory.collect_coin(&format!("dungeon-coin-{index:02}"));
-            debug_assert!(inserted);
-        }
-        let restored_room = demo_dungeon_room(room, inventory);
-        match self.entry_door.as_deref() {
-            Some(entry) if !restored_room.doors().iter().any(|door| door.id == entry) => {
-                return Err(format!(
-                    "dungeon save entry door {entry:?} does not exist in {:?}",
-                    self.room_id
-                ));
-            }
-            None if room != DemoDungeonRoom::HollowLanding => {
-                return Err("only the initial dungeon room may omit its entry door".to_owned());
-            }
-            Some(_) | None => {}
-        }
-        let mut explored: BTreeSet<DemoDungeonRoom> = self
-            .explored_rooms
-            .iter()
-            .map(|id| {
-                DemoDungeonRoom::from_id(id)
-                    .ok_or_else(|| format!("dungeon save explored unknown room {id:?}"))
-            })
-            .collect::<Result<_, _>>()?;
-        explored.insert(room);
-        Ok((
-            DungeonRunState { room, inventory },
-            self.entry_door.clone(),
-            explored,
-        ))
-    }
-}
-
-#[derive(Debug)]
-struct DungeonPersistence {
-    path: PathBuf,
-}
-
-type LoadedDungeonProgress = (DungeonRunState, Option<String>, BTreeSet<DemoDungeonRoom>);
-
-impl DungeonPersistence {
-    fn open(path: &Path, fresh: bool) -> Result<(Self, Option<LoadedDungeonProgress>), String> {
-        if let Some(parent) = path.parent()
-            && !parent.as_os_str().is_empty()
-        {
-            fs::create_dir_all(parent).map_err(|error| {
-                format!(
-                    "could not create dungeon-save directory {}: {error}",
-                    parent.display()
-                )
-            })?;
-        }
-        if fresh && path.exists() {
-            let file_name = path
-                .file_name()
-                .and_then(|name| name.to_str())
-                .unwrap_or("demo-dungeon-save-v1.json");
-            let mut archive = path.with_file_name(format!("{file_name}.{}.bak", unix_time_ms()));
-            let mut suffix = 1_u16;
-            while archive.exists() {
-                archive =
-                    path.with_file_name(format!("{file_name}.{}.{}.bak", unix_time_ms(), suffix));
-                suffix = suffix.saturating_add(1);
-            }
-            fs::rename(path, &archive).map_err(|error| {
-                format!(
-                    "could not archive dungeon save {} as {}: {error}",
-                    path.display(),
-                    archive.display()
-                )
-            })?;
-            eprintln!("archived previous dungeon save: {}", archive.display());
-        }
-        let loaded = if path.exists() {
-            let bytes = fs::read(path).map_err(|error| {
-                format!("could not read dungeon save {}: {error}", path.display())
-            })?;
-            let save: DungeonSaveV1 = serde_json::from_slice(&bytes).map_err(|error| {
-                format!("could not parse dungeon save {}: {error}", path.display())
-            })?;
-            Some(save.validate()?)
-        } else {
-            None
-        };
-        Ok((
-            Self {
-                path: path.to_owned(),
-            },
-            loaded,
-        ))
-    }
-
-    fn persist(
-        &self,
-        run: DungeonRunState,
-        entry_door: Option<&str>,
-        explored: &BTreeSet<DemoDungeonRoom>,
-    ) -> Result<(), String> {
-        let save = DungeonSaveV1::from_run(run, entry_door, explored);
-        let mut bytes = serde_json::to_vec_pretty(&save)
-            .map_err(|error| format!("could not serialize dungeon save: {error}"))?;
-        bytes.push(b'\n');
-        let file_name = self
-            .path
-            .file_name()
-            .and_then(|name| name.to_str())
-            .unwrap_or("demo-dungeon-save-v1.json");
-        let temporary = self.path.with_file_name(format!(
-            ".{file_name}.tmp-{}-{}",
-            std::process::id(),
-            unix_time_ms()
-        ));
-        let mut file = OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&temporary)
-            .map_err(|error| {
-                format!(
-                    "could not create temporary dungeon save {}: {error}",
-                    temporary.display()
-                )
-            })?;
-        file.write_all(&bytes)
-            .and_then(|()| file.sync_all())
-            .map_err(|error| format!("could not write dungeon save: {error}"))?;
-        fs::rename(&temporary, &self.path).map_err(|error| {
-            format!(
-                "could not publish dungeon save {}: {error}",
-                self.path.display()
-            )
-        })?;
-        let readback = fs::read(&self.path).map_err(|error| {
-            format!(
-                "could not read back dungeon save {}: {error}",
-                self.path.display()
-            )
-        })?;
-        let parsed: DungeonSaveV1 = serde_json::from_slice(&readback)
-            .map_err(|error| format!("published dungeon save is not readable: {error}"))?;
-        if parsed.validate()? != (run, entry_door.map(str::to_owned), explored.clone()) {
-            return Err("published dungeon save readback changed the run state".to_owned());
-        }
-        Ok(())
-    }
-}
-
 impl ClientState {
     #[cfg(test)]
     fn new(
@@ -3358,39 +2822,9 @@ impl ClientState {
             selection.seed = 0;
         }
         let (mut simulation, generated_provenance) = load_scenario(selection, &catalogue)?;
-        let mut dungeon_run = (selection.mode == RoomMode::Dungeon).then(DungeonRunState::default);
-        let mut explored_rooms = BTreeSet::new();
-        if dungeon_run.is_some() {
-            explored_rooms.insert(DemoDungeonRoom::HollowLanding);
+        if selection.mode != RoomMode::DungeonV2 && dungeon_save.is_some() {
+            return Err("dungeon persistence requires dungeon mode".to_owned());
         }
-        let dungeon_persistence = match (selection.mode, dungeon_save) {
-            (RoomMode::Dungeon, Some((path, fresh))) => {
-                let (persistence, loaded) = DungeonPersistence::open(path, fresh)?;
-                if let Some((loaded_run, entry_door, loaded_explored)) = loaded {
-                    explored_rooms = loaded_explored;
-                    let room = demo_dungeon_room(loaded_run.room, loaded_run.inventory);
-                    simulation = match entry_door.as_deref() {
-                        Some(door) => {
-                            Simulation::enter_via_door(room, loaded_run.inventory.abilities(), door)
-                                .map_err(|error| {
-                                    format!("could not restore dungeon entry: {error}")
-                                })?
-                        }
-                        None => Simulation::with_abilities(room, loaded_run.inventory.abilities()),
-                    };
-                    dungeon_run = Some(loaded_run);
-                }
-                let run = dungeon_run.expect("dungeon mode initializes run state");
-                persistence.persist(run, simulation.entry_door(), &explored_rooms)?;
-                Some(persistence)
-            }
-            (RoomMode::Dungeon, None) => None,
-            (RoomMode::DungeonV2, _) => None,
-            (_, Some(_)) => {
-                return Err("dungeon persistence requires dungeon mode".to_owned());
-            }
-            (_, None) => None,
-        };
         let mut dungeon_v2_run =
             (selection.mode == RoomMode::DungeonV2).then(DungeonV2RunState::default);
         let mut explored_v2_rooms = BTreeSet::new();
@@ -3444,10 +2878,9 @@ impl ClientState {
         let level_menu_preview = LevelMenuPreview::load(preview_selection, &catalogue);
         let browser_mode = match selection.mode {
             RoomMode::Gallery => BrowserMode::Gallery,
-            RoomMode::Challenge(_)
-            | RoomMode::CalibratedGenerated
-            | RoomMode::Dungeon
-            | RoomMode::DungeonV2 => BrowserMode::Closed,
+            RoomMode::Challenge(_) | RoomMode::CalibratedGenerated | RoomMode::DungeonV2 => {
+                BrowserMode::Closed
+            }
             RoomMode::Generated | RoomMode::DeveloperGenerated | RoomMode::Development => {
                 BrowserMode::Catalogue
             }
@@ -3471,13 +2904,10 @@ impl ClientState {
             level_stats: HashMap::new(),
             replay_mode: ReplayMode::Human,
             replay_notice: None,
-            dungeon_run,
-            dungeon_persistence,
             dungeon_v2_run,
             dungeon_v2_persistence,
             explored_v2_rooms,
             death_pause_ticks: 0,
-            explored_rooms,
             map_visible: false,
             pause_visible: false,
             pause_menu_index: 0,
@@ -3501,17 +2931,10 @@ impl ClientState {
         self.replay_mode = ReplayMode::Human;
         self.replay_notice = None;
         self.movement_tuning_menu = None;
-        self.dungeon_run = (selection.mode == RoomMode::Dungeon).then(DungeonRunState::default);
-        self.dungeon_persistence = None;
         self.dungeon_v2_run =
             (selection.mode == RoomMode::DungeonV2).then(DungeonV2RunState::default);
         self.dungeon_v2_persistence = None;
         self.explored_v2_rooms = BTreeSet::new();
-        self.explored_rooms = if selection.mode == RoomMode::Dungeon {
-            BTreeSet::from([DemoDungeonRoom::HollowLanding])
-        } else {
-            BTreeSet::new()
-        };
         self.map_visible = false;
         self.pause_visible = false;
         self.pause_menu_index = 0;
@@ -3525,34 +2948,10 @@ impl ClientState {
     }
 
     const fn gallery_menu_visible(&self) -> bool {
-        matches!(
-            self.browser_mode,
-            BrowserMode::Gallery | BrowserMode::DungeonFloors
-        )
-    }
-
-    fn current_dungeon_room(&self) -> Option<DemoDungeonRoom> {
-        match self.selection.mode {
-            RoomMode::Challenge(ChallengeKind::DungeonFloor(room)) => Some(room),
-            RoomMode::Dungeon => Some(
-                self.dungeon_run
-                    .map_or(DemoDungeonRoom::HollowLanding, |run| run.room),
-            ),
-            _ => None,
-        }
+        matches!(self.browser_mode, BrowserMode::Gallery)
     }
 
     fn open_level_menu(&mut self) {
-        if let Some(room) = self.current_dungeon_room() {
-            let focused = DemoDungeonRoom::ALL
-                .iter()
-                .position(|candidate| *candidate == room)
-                .unwrap_or(0);
-            self.gallery_menu = GalleryMenuState::focused_on(focused, DemoDungeonRoom::ALL.len());
-            self.browser_mode = BrowserMode::DungeonFloors;
-            self.refresh_gallery_menu_preview();
-            return;
-        }
         if self.selection.mode == RoomMode::Gallery {
             self.gallery_menu = GalleryMenuState::focused_on(
                 usize::try_from(self.selection.seed).unwrap_or(0),
@@ -3581,24 +2980,8 @@ impl ClientState {
         true
     }
 
-    fn selected_dungeon_floor_scenario(&self) -> Option<ScenarioSelection> {
-        let room = DemoDungeonRoom::ALL.get(self.gallery_menu.selected_index)?;
-        Some(
-            ScenarioSelection {
-                mode: RoomMode::Challenge(ChallengeKind::DungeonFloor(*room)),
-                seed: 0,
-                tier: AbilityTier::Baseline,
-            }
-            .canonicalized(),
-        )
-    }
-
     fn selected_browser_scenario(&self) -> Option<ScenarioSelection> {
-        if self.browser_mode == BrowserMode::DungeonFloors {
-            self.selected_dungeon_floor_scenario()
-        } else {
-            self.gallery_menu.selected_scenario()
-        }
+        self.gallery_menu.selected_scenario()
     }
 
     fn refresh_gallery_menu_preview(&mut self) -> bool {
@@ -3656,14 +3039,6 @@ impl ClientState {
     }
 
     fn next_level_selection(&self) -> Option<ScenarioSelection> {
-        if self.selection.mode == RoomMode::Dungeon {
-            return None;
-        }
-        // Floor-lab rooms continue through their own doors, never into the
-        // generated catalogue.
-        if let RoomMode::Challenge(ChallengeKind::DungeonFloor(_)) = self.selection.mode {
-            return None;
-        }
         if self.selection.mode == RoomMode::Gallery {
             let index =
                 gallery_adjacent_index(self.selection.seed, calibration_gallery().len(), true)?;
@@ -3712,10 +3087,6 @@ impl ClientState {
                 || "MISSING CALIBRATED LEVEL".to_owned(),
                 |level| level.title(),
             ),
-            RoomMode::Dungeon => self.dungeon_run.map_or_else(
-                || "MISSING DUNGEON RUN".to_owned(),
-                |run| format!("DUNGEON · {}", run.room.title()),
-            ),
             RoomMode::DungeonV2 => self.dungeon_v2_run.as_ref().map_or_else(
                 || "DUNGEON V2".to_owned(),
                 |run| format!("DUNGEON V2 · {}", run.room.to_ascii_uppercase()),
@@ -3743,10 +3114,6 @@ impl ClientState {
             RoomMode::CalibratedGenerated => format!(
                 "calibrated-wall-jump-v{}:{:016x}",
                 CALIBRATED_WALL_JUMP_GENERATION_VERSION, selection.seed
-            ),
-            RoomMode::Dungeon => self.dungeon_run.map_or_else(
-                || "dungeon:missing".to_owned(),
-                |run| format!("dungeon:{}", run.room.id()),
             ),
             RoomMode::DungeonV2 => self.dungeon_v2_run.as_ref().map_or_else(
                 || "dungeon-v2".to_owned(),
@@ -3937,17 +3304,7 @@ impl ClientState {
     }
 
     fn selected_route_complete(&self) -> bool {
-        if self.selection.mode == RoomMode::Dungeon
-            && self.dungeon_run.is_some_and(|run| run.inventory.crown)
-        {
-            return true;
-        }
         if let Some(kind) = self.selection.mode.challenge() {
-            // Floor labs never declare completion: their analysis target is a
-            // study coordinate, and rooms are left through their doors.
-            if matches!(kind, ChallengeKind::DungeonFloor(_)) {
-                return false;
-            }
             return kind.objective().is_satisfied_by(&self.simulation);
         }
         match self.selected_target_id() {
@@ -3961,9 +3318,6 @@ impl ClientState {
             .map(PlayableEntry::target_door_id)
             .or_else(|| self.current_gallery_entry().map(CalibrationLevel::target))
             .or_else(|| self.selection.mode.challenge().map(ChallengeKind::target))
-            .or_else(|| {
-                (self.selection.mode == RoomMode::Dungeon).then_some(DEMO_DUNGEON_GOAL_EXIT)
-            })
     }
 
     fn wrong_door(&self) -> Option<&str> {
@@ -4163,10 +3517,6 @@ impl ClientState {
             ReplayMode::SolveRequested(request) => request.clone(),
             ReplayMode::Human | ReplayMode::Playback(_) => return,
         };
-        if self.selection.mode == RoomMode::Dungeon {
-            self.perform_dungeon_solve(request);
-            return;
-        }
         if self.selection.mode == RoomMode::DungeonV2 {
             self.perform_dungeon_v2_solve(request);
             return;
@@ -4202,80 +3552,6 @@ impl ClientState {
         }
     }
 
-    fn perform_dungeon_solve(&mut self, request: SolveRequest) {
-        let Some(run) = self.dungeon_run else {
-            self.set_replay_error(
-                "DUNGEON STATE ERROR",
-                "persistent run state is missing".to_owned(),
-            );
-            return;
-        };
-        let initial = self.simulation.clone();
-        if let SolveRequest::Pickup(pickup_id) = request {
-            self.perform_pickup_solve(initial, None, pickup_id);
-            return;
-        }
-        if run.room == DemoDungeonRoom::ClimberVault && !run.inventory.climbing_gloves {
-            self.perform_pickup_solve(initial, None, DEMO_DUNGEON_GLOVE_PICKUP.to_owned());
-            return;
-        }
-        if run.room == DemoDungeonRoom::BootsVault && !run.inventory.winged_boots {
-            self.perform_pickup_solve(initial, None, DEMO_DUNGEON_BOOT_PICKUP.to_owned());
-            return;
-        }
-        if let Some(coin_id) = self
-            .simulation
-            .room()
-            .pickups()
-            .iter()
-            .enumerate()
-            .find(|(index, pickup)| {
-                pickup.id().starts_with("dungeon-coin-")
-                    && self.simulation.pickup_is_collected(*index) == Some(false)
-            })
-            .map(|(_, pickup)| pickup.id().to_owned())
-        {
-            self.perform_pickup_solve(initial, None, coin_id);
-            return;
-        }
-        // The Crown goal is the only terminal exit; everything else picks the
-        // nearest openable door that is not the one the player entered by
-        // (the entry door is a last resort so retreat is still offered).
-        if run.room == DemoDungeonRoom::CrownSanctum {
-            self.perform_exit_solve(initial, None);
-            return;
-        }
-        let entry_door = self.simulation.entry_door().map(str::to_owned);
-        let player = self.simulation.player().bounds();
-        let progression = run.inventory.authored_progression_inventory();
-        let mut candidates: Vec<(i64, String)> = self
-            .simulation
-            .room()
-            .doors()
-            .iter()
-            .filter(|door| {
-                demo_dungeon_door_requirement(run.room, &door.id).is_satisfied_by(&progression)
-            })
-            .map(|door| {
-                let trigger = door.trigger_bounds;
-                let dx = i64::from(trigger.x + trigger.width / 2 - player.x - player.width / 2);
-                let dy = i64::from(trigger.y + trigger.height / 2 - player.y - player.height / 2);
-                let mut score = dx * dx + dy * dy;
-                if Some(door.id.as_str()) == entry_door.as_deref() {
-                    score += 1_000_000_000;
-                }
-                (score, door.id.clone())
-            })
-            .collect();
-        candidates.sort();
-        let target_door = candidates.into_iter().next().map(|(_, id)| id);
-        if let Some(target) = target_door {
-            self.perform_target_door_solve(initial, None, target, None, 0, 0);
-        } else {
-            self.perform_exit_solve(initial, None);
-        }
-    }
-
     fn perform_dungeon_v2_solve(&mut self, request: SolveRequest) {
         let Some(run) = self.dungeon_v2_run.clone() else {
             self.set_replay_error(
@@ -4291,15 +3567,15 @@ impl ClientState {
         }
         let dungeon = dungeon_v2_definition();
         if run.room == dungeon.glove_room && !run.inventory.climbing_gloves {
-            self.perform_pickup_solve(initial, None, DEMO_DUNGEON_GLOVE_PICKUP.to_owned());
+            self.perform_pickup_solve(initial, None, DUNGEON_V2_GLOVE_PICKUP.to_owned());
             return;
         }
         if run.room == dungeon.boots_room && !run.inventory.winged_boots {
-            self.perform_pickup_solve(initial, None, DEMO_DUNGEON_BOOT_PICKUP.to_owned());
+            self.perform_pickup_solve(initial, None, DUNGEON_V2_BOOT_PICKUP.to_owned());
             return;
         }
         if run.room == dungeon.goal && !run.inventory.crown {
-            self.perform_pickup_solve(initial, None, DEMO_DUNGEON_CROWN_PICKUP.to_owned());
+            self.perform_pickup_solve(initial, None, DUNGEON_V2_CROWN_PICKUP.to_owned());
             return;
         }
         if run.room == dungeon.spawn && run.inventory.crown {
@@ -4888,19 +4164,13 @@ impl ClientState {
         }
         // AI progress is as real as human progress: persist coins and follow
         // door transitions, and hand control back the moment a goal lands.
-        let boundary = self.observe_dungeon_progress(&report)
-            || self.observe_dungeon_v2_progress(&report)
-            || self.observe_floor_lab_progress(&report);
+        let boundary = self.observe_dungeon_v2_progress(&report);
         if boundary {
             self.replay_mode = ReplayMode::Human;
             self.human_recorder = HumanRecorder::new(&self.simulation);
         } else if complete
             && matches!(&self.replay_mode, ReplayMode::Playback(_))
-            && (matches!(self.selection.mode, RoomMode::Dungeon | RoomMode::DungeonV2)
-                || matches!(
-                    self.selection.mode,
-                    RoomMode::Challenge(ChallengeKind::DungeonFloor(_))
-                ))
+            && self.selection.mode == RoomMode::DungeonV2
         {
             // In the dungeon and the floor lab, a finished AI goal hands
             // control straight back; review modes keep the replay transport.
@@ -4980,12 +4250,7 @@ impl ClientState {
             // initial digest and subsequent frames share one movement-policy domain.
             self.human_recorder.resume_at(&self.simulation);
         }
-        // Every connected door is a legitimate room-local completion in dungeon mode. The Crown
-        // remains the run-level target, but classifying intermediate doors against that ID would
-        // corrupt playtest history by recording every successful transition as a wrong door.
-        let expected_target = (self.selection.mode != RoomMode::Dungeon)
-            .then(|| self.selected_target_id().map(str::to_owned))
-            .flatten();
+        let expected_target = self.selected_target_id().map(str::to_owned);
         let report = self.step(action);
         if report
             .events
@@ -5041,70 +4306,13 @@ impl ClientState {
         } else {
             None
         };
-        let dungeon_boundary = self.observe_dungeon_progress(&report)
-            || self.observe_dungeon_v2_progress(&report)
-            || self.observe_floor_lab_progress(&report);
+        let dungeon_boundary = self.observe_dungeon_v2_progress(&report);
         if !dungeon_boundary && let Some(notice) = completed_notice {
             self.replay_notice = Some(notice);
         }
         report
     }
 
-    /// Apply the persistent run state that sits above an individual authoritative room.
-    ///
-    /// Returns `true` when this tick crossed an attempt boundary (a room transition or the boots
-    /// unlock). The ordinary single-room recorder must not append across that digest/loadout
-    /// boundary; it is resumed against the newly authoritative state here instead.
-    fn persist_dungeon_progress(&mut self) {
-        let result = match (self.dungeon_persistence.as_ref(), self.dungeon_run) {
-            (Some(persistence), Some(run)) => {
-                persistence.persist(run, self.simulation.entry_door(), &self.explored_rooms)
-            }
-            (None, _) | (_, None) => return,
-        };
-        if let Err(error) = result {
-            eprintln!("dungeon persistence disabled after write failure: {error}");
-            self.dungeon_persistence = None;
-            self.replay_notice = Some(ReplayNotice {
-                title: "DUNGEON SAVE FAILED".to_owned(),
-                detail: "The current run continues, but progress is no longer being saved"
-                    .to_owned(),
-                is_error: true,
-            });
-        }
-    }
-
-    fn record_dungeon_event(
-        &mut self,
-        event: &str,
-        room: DemoDungeonRoom,
-        destination: Option<DemoDungeonRoom>,
-        door: Option<&str>,
-        item_id: Option<&str>,
-        inventory: DemoDungeonInventory,
-    ) {
-        let result = self.human_history.as_mut().map(|history| {
-            history.append_dungeon_event(
-                DungeonEventContext {
-                    event,
-                    room,
-                    destination,
-                    door,
-                    item_id,
-                },
-                inventory,
-                self.movement_tuning,
-            )
-        });
-        if let Some(Err(error)) = result {
-            eprintln!("human attempt history disabled after dungeon-event failure: {error}");
-            self.human_history = None;
-        }
-    }
-
-    /// In the non-persistent floor lab, a reached connected door continues
-    /// into the destination room's floor lab (entered via the mate door, with
-    /// that room's analysis loadout) instead of ending the session.
     fn persist_dungeon_v2_progress(&mut self) {
         if let (Some(run), Some(persistence)) = (
             self.dungeon_v2_run.as_ref(),
@@ -5171,7 +4379,7 @@ impl ClientState {
                         is_error: false,
                     });
                 }
-            } else if id == DEMO_DUNGEON_GLOVE_PICKUP && !run.inventory.climbing_gloves {
+            } else if id == DUNGEON_V2_GLOVE_PICKUP && !run.inventory.climbing_gloves {
                 run.inventory.climbing_gloves = true;
                 changed = true;
                 self.simulation.grant_abilities(run.inventory.abilities());
@@ -5180,7 +4388,7 @@ impl ClientState {
                     detail: "Wall-jumps unlocked · sealed wall doors now open".to_owned(),
                     is_error: false,
                 });
-            } else if id == DEMO_DUNGEON_BOOT_PICKUP && !run.inventory.winged_boots {
+            } else if id == DUNGEON_V2_BOOT_PICKUP && !run.inventory.winged_boots {
                 run.inventory.winged_boots = true;
                 changed = true;
                 self.simulation.grant_abilities(run.inventory.abilities());
@@ -5189,7 +4397,7 @@ impl ClientState {
                     detail: "Dash unlocked · sealed dash doors now open".to_owned(),
                     is_error: false,
                 });
-            } else if id == DEMO_DUNGEON_CROWN_PICKUP && !run.inventory.crown {
+            } else if id == DUNGEON_V2_CROWN_PICKUP && !run.inventory.crown {
                 run.inventory.crown = true;
                 changed = true;
                 self.replay_notice = Some(ReplayNotice {
@@ -5284,309 +4492,6 @@ impl ClientState {
             is_error: false,
         });
         self.persist_dungeon_v2_progress();
-        true
-    }
-
-    fn observe_floor_lab_progress(&mut self, report: &StepReport) -> bool {
-        let RoomMode::Challenge(ChallengeKind::DungeonFloor(_)) = self.selection.mode else {
-            return false;
-        };
-        let Some(exit_id) = report.events.iter().find_map(|event| match event {
-            SimulationEvent::ExitReached { id } => Some(id.as_str()),
-            _ => None,
-        }) else {
-            return false;
-        };
-        let Some(door) = self
-            .simulation
-            .room()
-            .doors()
-            .iter()
-            .find(|door| door.id == exit_id)
-            .cloned()
-        else {
-            // The crown goal is a terminal legacy Exit, not a room transition.
-            return false;
-        };
-        let Some(destination_room) = door
-            .destination_room
-            .as_deref()
-            .and_then(DemoDungeonRoom::from_id)
-        else {
-            return false;
-        };
-        let destination_door = door
-            .destination_door
-            .as_deref()
-            .expect("built-in dungeon doors always name their mate");
-        let spec = dungeon_floor_route_spec(destination_room);
-        let room = demo_dungeon_room(destination_room, spec.inventory);
-        let mut simulation =
-            match Simulation::enter_via_door(room, spec.inventory.abilities(), destination_door) {
-                Ok(simulation) => simulation,
-                Err(error) => {
-                    eprintln!(
-                        "floor lab cannot enter {} by {destination_door:?}: {error}",
-                        destination_room.id()
-                    );
-                    return false;
-                }
-            };
-        configure_live_simulation(&mut simulation, self.movement_tuning);
-        self.selection = ScenarioSelection {
-            mode: RoomMode::Challenge(ChallengeKind::DungeonFloor(destination_room)),
-            seed: 0,
-            tier: AbilityTier::Baseline,
-        }
-        .canonicalized();
-        self.simulation = simulation;
-        self.feedback = SimulationFeedback::default();
-        self.human_recorder = HumanRecorder::new(&self.simulation);
-        self.replay_mode = ReplayMode::Human;
-        self.replay_notice = Some(ReplayNotice {
-            title: destination_room.title().to_ascii_uppercase(),
-            detail: "FLOOR LAB · non-persistent · M browses floors".to_owned(),
-            is_error: false,
-        });
-        true
-    }
-
-    fn observe_dungeon_progress(&mut self, report: &StepReport) -> bool {
-        let Some(mut run) = self.dungeon_run else {
-            return false;
-        };
-
-        let reset_needs_inventory_rebind = report
-            .events
-            .iter()
-            .any(|event| matches!(event, SimulationEvent::Reset))
-            && self
-                .simulation
-                .room()
-                .pickups()
-                .iter()
-                .any(|pickup| run.inventory.owns_persistent_pickup(pickup.id()));
-        if reset_needs_inventory_rebind {
-            let entry_door = self.simulation.entry_door().map(str::to_owned);
-            let room = demo_dungeon_room(run.room, run.inventory);
-            let mut rebound = match entry_door.as_deref() {
-                Some(door) => Simulation::enter_via_door(room, run.inventory.abilities(), door)
-                    .expect("persistent dungeon entry door remains valid"),
-                None => Simulation::with_abilities(room, run.inventory.abilities()),
-            };
-            configure_live_simulation(&mut rebound, self.movement_tuning);
-            self.simulation = rebound;
-            self.human_recorder = HumanRecorder::new(&self.simulation);
-            return true;
-        }
-
-        let mut collected_coin_ids = Vec::new();
-        for id in report.events.iter().filter_map(|event| match event {
-            SimulationEvent::PickupCollected { id } => Some(id.as_str()),
-            _ => None,
-        }) {
-            if run.inventory.collect_coin(id) {
-                collected_coin_ids.push(id.to_owned());
-            }
-        }
-        if !collected_coin_ids.is_empty() {
-            self.dungeon_run = Some(run);
-            self.replay_notice = Some(ReplayNotice {
-                title: format!(
-                    "COIN {}/{}",
-                    run.inventory.coin_count(),
-                    DEMO_DUNGEON_TOTAL_COINS
-                ),
-                detail: "Coins persist across rooms and open sealed doors".to_owned(),
-                is_error: false,
-            });
-            self.persist_dungeon_progress();
-            for id in &collected_coin_ids {
-                self.record_dungeon_event(
-                    "coin_collected",
-                    run.room,
-                    None,
-                    None,
-                    Some(id),
-                    run.inventory,
-                );
-            }
-        }
-
-        let collected_gloves = report.events.iter().any(|event| {
-            matches!(event, SimulationEvent::PickupCollected { id } if id == DEMO_DUNGEON_GLOVE_PICKUP)
-        });
-        if collected_gloves && !run.inventory.climbing_gloves {
-            run.inventory.climbing_gloves = true;
-            self.dungeon_run = Some(run);
-            self.simulation
-                .grant_abilities(AbilitySet::new(true, false));
-            self.human_recorder.resume_at(&self.simulation);
-            self.replay_notice = Some(ReplayNotice {
-                title: "CLIMBING GLOVES ACQUIRED".to_owned(),
-                detail: "Wall Jump unlocked: hold toward a wall and press Jump".to_owned(),
-                is_error: false,
-            });
-            self.persist_dungeon_progress();
-            self.record_dungeon_event(
-                "traversal_unlocked",
-                run.room,
-                None,
-                None,
-                Some(DEMO_DUNGEON_GLOVE_PICKUP),
-                run.inventory,
-            );
-            return true;
-        }
-
-        let collected_boots = report.events.iter().any(|event| {
-            matches!(event, SimulationEvent::PickupCollected { id } if id == DEMO_DUNGEON_BOOT_PICKUP)
-        });
-        if collected_boots && !run.inventory.winged_boots {
-            run.inventory.winged_boots = true;
-            self.dungeon_run = Some(run);
-            self.simulation
-                .grant_abilities(AbilitySet::new(false, true));
-            self.human_recorder.resume_at(&self.simulation);
-            self.replay_notice = Some(ReplayNotice {
-                title: "WINGED BOOTS ACQUIRED".to_owned(),
-                detail: "Dash unlocked: hold a direction and press X or Shift".to_owned(),
-                is_error: false,
-            });
-            self.persist_dungeon_progress();
-            self.record_dungeon_event(
-                "traversal_unlocked",
-                run.room,
-                None,
-                None,
-                Some(DEMO_DUNGEON_BOOT_PICKUP),
-                run.inventory,
-            );
-            return true;
-        }
-
-        if report.events.iter().any(|event| {
-            matches!(event, SimulationEvent::PickupCollected { id } if id == DEMO_DUNGEON_CROWN_PICKUP)
-        }) {
-            run.inventory.crown = true;
-            self.dungeon_run = Some(run);
-            self.persist_dungeon_progress();
-            self.record_dungeon_event(
-                "crown_collected",
-                run.room,
-                None,
-                None,
-                Some(DEMO_DUNGEON_CROWN_PICKUP),
-                run.inventory,
-            );
-        }
-
-        let Some(exit_id) = report.events.iter().find_map(|event| match event {
-            SimulationEvent::ExitReached { id } => Some(id.as_str()),
-            _ => None,
-        }) else {
-            return false;
-        };
-        let Some(door) = self
-            .simulation
-            .room()
-            .doors()
-            .iter()
-            .find(|door| door.id == exit_id)
-            .cloned()
-        else {
-            // The crown goal is a terminal legacy Exit, not a room transition.
-            return false;
-        };
-        let requirement = demo_dungeon_door_requirement(run.room, &door.id);
-        if !requirement.is_satisfied_by(&run.inventory.authored_progression_inventory()) {
-            // The production report and simulation are the same authoritative step. Keeping
-            // this tolerant also makes the run-state observer robust to synthetic diagnostics.
-            let _ = self.simulation.reject_reached_door(&door.id);
-            self.human_recorder.resume_at(&self.simulation);
-            self.replay_notice = Some(ReplayNotice {
-                title: format!(
-                    "SEALED · {} REQUIRED",
-                    dungeon_requirement_label(requirement)
-                ),
-                detail: format!(
-                    "you have {}/{} coins; explore another branch",
-                    run.inventory.coin_count(),
-                    DEMO_DUNGEON_TOTAL_COINS
-                ),
-                is_error: true,
-            });
-            self.record_dungeon_event(
-                "sealed_door_rejected",
-                run.room,
-                None,
-                Some(&door.id),
-                None,
-                run.inventory,
-            );
-            return true;
-        }
-        let Some(destination_room) = door
-            .destination_room
-            .as_deref()
-            .and_then(DemoDungeonRoom::from_id)
-        else {
-            self.replay_notice = Some(ReplayNotice {
-                title: "BROKEN DUNGEON DOOR".to_owned(),
-                detail: format!("{} has no known destination", door.id),
-                is_error: true,
-            });
-            return false;
-        };
-        let destination_door = door
-            .destination_door
-            .as_deref()
-            .expect("built-in dungeon doors always name their mate");
-        let source_room = run.room;
-        run.room = destination_room;
-        self.explored_rooms.insert(destination_room);
-        let room = demo_dungeon_room(run.room, run.inventory);
-        let mut simulation =
-            Simulation::enter_via_door(room, run.inventory.abilities(), destination_door)
-                .expect("built-in dungeon graph points at a validated destination door");
-        configure_live_simulation(&mut simulation, self.movement_tuning);
-        self.dungeon_run = Some(run);
-        self.simulation = simulation;
-        self.feedback = SimulationFeedback::default();
-        self.human_recorder = HumanRecorder::new(&self.simulation);
-        self.replay_mode = ReplayMode::Human;
-        self.replay_notice = Some(ReplayNotice {
-            title: destination_room.title().to_ascii_uppercase(),
-            detail: if !run.inventory.climbing_gloves {
-                format!(
-                    "Find the Climbing Gloves · coins {}/{}",
-                    run.inventory.coin_count(),
-                    DEMO_DUNGEON_TOTAL_COINS
-                )
-            } else if run.inventory.winged_boots {
-                format!(
-                    "Winged Boots equipped · coins {}/{} · find the Crown",
-                    run.inventory.coin_count(),
-                    DEMO_DUNGEON_TOTAL_COINS
-                )
-            } else {
-                format!(
-                    "Find the Winged Boots · coins {}/{}",
-                    run.inventory.coin_count(),
-                    DEMO_DUNGEON_TOTAL_COINS
-                )
-            },
-            is_error: false,
-        });
-        self.persist_dungeon_progress();
-        self.record_dungeon_event(
-            "room_transition",
-            source_room,
-            Some(destination_room),
-            Some(&door.id),
-            None,
-            run.inventory,
-        );
         true
     }
 }
@@ -5765,16 +4670,6 @@ fn load_scenario(
                     )
                 })?;
             (level.scenario(), None)
-        }
-        RoomMode::Dungeon => {
-            let run = DungeonRunState::default();
-            (
-                Simulation::with_abilities(
-                    demo_dungeon_room(run.room, run.inventory),
-                    run.inventory.abilities(),
-                ),
-                None,
-            )
         }
         RoomMode::DungeonV2 => {
             let run = DungeonV2RunState::default();
@@ -6036,9 +4931,7 @@ fn room_mode_label(mode: RoomMode) -> &'static str {
         RoomMode::Development => "DEVELOPMENT",
         RoomMode::Gallery => "GALLERY",
         RoomMode::CalibratedGenerated => "CALIBRATED",
-        RoomMode::Dungeon => "DUNGEON",
         RoomMode::DungeonV2 => "DUNGEON V2",
-        RoomMode::Challenge(ChallengeKind::DungeonFloor(_)) => "DUNGEON FLOOR LAB",
         RoomMode::Challenge(ChallengeKind::Hard | ChallengeKind::Medium) => "CHALLENGE",
     }
 }
@@ -6343,11 +5236,7 @@ fn render(client: &ClientState, visual_assets: &VisualAssets) {
     if client.level_menu_visible() {
         let menu_viewport = viewport.translated(0, ROOM_TOP);
         if client.gallery_menu_visible() {
-            if client.browser_mode == BrowserMode::DungeonFloors {
-                draw_dungeon_floor_menu(&menu_viewport, client, visual_assets);
-            } else {
-                draw_gallery_menu(&menu_viewport, client, visual_assets);
-            }
+            draw_gallery_menu(&menu_viewport, client, visual_assets);
         } else {
             draw_level_menu(&menu_viewport, client, visual_assets);
         }
@@ -6369,11 +5258,7 @@ fn render(client: &ClientState, visual_assets: &VisualAssets) {
     }
     if client.map_visible {
         let map_viewport = viewport.translated(0, ROOM_TOP);
-        if client.selection.mode == RoomMode::DungeonV2 {
-            draw_dungeon_v2_map(&map_viewport, client);
-        } else {
-            draw_dungeon_map(&map_viewport, client);
-        }
+        draw_dungeon_v2_map(&map_viewport, client);
         return;
     }
 
@@ -6393,7 +5278,6 @@ fn render(client: &ClientState, visual_assets: &VisualAssets) {
     if client.selection.mode == RoomMode::DungeonV2 {
         draw_dungeon_v2_exit_gate(&room_viewport, client);
     }
-    draw_dungeon_coin_gates(&room_viewport, client);
     draw_player_effects(
         &room_viewport,
         client.simulation.player().bounds(),
@@ -7006,259 +5890,6 @@ fn draw_dungeon_v2_map(viewport: &PixelViewport, client: &ClientState) {
     viewport.centered_text("TAB/ESC CLOSE", 177, 5, UI_DIM);
 }
 
-fn draw_dungeon_map(viewport: &PixelViewport, client: &ClientState) {
-    const CELL_W: i32 = 12;
-    const CELL_H: i32 = 8;
-    const PITCH_X: i32 = 17;
-    const PITCH_Y: i32 = 13;
-    const CENTER_X: i32 = 160;
-    const CENTER_Y: i32 = 92;
-
-    let Some(run) = client.dungeon_run else {
-        return;
-    };
-    viewport.rectangle(CoreRect::new(0, 0, 320, 180), MENU_BACKGROUND);
-    viewport.centered_text("DUNGEON MAP", 12, 9, PLAYER);
-    viewport.centered_text(
-        &format!(
-            "COINS {}/{}   GOLD DOT = COINS LEFT IN A ROOM YOU HAVE SEEN",
-            run.inventory.coin_count(),
-            DEMO_DUNGEON_TOTAL_COINS
-        ),
-        24,
-        5,
-        PLAYER_ACCENT,
-    );
-
-    let layout = dungeon_map_layout();
-    let definition = demo_dungeon_definition();
-    let origin = layout[&run.room];
-    let cell_origin = |room: DemoDungeonRoom| {
-        let (x, y) = layout[&room];
-        (
-            CENTER_X + (x - origin.0) * PITCH_X - CELL_W / 2,
-            CENTER_Y + (y - origin.1) * PITCH_Y - CELL_H / 2,
-        )
-    };
-    let on_screen =
-        |(x, y): (i32, i32)| (-CELL_W..320).contains(&x) && (30 - CELL_H..168).contains(&y);
-
-    // Connection stubs between explored neighbours first, so cells draw over
-    // them.
-    for &room in &client.explored_rooms {
-        let (x, y) = cell_origin(room);
-        if !on_screen((x, y)) {
-            continue;
-        }
-        let floor = definition
-            .floor(room.authored_key())
-            .expect("room has a floor definition");
-        for connection in &floor.connections {
-            let (stub_x, stub_y, stub_w, stub_h) = match connection.door_id.as_str() {
-                "west" => (x - (PITCH_X - CELL_W), y + CELL_H / 2, PITCH_X - CELL_W, 1),
-                "east" => (x + CELL_W, y + CELL_H / 2, PITCH_X - CELL_W, 1),
-                "ceiling" => (x + CELL_W / 2, y - (PITCH_Y - CELL_H), 1, PITCH_Y - CELL_H),
-                _ => (x + CELL_W / 2, y + CELL_H, 1, PITCH_Y - CELL_H),
-            };
-            viewport.rectangle(CoreRect::new(stub_x, stub_y, stub_w, stub_h), UI_DIM);
-        }
-    }
-
-    for &room in &client.explored_rooms {
-        let (x, y) = cell_origin(room);
-        if !on_screen((x, y)) {
-            continue;
-        }
-        let current = room == run.room;
-        viewport.rectangle(
-            CoreRect::new(x, y, CELL_W, CELL_H),
-            if current { MENU_SELECTED } else { DEBUG_PANEL },
-        );
-        viewport.rectangle_outline(
-            CoreRect::new(x, y, CELL_W, CELL_H),
-            1,
-            if current { PLAYER_ACCENT } else { UI_DIM },
-        );
-        let floor = definition
-            .floor(room.authored_key())
-            .expect("room has a floor definition");
-        let remaining = floor
-            .coin_indices
-            .iter()
-            .filter(|index| !run.inventory.has_coin(&format!("dungeon-coin-{index:02}")))
-            .count();
-        if remaining > 0 {
-            viewport.rectangle(CoreRect::new(x + CELL_W - 4, y + 1, 3, 3), PICKUP);
-        }
-    }
-
-    viewport.centered_text(&run.room.title().to_ascii_uppercase(), 168, 7, UI_TEXT);
-    viewport.centered_text("TAB/ESC CLOSE", 177, 5, UI_DIM);
-}
-
-fn draw_dungeon_floor_menu(
-    viewport: &PixelViewport,
-    client: &ClientState,
-    visual_assets: &VisualAssets,
-) {
-    const PREVIEW_X: i32 = 171;
-    const PREVIEW_Y: i32 = 43;
-    const PREVIEW_SCALE: f32 = 0.43;
-
-    viewport.rectangle(CoreRect::new(0, 0, 320, 180), MENU_BACKGROUND);
-    viewport.centered_text("DOWNWARDS  /  DUNGEON FLOOR LAB", 12, 9, PLAYER);
-    viewport.centered_text(
-        &format!(
-            "{} AUTHORED FLOORS / NON-PERSISTENT ANALYSIS LOADOUTS",
-            client.gallery_menu.item_count
-        ),
-        24,
-        5,
-        PLAYER_ACCENT,
-    );
-
-    let visible = client.gallery_menu.visible_indices();
-    let visible_end = visible.end;
-    for (row, index) in visible.enumerate() {
-        let y = 42 + row as i32 * 11;
-        let Some(room) = DemoDungeonRoom::ALL.get(index).copied() else {
-            continue;
-        };
-        if index == client.gallery_menu.selected_index {
-            viewport.rectangle(CoreRect::new(4, y - 8, 159, 10), MENU_SELECTED);
-            viewport.rectangle_outline(CoreRect::new(4, y - 8, 159, 10), 1, PLAYER_ACCENT);
-            viewport.text(">", 6, y, 6, PLAYER_ACCENT);
-        }
-        viewport.text(&format!("{:>3}", index + 1), 13, y, 5, UI_DIM);
-        viewport.text(room.title(), 32, y, 6, UI_TEXT);
-    }
-    if client.gallery_menu.first_visible_index > 0 {
-        viewport.text("^", 164, 42, 6, PLAYER_ACCENT);
-    }
-    if visible_end < client.gallery_menu.item_count {
-        viewport.text("v", 164, 141, 6, PLAYER_ACCENT);
-    }
-
-    viewport.rectangle(CoreRect::new(168, 38, 146, 84), DEBUG_PANEL);
-    viewport.rectangle_outline(CoreRect::new(168, 38, 146, 84), 1, UI_DIM);
-    if let Some(simulation) = &client.level_menu_preview.simulation {
-        viewport.rectangle(
-            CoreRect::new(PREVIEW_X, PREVIEW_Y, 138, 78),
-            ROOM_BACKGROUND,
-        );
-        let preview_viewport = PixelViewport {
-            scale: viewport.scale * PREVIEW_SCALE,
-            left: viewport.screen_x(PREVIEW_X),
-            top: viewport.screen_y(PREVIEW_Y),
-        };
-        draw_tiles(&preview_viewport, simulation.room(), visual_assets);
-        draw_room_objects(&preview_viewport, simulation, visual_assets);
-        draw_exits(&preview_viewport, simulation.room(), None, visual_assets);
-        draw_animated_player(
-            &preview_viewport,
-            simulation.player().bounds(),
-            PlayerVisual {
-                pose: PlayerPose::IdleA,
-                flip_x: false,
-            },
-            visual_assets,
-        );
-    } else {
-        viewport.centered_text_in(
-            CoreRect::new(168, 38, 146, 84),
-            "PREVIEW UNAVAILABLE",
-            78,
-            7,
-            HAZARD,
-        );
-    }
-
-    if let Some(selection) = client.selected_browser_scenario()
-        && let Some(room) = DemoDungeonRoom::ALL
-            .get(client.gallery_menu.selected_index)
-            .copied()
-    {
-        let spec = dungeon_floor_route_spec(room);
-        let stats = client.stats_for(selection);
-        viewport.text(
-            &fit_preview_line(&format!(
-                "{} / {}",
-                room.id().to_ascii_uppercase(),
-                room.title().to_ascii_uppercase()
-            )),
-            170,
-            132,
-            5,
-            PLAYER,
-        );
-        viewport.text(
-            &fit_preview_line(&format!(
-                "TARGET {} {}",
-                spec.target.kind().to_ascii_uppercase(),
-                spec.target.id().to_ascii_uppercase()
-            )),
-            170,
-            139,
-            5,
-            WALL_SLIDE_CUE,
-        );
-        let abilities = spec.inventory.abilities();
-        viewport.text(
-            &fit_preview_line(&format!(
-                "WALL:{} DASH:{} / V TRACTABILITY WITNESS",
-                if abilities.wall_jump { "ON" } else { "LOCKED" },
-                if abilities.dash { "ON" } else { "LOCKED" }
-            )),
-            170,
-            146,
-            5,
-            PLAYER_ACCENT,
-        );
-        viewport.text(
-            &fit_preview_line(&format!(
-                "RUNS {} D {} C {} BEST {}",
-                stats.attempts,
-                stats.deaths,
-                stats.clears,
-                format_best_clear(stats.best_clear_ticks)
-            )),
-            170,
-            153,
-            5,
-            UI_TEXT,
-        );
-    } else {
-        viewport.centered_text("NO DUNGEON FLOORS REGISTERED", 137, 7, HAZARD);
-    }
-    if let Some(error) = &client.level_menu_preview.error {
-        viewport.text(&fit_preview_line(error), 170, 153, 5, HAZARD);
-    }
-
-    viewport.centered_text(
-        "ARROWS/WASD PREVIOUS/NEXT   ENTER PLAY   V WITNESS",
-        164,
-        6,
-        UI_TEXT,
-    );
-    let scroll_hint = if visible_end < client.gallery_menu.item_count {
-        "   v MORE BELOW"
-    } else if client.gallery_menu.first_visible_index > 0 {
-        "   ^ MORE ABOVE"
-    } else {
-        ""
-    };
-    viewport.centered_text(
-        &format!(
-            "FLOOR {}/{}   HOME/END FIRST/LAST{scroll_hint}",
-            client.gallery_menu.selected_index.saturating_add(1),
-            client.gallery_menu.item_count
-        ),
-        174,
-        6,
-        UI_DIM,
-    );
-}
-
 fn draw_level_menu(viewport: &PixelViewport, client: &ClientState, visual_assets: &VisualAssets) {
     viewport.rectangle(CoreRect::new(0, 0, 320, 180), MENU_BACKGROUND);
     viewport.centered_text("DOWNWARDS  /  LEVEL SELECT", 12, 9, PLAYER);
@@ -7479,11 +6110,6 @@ fn draw_level_menu_preview(
             ),
             format!("EXACT STORED ROUTE -> {}", kind.target()),
             "KIT WALL:ON DASH:LOCKED | V PLAYS EXACT WITNESS".to_owned(),
-        ),
-        RoomMode::Dungeon => (
-            "PERSISTENT SEVEN-ROOM VERTICAL SLICE".to_owned(),
-            "FIND BOOTS · CROSS GALE CHASM · CLAIM CROWN".to_owned(),
-            "ROOM EXITS TRAVERSE THE DUNGEON GRAPH".to_owned(),
         ),
         RoomMode::DungeonV2 => (
             "REDESIGNED DATA-DRIVEN DUNGEON".to_owned(),
@@ -7818,13 +6444,13 @@ fn draw_room_objects(viewport: &PixelViewport, simulation: &Simulation, assets: 
             continue;
         }
         match pickup.id() {
-            DEMO_DUNGEON_BOOT_PICKUP => draw_dungeon_pickup(
+            DUNGEON_V2_BOOT_PICKUP => draw_dungeon_pickup(
                 viewport,
                 pickup.bounds(),
                 DungeonPickupSprite::WingedBoots,
                 assets,
             ),
-            DEMO_DUNGEON_CROWN_PICKUP => draw_dungeon_pickup(
+            DUNGEON_V2_CROWN_PICKUP => draw_dungeon_pickup(
                 viewport,
                 pickup.bounds(),
                 DungeonPickupSprite::Crown,
@@ -7893,7 +6519,7 @@ fn draw_exits(
     assets: &VisualAssets,
 ) {
     for exit in room.exits() {
-        if exit.id == DEMO_DUNGEON_GOAL_EXIT {
+        if exit.id == DUNGEON_V2_GOAL_EXIT {
             // The Crown is the goal's complete visual affordance. Its trigger deliberately
             // surrounds the pickup, but drawing a generic exit frame over the sprite would make
             // it look like another door and obscure the generated pixel art.
@@ -7962,64 +6588,6 @@ fn draw_exits(
                 colour,
             ),
         }
-    }
-}
-
-fn draw_dungeon_coin_gates(viewport: &PixelViewport, client: &ClientState) {
-    let Some(run) = client.dungeon_run else {
-        return;
-    };
-    for door in client.simulation.room().doors() {
-        let requirement = demo_dungeon_door_requirement(run.room, &door.id);
-        if requirement.is_empty()
-            || requirement.is_satisfied_by(&run.inventory.authored_progression_inventory())
-        {
-            continue;
-        }
-        let bounds = door.trigger_bounds;
-        viewport.rectangle(bounds, Color::new(0.2, 0.04, 0.08, 0.82));
-        for offset in [5, 14, 23, 32] {
-            let slat = match door.side {
-                BoundarySide::Left | BoundarySide::Right => {
-                    CoreRect::new(bounds.x, bounds.y + offset, bounds.width, 3)
-                }
-                BoundarySide::Ceiling | BoundarySide::Floor => {
-                    CoreRect::new(bounds.x + offset, bounds.y, 3, bounds.height)
-                }
-            };
-            viewport.rectangle(slat, HAZARD);
-        }
-        let (label_x, label_y) = match door.side {
-            BoundarySide::Right => (bounds.x - 38, bounds.y - 3),
-            BoundarySide::Left => (bounds.right() + 3, bounds.y - 3),
-            BoundarySide::Ceiling => (bounds.x + 2, bounds.bottom() + 6),
-            BoundarySide::Floor => (bounds.x + 2, bounds.y - 3),
-        };
-        viewport.text(
-            &dungeon_requirement_label(requirement),
-            label_x,
-            label_y,
-            5,
-            PICKUP,
-        );
-    }
-}
-
-fn dungeon_requirement_label(requirement: AuthoredDoorRequirement) -> String {
-    let needs_wall = requirement
-        .traversal_methods
-        .contains(TraversalMethod::WallJump);
-    let needs_dash = requirement
-        .traversal_methods
-        .contains(TraversalMethod::Dash);
-    match (requirement.coins, needs_wall, needs_dash) {
-        (0, true, true) => "ALL TOOLS".to_owned(),
-        (0, true, false) => "WALL JUMP".to_owned(),
-        (0, false, true) => "DASH".to_owned(),
-        (coins, true, true) => format!("{coins} COINS + TOOLS"),
-        (coins, true, false) => format!("{coins} COINS + WALL"),
-        (coins, false, true) => format!("{coins} COINS + DASH"),
-        (coins, false, false) => format!("{coins} COINS"),
     }
 }
 
@@ -8213,17 +6781,6 @@ fn draw_hud(viewport: &PixelViewport, client: &ClientState) {
             "A/D MOVE  JUMP: TAP=LOW HOLD=HIGH  [ ] LEVEL  V WITNESS  M GALLERY".to_owned()
         } else if client.selection.mode.is_challenge() {
             "A/D MOVE  JUMP: TAP=LOW HOLD=HIGH  WALL: HOLD TOWARD + JUMP  R/M".to_owned()
-        } else if client.selection.mode == RoomMode::Dungeon {
-            let coins = client
-                .dungeon_run
-                .map_or(0, |run| run.inventory.coin_count());
-            if !client.simulation.abilities().wall_jump {
-                format!("DUNGEON · COINS {coins}/{DEMO_DUNGEON_TOTAL_COINS} · FIND CLIMBING GLOVES")
-            } else if client.simulation.abilities().dash {
-                format!("DUNGEON · COINS {coins}/{DEMO_DUNGEON_TOTAL_COINS} · X DASH · TAB MAP")
-            } else {
-                format!("DUNGEON · COINS {coins}/{DEMO_DUNGEON_TOTAL_COINS} · FIND BOOTS · TAB MAP")
-            }
         } else {
             gameplay_control_summary(client.selection.tier).to_owned()
         }
@@ -8281,28 +6838,6 @@ fn draw_hud(viewport: &PixelViewport, client: &ClientState) {
                 )
             },
         ),
-        RoomMode::Dungeon => client.dungeon_run.map_or_else(
-            || "MISSING DUNGEON RUN".to_owned(),
-            |run| {
-                format!(
-                    "{} / COINS:{}/{} / GLOVES:{} / BOOTS:{} / CROWN:{}",
-                    run.room.title(),
-                    run.inventory.coin_count(),
-                    DEMO_DUNGEON_TOTAL_COINS,
-                    if run.inventory.climbing_gloves {
-                        "ON"
-                    } else {
-                        "OFF"
-                    },
-                    if run.inventory.winged_boots {
-                        "YES"
-                    } else {
-                        "NO"
-                    },
-                    if run.inventory.crown { "YES" } else { "NO" }
-                )
-            },
-        ),
         RoomMode::DungeonV2 => client.dungeon_v2_run.as_ref().map_or_else(
             || "MISSING DUNGEON V2 RUN".to_owned(),
             |run| {
@@ -8327,11 +6862,7 @@ fn draw_hud(viewport: &PixelViewport, client: &ClientState) {
         ),
         RoomMode::Challenge(kind) => kind.level_identifier().to_owned(),
     };
-    let displayed_tier = if client.selection.mode == RoomMode::Dungeon {
-        AbilityTier::from_abilities(client.simulation.abilities())
-    } else {
-        client.selection.tier
-    };
+    let displayed_tier = client.selection.tier;
     // The v2 dungeon rail permanently advertises the two meta keys instead of
     // the lab tier tag, keeping the room viewport itself unobstructed.
     let level_line = if client.selection.mode == RoomMode::DungeonV2 {
@@ -8430,23 +6961,14 @@ fn draw_win_feedback(viewport: &PixelViewport, client: &ClientState) {
     let panel = CoreRect::new(40, 51, 240, 80);
     viewport.rectangle(panel, WIN_PANEL);
     viewport.rectangle_outline(panel, 1, EXIT);
-    viewport.centered_text(
-        if client.selection.mode == RoomMode::Dungeon {
-            "THE CROWN IS YOURS"
-        } else {
-            "WAY DOWN OPEN"
-        },
-        69,
-        11,
-        EXIT,
-    );
+    viewport.centered_text("WAY DOWN OPEN", 69, 11, EXIT);
     let result = match client.selection.mode {
         RoomMode::Generated => client.level_name(client.selection),
         RoomMode::DeveloperGenerated => format!("DEV SEED {:X}", client.selection.seed),
         RoomMode::Development => DEVELOPMENT_LEVEL_IDENTIFIER.to_owned(),
         RoomMode::Gallery => client.level_name(client.selection),
         RoomMode::CalibratedGenerated => client.level_name(client.selection),
-        RoomMode::Dungeon | RoomMode::DungeonV2 => client.level_name(client.selection),
+        RoomMode::DungeonV2 => client.level_name(client.selection),
         RoomMode::Challenge(kind) => kind.level_identifier().to_owned(),
     };
     viewport.centered_text(&result, 84, 7, UI_TEXT);
@@ -9083,10 +7605,8 @@ mod tests {
             vec!["--gallery"],
             vec!["--calibrated"],
             vec!["--challenge"],
-            vec!["--dungeon"],
             vec!["--dungeon-v2"],
             vec!["--dungeon-v2-new"],
-            vec!["--dungeon-floor", "1"],
         ] {
             let options = parse_launch_options(arguments.clone()).unwrap();
             assert!(!options.title_screen, "{arguments:?} must skip the title");
@@ -9278,140 +7798,6 @@ mod tests {
         assert!(parse_launch_options(["--challenge", "--corpus=x"]).is_err());
     }
 
-    #[test]
-    fn dungeon_launch_is_explicit_and_uses_its_persistent_content_loadout() {
-        let options = parse_launch_options(["--dungeon"]).unwrap();
-        assert_eq!(options.selection.mode, RoomMode::Dungeon);
-        assert_eq!(options.selection.seed, 0);
-        assert_eq!(options.selection.tier, AbilityTier::Baseline);
-        assert!(!options.fresh_dungeon);
-        let fresh =
-            parse_launch_options(["--dungeon-new", "--dungeon-save", "feedback/dungeon.json"])
-                .unwrap();
-        assert_eq!(fresh.selection.mode, RoomMode::Dungeon);
-        assert!(fresh.fresh_dungeon);
-        assert_eq!(
-            fresh.dungeon_save_path,
-            PathBuf::from("feedback/dungeon.json")
-        );
-        assert!(parse_launch_options(["--dungeon", "--tier", "dash"]).is_err());
-        assert!(parse_launch_options(["--dungeon", "--gallery"]).is_err());
-        assert!(parse_launch_options(["--dungeon", "--seed", "3"]).is_err());
-        assert!(parse_launch_options(["--dungeon", "--dungeon-new"]).is_err());
-    }
-
-    #[test]
-    fn dungeon_floor_lab_accepts_numbers_ids_and_titles_without_persistence() {
-        let first = parse_launch_options(["--dungeon-floor", "1"]).unwrap();
-        assert_eq!(
-            first.selection.mode,
-            RoomMode::Challenge(ChallengeKind::DungeonFloor(DemoDungeonRoom::HollowLanding))
-        );
-        assert_eq!(first.selection.tier, AbilityTier::Baseline);
-        assert!(!first.fresh_dungeon);
-
-        for value in ["gale-chasm", "demo-dungeon.gale-chasm", "Gale Chasm"] {
-            assert_eq!(
-                parse_launch_options(["--dungeon-floor", value])
-                    .unwrap()
-                    .selection
-                    .mode,
-                RoomMode::Challenge(ChallengeKind::DungeonFloor(DemoDungeonRoom::DashChasm))
-            );
-        }
-        let last = parse_launch_options(["--dungeon-floor=101"]).unwrap();
-        assert_eq!(
-            last.selection.mode,
-            RoomMode::Challenge(ChallengeKind::DungeonFloor(DemoDungeonRoom::CrownSanctum))
-        );
-        assert_eq!(last.selection.tier, AbilityTier::WallJumpAndDash);
-
-        assert!(parse_launch_options(["--dungeon-floor", "0"]).is_err());
-        assert!(parse_launch_options(["--dungeon-floor", "102"]).is_err());
-        assert!(parse_launch_options(["--dungeon-floor", "missing"]).is_err());
-        assert!(parse_launch_options(["--dungeon-floor"]).is_err());
-        assert!(parse_launch_options(["--dungeon-floor", "1", "--dungeon"]).is_err());
-        assert!(parse_launch_options(["--dungeon-floor", "1", "--tier", "dash"]).is_err());
-        assert!(
-            parse_launch_options(["--dungeon-floor", "1", "--dungeon-save", "save.json"]).is_err()
-        );
-    }
-
-    #[test]
-    fn dungeon_save_roundtrips_exact_progress_and_rejects_corruption() {
-        let path = temporary_test_path("dungeon-save-roundtrip", "save.json");
-        let (persistence, loaded) = DungeonPersistence::open(&path, false).unwrap();
-        assert!(loaded.is_none());
-        let mut inventory = DemoDungeonInventory::default();
-        inventory.climbing_gloves = true;
-        assert!(inventory.collect_coin("dungeon-coin-00"));
-        assert!(inventory.collect_coin("dungeon-coin-17"));
-        let expected = DungeonRunState {
-            room: DemoDungeonRoom::BroadChimney,
-            inventory,
-        };
-        let explored = BTreeSet::from([
-            DemoDungeonRoom::HollowLanding,
-            DemoDungeonRoom::BroadChimney,
-        ]);
-        persistence
-            .persist(expected, Some("west"), &explored)
-            .unwrap();
-
-        let (_, loaded) = DungeonPersistence::open(&path, false).unwrap();
-        assert_eq!(
-            loaded,
-            Some((expected, Some("west".to_owned()), explored.clone()))
-        );
-        let mut save: DungeonSaveV1 = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
-        save.collected_coins = vec![0, 0];
-        assert!(save.validate().unwrap_err().contains("unique, sorted"));
-        save.collected_coins = vec![0, 17];
-        save.palette_generation_version += 1;
-        assert!(
-            save.validate()
-                .unwrap_err()
-                .contains("different authored dungeon version")
-        );
-        fs::write(&path, b"{}\n").unwrap();
-        assert!(
-            DungeonPersistence::open(&path, false)
-                .unwrap_err()
-                .contains("parse")
-        );
-    }
-
-    #[test]
-    fn fresh_dungeon_archives_the_previous_save_instead_of_erasing_it() {
-        let path = temporary_test_path("dungeon-save-fresh", "save.json");
-        let (persistence, _) = DungeonPersistence::open(&path, false).unwrap();
-        persistence
-            .persist(
-                DungeonRunState::default(),
-                None,
-                &BTreeSet::from([DemoDungeonRoom::HollowLanding]),
-            )
-            .unwrap();
-        let original = fs::read(&path).unwrap();
-
-        let (_, loaded) = DungeonPersistence::open(&path, true).unwrap();
-        assert!(loaded.is_none());
-        assert!(!path.exists());
-        let archives = fs::read_dir(path.parent().unwrap())
-            .unwrap()
-            .filter_map(Result::ok)
-            .map(|entry| entry.path())
-            .filter(|candidate| {
-                candidate
-                    .file_name()
-                    .and_then(|name| name.to_str())
-                    .is_some_and(|name| name.ends_with(".bak"))
-            })
-            .collect::<Vec<_>>();
-        assert_eq!(archives.len(), 1);
-        assert_eq!(fs::read(&archives[0]).unwrap(), original);
-    }
-
     use downwards_content::dungeon_v2_coin_id;
 
     #[test]
@@ -9553,7 +7939,7 @@ mod tests {
         assert!(client.observe_dungeon_v2_progress(&report(
             &client,
             vec![SimulationEvent::ExitReached {
-                id: DEMO_DUNGEON_GOAL_EXIT.to_owned(),
+                id: DUNGEON_V2_GOAL_EXIT.to_owned(),
             }],
         )));
         assert!(!client.dungeon_v2_victory);
@@ -9562,7 +7948,7 @@ mod tests {
         assert!(client.observe_dungeon_v2_progress(&report(
             &client,
             vec![SimulationEvent::ExitReached {
-                id: DEMO_DUNGEON_GOAL_EXIT.to_owned(),
+                id: DUNGEON_V2_GOAL_EXIT.to_owned(),
             }],
         )));
         assert!(client.dungeon_v2_victory);
@@ -9610,191 +7996,6 @@ mod tests {
         assert_eq!(resumed.pause_menu_index, 0);
         assert!(resumed.dungeon_v2_run.is_some());
         fs::remove_dir_all(save_path.parent().unwrap()).unwrap();
-    }
-
-    #[test]
-    fn dungeon_client_resumes_room_inventory_and_logs_progress_events() {
-        let save_path = temporary_test_path("dungeon-client-resume", "save.json");
-        let history_path = save_path.parent().unwrap().join("history.jsonl");
-        let selection = ScenarioSelection {
-            mode: RoomMode::Dungeon,
-            seed: 0,
-            tier: AbilityTier::Baseline,
-        };
-        let mut client = ClientState::new_with_persistence(
-            selection,
-            None,
-            false,
-            Some(&history_path),
-            Some((&save_path, false)),
-        )
-        .unwrap();
-        let report = |client: &ClientState, events: Vec<SimulationEvent>| StepReport {
-            tick: client.simulation.tick(),
-            events,
-            digest: client.simulation.digest(),
-        };
-        assert!(!client.observe_dungeon_progress(&report(
-            &client,
-            vec![SimulationEvent::PickupCollected {
-                id: "dungeon-coin-00".to_owned(),
-            }],
-        )));
-        assert!(client.observe_dungeon_progress(&report(
-            &client,
-            vec![SimulationEvent::ExitReached {
-                id: "east".to_owned(),
-            }],
-        )));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::MossWalk);
-        drop(client);
-
-        let resumed = ClientState::new_with_persistence(
-            selection,
-            None,
-            false,
-            None,
-            Some((&save_path, false)),
-        )
-        .unwrap();
-        let run = resumed.dungeon_run.unwrap();
-        assert_eq!(run.room, DemoDungeonRoom::MossWalk);
-        assert!(run.inventory.has_coin("dungeon-coin-00"));
-        assert_eq!(resumed.simulation.entry_door(), Some("west"));
-        assert!(
-            resumed
-                .simulation
-                .room()
-                .pickups()
-                .iter()
-                .all(|pickup| pickup.id() != "dungeon-coin-00")
-        );
-
-        let progress = fs::read_to_string(&history_path).unwrap();
-        let events = progress
-            .lines()
-            .map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap())
-            .filter(|record| record["schema"] == "downwards-dungeon-progress-v2")
-            .collect::<Vec<_>>();
-        assert_eq!(events.len(), 2);
-        assert_eq!(
-            events[0]["dungeon_definition_id"],
-            demo_dungeon_definition().id
-        );
-        assert_eq!(
-            events[0]["palette_generation_version"],
-            DUNGEON_PALETTE_GENERATION_VERSION
-        );
-        assert_eq!(events[0]["event"], "coin_collected");
-        assert_eq!(events[0]["item_id"], "dungeon-coin-00");
-        assert_eq!(events[1]["event"], "room_transition");
-        assert_eq!(
-            events[1]["destination_room_id"],
-            DemoDungeonRoom::MossWalk.id()
-        );
-    }
-
-    #[test]
-    fn dungeon_transition_persists_the_completed_human_attempt_before_loading_next_room() {
-        let save_path = temporary_test_path("dungeon-attempt-transition", "save.json");
-        let history_path = save_path.parent().unwrap().join("history.jsonl");
-        let selection = ScenarioSelection {
-            mode: RoomMode::Dungeon,
-            seed: 0,
-            tier: AbilityTier::Baseline,
-        };
-        let mut client = ClientState::new_with_persistence(
-            selection,
-            None,
-            false,
-            Some(&history_path),
-            Some((&save_path, false)),
-        )
-        .unwrap();
-        // The tutorial exit needs a hop, so hold right and jump periodically.
-        for tick in 0..600 {
-            client.step_human(Action {
-                move_x: 1,
-                jump: tick % 30 < 8,
-                ..Action::default()
-            });
-            if client.dungeon_run.unwrap().room == DemoDungeonRoom::MossWalk {
-                break;
-            }
-        }
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::MossWalk);
-        drop(client);
-
-        let records = fs::read_to_string(&history_path)
-            .unwrap()
-            .lines()
-            .map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap())
-            .collect::<Vec<_>>();
-        let attempt = records
-            .iter()
-            .find(|record| record["schema"] == HUMAN_HISTORY_SCHEMA)
-            .expect("room-local human attempt was persisted before transition");
-        assert_eq!(
-            attempt["dungeon_definition_id"],
-            demo_dungeon_definition().id
-        );
-        assert_eq!(
-            attempt["palette_generation_version"],
-            DUNGEON_PALETTE_GENERATION_VERSION
-        );
-        assert_eq!(attempt["room_id"], DemoDungeonRoom::HollowLanding.id());
-        assert_eq!(attempt["outcome"]["kind"], "success");
-        assert_eq!(attempt["outcome"]["detail"], "east");
-        assert!(records.iter().any(|record| {
-            record["schema"] == "downwards-dungeon-progress-v2"
-                && record["event"] == "room_transition"
-        }));
-    }
-
-    #[test]
-    fn dungeon_floor_lab_attempts_keep_provenance_without_progress_events() {
-        let history_path = temporary_test_path("dungeon-floor-attempt", "history.jsonl");
-        let room = DemoDungeonRoom::DashChasm;
-        let selection = ScenarioSelection {
-            mode: RoomMode::Challenge(ChallengeKind::DungeonFloor(room)),
-            seed: 0,
-            tier: AbilityTier::Baseline,
-        };
-        let mut client =
-            ClientState::new_with_persistence(selection, None, false, Some(&history_path), None)
-                .unwrap();
-        client.step_human(Action {
-            restart: true,
-            ..Action::default()
-        });
-        drop(client);
-
-        let records = fs::read_to_string(&history_path)
-            .unwrap()
-            .lines()
-            .map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap())
-            .collect::<Vec<_>>();
-        assert_eq!(records.len(), 1);
-        let attempt = &records[0];
-        assert_eq!(attempt["schema"], HUMAN_HISTORY_SCHEMA);
-        assert_eq!(
-            attempt["dungeon_definition_id"],
-            demo_dungeon_definition().id
-        );
-        assert_eq!(
-            attempt["palette_generation_version"],
-            DUNGEON_PALETTE_GENERATION_VERSION
-        );
-        assert_eq!(
-            attempt["level_id"],
-            format!("dungeon-playtest:{}", room.id())
-        );
-        assert_eq!(attempt["room_id"], room.id());
-        assert!(
-            records
-                .iter()
-                .all(|record| { record["schema"] != "downwards-dungeon-progress-v2" })
-        );
     }
 
     #[test]
@@ -9908,67 +8109,6 @@ mod tests {
     }
 
     #[test]
-    fn dungeon_mode_menu_browses_dungeon_floors_and_launches_a_floor_lab() {
-        let selection = ScenarioSelection {
-            mode: RoomMode::Dungeon,
-            seed: 0,
-            tier: AbilityTier::Baseline,
-        };
-        let mut client = ClientState::new(selection, None, false).unwrap();
-
-        client.open_level_menu();
-        assert_eq!(client.browser_mode, BrowserMode::DungeonFloors);
-        assert!(client.gallery_menu_visible());
-        assert_eq!(client.gallery_menu.item_count, DemoDungeonRoom::ALL.len());
-        assert_eq!(client.gallery_menu.selected_index, 0);
-
-        let tempo_index = DemoDungeonRoom::ALL
-            .iter()
-            .position(|room| *room == DemoDungeonRoom::TempoHall)
-            .unwrap();
-        client.gallery_menu.selected_index = tempo_index;
-        client.gallery_menu.ensure_selected_visible();
-        assert!(client.refresh_gallery_menu_preview());
-        assert!(client.level_menu_preview.simulation.is_some());
-        client.play_gallery_selection().unwrap();
-        assert_eq!(
-            client.selection.mode,
-            RoomMode::Challenge(ChallengeKind::DungeonFloor(DemoDungeonRoom::TempoHall))
-        );
-        assert!(client.dungeon_run.is_none());
-
-        // Reopening the browser from the floor lab focuses the current floor.
-        client.open_level_menu();
-        assert_eq!(client.browser_mode, BrowserMode::DungeonFloors);
-        assert_eq!(client.gallery_menu.selected_index, tempo_index);
-    }
-
-    #[test]
-    fn floor_lab_door_continues_into_the_connected_room() {
-        let selection = ScenarioSelection {
-            mode: RoomMode::Challenge(ChallengeKind::DungeonFloor(DemoDungeonRoom::HollowLanding)),
-            seed: 0,
-            tier: AbilityTier::Baseline,
-        };
-        let mut client = ClientState::new(selection, None, false).unwrap();
-        let report = StepReport {
-            tick: client.simulation.tick(),
-            events: vec![SimulationEvent::ExitReached {
-                id: "east".to_owned(),
-            }],
-            digest: client.simulation.digest(),
-        };
-        assert!(client.observe_floor_lab_progress(&report));
-        assert_eq!(
-            client.selection.mode,
-            RoomMode::Challenge(ChallengeKind::DungeonFloor(DemoDungeonRoom::MossWalk))
-        );
-        assert_eq!(client.simulation.entry_door(), Some("west"));
-        // Completion never falls through to the generated catalogue.
-        assert_eq!(client.next_level_selection(), None);
-    }
-
-    #[test]
     fn dungeon_v2_map_layout_places_every_room_distinctly() {
         let layout = dungeon_v2_map_layout();
         let dungeon = dungeon_v2_definition();
@@ -9977,37 +8117,6 @@ mod tests {
         for cell in layout.values() {
             assert!(seen.insert(*cell), "map layout reuses cell {cell:?}");
         }
-    }
-
-    #[test]
-    fn dungeon_map_layout_places_every_room_distinctly() {
-        let layout = dungeon_map_layout();
-        assert_eq!(layout.len(), DemoDungeonRoom::ALL.len());
-        let cells: HashSet<(i32, i32)> = layout.values().copied().collect();
-        assert_eq!(cells.len(), layout.len(), "map cells must be distinct");
-        assert_eq!(layout[&DemoDungeonRoom::HollowLanding], (0, 0));
-    }
-
-    #[test]
-    fn dungeon_save_roundtrips_explored_rooms() {
-        let mut explored = BTreeSet::from([DemoDungeonRoom::HollowLanding]);
-        explored.insert(DemoDungeonRoom::MossWalk);
-        let run = DungeonRunState::default();
-        let save = DungeonSaveV1::from_run(run, None, &explored);
-        let (restored_run, entry, restored_explored) = save.validate().unwrap();
-        assert_eq!(restored_run, run);
-        assert_eq!(entry, None);
-        assert_eq!(restored_explored, explored);
-
-        // Old saves without the field restore with the current room explored.
-        let mut value = serde_json::to_value(&save).unwrap();
-        value.as_object_mut().unwrap().remove("explored_rooms");
-        let legacy: DungeonSaveV1 = serde_json::from_value(value).unwrap();
-        let (_, _, legacy_explored) = legacy.validate().unwrap();
-        assert_eq!(
-            legacy_explored,
-            BTreeSet::from([DemoDungeonRoom::HollowLanding])
-        );
     }
 
     #[test]
@@ -11080,67 +9189,6 @@ mod tests {
     }
 
     #[test]
-    fn dungeon_floor_lab_uses_exact_entry_inventory_objective_and_witness() {
-        for room in [
-            DemoDungeonRoom::HollowLanding,
-            DemoDungeonRoom::ClimberVault,
-            DemoDungeonRoom::DashChasm,
-            DemoDungeonRoom::CrownSanctum,
-        ] {
-            let spec = dungeon_floor_route_spec(room);
-            let kind = ChallengeKind::DungeonFloor(room);
-            let selection = ScenarioSelection {
-                mode: RoomMode::Challenge(kind),
-                seed: 0,
-                tier: AbilityTier::Baseline,
-            };
-            let mut client = ClientState::new(selection, None, false).unwrap();
-            assert!(client.dungeon_run.is_none());
-            assert!(client.dungeon_persistence.is_none());
-            assert_eq!(client.simulation.room().id(), room.id());
-            assert_eq!(client.simulation.entry_door(), spec.entry_door);
-            assert_eq!(client.simulation.abilities(), spec.inventory.abilities());
-            assert_eq!(
-                client.selection.tier,
-                tier_for_abilities(spec.inventory.abilities())
-            );
-            assert_eq!(
-                client.stats_key(client.selection),
-                format!("dungeon-playtest:{}", room.id())
-            );
-
-            client.request_solve();
-            client.perform_requested_solve();
-            let ReplayMode::Playback(playback) = &client.replay_mode else {
-                panic!(
-                    "{} should install its checked floor witness: {:?}",
-                    room.id(),
-                    client.replay_notice.as_ref().map(|notice| &notice.detail)
-                );
-            };
-            assert_eq!(playback.expected_objective, Some(kind.objective()));
-            assert!(matches!(playback.origin, ReplayOrigin::Challenge(actual) if actual == kind));
-            let frame_count = playback.transport.total_frames;
-            assert!(frame_count > 0);
-            for _ in 0..frame_count {
-                client.advance_replay(false);
-            }
-            // A finished floor-lab goal returns control to the human: either
-            // the objective is satisfied in place (pickup goals) or the door
-            // goal already carried the lab into the connected room.
-            assert!(client.human_controlled());
-            let transitioned = client.selection.mode
-                != RoomMode::Challenge(ChallengeKind::DungeonFloor(room))
-                || client.simulation.room().id() != room.id();
-            assert!(
-                kind.objective().is_satisfied_by(&client.simulation) || transitioned,
-                "{} witness ended neither on its objective nor in a connected room",
-                room.id()
-            );
-        }
-    }
-
-    #[test]
     fn gallery_v_installs_and_plays_every_registered_exact_witness() {
         for (index, level) in calibration_gallery().iter().copied().enumerate() {
             let selection = ScenarioSelection {
@@ -11648,664 +9696,6 @@ mod tests {
     fn human_tap_and_hold_produce_distinct_stable_jump_heights() {
         assert_eq!(human_input_jump_rise(None), 1_744);
         assert_eq!(human_input_jump_rise(Some(10)), 7_792);
-    }
-
-    #[test]
-    fn dungeon_transitions_persist_both_unlocks_and_follow_the_authored_loop_to_the_crown() {
-        let selection = ScenarioSelection {
-            mode: RoomMode::Dungeon,
-            seed: 0,
-            tier: AbilityTier::Baseline,
-        };
-        let mut client = ClientState::new(selection, None, false).unwrap();
-        assert_eq!(client.dungeon_run, Some(DungeonRunState::default()));
-        assert!(!client.simulation.abilities().dash);
-
-        let report = |client: &ClientState, events: Vec<SimulationEvent>| StepReport {
-            tick: client.simulation.tick(),
-            events,
-            digest: client.simulation.digest(),
-        };
-        let exit = |id: &str| SimulationEvent::ExitReached { id: id.to_owned() };
-        let coins = |indices: &[u8]| {
-            indices
-                .iter()
-                .map(|index| SimulationEvent::PickupCollected {
-                    id: format!("dungeon-coin-{index:02}"),
-                })
-                .collect::<Vec<_>>()
-        };
-
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[0]))));
-
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::MossWalk);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[1]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::SplitRoot);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::RootCellar
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[2, 3]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::SplitRoot);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::BrokenAqueduct
-        );
-        // Coin 4 is deliberately skipped: gate tolerance means progression
-        // never needs every coin, and the Sluice gate below still seals at 4.
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::OldLift);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::LanternGallery
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Sluice);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Sluice);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("west")])));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::WatchPost);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[5]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::LanternGallery
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::ClimberVault
-        );
-        assert!(client.observe_dungeon_progress(&report(
-            &client,
-            vec![SimulationEvent::PickupCollected {
-                id: DEMO_DUNGEON_GLOVE_PICKUP.to_owned(),
-            }],
-        )));
-        assert!(client.dungeon_run.unwrap().inventory.climbing_gloves);
-        assert!(client.simulation.abilities().wall_jump);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![SimulationEvent::Reset])));
-        assert!(
-            client
-                .simulation
-                .room()
-                .pickups()
-                .iter()
-                .all(|pickup| pickup.id() != DEMO_DUNGEON_GLOVE_PICKUP)
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::WallAntechamber
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[16]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::BroadChimney
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[17]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::BellSwitchback
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::BellNiche);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[18]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::BellSwitchback
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::TempoHall);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[19]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::SplitSpire
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::RafterShrine
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[20]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::SplitSpire
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::LandingChain
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::NeedleTurn
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::WallGate);
-        // With coins 4 and 21 skipped the run sits exactly at the wall gate's
-        // tolerant requirement, so the seal opens without a completionist
-        // backtrack.
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 10);
-        assert_eq!(
-            downwards_content::DEMO_DUNGEON_WALL_REGION_GATE_REQUIREMENT,
-            10
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Threshold);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[6]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::Crossroads
-        );
-        assert_eq!(client.simulation.entry_door(), Some("west"));
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[7]))));
-
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::Crossroads
-        );
-
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::CoinLoft);
-        assert_eq!(client.simulation.entry_door(), Some("ceiling"));
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[8, 9]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::Crossroads
-        );
-        assert_eq!(client.simulation.entry_door(), Some("floor"));
-
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::WallGallery
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[10]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::NeedleRoom
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[11]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::WallGallery
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("west")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::Crossroads
-        );
-
-        // Eighteen coins expose the lower vault route, but no longer skip its Underpass and
-        // Treasury trials by opening the Winged Vault directly.
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::Crossroads
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::WallGallery
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Underpass);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[13]))));
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 17);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("west")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Underpass);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Treasury);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[14, 15]))));
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 19);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("west")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Underpass);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("west")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::BootsVault
-        );
-        assert_eq!(client.simulation.entry_door(), Some("east"));
-
-        assert!(client.observe_dungeon_progress(&report(
-            &client,
-            vec![
-                SimulationEvent::PickupCollected {
-                    id: "dungeon-coin-12".to_owned(),
-                },
-                SimulationEvent::PickupCollected {
-                    id: DEMO_DUNGEON_BOOT_PICKUP.to_owned(),
-                },
-            ],
-        )));
-        assert!(client.dungeon_run.unwrap().inventory.winged_boots);
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 20);
-        assert!(client.simulation.abilities().dash);
-        assert!(client.simulation.player().dash_available());
-        assert!(client.observe_dungeon_progress(&report(&client, vec![SimulationEvent::Reset],)));
-        assert!(client.simulation.room().pickups().is_empty());
-        assert!(client.simulation.abilities().dash);
-
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Underpass);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::WallGallery
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::DashChasm);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::GaleLanding
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("west")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::DashChasm);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("west")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::WallGallery
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::GaleLanding
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[22]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::LowPassage
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[23]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::CurrentFork
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::CoinDuct);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[24]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::CurrentFork
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::PulseGallery
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[25]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::StormSplit
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::StormCache
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[26]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::StormSplit
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::RelayChasm
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::BrakeTower
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::DashSeal);
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 25);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[27]))));
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 26);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::AlloyThreshold
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[28]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Windshaft);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[29]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::SplitFurnace
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::EmberVault
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[30]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::GearGallery
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[31]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::CrosswindChimney
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::FoundryFork
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::CoolingDuct
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[32]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::HammerHall
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[33]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::LiftShaft);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::SparkNiche
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[34]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::RivetRun);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::BlastGallery
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[35]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::PressureFork
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::AshCache);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[36]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::VentSpire);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[37]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::PistonPass
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::CrucibleClimb
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::CinderBridge
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[38]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::FoundrySeal
-        );
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 37);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[39]))));
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 38);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::GlassThreshold
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[40]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::PrismRun);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[41]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::SplitKiln);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::ShardVault
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[42]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::GlassGallery
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[43]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::RefractionShaft
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::MirrorFork
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::MirrorDuct
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[44]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::TemperHall
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[45]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::FurnaceLift
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::LensNiche);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[46]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::SliverRun);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::HotGlass);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[47]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::CulletFork
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::CulletCache
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[48]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::AnnealingSpire
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[49]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::RazorPass);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::LatticeClimb
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::CrystalBridge
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[50]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::GlassSeal);
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 49);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[51]))));
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 50);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::StarThreshold
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[52]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::CometRun);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[53]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::OrbitFork);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::MoonVault);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[54]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::ConstellationHall
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[55]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::ZenithShaft
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::EclipseFork
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::ShadowDuct
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[56]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::Observatory
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[57]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::GravityLift
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::NovaNiche);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[58]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::MeteorRun);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::VacuumGallery
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[59]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::TidalFork);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("floor")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::LunarCache
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[60]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("ceiling")])));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::AuroraSpire
-        );
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[61]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::VoidPass);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::StarwellClimb
-        );
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Skybridge);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[62]))));
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::AstralSeal
-        );
-        // Two coins were skipped along the run; the tolerant astral and crown
-        // gates open regardless, and its own coin is not required to leave.
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 61);
-        assert!(!client.observe_dungeon_progress(&report(&client, coins(&[63]))));
-        assert_eq!(client.dungeon_run.unwrap().inventory.coin_count(), 62);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(client.dungeon_run.unwrap().room, DemoDungeonRoom::Gatehouse);
-        assert!(client.observe_dungeon_progress(&report(&client, vec![exit("east")])));
-        assert_eq!(
-            client.dungeon_run.unwrap().room,
-            DemoDungeonRoom::CrownSanctum
-        );
-        assert_eq!(client.simulation.entry_door(), Some("west"));
-
-        assert!(!client.observe_dungeon_progress(&report(
-            &client,
-            vec![
-                SimulationEvent::PickupCollected {
-                    id: DEMO_DUNGEON_CROWN_PICKUP.to_owned(),
-                },
-                exit(DEMO_DUNGEON_GOAL_EXIT),
-            ],
-        )));
-        assert!(client.dungeon_run.unwrap().inventory.crown);
-        assert_eq!(client.selected_target_id(), Some(DEMO_DUNGEON_GOAL_EXIT));
     }
 
     #[test]

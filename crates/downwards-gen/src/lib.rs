@@ -9,9 +9,8 @@
 #![forbid(unsafe_code)]
 
 mod calibrated_wall_jump;
-mod dungeon_palette;
 pub mod experimental;
-mod room_grids;
+mod room_grid;
 pub mod v6;
 
 pub use calibrated_wall_jump::{
@@ -19,11 +18,7 @@ pub use calibrated_wall_jump::{
     CALIBRATED_WALL_JUMP_TARGET, CalibratedWallJumpCandidate, CalibratedWallJumpCourse,
     CalibratedWallJumpKey, CalibratedWallJumpParameters,
 };
-pub use dungeon_palette::{
-    DUNGEON_PALETTE_GENERATION_VERSION, DungeonPaletteCandidate, DungeonPaletteConnection,
-    DungeonPaletteCourse, DungeonPaletteError, DungeonPaletteKey, parse_room_grid,
-    render_room_grid,
-};
+pub use room_grid::{parse_room_grid, render_room_grid};
 
 pub use v6::{
     COMPOSITIONAL_FEATURE_STAGE_VERSION, COMPOSITIONAL_GENERATION_VERSION, CompositionFailure,

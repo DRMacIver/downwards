@@ -17,8 +17,8 @@ use std::{
 
 use downwards_ai::{SearchTarget, SolverConfig, TargetSolveOutcome, solve_target};
 use downwards_content::{
-    DEMO_DUNGEON_BOOT_PICKUP, DEMO_DUNGEON_CROWN_PICKUP, DEMO_DUNGEON_GLOVE_PICKUP,
-    DEMO_DUNGEON_GOAL_EXIT,
+    DUNGEON_V2_BOOT_PICKUP, DUNGEON_V2_CROWN_PICKUP, DUNGEON_V2_GLOVE_PICKUP,
+    DUNGEON_V2_GOAL_EXIT,
     DungeonV2Inventory, DungeonV2Requirement, dungeon_v2_definition, dungeon_v2_door_requirement,
     dungeon_v2_room, dungeon_v2_total_coins,
 };
@@ -141,12 +141,12 @@ fn main() {
     for (room, pickup, abilities) in [
         (
             dungeon.glove_room.clone(),
-            DEMO_DUNGEON_GLOVE_PICKUP,
+            DUNGEON_V2_GLOVE_PICKUP,
             AbilitySet::new(false, false),
         ),
         (
             dungeon.boots_room.clone(),
-            DEMO_DUNGEON_BOOT_PICKUP,
+            DUNGEON_V2_BOOT_PICKUP,
             AbilitySet::new(true, false),
         ),
     ] {
@@ -167,7 +167,7 @@ fn main() {
             format!("goal {} {entry} 3", dungeon.goal),
             &enter(&dungeon.goal, entry, AbilitySet::new(true, true)),
             AbilitySet::new(true, true),
-            SearchTarget::pickup(DEMO_DUNGEON_CROWN_PICKUP),
+            SearchTarget::pickup(DUNGEON_V2_CROWN_PICKUP),
         );
     }
     // ...and the escape gate in the spawn room must be reachable with the
@@ -190,7 +190,7 @@ fn main() {
             format!("escape {} {entry} 3", dungeon.spawn),
             &initial,
             AbilitySet::new(true, true),
-            SearchTarget::exit(DEMO_DUNGEON_GOAL_EXIT),
+            SearchTarget::exit(DUNGEON_V2_GOAL_EXIT),
         );
     }
 

@@ -2,27 +2,18 @@
 
 #![forbid(unsafe_code)]
 
-mod authored_dungeon;
 mod calibrated_generator_playtest;
 mod calibration_gallery;
 mod calibration_gallery_a;
 mod calibration_gallery_b;
-mod demo_dungeon;
 mod dungeon_v2;
 mod generated_calibration_witnesses;
-mod generated_demo_dungeon_witnesses;
 pub mod generated_tracks;
 mod hard_no_dash;
 mod medium_no_dash;
 mod movement_obstacle_courses;
 mod rooms_v2;
 
-pub use authored_dungeon::{
-    AUTHORED_DUNGEON_MAX_COINS, AUTHORED_DUNGEON_SCHEMA_VERSION, AuthoredConnection,
-    AuthoredDoorRequirement, AuthoredDungeonDefinition, AuthoredDungeonError,
-    AuthoredDungeonInventory, AuthoredDungeonProgressionAudit, AuthoredFloorDefinition,
-    AuthoredFloorKey, TraversalMethod, TraversalMethods,
-};
 pub use calibrated_generator_playtest::{
     CalibratedGeneratorPlaytestLevel, calibrated_generator_playtest,
 };
@@ -36,24 +27,12 @@ pub use calibration_gallery_b::{
     CALIBRATION_GALLERY_B_ABILITIES, CALIBRATION_GALLERY_B_TARGET, CalibrationGalleryBCase,
     calibration_gallery_b_cases,
 };
-pub use demo_dungeon::{
-    DEMO_DUNGEON_ASTRAL_GATE_REQUIREMENT, DEMO_DUNGEON_BOOT_GATE_REQUIREMENT,
-    DEMO_DUNGEON_BOOT_PICKUP, DEMO_DUNGEON_CROWN_GATE_REQUIREMENT, DEMO_DUNGEON_CROWN_PICKUP,
-    DEMO_DUNGEON_DASH_REGION_GATE_REQUIREMENT, DEMO_DUNGEON_FOUNDRY_GATE_REQUIREMENT,
-    DEMO_DUNGEON_GLASSWORKS_GATE_REQUIREMENT, DEMO_DUNGEON_GLOVE_GATE_REQUIREMENT,
-    DEMO_DUNGEON_GLOVE_PICKUP, DEMO_DUNGEON_GOAL_EXIT, DEMO_DUNGEON_LOWER_VAULT_REQUIREMENT,
-    DEMO_DUNGEON_START_ABILITIES, DEMO_DUNGEON_TOTAL_COINS, DEMO_DUNGEON_TREASURY_REQUIREMENT,
-    DEMO_DUNGEON_WALL_REGION_GATE_REQUIREMENT, DemoDungeonInventory, DemoDungeonRoom,
-    DemoDungeonRouteSpec, DemoDungeonRouteTarget, demo_dungeon_definition,
-    demo_dungeon_door_coin_requirement, demo_dungeon_door_requirement, demo_dungeon_room,
-    demo_dungeon_route_specs,
-};
 pub use dungeon_v2::{
+    DUNGEON_V2_BOOT_PICKUP, DUNGEON_V2_CROWN_PICKUP, DUNGEON_V2_GLOVE_PICKUP, DUNGEON_V2_GOAL_EXIT,
     DungeonV2, DungeonV2Instance, DungeonV2Inventory, DungeonV2Requirement, dungeon_v2_coin_id,
     dungeon_v2_definition, dungeon_v2_door_requirement, dungeon_v2_exit_gate_bounds,
     dungeon_v2_room, dungeon_v2_total_coins,
 };
-pub use generated_demo_dungeon_witnesses::demo_dungeon_witness_actions;
 pub use rooms_v2::{rooms_v2_room, rooms_v2_slugs};
 pub use hard_no_dash::{
     HARD_NO_DASH_ABILITIES, HARD_NO_DASH_TARGET, hard_no_dash_room, hard_no_dash_scenario,
