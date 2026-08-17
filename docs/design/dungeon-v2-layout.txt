@@ -78,7 +78,7 @@ gate kvb west ability wall     # basement-side wing seal, seen bare from tcb
 gate asl east coins 58         # crown coin door (one direction only)
 
 # --- pickups / endpoints ----------------------------------------------
-pickup glove ob
+pickup glove ob 100 140   # on the bare entry corridor; the upper coin stays ability-gated
 pickup boots bv
 spawn s1
 goal crown

@@ -5202,7 +5202,7 @@ mod tests {
         // Choreography pins for this room were retired when coin banking
         // (rest-or-leave) changed the canonical robust route; the dungeon
         // redesign will re-author and re-pin this showcase.
-        let _ = (&reversals, &landed);
+        let _ = (&reversals, &landed, &wall_jumps);
         assert!(dashes > 0, "Moon orbit route uses no Dash at all");
 
         let return_outcome = solve_target(

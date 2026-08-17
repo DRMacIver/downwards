@@ -8,6 +8,7 @@ mod calibration_gallery;
 mod calibration_gallery_a;
 mod calibration_gallery_b;
 mod demo_dungeon;
+mod dungeon_v2;
 mod generated_calibration_witnesses;
 mod generated_demo_dungeon_witnesses;
 mod hard_no_dash;
@@ -44,6 +45,10 @@ pub use demo_dungeon::{
     DemoDungeonRouteSpec, DemoDungeonRouteTarget, demo_dungeon_definition,
     demo_dungeon_door_coin_requirement, demo_dungeon_door_requirement, demo_dungeon_room,
     demo_dungeon_route_specs,
+};
+pub use dungeon_v2::{
+    DungeonV2, DungeonV2Instance, DungeonV2Inventory, DungeonV2Requirement, dungeon_v2_coin_id,
+    dungeon_v2_definition, dungeon_v2_door_requirement, dungeon_v2_room, dungeon_v2_total_coins,
 };
 pub use generated_demo_dungeon_witnesses::demo_dungeon_witness_actions;
 pub use hard_no_dash::{

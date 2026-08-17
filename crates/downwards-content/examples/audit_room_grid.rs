@@ -127,7 +127,8 @@ fn aperture_tiles(side: BoundarySide) -> Vec<(u16, u16)> {
 
 fn check_apertures(tiles: &[Tile], spec: &Spec) -> Vec<String> {
     let mut problems = Vec::new();
-    let tile_at = |column: u16, row: u16| tiles[usize::from(row) * usize::from(WIDTH) + usize::from(column)];
+    let tile_at =
+        |column: u16, row: u16| tiles[usize::from(row) * usize::from(WIDTH) + usize::from(column)];
     for side in [
         BoundarySide::Left,
         BoundarySide::Right,
