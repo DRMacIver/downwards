@@ -30,6 +30,10 @@ const LOOP_BARS: u32 = 16;
 const DOWNBEAT_VEL: u8 = 12;
 const FILL_VEL: u8 = 9;
 
+/// Seed salt for the expression RNG stream (pickups). Kept separate from the
+/// pitch-walk stream so expression tuning can never reshuffle the melody.
+const EXPRESSION_SALT: u64 = 0x9e3a_11ce_5a17_e551_u64;
+
 struct Walk<'a> {
     key: Key,
     rng: XorShift64Star,
@@ -92,29 +96,161 @@ pub fn generate_melody(
             placed.push((base_step + offset, index));
         }
     }
+    // Expression pass (designer round-3, 2026-08): micro-rests at phrase
+    // boundaries, seeded pickups into phrase downbeats, phrase-arc dynamics,
+    // and contextual articulation. Pickups use their own RNG stream so
+    // expression tuning can never reshuffle the pitch walk above.
+    let loop_steps = grid.loop_steps();
+    let phrase_steps = 4 * bar_steps;
+    let eighth = (grid.beat_steps / 2).max(1);
+
+    // Punctuation: reserve the last eighth before every phrase boundary
+    // (bars 4, 8, 12 and the loop seam) so the line always breathes there.
+    placed.retain(|&(step, _)| {
+        let boundary = (step / phrase_steps + 1) * phrase_steps;
+        step + eighth < boundary || step.is_multiple_of(phrase_steps)
+    });
+
     // Force the final note of the loop to the tonic (rule 6).
     if let Some(last) = placed.last_mut() {
         last.1 = 0;
     }
 
-    // Note lengths: sustain to the next onset, capped at one beat.
-    let loop_steps = grid.loop_steps();
+    // Pickups: an eighth-note lower neighbour into a phrase downbeat (and
+    // into the loop seam, rebuilding toward the restart). Only on grids fine
+    // enough to keep a one-step micro-rest inside the reserved eighth.
+    let mut expression = XorShift64Star::new(fnv1a64(slug.as_bytes()) ^ EXPRESSION_SALT);
+    if eighth >= 2 {
+        for phrase in 1..=4_u32 {
+            let boundary = phrase * phrase_steps;
+            let target = downbeats[((phrase * 4) % LOOP_BARS) as usize];
+            let pickup_index = target - 1;
+            let step = boundary - eighth;
+            let take = expression.percent(60);
+            if !take || !in_range_for(key, pickup_index) {
+                continue;
+            }
+            let previous = placed
+                .iter()
+                .filter(|&&(other, _)| other < step)
+                .max_by_key(|&&(other, _)| other);
+            let near_fifth = |a: i32, b: i32| {
+                (i32::from(key.scale_pitch(a).midi()) - i32::from(key.scale_pitch(b).midi()))
+                    .abs()
+                    <= 7
+            };
+            if let Some(&(_, previous_index)) = previous
+                && !near_fifth(previous_index, pickup_index)
+            {
+                continue;
+            }
+            placed.push((step, pickup_index));
+        }
+        placed.sort_unstable_by_key(|&(step, _)| step);
+    }
+
+    // Per-phrase melodic peaks for the arch dynamics.
+    let mut peak_steps = [0_u32; 4];
+    for (phrase, peak_step) in peak_steps.iter_mut().enumerate() {
+        let lo = phrase as u32 * phrase_steps;
+        let hi = lo + phrase_steps;
+        let peak = placed
+            .iter()
+            .filter(|&&(step, _)| step >= lo && step < hi)
+            .max_by_key(|&&(step, index)| (key.scale_pitch(index).midi(), std::cmp::Reverse(step)));
+        *peak_step = peak.map_or(lo, |&(step, _)| step);
+    }
+
     let mut events = Vec::with_capacity(placed.len());
     for (position, &(step, index)) in placed.iter().enumerate() {
         let next_start = placed
             .get(position + 1)
             .map_or(loop_steps, |&(next, _)| next);
-        let len = (next_start - step).min(grid.beat_steps).max(1);
+        let gap = (next_start - step).max(1);
+        let phrase = (step / phrase_steps).min(3) as usize;
+        let boundary = (phrase as u32 + 1) * phrase_steps;
+        let phrase_last = next_start >= boundary;
+
+        // Articulation: legato within stepwise motion, detached on repeats
+        // and leaps, longer values at phrase ends, a micro-rest before every
+        // phrase boundary.
+        let next_index = placed
+            .get(position + 1)
+            .map_or(placed.first().map_or(index, |&(_, first)| first), |&(_, next)| next);
+        let interval = (i32::from(key.scale_pitch(index).midi())
+            - i32::from(key.scale_pitch(next_index).midi()))
+        .abs();
+        let cap = if phrase_last {
+            2 * grid.beat_steps
+        } else {
+            grid.beat_steps
+        };
+        let mut len = gap.min(cap);
+        if interval == 0 || interval > 4 {
+            // Repeated note or leap: detach.
+            len = (len * 3 / 5).max(1);
+        }
+        if phrase_last {
+            // Breathe: end strictly before the boundary.
+            let room_to_boundary = boundary.min(loop_steps) - step;
+            len = len.min(room_to_boundary.saturating_sub(1)).max(1);
+        }
+
+        // Phrase-arc dynamics: crescendo toward the phrase's melodic peak,
+        // relax after; downbeats accented; harmonically-charged (non-chord)
+        // tones lifted.
         let on_downbeat = step.is_multiple_of(bar_steps);
+        let base = if on_downbeat { DOWNBEAT_VEL } else { FILL_VEL };
+        let distance = step.abs_diff(peak_steps[phrase]);
+        let arch: i32 = if distance == 0 {
+            2
+        } else if distance <= phrase_steps / 4 {
+            1
+        } else if distance >= phrase_steps / 2 {
+            -1
+        } else {
+            0
+        };
+        let chord = progression[(step / (4 * bar_steps)).min(3) as usize];
+        let chord_classes = key.triad_pitch_classes(chord);
+        let midi = key.scale_pitch(index).midi();
+        let charge =
+            i32::from(!chord_classes.iter().any(|class| class.semitones() == midi % 12));
+        let vel = (i32::from(base) + arch + charge).clamp(5, 14) as u8;
+
         events.push(NoteEvent {
             voice: voice_name.to_owned(),
             start_step: step,
             len_steps: len,
             pitch: Some(key.scale_pitch(index)),
-            vel: if on_downbeat { DOWNBEAT_VEL } else { FILL_VEL },
+            vel,
         });
     }
+
+    // High-loud coupling: guarantee each phrase's melodic peak is at least
+    // as loud as everything else in its phrase.
+    for (phrase, &peak_step) in peak_steps.iter().enumerate() {
+        let lo = phrase as u32 * phrase_steps;
+        let hi = lo + phrase_steps;
+        let max_vel = events
+            .iter()
+            .filter(|event| event.start_step >= lo && event.start_step < hi)
+            .map(|event| event.vel)
+            .max()
+            .unwrap_or(0);
+        if let Some(peak) = events
+            .iter_mut()
+            .find(|event| event.start_step == peak_step)
+        {
+            peak.vel = peak.vel.max(max_vel);
+        }
+    }
     events
+}
+
+fn in_range_for(key: Key, index: i32) -> bool {
+    let midi = key.scale_pitch(index).midi();
+    (RANGE_LOW_MIDI..=RANGE_HIGH_MIDI).contains(&midi)
 }
 
 impl Walk<'_> {

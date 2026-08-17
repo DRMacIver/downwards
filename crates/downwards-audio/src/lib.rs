@@ -46,4 +46,4 @@ pub use melody::DoorSet;
 pub use sequencer::{AbilityMask, Sequencer, sample_index_for_tick, tick_for_sample};
 pub use tempo::{Difficulty, GridChoice, HazardTiming, WARNING_TICKS, derive_grid};
 pub use theory::{Key, Mode, Pitch, PitchClass, fnv1a64};
-pub use track::{Track, TrackParseError};
+pub use track::{NoteEvent, Track, TrackParseError};

@@ -7,7 +7,7 @@
 use crate::{
     melody::{DoorSet, generate_melody},
     tempo::{Difficulty, HazardTiming, derive_grid},
-    theory::{Key, Mode, PitchClass},
+    theory::{Key, Mode, PitchClass, XorShift64Star, fnv1a64},
     track::{Duty, HazardVoice, NoiseTimbre, NoteEvent, Track, VoiceDef, VoiceKind},
 };
 
@@ -47,21 +47,24 @@ pub struct RoomMusicInputs {
 /// (peaks ~0.7–0.8 instead of riding the soft clipper), quieter percussion,
 /// softer hazard presence.
 pub mod defaults {
-    /// Mixer gains 0..=15 (§6.3).
+    /// Mixer gains 0..=15 (§6.3). The bass gain dropped 10 → 8 in the
+    /// round-3 expressiveness pass: the part is far busier now, and the brief
+    /// is "a bass at a low level underlying the music".
     pub const LEAD_GAIN: u8 = 7;
     pub const ARP_GAIN: u8 = 5;
-    pub const BASS_GAIN: u8 = 10;
+    pub const BASS_GAIN: u8 = 8;
     pub const PERC_GAIN: u8 = 3;
     pub const GLOVES_GAIN: u8 = 6;
     pub const BOOTS_GAIN: u8 = 5;
 
-    /// Note velocities 0..=15.
-    pub const ARP_VEL: u8 = 6;
-    pub const BASS_VEL: u8 = 10;
+    /// Note velocities 0..=15. Since the round-3 pass these are *bases* that
+    /// the phrase-arc/intensity shaping moves around, never flat values.
+    pub const ARP_BEAT_VELS: [u8; 4] = [7, 5, 6, 5];
     pub const HAT_OFFBEAT_VEL: u8 = 4;
     pub const HAT_BEAT3_VEL: u8 = 6;
-    pub const GLOVES_VEL: u8 = 7;
-    pub const BOOTS_VEL: u8 = 6;
+    pub const HAT_DOWNBEAT_VEL: u8 = 5;
+    pub const GLOVES_VELS: [u8; 2] = [7, 6];
+    pub const BOOTS_VELS: [u8; 4] = [5, 6, 6, 7];
 
     /// Default hazard bed level (0 disables the bed).
     pub const BED_LEVEL: u8 = 2;
@@ -102,6 +105,106 @@ const fn lead_duty(difficulty: Difficulty) -> Duty {
         Difficulty::Easy | Difficulty::Medium => Duty::Half,
         Difficulty::Hard => Duty::Quarter,
     }
+}
+
+/// Seed salt for the accompaniment RNG stream (bass pattern choice); kept
+/// apart from the melody stream so bass tuning never reshuffles the lead.
+const ACCOMPANIMENT_SALT: u64 = 0x00ba_5511_e50f_f00d_u64;
+
+/// The 16-bar tension/release arc (§ round-3 critique: "energising without
+/// exhausting"): bars 9–10 breathe (a layer drops, percussion thins), bars
+/// 13–15 peak, bar 16 is the turnaround that rebuilds into the loop start.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum BarRole {
+    Normal,
+    Breathe,
+    Peak,
+    Turnaround,
+}
+
+const fn bar_role(bar: u32) -> BarRole {
+    match bar {
+        8 | 9 => BarRole::Breathe,
+        12..=14 => BarRole::Peak,
+        15 => BarRole::Turnaround,
+        _ => BarRole::Normal,
+    }
+}
+
+/// One bass pattern event: (offset in eighth-note units from the bar start,
+/// length in units, which tone, base velocity).
+type BassEvent = (u32, u32, BassTone, u8);
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum BassTone {
+    Root,
+    RootLow,
+    Fifth,
+}
+
+/// Seeded rhythmic bass vocabulary, keyed to difficulty: calmer patterns on
+/// easy rooms, driving syncopated grooves on hard. Bars are 8 eighth-units.
+const fn bass_vocabulary(difficulty: Difficulty) -> &'static [&'static [BassEvent]] {
+    use BassTone::{Fifth, Root, RootLow};
+    match difficulty {
+        Difficulty::Easy => &[
+            &[(0, 6, Root, 10), (6, 2, Fifth, 8)],
+            &[(0, 4, Root, 10), (4, 4, Fifth, 8)],
+            &[(0, 8, Root, 9)],
+        ],
+        Difficulty::Medium => &[
+            &[(0, 3, Root, 11), (3, 2, Fifth, 8), (5, 1, Root, 7), (6, 2, Root, 9)],
+            &[(0, 2, Root, 11), (2, 1, Root, 7), (3, 2, Fifth, 9), (6, 2, Root, 8)],
+            &[(0, 3, Root, 10), (3, 3, Fifth, 9), (6, 2, Root, 8)],
+        ],
+        Difficulty::Hard => &[
+            &[
+                (0, 1, Root, 11),
+                (1, 1, Root, 7),
+                (2, 1, Fifth, 8),
+                (3, 1, Root, 7),
+                (4, 1, Root, 10),
+                (5, 1, Fifth, 8),
+                (6, 1, Root, 7),
+                (7, 1, Fifth, 8),
+            ],
+            &[
+                (0, 2, Root, 11),
+                (2, 1, RootLow, 8),
+                (3, 1, Root, 7),
+                (4, 1, Fifth, 9),
+                (5, 1, Root, 7),
+                (6, 2, Root, 9),
+            ],
+            &[
+                (0, 1, Root, 11),
+                (1, 1, RootLow, 7),
+                (2, 2, Root, 9),
+                (4, 1, Fifth, 9),
+                (5, 1, Root, 7),
+                (6, 1, Fifth, 8),
+                (7, 1, Root, 7),
+            ],
+        ],
+    }
+}
+
+/// The breathing-bar bass: long, calm, low in every difficulty.
+const BREATHE_BASS: &[BassEvent] = &[
+    (0, 4, BassTone::Root, 8),
+    (4, 4, BassTone::Fifth, 7),
+];
+
+/// Fold a scale-lattice index by octaves until its pitch sits in the bass
+/// register (MIDI 26..=50), where the triangle underpins without muddying.
+fn fold_bass_index(key: Key, mut index: i32) -> i32 {
+    while key.scale_pitch(index).midi() > 50 {
+        index -= 7;
+    }
+    while key.scale_pitch(index).midi() < 26 {
+        index += 7;
+    }
+    index
 }
 
 /// Compose the complete track for one room.
@@ -180,8 +283,19 @@ pub fn compose(inputs: &RoomMusicInputs) -> Track {
 
     let bar_steps = grid.bar_steps();
     let eighth = grid.beat_steps / 2;
+    let sixteenth = grid.beat_steps / 4;
+    let mut accompaniment =
+        XorShift64Star::new(fnv1a64(inputs.slug.as_bytes()) ^ ACCOMPANIMENT_SALT);
+    let vocabulary = bass_vocabulary(inputs.difficulty);
+    // One seeded pattern per 4-bar chord block, chosen up front in a fixed
+    // order so later rules never reshuffle earlier choices.
+    let block_patterns: [usize; 4] = std::array::from_fn(|_| {
+        accompaniment.below(vocabulary.len() as u64) as usize
+    });
     for bar in 0..16_u32 {
+        let role = bar_role(bar);
         let chord = progression[(bar / 4) as usize];
+        let next_chord = progression[(((bar + 1) % 16) / 4) as usize];
         // The triad's three tones stacked ascending from the root in a given
         // octave: root, third above it, fifth above that.
         let stacked = |octave: i32| -> [crate::theory::Pitch; 3] {
@@ -204,65 +318,154 @@ pub fn compose(inputs: &RoomMusicInputs) -> Track {
 
         // Arp: chord tones at quarter-note rate (slowed from 8ths, designer
         // feedback 2026-08), lowest-to-highest, restarting each bar, octave 3.
-        let arp_tones = stacked(3);
-        for beat in 0..4_u32 {
-            notes.push(NoteEvent {
-                voice: "arp".to_owned(),
-                start_step: base + beat * grid.beat_steps,
-                len_steps: grid.beat_steps,
-                pitch: Some(arp_tones[(beat % 3) as usize]),
-                vel: defaults::ARP_VEL,
-            });
+        // Round-3: metric velocity shape instead of a flat level, +1 in the
+        // peak bars, and the whole layer drops out in the breathing bars.
+        if role != BarRole::Breathe {
+            let arp_tones = stacked(3);
+            for beat in 0..4_u32 {
+                let mut vel = defaults::ARP_BEAT_VELS[beat as usize];
+                if role == BarRole::Peak {
+                    vel += 1;
+                }
+                notes.push(NoteEvent {
+                    voice: "arp".to_owned(),
+                    start_step: base + beat * grid.beat_steps,
+                    len_steps: grid.beat_steps,
+                    pitch: Some(arp_tones[(beat % 3) as usize]),
+                    vel,
+                });
+            }
         }
 
-        // Bass: root on beat 1 and fifth on beat 3, octave 2, half notes.
-        let bass_tones = stacked(2);
-        let half_note = grid.beat_steps * 2;
-        notes.push(NoteEvent {
-            voice: "bass".to_owned(),
-            start_step: base,
-            len_steps: half_note,
-            pitch: Some(bass_tones[0]),
-            vel: defaults::BASS_VEL,
-        });
-        notes.push(NoteEvent {
-            voice: "bass".to_owned(),
-            start_step: base + half_note,
-            len_steps: half_note,
-            pitch: Some(bass_tones[2]),
-            vel: defaults::BASS_VEL,
-        });
+        // Bass (round-3 rewrite): a seeded rhythmic pattern per chord block
+        // instead of root–fifth half notes, with walking approaches into
+        // chord changes, a calm override in the breathing bars, and a
+        // turnaround walk home in bar 16. Kept low: gain 8, velocities <= 12.
+        let root_index = fold_bass_index(key, i32::from(chord) - 1 - 14);
+        let fifth_index = fold_bass_index(key, i32::from(chord) - 1 + 4 - 14);
+        let next_root_index = fold_bass_index(key, i32::from(next_chord) - 1 - 14);
+        let tone_index = |tone: BassTone| match tone {
+            BassTone::Root => root_index,
+            BassTone::RootLow => {
+                let low = root_index - 7;
+                if key.scale_pitch(low).midi() < 26 {
+                    root_index
+                } else {
+                    low
+                }
+            }
+            BassTone::Fifth => fifth_index,
+        };
+        // Stepwise approach tones into a target: one and two scale steps
+        // below it (or above, when below would leave the register).
+        let approach_indices = |target: i32| -> [i32; 2] {
+            if key.scale_pitch(target - 2).midi() >= 26 {
+                [target - 2, target - 1]
+            } else {
+                [target + 2, target + 1]
+            }
+        };
+        let chord_changes = next_chord != chord;
+        let arc_shift: i32 = match role {
+            BarRole::Peak | BarRole::Turnaround => 1,
+            BarRole::Breathe => -1,
+            BarRole::Normal => 0,
+        };
+        let mut push_bass = |unit: u32, len_units: u32, index: i32, vel: u8| {
+            notes.push(NoteEvent {
+                voice: "bass".to_owned(),
+                start_step: base + unit * eighth,
+                len_steps: (len_units * eighth).max(1),
+                pitch: Some(key.scale_pitch(index)),
+                vel: (i32::from(vel) + arc_shift).clamp(1, 12) as u8,
+            });
+        };
+        if role == BarRole::Turnaround {
+            // Turnaround: walk home so the loop rebuilds into its start.
+            let [far, near] = approach_indices(next_root_index);
+            push_bass(0, 2, root_index, 10);
+            push_bass(2, 2, fifth_index, 9);
+            push_bass(4, 2, far, 9);
+            push_bass(6, 2, near, 10);
+        } else {
+            let pattern = if role == BarRole::Breathe {
+                BREATHE_BASS
+            } else {
+                vocabulary[block_patterns[(bar / 4) as usize]]
+            };
+            // Walking approach into the chord change: the last beat of a
+            // block's final bar steps into the next chord's root.
+            let walk_last_beat = chord_changes && bar % 4 == 3 && role == BarRole::Normal;
+            for &(unit, len_units, tone, vel) in pattern {
+                if walk_last_beat && unit >= 6 {
+                    continue;
+                }
+                push_bass(unit, len_units, tone_index(tone), vel);
+            }
+            if walk_last_beat {
+                let [far, near] = approach_indices(next_root_index);
+                push_bass(6, 1, far, 8);
+                push_bass(7, 1, near, 9);
+            }
+        }
 
         // Perc hats, density by difficulty (designer feedback 2026-08:
         // sparse on easy rooms). Easy: soft ticks on beats 2 and 4 only.
-        // Medium/hard: offbeat 8ths plus a beat-3 accent. Fire-hit
+        // Medium/hard: offbeat 8ths plus a beat-3 accent. Round-3 intensity
+        // arc: breathing bars thin the kit, peak bars add a downbeat tick,
+        // and the turnaround bar carries a small rising fill. Fire-hit
         // suppression happens live in the sequencer, which knows the hazard
         // clocks.
+        let mut push_hat = |step: u32, vel: u8| {
+            notes.push(NoteEvent {
+                voice: "perc".to_owned(),
+                start_step: step,
+                len_steps: 1,
+                pitch: None,
+                vel,
+            });
+        };
         for eighth_index in 0..8_u32 {
             let step = base + eighth_index * eighth;
             let vel = match inputs.difficulty {
-                Difficulty::Easy => match eighth_index {
-                    2 | 6 => Some(defaults::HAT_OFFBEAT_VEL),
+                Difficulty::Easy => match (role, eighth_index) {
+                    (BarRole::Breathe, _) => None,
+                    (_, 2 | 6) => Some(defaults::HAT_OFFBEAT_VEL),
                     _ => None,
                 },
-                Difficulty::Medium | Difficulty::Hard => {
-                    if eighth_index % 2 == 1 {
-                        Some(defaults::HAT_OFFBEAT_VEL)
-                    } else if eighth_index == 4 {
-                        Some(defaults::HAT_BEAT3_VEL)
-                    } else {
-                        None
+                Difficulty::Medium | Difficulty::Hard => match role {
+                    BarRole::Breathe => match eighth_index {
+                        2 | 6 => Some(defaults::HAT_OFFBEAT_VEL - 1),
+                        _ => None,
+                    },
+                    _ => {
+                        if eighth_index % 2 == 1 {
+                            Some(defaults::HAT_OFFBEAT_VEL)
+                        } else if eighth_index == 4 {
+                            Some(defaults::HAT_BEAT3_VEL)
+                        } else if eighth_index == 0 && role == BarRole::Peak {
+                            Some(defaults::HAT_DOWNBEAT_VEL)
+                        } else {
+                            None
+                        }
                     }
-                }
+                },
             };
             if let Some(vel) = vel {
-                notes.push(NoteEvent {
-                    voice: "perc".to_owned(),
-                    start_step: step,
-                    len_steps: 1,
-                    pitch: None,
-                    vel,
-                });
+                push_hat(step, vel);
+            }
+        }
+        if role == BarRole::Turnaround {
+            // Rising fill on the last beat, rebuilding into the loop start.
+            let beat4 = base + 3 * grid.beat_steps;
+            if inputs.difficulty == Difficulty::Easy {
+                push_hat(beat4, defaults::HAT_DOWNBEAT_VEL);
+            } else {
+                push_hat(beat4, defaults::HAT_DOWNBEAT_VEL);
+                if sixteenth > 0 {
+                    push_hat(beat4 + sixteenth, defaults::HAT_DOWNBEAT_VEL);
+                    push_hat(beat4 + 3 * sixteenth, defaults::HAT_BEAT3_VEL);
+                }
             }
         }
 
@@ -277,14 +480,15 @@ pub fn compose(inputs: &RoomMusicInputs) -> Track {
                     start_step: base + beat * grid.beat_steps,
                     len_steps: eighth.max(1),
                     pitch: Some(gloves_tones[cycle]),
-                    vel: defaults::GLOVES_VEL,
+                    vel: defaults::GLOVES_VELS[position],
                 });
             }
         }
 
         // Boots riff: run up the chord in the bar's last beat at 16th rate
-        // (or step rate if the grid is coarser).
-        if inputs.layer_gates.boots {
+        // (or step rate if the grid is coarser). Rests in the breathing bars
+        // and ramps its velocities so the run pushes into the next downbeat.
+        if inputs.layer_gates.boots && role != BarRole::Breathe {
             let boots_tones = stacked(4);
             let spacing = (grid.beat_steps / 4).max(1);
             let count = (grid.beat_steps / spacing).min(4);
@@ -299,7 +503,7 @@ pub fn compose(inputs: &RoomMusicInputs) -> Track {
                     start_step: base + 3 * grid.beat_steps + position * spacing,
                     len_steps: spacing,
                     pitch: Some(pitch),
-                    vel: defaults::BOOTS_VEL,
+                    vel: defaults::BOOTS_VELS[position as usize],
                 });
             }
         }
