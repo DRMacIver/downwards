@@ -1,3 +1,11 @@
+> [!WARNING]
+>
+> I think this game is something of a failed experiment and probably am not going to continue
+> working on it, but might use it as the basis of future work. Turns out, LLMs have very poor
+> taste in level design, and this makes trying to get them to develop generative content for
+> this is very hard, and doing it well would require more time investment than I'm currently
+> willing.
+
 # Downwards
 
 Downwards is an early-stage, no-combat roguelike metroidvania platformer.
